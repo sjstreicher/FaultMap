@@ -15,7 +15,7 @@ load('doubledelayedtf');
 
 csvwrite('original_data.csv', original_data(5002:end));
 csvwrite('puredelay_data.csv', puredelay_data(5002:end));
-csvwrite('delayedf_data.csv', delayedtf.data(5002:end));
+csvwrite('delayedtf_data.csv', delayedtf.data(5002:end));
 csvwrite('doubledelayedf_data.csv', doubledelayedtf.data(5002:end));
 
 
