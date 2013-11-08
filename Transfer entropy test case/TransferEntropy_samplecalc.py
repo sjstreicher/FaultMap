@@ -21,7 +21,7 @@ import numpy as np
 #from math import isnan
 
 
-def importcsv(file):
+def importcsv(filename):
     """Imports csv file and returns values in array"""
     fromfile = csv.reader(open(file), delimiter=' ')
     temp = []
@@ -32,9 +32,24 @@ def importcsv(file):
 
 original = importcsv('original_data.csv')
 puredelay = importcsv('puredelay_data.csv')
+delayedtf = importcsv('delayedtf_data.csv')
 
-data = np.vstack([original, puredelay])
+data = np.vstack([original, puredelay, delayedtf])
 kernel = stats.gaussian_kde(data, 'silverman')
+
+#def multivarPDF(data):
+    
+
+def te(var1, var2, predh, k):
+    """Calculates the transfer entropy between two variables
+    predh is the prediction horizon and can be used to solve for the dead time
+    k is the time lag and is set equal to h for now
+    """
+    
+    
+    
+    te = 1
+    return te
 
 #xmin = original.min()
 #xmax = original.max()
@@ -43,11 +58,11 @@ kernel = stats.gaussian_kde(data, 'silverman')
 #X, Y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
 #positions = np.vstack([X.ravel(), Y.ravel()])
 #Z = np.reshape(kernel(positions).T, X.shape)
-fig = plt.figure()
-ax = fig.add_subplot(111)
+#fig = plt.figure()
+#ax = fig.add_subplot(111)
 #ax.imshow(np.rot90(Z), cmap=plt.cm.gist_earth_r,
 #          extent=[xmin, xmax, ymin, ymax])
-ax.plot(original, puredelay, 'k.', markersize=2)
+#ax.plot(original, puredelay, 'k.', markersize=2)
 #ax.set_xlim([xmin, xmax])
 #ax.set_ylim([ymin, ymax])
-plt.show()
+#plt.show()
