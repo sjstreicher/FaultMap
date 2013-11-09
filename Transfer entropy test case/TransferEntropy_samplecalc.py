@@ -23,7 +23,7 @@ import numpy as np
 
 def importcsv(filename):
     """Imports csv file and returns values in array"""
-    fromfile = csv.reader(open(file), delimiter=' ')
+    fromfile = csv.reader(open(filename), delimiter=' ')
     temp = []
     for row in fromfile:
         temp.append(float(row[0]))
@@ -34,17 +34,58 @@ original = importcsv('original_data.csv')
 puredelay = importcsv('puredelay_data.csv')
 delayedtf = importcsv('delayedtf_data.csv')
 
-data = np.vstack([original, puredelay, delayedtf])
+data = np.vstack([puredelay, original])
 kernel = stats.gaussian_kde(data, 'silverman')
 
 #def multivarPDF(data):
-    
 
-def te(var1, var2, predh, k):
-    """Calculates the transfer entropy between two variables
-    predh is the prediction horizon and can be used to solve for the dead time
-    k is the time lag and is set equal to h for now
+def vectorselection(data, timelag, samples, k, l):
+    """Generates sets of vectors for calculating transfer entropy.
+    Takes into account the time lag (number of samples between vectors of the
+    same variable).
+    In this application the prediction horizon is set to equal to the time lag.
+    The first vector in the data array should be the samples of the variable
+    to be predicted while the second vector should be sampled of the vector
+    used to make the prediction.
+    The required number of samples is extracted from the end of the vector.
+    If the vector is longer than the number of samples specified plus the
+    desired time lag then the remained of the data will be discarded.
+    k refers to the dimension of the historical data to be predicted
+    l refers to the dimension of the historical data used to do the prediction
     """
+    sample_n = np.size(data[1, :])
+    x_pred = data[0, (sample_n - samples):sample_n]
+    x_pred = data[0, (sample_n - samples):sample_n]
+    
+    x_hist = np.zeros((k, samples))
+    y_hist = np.zeros((l, samples))
+    
+    for n in range(1, (k+1)):
+        x_hist[n-1, :] = data[0, ((sample_n - samples) - timelag * n):(sample_n - timelag * n)]
+    for m in range(1, (l+1)):
+        y_hist[m-1:, :] = data[1, ((sample_n - samples) - timelag * m):(sample_n - timelag * m)]
+    
+#    for n in range(1, (k+1)):
+#        x_hist = data[0, ((sample_n - samples) - timelag * n):(sample_n - timelag * n)]
+#    for m in range(1, (l+1)):
+#        y_hist = data[1, ((sample_n - samples) - timelag * m):(sample_n - timelag * m)]
+
+    return x_pred, x_hist, y_hist
+
+#[x_pred, x_hist, y_hist] = vectorselection(data, 10, 3000, 1, 1)
+
+def te(x_pred, x_hist, y_hist):
+    """Calculates the transfer entropy between two variables from a set of
+    vectors already calculated.
+    """
+    
+    """Get dimensions of vectors"""
+    k = np.size(x_hist[:, 1])
+    l = np.size(y_hist[:, 1])
+    
+    
+    
+    """Set up consecutive sums"""
     
     
     
