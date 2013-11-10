@@ -10,6 +10,7 @@ Created on Fri Nov 08 15:37:47 2013
 """Import classes and modules"""
 import csv
 from numpy import array
+from random import gauss
 from scipy import stats
 import scipy
 import matplotlib.pyplot as plt
@@ -31,19 +32,11 @@ def importcsv(filename):
     temp = array(temp)
     return temp
 
-#original = importcsv('original_data.csv')
-#puredelay = importcsv('puredelay_data.csv')
-#delayedtf = importcsv('delayedtf_data.csv')
-#puretf = importcsv('puretf_data.csv')
-
-autoregx = importcsv('autoregx_data.csv')
-autoregy = importcsv('autoregy_data.csv')
+# TODO: Generate this data in Python itself
+autoregx = importcsv('autoregx_data_excelgen.csv')
+autoregy = importcsv('autoregy_data_excelgen.csv')
 
 data = np.vstack([autoregx, autoregy])
-#data = np.vstack([puretf, original])
-kernel = stats.gaussian_kde(data, 'silverman')
-
-#def multivarPDF(data):
 
 
 def vectorselection(data, timelag, samples, k, l):
@@ -78,25 +71,17 @@ def vectorselection(data, timelag, samples, k, l):
         y_hist[m-1:, :] = data[1, ((sample_n - samples) - timelag * m):
                                (sample_n - timelag * m)]
 
-#    for n in range(1, (k+1)):
-#        x_hist = data[0, ((sample_n - samples) - timelag * n):
-#                            (sample_n - timelag * n)]
-#    for m in range(1, (l+1)):
-#        y_hist = data[1, ((sample_n - samples) - timelag * m):
-#                            (sample_n - timelag * m)]
-
     return x_pred, x_hist, y_hist
-
-#[x_pred, x_hist, y_hist] = vectorselection(data, 10, 3000, 1, 1)
 
 
 def te(x_pred, x_hist, y_hist, ampbins):
     """Calculates the transfer entropy between two variables from a set of
     vectors already calculated.
     ampbins is the number of amplitude bins to use over each variable
-    First do an example for the case of k = l = 1
-    Go smart about the for summing loops to allow for a general case
     """
+
+    # This only works for k = l = 1
+    # TODO: Implement summing loop for a general case
 
     # Divide the range of each variable into amplitude bins to sum over
     x_pred_min = x_pred.min()
@@ -122,10 +107,8 @@ def te(x_pred, x_hist, y_hist, ampbins):
     # TODO: Make sure Riemann sum diff elements is handled correctly
 
     tesum = 0
-#    tesum_old = -1
-#    sumelement_store = np.zeros(ampbins**3)
     delement = x_pred_diff * x_hist_diff * y_hist_diff
-    print delement
+#    print delement
     for s1 in x_pred_space:
 #        print 's1', s1
         for s2 in x_hist_space:
@@ -134,20 +117,6 @@ def te(x_pred, x_hist, y_hist, ampbins):
 #                print 's3', s3
                 sum_element = tecalc(pdf_1, pdf_2, pdf_3, pdf_4, s1, s2, s3)
                 tesum = tesum + sum_element
-                # Try to detect point at which the huge term enters
-                # For special case of data = np.vstack([puretf, original])
-                # and timelag = 1 and ampbins = 20
-                # Has to do with a huge value for PDF1 at a specific point
-#                if tesum / tesum_old < 0:
-#                    print s1, s2, s3
-#                    temp1 = pdf_1([s1, s2, s3])
-#                    temp2 = pdf_2([s2, s3])
-#                    temp3 = pdf_3([s1, s2])
-#                    temp4 = pdf_4([s2])
-#                    print temp1, temp2, temp3, temp4
-#                tesum_old = tesum
-#                print tesum
-#                sumelement_store[s1*s2*s3] = sum_element
     te = tesum * delement
 
     # Using local sums
@@ -207,7 +176,10 @@ def tecalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val, x_hist_val, y_hist_val):
     # Need to find a proper way to correct for cases when PDFs return 0
     # Most of the PDF issues are associated with the x_hist values being
     # very similar to the x_pred values
-    # Some very small negative values are sometimes returned
+    # This will not be an issue if using k = 0 and l = 2 as in the work
+    # of Bauer (2005)
+    # Some very small negative values are sometimes returned - find out if
+    # this is realistic
 
     # Function evaluations
     term1 = pdf_1([x_pred_val, x_hist_val, y_hist_val])
@@ -231,74 +203,45 @@ def tecalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val, x_hist_val, y_hist_val):
     if term4 < 1e-300:
         term4 = 1e-300
 
-#    print term1, term2, term3, term4
-#    if term1 == 0 or term2 == 0 or term3 == 0 or term4 == 0:
-#        sum_element = 0
-#        print term1, term2, term3, term4
-#
-#    else:
-#        logterm_num = (term1 / term2)
-#        logterm_den = (term3 / term4)
-#        coeff = term1
-#        sum_element = coeff * np.log(logterm_num / logterm_den)
-#        print np.log(logterm_num / logterm_den)
-
     logterm_num = (term1 / term2)
     logterm_den = (term3 / term4)
     coeff = term1
     sum_element = coeff * np.log(logterm_num / logterm_den)
-    
-    # Have problems with negative sum elements, not sure if this is realistic
+
+    # Some negative sum elements due to logterm_num being smaller than
+    # logterm_den, not sure if this is realistic
+
     # Eliminate negative sum terms
     if sum_element < 0:
         sum_element = 0
-        
 #        print logterm_num, logterm_den
-    print sum_element
+
+#    print sum_element
 
     return sum_element
 
-
 """Testing commands"""
 
-[x_pred, x_hist, y_hist] = vectorselection(data, 4, 3000, 1, 1)
 
-TE = te(x_pred, x_hist, y_hist, 25)
-print 'TE: ', float(TE)
+def grandcalc(data, lag, samples, k, l, ampbins):
+    [x_pred, x_hist, y_hist] = vectorselection(data, lag, samples, k, l)
+    TE = te(x_pred, x_hist, y_hist, ampbins)
+    return TE
 
-[pdf_1, pdf_2, pdf_3, pdf_4] = pdfcalcs(x_pred, x_hist, y_hist)
+# Generate list of TEs for h = 1 to h = 10
 
-# Plot to see why the PDFs fail repeatedly
+TE_list = np.zeros(10)
+for m in range(0, 10):
+    TE_list[m] = grandcalc(data, (m+1), 2500, 1, 1, 20)
+    print 'TE for h = ', (m+1), ' is: ', float(TE_list[m])
 
-#plt.plot(puretf, original, 'k.')
-#plt.show()
+# Generate PDFs to test in console
+#[pdf_1, pdf_2, pdf_3, pdf_4] = pdfcalcs(x_pred, x_hist, y_hist)
 
-#plt.plot(range(1, 3001), x_hist[0, :])
-#plt.show()
-
+# Example of finding the location of the highest probability
 #def x_max(x, x_pred, x_hist, y_hist):
 #    # There must be a better way than calculating PDFs in each iteration
 #    [pdf_1, pdf_2, pdf_3, pdf_4] = pdfcalcs(x_pred, x_hist, y_hist)
 #    return -pdf_4([x])
 #
 #max_x = scipy.optimize.fmin(x_max, 0, args=(x_pred, x_hist, y_hist))
-
-
-
-#[te, sums1, x_pred_space] = te(x_pred, x_hist, y_hist, 100)
-
-#xmin = original.min()
-#xmax = original.max()
-#ymin = puredelay.min()
-#ymax = puredelay.max()
-#X, Y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
-#positions = np.vstack([X.ravel(), Y.ravel()])
-#Z = np.reshape(kernel(positions).T, X.shape)
-#fig = plt.figure()
-#ax = fig.add_subplot(111)
-#ax.imshow(np.rot90(Z), cmap=plt.cm.gist_earth_r,
-#          extent=[xmin, xmax, ymin, ymax])
-#ax.plot(original, puredelay, 'k.', markersize=2)
-#ax.set_xlim([xmin, xmax])
-#ax.set_ylim([ymin, ymax])
-#plt.show()
