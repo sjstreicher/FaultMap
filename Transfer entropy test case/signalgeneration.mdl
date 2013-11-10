@@ -6,7 +6,7 @@ Model {
     NumRootInports	    0
     NumRootOutports	    0
     ParameterArgumentNames  ""
-    ComputedModelVersion    "1.29"
+    ComputedModelVersion    "1.39"
     NumModelReferences	    0
     NumTestPointedSignals   0
   }
@@ -25,9 +25,9 @@ Model {
   ModifiedByFormat	  "%<Auto>"
   LastModifiedBy	  "s13071832"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "Fri Nov 08 15:30:42 2013"
-  RTWModifiedTimeStamp	  305825442
-  ModelVersionFormat	  "1.%<AutoIncrement:29>"
+  LastModifiedDate	  "Sun Nov 10 11:03:40 2013"
+  RTWModifiedTimeStamp	  305982198
+  ModelVersionFormat	  "1.%<AutoIncrement:39>"
   ConfigurationManager	  "None"
   SampleTimeColors	  off
   SampleTimeAnnotations	  off
@@ -110,7 +110,7 @@ Model {
 	  $ObjectID		  2
 	  Version		  "1.10.0"
 	  StartTime		  "0.0"
-	  StopTime		  "1000"
+	  StopTime		  "500"
 	  AbsTol		  "auto"
 	  FixedStep		  "0.1"
 	  InitialStep		  "auto"
@@ -601,15 +601,6 @@ Model {
   }
   BlockParameterDefaults {
     Block {
-      BlockType		      RateTransition
-      Integrity		      on
-      Deterministic	      on
-      X0		      "0"
-      OutPortSampleTimeOpt    "Specify"
-      OutPortSampleTimeMultiple	"1"
-      OutPortSampleTime	      "-1"
-    }
-    Block {
       BlockType		      Scope
       ModelBased	      off
       TickLabels	      "OneTimeTick"
@@ -625,6 +616,25 @@ Model {
       Decimation	      "1"
       SampleInput	      off
       SampleTime	      "-1"
+    }
+    Block {
+      BlockType		      SignalGenerator
+      WaveForm		      "sine"
+      TimeSource	      "Use simulation time"
+      Amplitude		      "1"
+      Frequency		      "1"
+      Units		      "Hertz"
+      VectorParams1D	      on
+    }
+    Block {
+      BlockType		      Sin
+      SineType		      "Time based"
+      TimeSource	      "Use simulation time"
+      SampleTime	      "-1"
+      VectorParams1D	      on
+    }
+    Block {
+      BlockType		      Terminator
     }
     Block {
       BlockType		      ToFile
@@ -654,7 +664,7 @@ Model {
   }
   System {
     Name		    "signalgeneration"
-    Location		    [1282, 74, 2558, 1003]
+    Location		    [2, 82, 1278, 981]
     Open		    on
     ModelBrowserVisibility  off
     ModelBrowserWidth	    200
@@ -668,16 +678,16 @@ Model {
     ShowPageBoundaries	    off
     ZoomFactor		    "100"
     ReportName		    "simulink-default.rpt"
-    SIDHighWatermark	    18
+    SIDHighWatermark	    24
     Block {
       BlockType		      Reference
-      Name		      "Band-Limited\nWhite Noise"
-      SID		      1
+      Name		      "Ramp"
+      SID		      19
       Ports		      [0, 1]
-      Position		      [290, 385, 320, 415]
+      Position		      [245, 235, 275, 265]
       LibraryVersion	      "1.216"
-      SourceBlock	      "simulink/Sources/Band-Limited\nWhite Noise"
-      SourceType	      "Band-Limited White Noise."
+      SourceBlock	      "simulink/Sources/Ramp"
+      SourceType	      "Ramp"
       ShowPortLabels	      "FromPortIcon"
       SystemSampleTime	      "-1"
       FunctionWithSeparateData off
@@ -686,16 +696,38 @@ Model {
       RTWMemSecDataConstants  "Inherit from model"
       RTWMemSecDataInternal   "Inherit from model"
       RTWMemSecDataParameters "Inherit from model"
-      Cov		      "[0.1]"
-      Ts		      "0.1"
-      seed		      "[23341]"
-      VectorParams1D	      on
+      slope		      "1"
+      start		      "10"
+      X0		      "1"
+      VectorParams1D	      off
     }
     Block {
-      BlockType		      RateTransition
-      Name		      "Rate Transition"
-      SID		      17
-      Position		      [365, 379, 405, 421]
+      BlockType		      Reference
+      Name		      "Repeating\nSequence\nStair"
+      SID		      23
+      Ports		      [0, 1]
+      Position		      [760, 605, 790, 635]
+      LibraryVersion	      "1.216"
+      SourceBlock	      "simulink/Sources/Repeating\nSequence\nStair"
+      SourceType	      "Repeating Sequence Stair"
+      ShowPortLabels	      "FromPortIcon"
+      SystemSampleTime	      "-1"
+      FunctionWithSeparateData off
+      RTWMemSecFuncInitTerm   "Inherit from model"
+      RTWMemSecFuncExecute    "Inherit from model"
+      RTWMemSecDataConstants  "Inherit from model"
+      RTWMemSecDataInternal   "Inherit from model"
+      RTWMemSecDataParameters "Inherit from model"
+      OutValues		      "[3 1 4 2 1].'"
+      tsamp		      "-1"
+      OutMin		      "[]"
+      OutMax		      "[]"
+      OutDataTypeStr	      "double"
+      OutputDataTypeScalingMode	"double"
+      OutDataType	      "fixdt(0,8)"
+      ConRadixGroup	      "Best Precision: Vector-wise"
+      OutScaling	      "2^-12"
+      LockScale		      off
     }
     Block {
       BlockType		      Scope
@@ -704,8 +736,8 @@ Model {
       Ports		      [4]
       Position		      [885, 389, 935, 471]
       Floating		      off
-      Location		      [1, 48, 1281, 993]
-      Open		      off
+      Location		      [5, 43, 1285, 1018]
+      Open		      on
       NumInputPorts	      "4"
       List {
 	ListType		AxesTitles
@@ -714,11 +746,57 @@ Model {
 	axes3			"%<SignalLabel>"
 	axes4			"%<SignalLabel>"
       }
+      TimeRange		      "1000"
       YMin		      "-5~-5~-5~-5"
       YMax		      "5~5~5~5"
       DataFormat	      "StructureWithTime"
       MaxDataPoints	      "10000"
       SampleTime	      "0"
+    }
+    Block {
+      BlockType		      Scope
+      Name		      "Scope1"
+      SID		      22
+      Ports		      [1]
+      Position		      [370, 124, 400, 156]
+      Floating		      off
+      Location		      [188, 390, 512, 629]
+      Open		      off
+      NumInputPorts	      "1"
+      List {
+	ListType		AxesTitles
+	axes1			"%<SignalLabel>"
+      }
+      SaveName		      "ScopeData1"
+      DataFormat	      "StructureWithTime"
+      SampleTime	      "0"
+    }
+    Block {
+      BlockType		      SignalGenerator
+      Name		      "Signal\nGenerator"
+      SID		      24
+      Ports		      [0, 1]
+      Position		      [995, 535, 1025, 565]
+    }
+    Block {
+      BlockType		      Sin
+      Name		      "Sine Wave"
+      SID		      20
+      Ports		      [0, 1]
+      Position		      [325, 385, 355, 415]
+      Amplitude		      "1"
+      Bias		      "0"
+      Frequency		      "0.5"
+      Phase		      "0"
+      Samples		      "10"
+      Offset		      "0"
+      SampleTime	      "0"
+    }
+    Block {
+      BlockType		      Terminator
+      Name		      "Terminator"
+      SID		      21
+      Position		      [375, 240, 395, 260]
     }
     Block {
       BlockType		      ToFile
@@ -775,7 +853,7 @@ Model {
       Name		      "Transfer Fcn"
       SID		      5
       Position		      [555, 382, 615, 418]
-      Denominator	      "[1 1]"
+      Denominator	      "[20 1]"
     }
     Block {
       BlockType		      TransferFcn
@@ -783,7 +861,7 @@ Model {
       SID		      11
       Position		      [605, 527, 665, 563]
       ShowName		      off
-      Denominator	      "[1 1]"
+      Denominator	      "[20 1]"
     }
     Block {
       BlockType		      TransportDelay
@@ -798,12 +876,6 @@ Model {
       SID		      8
       Position		      [480, 385, 510, 415]
       DelayTime		      "6.3"
-    }
-    Line {
-      SrcBlock		      "Band-Limited\nWhite Noise"
-      SrcPort		      1
-      DstBlock		      "Rate Transition"
-      DstPort		      1
     }
     Line {
       SrcBlock		      "Transfer Fcn"
@@ -870,33 +942,46 @@ Model {
       }
     }
     Line {
-      SrcBlock		      "Rate Transition"
+      SrcBlock		      "Sine Wave"
       SrcPort		      1
-      Points		      [10, 0]
+      Points		      [65, 0]
       Branch {
-	Points			[10, 0]
+	Points			[25, 0]
 	Branch {
-	  Points		  [0, 240]
-	  DstBlock		  "To File"
+	  DstBlock		  "Transport\nDelay1"
 	  DstPort		  1
 	}
 	Branch {
-	  Points		  [30, 0]
-	  Branch {
-	    DstBlock		    "Transport\nDelay1"
-	    DstPort		    1
-	  }
-	  Branch {
-	    Points		    [0, 145]
-	    DstBlock		    "Transfer Fcn1"
-	    DstPort		    1
-	  }
+	  Points		  [0, 145]
+	  DstBlock		  "Transfer Fcn1"
+	  DstPort		  1
 	}
       }
       Branch {
 	Points			[0, 60]
-	DstBlock		"Scope"
-	DstPort			4
+	Branch {
+	  Points		  [0, 180]
+	  DstBlock		  "To File"
+	  DstPort		  1
+	}
+	Branch {
+	  DstBlock		  "Scope"
+	  DstPort		  4
+	}
+      }
+    }
+    Line {
+      SrcBlock		      "Ramp"
+      SrcPort		      1
+      Points		      [50, 0]
+      Branch {
+	DstBlock		"Terminator"
+	DstPort			1
+      }
+      Branch {
+	Points			[0, -110]
+	DstBlock		"Scope1"
+	DstPort			1
       }
     }
   }
