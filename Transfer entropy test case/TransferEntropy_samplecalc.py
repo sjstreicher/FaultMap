@@ -35,8 +35,8 @@ original = importcsv('original_data.csv')
 puredelay = importcsv('puredelay_data.csv')
 delayedtf = importcsv('delayedtf_data.csv')
 
-autoregx = importcsv('autoregx_data.csv')
-autoregy = importcsv('autoregy_data.csv')
+#autoregx = importcsv('autoregx_data.csv')
+#autoregy = importcsv('autoregy_data.csv')
 
 #data = np.vstack([autoregx, autoregy])
 data = np.vstack([puredelay, original])
@@ -210,7 +210,7 @@ def tecalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val, x_hist_val, y_hist_val):
 
 """Testing commands"""
 
-[x_pred, x_hist, y_hist] = vectorselection(data, 10, 3000, 1, 1)
+[x_pred, x_hist, y_hist] = vectorselection(data, 60, 3000, 1, 1)
 
 TE = te(x_pred, x_hist, y_hist, 20)
 print 'TE: ', float(TE)
