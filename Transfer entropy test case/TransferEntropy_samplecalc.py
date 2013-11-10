@@ -11,6 +11,7 @@ Created on Fri Nov 08 15:37:47 2013
 import csv
 from numpy import array
 from scipy import stats
+import scipy
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -34,6 +35,10 @@ original = importcsv('original_data.csv')
 puredelay = importcsv('puredelay_data.csv')
 delayedtf = importcsv('delayedtf_data.csv')
 
+autoregx = importcsv('autoregx_data.csv')
+autoregy = importcsv('autoregy_data.csv')
+
+#data = np.vstack([autoregx, autoregy])
 data = np.vstack([puredelay, original])
 kernel = stats.gaussian_kde(data, 'silverman')
 
@@ -114,18 +119,18 @@ def te(x_pred, x_hist, y_hist, ampbins):
     delement = x_pred_diff * x_hist_diff * y_hist_diff
     print delement
     for s1 in x_pred_space:
-        print s1
+#        print 's1', s1
         for s2 in x_hist_space:
-#            print s2
+#            print 's2', s2
             for s3 in y_hist_space:
+#                print 's3', s3
                 sum_element = tecalc(pdf_1, pdf_2, pdf_3, pdf_4, s1, s2, s3)
                 tesum = tesum + sum_element
     te = tesum * delement
 
-    
     # Using local sums
     # (It does give the same result)
-    
+
 #    sums3 = 0
 #    sums2 = 0
 #    sums1 = 0
@@ -176,13 +181,28 @@ def pdfcalcs(x_pred, x_hist, y_hist):
 
 def tecalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val, x_hist_val, y_hist_val):
     """Calculate elements for summation for a specific set of coordinates"""
-    logterm_num = (pdf_1([x_pred_val, x_hist_val, y_hist_val]) /
-                   pdf_2([x_hist_val, y_hist_val]))
 
-    logterm_den = pdf_3([x_pred_val, x_hist_val]) / pdf_4([x_hist_val])
+    # Need to find a proper way to correct for cases when PDFs return 0
 
-    coeff = pdf_1([x_pred_val, x_hist_val, y_hist_val])
+    # Function evaluations
+    term1 = pdf_1([x_pred_val, x_hist_val, y_hist_val])
+    term2 = pdf_2([x_hist_val, y_hist_val])
+    term3 = pdf_3([x_pred_val, x_hist_val])
+    term4 = pdf_4([x_hist_val])
+#    if term1 == 0 or term2 == 0 or term3 == 0 or term4 == 0:
+#        sum_element = 0
+#        print term1, term2, term3, term4
+#
+#    else:
+#        logterm_num = (term1 / term2)
+#        logterm_den = (term3 / term4)
+#        coeff = term1
+#        sum_element = coeff * np.log(logterm_num / logterm_den)
+#        print np.log(logterm_num / logterm_den)
 
+    logterm_num = (term1 / term2)
+    logterm_den = (term3 / term4)
+    coeff = term1
     sum_element = coeff * np.log(logterm_num / logterm_den)
 
     return sum_element
@@ -192,10 +212,18 @@ def tecalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val, x_hist_val, y_hist_val):
 
 [x_pred, x_hist, y_hist] = vectorselection(data, 10, 3000, 1, 1)
 
-TE = te(x_pred, x_hist, y_hist, 10)
-print float(TE)
+TE = te(x_pred, x_hist, y_hist, 20)
+print 'TE: ', float(TE)
 
-#[pdf_1, pdf_2, pdf_3, pdf_4] = pdfcalcs(x_pred, x_hist, y_hist)
+[pdf_1, pdf_2, pdf_3, pdf_4] = pdfcalcs(x_pred, x_hist, y_hist)
+
+
+#def x_max(x, x_pred, x_hist, y_hist):
+#    # There must be a better way than calculating PDFs in each iteration
+#    [pdf_1, pdf_2, pdf_3, pdf_4] = pdfcalcs(x_pred, x_hist, y_hist)
+#    return -pdf_4([x])
+#
+#max_x = scipy.optimize.fmin(x_max, 0, args=(x_pred, x_hist, y_hist))
 
 
 
