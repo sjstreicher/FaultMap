@@ -212,6 +212,7 @@ def tecalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val, x_hist_val, y_hist_val):
     # logterm_den, not sure if this is realistic
 
     # Eliminate negative sum terms
+
     if sum_element < 0:
         sum_element = 0
 #        print logterm_num, logterm_den
@@ -222,18 +223,37 @@ def tecalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val, x_hist_val, y_hist_val):
 
 """Testing commands"""
 
+# Test for special case of h = 5 to see source of problem
+# Expected source: covariance in kernel function
+
+# Proposed solution: add a small bit of noise to x values in order to
+# break covariance issue
+
+autoregx_noise = importcsv('autoregx_data_noise_excelgen.csv')
+
+data_noise = np.vstack([autoregx_noise, autoregy])
+
+#[x_pred, x_hist, y_hist] = vectorselection(data_noise, 5, 2500, 1, 1)
+#TE_5 = te(x_pred, x_hist, y_hist, 20)
+
+#print 'The TE at h = 5 evaluates to: ', TE_5
+
 
 def grandcalc(data, lag, samples, k, l, ampbins):
     [x_pred, x_hist, y_hist] = vectorselection(data, lag, samples, k, l)
     TE = te(x_pred, x_hist, y_hist, ampbins)
     return TE
 
-# Generate list of TEs for h = 1 to h = 10
+# Generate list of TEs for h = 1 to h = 20
 
-TE_list = np.zeros(10)
-for m in range(0, 10):
-    TE_list[m] = grandcalc(data, (m+1), 2500, 1, 1, 20)
+print 'The current lag in the data is 5.'
+print 'Expected peaks at multiples of 5.'
+
+TE_list = np.zeros(20)
+for m in range(0, 20):
+    TE_list[m] = grandcalc(data_noise, (m+1), 2500, 1, 1, 20)
     print 'TE for h = ', (m+1), ' is: ', float(TE_list[m])
+
 
 # Generate PDFs to test in console
 #[pdf_1, pdf_2, pdf_3, pdf_4] = pdfcalcs(x_pred, x_hist, y_hist)
