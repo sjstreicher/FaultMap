@@ -34,12 +34,13 @@ def importcsv(filename):
 original = importcsv('original_data.csv')
 puredelay = importcsv('puredelay_data.csv')
 delayedtf = importcsv('delayedtf_data.csv')
+puretf = importcsv('puretf_data.csv')
 
 #autoregx = importcsv('autoregx_data.csv')
 #autoregy = importcsv('autoregy_data.csv')
 
 #data = np.vstack([autoregx, autoregy])
-data = np.vstack([puredelay, original])
+data = np.vstack([puretf, original])
 kernel = stats.gaussian_kde(data, 'silverman')
 
 #def multivarPDF(data):
@@ -68,16 +69,21 @@ def vectorselection(data, timelag, samples, k, l):
 
     for n in range(1, (k+1)):
         # Original form according to Bauer (2007)
-#        x_hist[n-1, :] = data[0, ((sample_n - samples) - timelag * n):(sample_n - timelag * n)]
+#        x_hist[n-1, :] = data[0, ((sample_n - samples) - timelag * n):
+#                               (sample_n - timelag * n)]
         # Modified form according to Shu & Zhao (2013)
-        x_hist[n-1, :] = data[0, ((sample_n - samples) - timelag * (n-1) -1):(sample_n - timelag * (n-1) -1)]
+        x_hist[n-1, :] = data[0, ((sample_n - samples) - timelag * (n-1) - 1):
+                              (sample_n - timelag * (n-1) - 1)]
     for m in range(1, (l+1)):
-        y_hist[m-1:, :] = data[1, ((sample_n - samples) - timelag * m):(sample_n - timelag * m)]
+        y_hist[m-1:, :] = data[1, ((sample_n - samples) - timelag * m):
+                               (sample_n - timelag * m)]
 
 #    for n in range(1, (k+1)):
-#        x_hist = data[0, ((sample_n - samples) - timelag * n):(sample_n - timelag * n)]
+#        x_hist = data[0, ((sample_n - samples) - timelag * n):
+#                            (sample_n - timelag * n)]
 #    for m in range(1, (l+1)):
-#        y_hist = data[1, ((sample_n - samples) - timelag * m):(sample_n - timelag * m)]
+#        y_hist = data[1, ((sample_n - samples) - timelag * m):
+#                            (sample_n - timelag * m)]
 
     return x_pred, x_hist, y_hist
 
@@ -116,6 +122,8 @@ def te(x_pred, x_hist, y_hist, ampbins):
     # TODO: Make sure Riemann sum diff elements is handled correctly
 
     tesum = 0
+    tesum_old = -1
+    sumelement_store = np.zeros(ampbins**3)
     delement = x_pred_diff * x_hist_diff * y_hist_diff
     print delement
     for s1 in x_pred_space:
@@ -126,6 +134,20 @@ def te(x_pred, x_hist, y_hist, ampbins):
 #                print 's3', s3
                 sum_element = tecalc(pdf_1, pdf_2, pdf_3, pdf_4, s1, s2, s3)
                 tesum = tesum + sum_element
+                # Try to detect point at which the huge term enters
+                # For special case of data = np.vstack([puretf, original])
+                # and timelag = 1 and ampbins = 20
+                # Has to do with a huge value for PDF1 at a specific point
+                if tesum / tesum_old < 0:
+                    print s1, s2, s3
+                    temp1 = pdf_1([s1, s2, s3])
+                    temp2 = pdf_2([s2, s3])
+                    temp3 = pdf_3([s1, s2])
+                    temp4 = pdf_4([s2])
+                    print temp1, temp2, temp3, temp4
+                tesum_old = tesum
+#                print tesum
+                sumelement_store[s1*s2*s3] = sum_element
     te = tesum * delement
 
     # Using local sums
@@ -147,7 +169,7 @@ def te(x_pred, x_hist, y_hist, ampbins):
 #        sums1 = sums1 + sums2 * x_hist_diff
 #        te = sums1 * x_pred_diff
 
-    return te
+    return te, sumelement_store
 
 
 def pdfcalcs(x_pred, x_hist, y_hist):
@@ -183,12 +205,33 @@ def tecalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val, x_hist_val, y_hist_val):
     """Calculate elements for summation for a specific set of coordinates"""
 
     # Need to find a proper way to correct for cases when PDFs return 0
+    # Most of the PDF issues are associated with the x_hist values being
+    # very similar to the x_pred values
+    # Some very small negative values are sometimes returned
 
     # Function evaluations
     term1 = pdf_1([x_pred_val, x_hist_val, y_hist_val])
     term2 = pdf_2([x_hist_val, y_hist_val])
     term3 = pdf_3([x_pred_val, x_hist_val])
     term4 = pdf_4([x_hist_val])
+#    print term1, term2, term3, term4
+
+    # Temporary solution: assigns small values to evaluations
+    # below a certain threshold
+
+    if term1 < 1e-300:
+        term1 = 1e-300
+
+    if term2 < 1e-300:
+        term2 = 1e-300
+
+    if term3 < 1e-300:
+        term3 = 1e-300
+
+    if term4 < 1e-300:
+        term4 = 1e-300
+
+#    print term1, term2, term3, term4
 #    if term1 == 0 or term2 == 0 or term3 == 0 or term4 == 0:
 #        sum_element = 0
 #        print term1, term2, term3, term4
@@ -204,19 +247,27 @@ def tecalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val, x_hist_val, y_hist_val):
     logterm_den = (term3 / term4)
     coeff = term1
     sum_element = coeff * np.log(logterm_num / logterm_den)
+#    print sum_element
 
     return sum_element
 
 
 """Testing commands"""
 
-[x_pred, x_hist, y_hist] = vectorselection(data, 60, 3000, 1, 1)
+[x_pred, x_hist, y_hist] = vectorselection(data, 1, 3000, 1, 1)
 
-TE = te(x_pred, x_hist, y_hist, 20)
+[TE, store] = te(x_pred, x_hist, y_hist, 25)
 print 'TE: ', float(TE)
 
 [pdf_1, pdf_2, pdf_3, pdf_4] = pdfcalcs(x_pred, x_hist, y_hist)
 
+# Plot to see why the PDFs fail repeatedly
+
+#plt.plot(puretf, original, 'k.')
+#plt.show()
+
+#plt.plot(range(1, 3001), x_hist[0, :])
+#plt.show()
 
 #def x_max(x, x_pred, x_hist, y_hist):
 #    # There must be a better way than calculating PDFs in each iteration
