@@ -99,13 +99,20 @@ def te(x_pred, x_hist, y_hist, ampbins):
     x_hist_space = np.linspace(x_hist_min, x_hist_max, ampbins)
     y_hist_space = np.linspace(y_hist_min, y_hist_max, ampbins)
 
+    x_pred_diff = x_pred_space[1] - x_pred_space[0]
+    x_hist_diff = x_hist_space[1] - x_hist_space[0]
+    y_hist_diff = y_hist_space[1] - y_hist_space[0]
+
     # Calculate PDFs for all combinations required
     [pdf_1, pdf_2, pdf_3, pdf_4] = pdfcalcs(x_pred, x_hist, y_hist)
 
     # Consecutive sums
 
-    # TODO: There is some misunderstanding here...
+    # TODO: Make sure Riemann sum diff elements is handled correctly
+
     tesum = 0
+    delement = x_pred_diff * x_hist_diff * y_hist_diff
+    print delement
     for s1 in x_pred_space:
         print s1
         for s2 in x_hist_space:
@@ -113,8 +120,29 @@ def te(x_pred, x_hist, y_hist, ampbins):
             for s3 in y_hist_space:
                 sum_element = tecalc(pdf_1, pdf_2, pdf_3, pdf_4, s1, s2, s3)
                 tesum = tesum + sum_element
+    te = tesum * delement
 
-    return tesum
+    
+    # Using local sums
+    # (It does give the same result)
+    
+#    sums3 = 0
+#    sums2 = 0
+#    sums1 = 0
+#    for s1 in x_pred_space:
+#        print s1
+#        sums2 = 0
+#        for s2 in x_hist_space:
+##            print s2
+#            sums3 = 0
+#            for s3 in y_hist_space:
+#                sum_element = tecalc(pdf_1, pdf_2, pdf_3, pdf_4, s1, s2, s3)
+#                sums3 = sums3 + sum_element
+#            sums2 = sums2 + sums3 * y_hist_diff
+#        sums1 = sums1 + sums2 * x_hist_diff
+#        te = sums1 * x_pred_diff
+
+    return te
 
 
 def pdfcalcs(x_pred, x_hist, y_hist):
@@ -162,9 +190,10 @@ def tecalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val, x_hist_val, y_hist_val):
 
 """Testing commands"""
 
-[x_pred, x_hist, y_hist] = vectorselection(data, 100, 3000, 1, 1)
+[x_pred, x_hist, y_hist] = vectorselection(data, 10, 3000, 1, 1)
 
 TE = te(x_pred, x_hist, y_hist, 10)
+print float(TE)
 
 #[pdf_1, pdf_2, pdf_3, pdf_4] = pdfcalcs(x_pred, x_hist, y_hist)
 
