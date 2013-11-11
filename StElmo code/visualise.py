@@ -33,8 +33,8 @@ class visualiseOpenLoopSystem:
     G2 = RGA recommended pairings using max criteria. edgecolour attribute.
     GGF = Google Gain Forward (scaled) graph with node importance as node attribute 'importance' 
     LGF = Local Gain Forward (scaled) graph with node importance as node attribute 'importance'
-    GGB = Google Gain Forward (scaled) graph with node importance as node attribute 'importance'
-    LGB = Local Gain Forward (scaled) graph with node importance as node attribute 'importance' 
+    GGB = Google Gain Backward (scaled) graph with node importance as node attribute 'importance'
+    LGB = Local Gain Backward (scaled) graph with node importance as node attribute 'importance' 
     NFG = Normal Forward Gain (not scaled) graph with node importance as node attribute 'importance'
     NBG = Normal Backward Gain (not scaled) graph with node importance as node attribute 'importance'
     EBG = Eigen Blended Graph = Eigen approach using LGF and LGB to calculate node attribute 'importance' 
