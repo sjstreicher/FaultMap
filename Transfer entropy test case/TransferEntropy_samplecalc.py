@@ -9,7 +9,7 @@ Created on Fri Nov 08 15:37:47 2013
 
 """Import classes and modules"""
 import csv
-from numpy import array
+from numpy import array, loadtxt
 from scipy import stats
 import scipy
 import matplotlib.pyplot as plt
@@ -21,23 +21,13 @@ import numpy as np
 #from random import random
 #from math import isnan
 
-
-def importcsv(filename):
-    """Imports csv file and returns values in array"""
-    fromfile = csv.reader(open(filename), delimiter=' ')
-    temp = []
-    for row in fromfile:
-        temp.append(float(row[0]))
-    temp = array(temp)
-    return temp
-
 #original = importcsv('original_data.csv')
 #puredelay = importcsv('puredelay_data.csv')
 #delayedtf = importcsv('delayedtf_data.csv')
 #puretf = importcsv('puretf_data.csv')
 
-autoregx = importcsv('autoregx_data.csv')
-autoregy = importcsv('autoregy_data.csv')
+autoregx = loadtxt('autoregx_data.csv')
+autoregy = loadtxt('autoregy_data.csv')
 
 data = np.vstack([autoregx, autoregy])
 #data = np.vstack([puretf, original])
@@ -60,9 +50,8 @@ def vectorselection(data, timelag, samples, k, l):
     k refers to the dimension of the historical data to be predicted
     l refers to the dimension of the historical data used to do the prediction
     """
-    sample_n = np.size(data[1, :])
-    x_pred = data[0, (sample_n - samples):sample_n]
-    x_pred = data[0, (sample_n - samples):sample_n]
+    _, sample_n = data.shape
+    x_pred = data[0, :-samples]
 
     x_hist = np.zeros((k, samples))
     y_hist = np.zeros((l, samples))
