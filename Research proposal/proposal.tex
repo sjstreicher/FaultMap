@@ -1,0 +1,487 @@
+\documentclass[a4paper]{book}
+\usepackage{syntonly}
+%\syntaxonly
+\usepackage{titling}
+\newcommand{\subtitle}[1]{%
+  \posttitle{%
+    \par\end{center}
+    \begin{center}\large#1\end{center}
+    \vskip0.5em}%
+}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1ex plus 0.5ex minus 0.2ex}
+
+
+
+\begin{document}
+
+\title{Eigenvector analysis for the ranking of control loop importance}
+\subtitle{Research proposal}
+%\date{December 10, 2013}
+\author{Simon Jacobus Streicher}
+\maketitle
+
+\frontmatter
+
+\chapter{NRF Questions}
+
+\section{Personal Profile}
+(5500 characters max.)
+
+I matriculated in 2008 via the British International Distance College having completed the HIGCSE (Higher International General Certificate of Secondary Education) exams.
+I obtained distinctions in all subjects.
+I enrolled for Chemical Engineering at the North-West University Potchefstroom Campus and completed the course in the minimum of four years (cum laude).
+I was awarded the best chemical engineering final year student certificate.
+I received a score of 84\% for my final year research project which dealt with the characterisation of an electrochemical PEM (proton exchange membrane) solid-state hydrogen compressor.
+I presented a poster presentation on the same topic at the CATSA 2012 conference.
+
+After graduating from NWU I moved to the University of Pretoria (UP) to join the process modelling and control group there.
+I am currently busy with the postgraduate honours degree (5th, not 4th, academic year course) in control engineering and passed the first semester with distinction.
+I decided to specialize in control engineering as I believe that in a capital-contrained industry such as is currently the case in South Africa there are more opportunities for high-return projects in this field.
+The capital expenditure required tend to be significantly less than for process equipment modification projects providing similar savings. 
+
+I have been interested in sustainability issues, especially those related to energy, since middle school.
+At the age of 13 I read Paul Robert's The End of Oil which made a lasting impact on my worldview.
+The concept of peak oil and limits to growth has motivated me to join the quest for the design and development of a sustainable energy economy.
+
+I recently became aware of interesting developments in new generation nuclear technologies, especially the molten salt breeder reactor varieties.
+The liquid fluoride thorium reactor (LFTR) is arguably the best known example, having been popularized by Robert Hargarves' excellent book Thorium: energy cheaper than coal.
+This technology is being actively researched in China and India.
+I am especially interested in the possibility of using high-temperature nuclear reactors to produce liquid fuels via a combination of water thermolysis, atmospheric carbon dioxide absorbtion, water-gas shift and Fischer-Tropsch processes.
+This process is carbon neutral and simply adds another closed-loop link to the carbon cycle.
+I believe liquid fuels will remain an important primary energy carrier for decades, unless a drastic advance in electrical energy storage devices is made.
+
+
+
+\section{Research Project Questions}
+
+\subsection{Short Title of Research Project}
+(100 characters max.)
+
+Eigenvector analysis for the ranking of control loop importance
+
+Ranking of control loop importance using eigenvector analysis and plant topology
+
+\subsection{Descriptive Title of Research Project}
+(2000 characters max.)
+
+The large number of control loops present on a typical industrial site necessitates the prioritization of control loop maintenance and optimization.
+It is proposed that known information on the connectivity of control loops (contained in pipeline \& instrumentation diagrams) together with analysis of historical data, step tests and economical attributes will allow control loops with the greatest influence on profitability and/or stability to be identified.
+This will allow more efficient use of control engineer and instrumentation specialist man hours.
+The aim is to provide base layer control engineers and instrumentation specialists a definite list of the most important control loops in need of attention.
+
+\section{Details of Research}
+
+\subsection{Research Rationale and Motivation}
+(5500 characters max.)
+
+
+On a typical large scale industrial complex base layer control maintenance is an ongoing process.
+It is quite common to find that the number of control loops in need of attention far exceeds the required manpower available.
+The typical troublehsooting procedure followed can bed divided into two parts:
+(1) identifying out of control loops and
+(2) finding the root cause of the identified control loops being out of control.
+
+Numerous methods and tools are available to aid in the identification of out of control loops.
+These are easily implemented and generally function as expected.
+In the industrial case being investigated, a simple rudimentary method based on the flagging of loops that have been placed in manual by panel operators combined with identification of loops that fail to maintain setpoints within specified margins have been used with great success and already identifies more loops than can be handled.
+
+The reasons for control loops failing to meet objectives can be numerous.
+One reason for poor control loop performance is simply that the controller was never tuned to meet basic robustness and performance criteria, but simply to provide good enough performance to allow the process to be commissioned for the first time.
+A second reason for poor control loop performance arises from poor management of change when process feed or conditions have been altered or a general modification has been done, such as a heat integration network being implemented.
+A third reason for a sudden drop in control loop performance is related to hardware maintenance issues, such as control valve hysteresis or sticking, or the clogging of heat exchangers, the deactivation of catalysts, etc.
+Although valve positioners are an effective solution to control valve hysteresis or sticking, many of the older plants do not make widespread use of valve positioners.
+Drastic control loop performance deterioration related to a mechanical failure of some sort is usually quickly identified by panel operators who place the loop in manual, causing it to flag on the base layer control engineers' list of loops in need of attention.
+
+The second aspect of base layer control loop maintenance, namely finding the root cause, is one of the most time-consuming activities involved in control loop troubleshooting.
+In identifying possible sources of poor control loop interaction, experienced control engineers rely on intuition that was build over many years to identify the most likely cause.
+A significant portion of this intuition is sourced from simply knowing how the different control loops are interconnected, and thus able to interact with each other in a detrimental way.
+For example, it is quite common to find that the source of a quality specification being violated lies in upsets in the feed or poor control in recycle streams.
+
+It is proposed that by combining the information contained in plant pipeline and instrumentation diagrams as well as employing measures to assign a metric of interaction between control loops, the important and time consuming task of addressing the root cause instead of the symptoms can be significantly aided.
+
+It is the situation on many large industrial plants in South Africa that a significant portion of the plant operators are starting to reach the end of their careers almost simultaneously and are being replaced by unexperienced youths. Sadly, no great effort has been made to encourage the old generation of operators to convey the peculiarities of the plant and general technical tips in general to the younger generation.
+
+The provision of a metric that can assist in procedures that previously relied on intuition acquired by experience is expected to be a significant aid in maintaining a workable contingency plan with respect to plant operations.
+
+
+Tight mass and heat integration on large-scale plants lead to significant control loop interaction.
+Plants with recycle also commonly suffer from control loop interaction~\cite{Bauer2005a}
+
+Motivations for data-driven root cause plant-wide disturbance and fault detection include (1) streamlining troubleshooting, reducing manhour requirements, (2) yield information to enhance maintencane efforts during plant shutdown and (3) discover problems not found with traditional "fight today's fire" approaches.~\cite{Bauer2005a}
+
+Fault detection and diagnosis of plant-wide disturbances can be approached either by model-based or data-driven methods.
+Data-driven methods are generally preferred accurate process models are rarely available - it is estimated that only about 5\% of processes are modelled~\cite{Bauer2005a}. % Secondary reference from conference oral presentation
+
+Model-based techniques compare model parameters agains measurements, while data-driven methods are based on historical proces data.
+
+% Can reference to recently published review articles.
+
+\subsection{Problem Identification}
+(5000 characters max.)
+
+Measuring the degree of interaction between control loops and ranking them accordingly is considered to be an important yet challenging task~\cite{Rahman2011}.
+
+Although a  number of methods have been proposed and tested with varying degrees of success, most require plants to be step tested in order to determine useful interaction measures.
+Step testing can be constly and in the case of already unstable plants near impossible.
+Management will rarely authorize step testing to be done, and with good reason.
+
+None of the methods for determining control loop interaction have been found to make use of the \textit{a priori} information of control loop interconnectivity contained in pipeline and instrumentation diagrams (P\&IDs). % Wrong
+
+
+\subsection{Research Aims and Objectives}
+(5500 characters max.)
+
+It is suggested that by incorporating interconnectivity information contained in pipeline and instrumentation diagrams (P\&IDs) together with the application of novel interaction algorithms as well as the application of multivariate statistics useful metrics can be derived with none or minimal induced plant disturbances, provided that plant historian data of sufficient resoltuion (short enough sampling interval) can be accessed.
+
+In addition to finding the root cause of problems, performing economical analysis on identified errors based on known interactions can potentially aid in prioritizing control loop maintenance projects.
+This will particularly be useful for identifying control loop maintenance activities that may involve significant processing equipment modifications instead of simply altering parameters used by software as these projects are typically associated with higher expenditure.
+
+% How and what exactly are we hoping to learn from the P&IDs that we could not have learned from interaction analyses?
+% It is not as if we want to ignore other interactions that might not be immediately obvious from the P&IDs alone!!
+
+\subsection{Research Activities}
+(Plan which include(s) the research approach/method/techniques.)
+(5500 characters max.)
+
+The research will be entirely based on data processing and software development with no hardware apart from a personal computer of sufficient computational ability involved or required.
+
+Numerous case studies will be carried out in order to evaluate the efficiency and industrial usefulness of the interaction metrics developed.
+A number of custom designed scenarios will likely be used in the initial stages of the project to assess the feasibility of methods and compare results over a wide range of potential problems.
+Well-known academic example problems such as the Shell control problem as well as the Tenessee-Eastman plant will be studied.
+% Shell problem data can be found in Rossi et al. (2006) contained in {Rahmann2011}.
+It is planned that data and pipeline and instrumentation diagrams (P\&IDs) from large scale South African industrial operations will be sourced.
+At least one business unit operating withing a large industrial complex has already been approached and a promising response was obtained.
+Data sourced from industrial operations will likely be denatured to allow for adherence to intellectual property protocols.
+However, it should still be useful to determine the real-life usefulness of the developed methodologies in practical industry, and will allow for the methods to be exposed to the difficulties surrounding industry problems, such as limited historian information or low historical sampling intervals.
+
+\mainmatter
+\chapter{Introduction and background}
+
+\chapter{Literature Study}
+
+% TODO: Study the following first of all and discuss as you go along:
+
+% Bauer2005
+% Bauer2008
+% Rossi2006
+% Gao2011
+% Padmanabhan
+
+% Look into the possibility of using Mark Transell's method of finding similar patterns in historical plant data.
+
+% Bauer2005
+
+Bauer \& Thornhill (2005) ~\cite{Bauer2005} discussed a method to detect the plant-wide propagation path of disturbances on a plant using historical process data.
+These methods might be useful for developing a ranking methodology that does not require plant step-testing in order to generate data.
+
+The emphasis is on plant-wide oscillations caused by disturbances.
+The newly developed method of transfer entropy is introduced to identify the direction of the disturbance, even in the absence of a time delay.
+
+% This is a bit too much word for word, but it is stated so beautifully...
+According to Bauer \& Thornhill (2005)~\cite{Bauer2005} there is a need for industrial tools that will help company expertise focus on problem areas early and combine data-driven analysis with their knowledge and understanding of the process.
+The methods presented by Bauer \& Thornhill were successfull in pointing out areas for investigation but site expertise is still required to get to the bottom of them.
+There is an urgent requirement for tools that can link process understanding with a data driven analysis whoch can help company experts focus on getting early solutions to plant problems.
+
+It is the aim of this project to incorporate known physical and logical plant interconnections with multivariate statistical methods to provide metrics that are more clearly defined and rely less on plant knowledge than the previous tools made available.
+In a sense the aim is to use the structure of the plant contained in P\&IDs and mimick the thought process of an experienced engineer that is used to produce results that are commonly considered to have relied on intuition gained over many years of plant experience.
+Logical as well as physical connections will need to be defined and some of the experienced engineers might be needed to provide information on logical connections that cannot be deducted from P\&IDs.
+This should not only help experienced engineers to work more effectively and faster, but will also allow control engineers who are not familiar with all the intricate details of a particular plant to work more independtly on a control problem.
+Many of the interactions among processes are common and can be classified to generate a set of heuristics that can allow a control engineer to work in a wide variety of environments.
+
+To date there are no data-driven signatures that uniquely identifiy a plant-wide disturbance as originating from one or another of these categories.
+The present state of teh art in controller diagnosis is that the process control engineers have to come up with an explanation that is consistent with both the data-driven results and their process understanding.
+
+Recycling acts as a physical feedback loop.
+A recycle stream can oscillate just as a feedback control loop can oscillate if the gain is too high.
+Process loop gain...
+
+Comparison of causal map from transfer entropy analysis and that generated by logical and physical connections might indicate some undesired control loop interactions.
+Why would we want to go through the trouble of inputting P\&IDs if causal maps from transfer entropy analysis gives a more intricate connection among variables?
+
+
+\section{Transfer entropy}
+
+% Bookmarked Google Books reference...
+
+Causal qualitative models - identify the order of occurrence of events and specify the paths of fault propagation.
+Trace root cause of disturbance along propagation path.
+
+Automatic construction of digraphs.
+
+Consistency question:
+How does directionality change with faults?
+
+Expected directionality vs. actual directionality.
+
+The combination of plant topology and PDA algortihms can be used to verify that a feasible path between a candidate root cause and other locations in the plant were secondary disturbances have been detected exist ~\cite{Yim2006}.
+
+Signal-based analysis is enhanced by the capture and integration of cause and effect information from a process schematic~\cite{Yim2006}.
+
+Disturbance rejection is indicated when the OP is a member of a disturbed cluster while the PV is not~\cite{Yim2006}.
+
+Manual, ratio, feedforward and cascade configurations can also be detected via rules exploiting the integration of data-drive analysis with plant topologu~\cite{Yim2006}.
+
+The maintenance of accurate drawings is a considerably easier and more routine task than the maintenance of a mathematical model or SDG~\cite{Yim2006}.
+
+``The fuction of CAPEX Plant Analyser is to help engineers form and test hypotheses.''~\cite{Yim2006}
+
+``Standard performance measures, such as control loop performance indices, are not able to deal with plant-wide problems becuase they deal with individual loops one at a time and do not take account of propagation.''~\cite{Bauer2008}
+
+%% Notes of reading on 05/09/13
+
+% Reading from ~\cite{Bauer2005a} (Data-driven methods for process analysis thesis)
+
+Three methods are investigated: cross-correlation, nearest neighbours methods and transfer entropy.
+The last two mentioned methods are statistics based.
+
+Root cause analysis is oncerned with finding the process measurement that is closets to the originating point of the disturbance.
+
+Different categories of plant wide disturbance root caueses include process and constraint problems, controller tuning problems and valve problems. % From reference [21]
+
+
+% End ~\cite{Bauer2005a}
+
+
+
+%% End 05/09/13
+
+The plant-wide analysis is often grouped into two categories: detection and diagnosis.~\cite{Bauer2008} % This is a secondary reference, get original [3].
+This work will focus on diagnosis.
+
+A model-free causal analysis has been called for~\cite{Bauer2008} % See original references [6] and [7].
+
+Background:
+
+Holland and Pearl introduced the area known as learning causality from data.
+
+Conditional probabilities - Bayesian networks.
+Transfer entropy adds information about time to Bayesian networks because it tests hypotheses concerning the joint and conditional probabilities of past and current values in a time series.
+
+
+
+
+
+% Nam et al reference for creating digraphs
+
+Diagraph based models usually express the relationship between faults and symptoms and define the propagation paths by incorporating process knowledge of expers.
+A drawback is that extracting expert knowledge is very time consuming and the knowledge not always available.
+
+Complete descriptions of chemical plants in terms of differential and algebraic equations are rarely available.
+
+% Get Chiang and Braatz reference
+
+Assumptions:
+Process is ergodic.
+Ergodic means that the same behaviour averaged over time as averaged over the space of all the system's states (phase space).
+The system satisfies the ergodic hypothesis of thermodynamics.
+
+The ergodic hypothesis is often assumed in statistical analysis and states that the time spent by a particle in some region of the phase space of microstates with the same energy is proportional to the volume of this region.
+Liouville's theorem ensures that the motion of time average makes sense.
+
+\begin{equation}
+  T_{Y\rightarrow X} = \sum_{x_{i+1}}
+%\sum_{\bold{x}^k_i}
+%\sum_{\bold{y}^l_i} p
+%\left(x_{i + 1}, \bold{x}_i^k, \bold{y}^l_i\right)\log{\frac{p \left(x_{i + 1} | \bold{x}_i^k, \bold{y}^l_i \right )}{p \left(x_{i + 1} | \bold{x}_i^k \right )}}
+\end{equation}
+
+
+
+http://store.elsevier.com/product.jsp?isbn=9780080442976c
+
+
+
+% Bauer2005
+% Schreiber (2000)
+
+
+
+
+\section{Visual inspection}
+
+\subsection{Normalised time trends}
+
+Normalised time trends of set points (SP), controlled variables (CV), controller error and controller output (MV) can be useful for a first-pass visual inspection.
+
+Normalised: mean values of time trends removed and standard deviations scaled to unity.
+
+\subsection{Spectral analysis}
+
+A plant-wide spectral analysis can detect measurements having similar spectral features.
+Measurements whose spectra are similar are likely to be subject to the same disturbance.
+Power spectra are invariant with respect to the phase of a signal therefore time delays between tags do not affect the analysis.
+
+
+Measuring the degree of interaction between control loops and ranking them accordingly is considered to be an important yet challenging task~\cite{Rahman2011}.
+The difficulty arises from the sheer number of control loops connected in a multiple-input multiple-output (MIMO) configuration.
+
+Plant engineers are generally overloaded and do not know where the best place is to start the maintenance work~\cite{Rahman2011}.
+
+Various methods for determining control loop interaction measures have been proposed and adopted with varying degrees of success, including~\cite{Rahman2011}: % Also mention Julali article
+
+\begin{itemize}
+  \item Standard deviation of error signals
+  \item Key performance indicators (KPIs) 
+  \item Economic indicators
+  \item Oscillation index
+  \item Interaction index
+\end{itemize}
+
+This study will focus on interaction indexes. % Alternative plural: indices (less American)
+
+The interaction methods can be divided into those based on (1) model identification and (2) data processing.
+Due to the lack of accurate models in industry, model based interaction determination methods have found limited use to date.
+Data-driven methods have been more successful and methods that do not rely on step-tests but can instead make use of routine operating data or set point change data have been developed~\cite{Rahman2011}. % NB!! Read these articles ASAP.
+
+\section{Statistical methods}
+
+\subsection{Auto correlation}
+
+Auto correlation refers to the degree to which data is correlated with itself, in other words how much future values are dependent on historical values. % Confirm this statement!!
+
+An auto correlation value is reported, with 1 indicating the strongest possible correlation and 0 indicating no correlation.
+
+\subsection{Cross correlation}
+
+Cross correlation is similar to auto correlation except that the correlation between two different variables is studied.
+
+Covariance...
+
+\subsection{Partial correlation}
+
+
+\subsection{Local gain}
+
+
+
+\subsection{Canonical correlation}
+
+Canonical correlation can be used to quantify relations between multidimensional variables.
+It is assumed that the relationship is linear.
+
+% This section chiefly copied from {Rahman2011}.
+% Ask about suggestions to comply with plagiarism standards. There are only so many technical terms available, especially in math!
+
+The most important difference between canonical correlation analysis (CCA) and ordinary correlation analysis is the fact that they are invariant with respect to affine transformations of the variables.
+
+Affine transformations refers to... % Discuss what this is and why this is important, especially from the interaction analysis.
+% See Weenink 2003 reference
+
+\section{Error criteria}
+
+Interaction measures based on squared error criteria are based on the idea that a change in any parameter of one control loop will increase the integrated square error (ISA) or integrated absolute error (IAE) of any other loop affected by the adjusted loop.
+The set-point is generally used as the parameter that is changed.
+
+Rahman and Choudhury (2011)~\cite{Rahmann2011} % but date in automatically using specialized cite command
+suggested the calculation of a loop interaction metric followed by the arrangement of a loop interaction matrix.
+This loop interaction matrix can then be used to calculate a loop importance index (LII).
+
+Rossi \textit{et al.} reported on a control loop performance diagnostic method designed for the purpose of determining whether a decentralized PI(D)\textsuperscript{+} controller will be sufficient or if an advanced control structure such as an model predictive controller (MPC) will be needed.
+
+
+
+\subsection{Integral squared error methods}
+
+
+
+\subsection{Absolute squared error methods}
+
+Rahman and Choudhury~\cite{Rahman2011} mention that in their experience a step size of 1-2\% of the nominal value is sufficient, depending on noise levels.
+
+It might be necessary to filter noise from data before analysis.
+
+
+
+Interaction quantification techniques can be supplemented using cause-effect analysis techniques based on mutual entropy methods that are presented by Bauer and Thornhill (2008, 2005).
+
+\subsection{Error power spectrum}
+
+
+
+\section{RGA}
+
+The relative gain array introduced by Bristol in 1966 % include reference
+was one of the first interaction measures proposed to provide a metric for the pairing of controlled and manipulated variables.
+
+Originally the RGA was limited to a study of steady-state interactions but its use was later expanded to all frequencies to provide a measure known as the dynamic RGA. % include reference
+
+\section{Open loop responses}
+
+Tung and Edgar's method for determining interaction based on open loop responses. % Find out what it was about.
+
+On many occasions it is important to relate closed-loop responses to open-loop responses.
+A number of methods have been developed to allow for this based on a known controller model.
+% What if no controller model is available or if the model is very complex such as with the case of MPC?
+
+\section{Singular perturbation technique}
+
+% Gagnepain and Seborg (1982)
+% Get reference from ~\cite{Rahman2011}
+
+% Read and discuss all the methods mentioned in ~\cite{Rahmann2011}.
+
+
+
+
+
+
+\section{LoopRank}
+
+Farenzena and Trierweiler~\cite{Farenzena2009} were the first to report on the usage of a Google PageRank type algorithm for analysing interactions between control loops, dubbing the method LoopRank.
+
+Wilken~\cite{Wilken2012} studied the application of the Google PageRank type algorithm on the well-known Tenesee Eastman Process.
+It was noted that % insert method here
+was a better interaction metric than
+% insert method here.
+An approach was followed whereby a base case set of interaction measures were determined which allowed for future deviations in performance due to maintenance requirements to be pinpointed.
+Although this will certainly be of some use in industry, very few industrial plants are running or have run in a manner that can be considered to represent a desirable base case scenario for future comparison.
+
+However, tracking the way control loop interactions change over time will still be useful in monitoring the effect of maintenance activities on the plant, and can possibly indicate which maintenance activities are of the highest priority.
+
+\section{Canonical correlation}
+
+Rahman and Chouldhury~\cite{Rahman2011} reporterd on a novel use of canonical correlation measures to rank control loops based on interaction.
+This method requires step-test data.
+
+
+
+
+
+
+
+
+
+
+
+
+\chapter{Problem statment and research objectives}
+
+\chapter{Expected contributions}
+
+\chapter{Research strategy}
+
+\chapter{Proposed Table of Contents of thesis}
+
+\chapter{Conclusion}
+
+\backmatter
+\chapter{References and preliminary bibliography}
+
+\bibliography{biblio}
+\bibliographystyle{plain}
+
+\chapter{Personal information}
+
+\begin{tabbing}
+  Telephone number: \= 072 712 6845 \= \kill
+  Full name: \> Simon Jacobus Streicher \\[2ex]
+  Postal address: \> 15 Van Standen Street \\ \> Vaalpark \\ \>1947 \\[2ex] 
+  E-mail address: \> streichersj@gmail.com \\[2ex]
+  Telephone number: \> 072 712 6845 \\[2ex]
+  Academic record: \> B.Eng.(Chem) (NWU) (\textit{cum laude})
+\end{tabbing}
+
+\end{document}
+
+
