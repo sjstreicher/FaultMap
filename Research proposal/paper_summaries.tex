@@ -1,0 +1,263 @@
+\documentclass{article}
+%\usepackage{syntonly}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+%\syntaxonly
+\usepackage{titling}
+%\usepackage{apalike}
+\usepackage[authoryear,round]{natbib}
+\newcommand{\subtitle}[1]{%
+  \posttitle{%
+    \par\end{center}
+    \begin{center}\Large#1\end{center}
+    \vskip0.5em}%
+  }
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1ex plus 0.5ex minus 0.2ex}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[LE,RO]{\thepage}
+
+\begin{document}
+\pagenumbering{roman}
+
+
+\title{Eigenvector analysis for the ranking of control loop importance}
+\subtitle{Research summaries}
+\date{}
+\author{Simon Jacobus Streicher}
+\maketitle
+\thispagestyle{empty}
+
+%\newpage
+%
+%\tableofcontents
+%\thispagestyle{empty}
+
+%\frontmatter
+
+%\mainmatter
+
+
+% Research groups identified:
+
+% Nina Thornhill
+% Mano Ram Maurya
+
+\newpage
+\pagenumbering{arabic}
+\pagestyle{fancy}
+
+\section{Prioritizing control loops for maintanance}
+
+%~\citep{Rahman2011}
+
+\section{Finding signed digraphs}
+
+The connectivity between process variables can be determined in at least two different ways:
+1) Determining causality using data-driven methods and
+2) defining connections by making use of known process topology (referring to physical and logical connectivity) information contained in P\&IDs (pipeline \& instrumentation diagrams) which are normally kept well organized and reasonably up to date.
+
+\subsection{Data-driven methods}
+%\cite{Bauer2005b}
+%~\cite{Bauer2007}
+%~\cite{Bauer2008}
+
+\subsection{Knowledge based methods}
+
+\subsection{Hybrid methods}
+%\citet{Yim2006}
+
+\section{Signed digraphs - theory and application}
+
+%\citet{RamMaurya2004}
+%\citet{Maurya2006}
+%\citet{Musulin2013}
+
+\section{Ranking algorithms}
+
+%\citet{Farenzena2009}
+%\citet{Gao2011}
+%\citep{Bryan2006}
+
+\section{Transfer entropy}
+%\citet{Schreiber2000}
+%\citet{Bauer2005a} (PhD Thesis)
+%\citet{Shu2013}
+
+
+%%A number of data-driven methods for determining causality between control loops have been reported in the past.
+%%A relatively new method called transfer entropy has been show to produce robust results even in the absence of observable time delays~\cite{Bauer2007}.
+%%Another prominent method uses cross-correlation to estimate time delays in order to infer the sequence of events and therefore causality~\cite{Bauer2008}.
+%%Assigning causality based on these methods follows statistical hypothesis testing whereby the apparent degree of correlation is compared to threshold values obtained by studying correlations between random signals of various sampling length and the desired confidence.
+%%
+%%\citet{Yim2006} reported on the development of a software package combining plant topology with data-driven performance assessment analysis.
+%%It is proposed that a similar hybrid approach is followed in order to generate connectivity matrices for the ranking problem using the data-driven methods mentioned above.
+%
+%%In the Google PageRank algorithm the value of an edge between nodes on a directed graph is considered to be a binary state.
+%%In order to refine the sensitivity by which control loops with the greatest sphere of influence can be isolated it is desired to assign some weight instead.
+%%These weights can be derived from the causality measured mentioned above.
+%%Different weighing strategies will be compared to binary mapping in order to find balance between robust results and engineering effort.
+%
+%%Tight mass and heat integration on large-scale plants lead to significant control loop interaction.
+%%Plants with recycle also commonly suffer from control loop interaction~\citep{Bauer2005}.
+%
+%%Motivations for data-driven root cause plant-wide disturbance and fault detection include (1) streamlining troubleshooting, reducing man hour requirements, (2) yield information to enhance maintenance efforts during plant shutdown and (3) discover problems not found with traditional "fight today's fire" approaches~\citep{Bauer2005}.
+%
+%%Fault detection and diagnosis of plant-wide disturbances can be approached either by model-based or data-driven methods.
+%%Data-driven methods are generally preferred accurate process models are rarely available - it is estimated that only about 5\% of processes are modeled~\citep{Bauer2005}. % Secondary reference from conference oral presentation
+%
+%%Model-based techniques compare model parameters against measurements, while data-driven methods are based on historical process data.
+%%
+%%Measuring the degree of interaction between control loops and ranking them accordingly is considered to be an important yet challenging task~\citep{Rahman2011}.
+%%
+%%Although a  number of methods have been proposed and tested with varying degrees of success, most require plants to be step tested in order to determine useful interaction measures.
+%%Step testing can be costly and in the case of already unstable plants near impossible.
+%%Management will rarely authorize step testing to be done, and with good reason.
+%%
+%%It is suggested that by incorporating interconnectivity information contained in pipeline and instrumentation diagrams (P\&IDs) together with the application of novel interaction algorithms as well as the application of multivariate statistics useful metrics can be derived with none or minimal induced plant disturbances, provided that plant historian data of sufficient resolution (short enough sampling interval) can be accessed.
+%
+%In addition to finding the root cause of problems, performing economical analysis on identified errors based on known interactions can potentially aid in prioritizing control loop maintenance projects.
+%This will particularly be useful for identifying the most important control loop maintenance activities that will require significant process equipment modifications instead of simply altering parameters used by software as these projects are typically associated with higher expenditure.
+%
+%
+%%\include{litstudy}
+%
+%\newpage
+%\section{Preliminary literature study}
+%
+%\subsection{Ranking algorithm}
+%
+%A modified form of the Google PageRank algorithm \citep{Bryan2006} is used to rank control loops based on their connectivity, interaction and importance scores (weights).
+%This concept has been introduced by \citet{Farenzena2009} who dubbed the algorithm LoopRank when applied to the ranking of control loops.
+%
+%In order to apply the method a directed graph defining the interactions between process variables is needed.
+%%For a review of directed graphs, see Narsingh (1974).
+%A convenient method for representing a binary directed graph is an adjacency matrix as defined in Eq. \ref{eq:adef}.
+%
+%\begin{equation} \label{eq:adef}
+%A_{ij} = \left( \begin{array}{ll}
+%1 & \textrm{If $v_j$ has an edge directed towards $v_i$} \\
+%0 &\textrm{Otherwise} \end{array} \right)
+%\end{equation}
+%
+%The importance of a node $x_k$ depends on the importance of the nodes pointing towards $x_k$ as displayed in Eq. \ref{eq:importance}.
+%
+%\begin{equation} \label{eq:importance}
+%x_k = \sum_{j \in \boldsymbol{L}_k} e_j x_j
+%\end{equation}
+%
+%In Eq. \ref{eq:importance} $\boldsymbol{L}_k$ is the set of nodes which have an incident edge to node $x_k$ and the weight $e_j$ ensures that node $x_j$ contributes importance to node $x_k$ in proportion to the extent to which it affects node $x_k$.
+%
+%If this system is expressed in matrix form the ranking problem reduces to the standard eigenvector problem of Eq. \ref{eq:standard}
+%
+%\begin{equation} \label{eq:standard}
+%\boldsymbol{Ax} = \boldsymbol{x}
+%\end{equation}
+%
+%The $\boldsymbol{A}$ matrix is a normalized adjacency matrix such that each column sums to unity.
+%The importance scores of the nodes are the elements of the normalized eigenvector corresponding to the eigenvalue of one in Eq. \ref{eq:standard}.
+%
+%\subsection{Methods for determining causality}
+%
+%The ranking algorithm requires a suitable connectivity matrix to be identified.
+%Setting up this matrix involves 1) determining the causal connections between process variables and 2) assigning weights and importance scores to the connections between process variables as well as the variables themselves.
+%
+%The connectivity between process variables can be determined in at least two different ways: 1) defining connections by making use of known physical and logical connectivity information and 2) determining causality using data-driven methods.
+%Knowledge-based methods for determining causality are generally limited to generating a binary adjacency matrix and are commonly used in combination with data-driven techniques.
+%If knowledge-based methods are combined with data driven methods the main contribution of the knowledge-based methods will be to ensure that the network structure is correct while the data driven methods can be used to calculate appropriate weights for the connections.
+%
+%Knowledge-based methods seek to determine causal connections by employing information on physical and logical connections coupled with reasoning algorithms.
+%\citet{Yim2006} reported on the development of a software package combining plant topology information captured using packages compatible with the Computer Aided Engineering Exchange (CAEX) format and a reasoning engine written in Prolog to generate a signed directed graph (SDG) of the network of tags involved.
+%The SDG is then augmented by the use of a plant disturbance analyzer to produce an effective hybrid approach for generating the required connectivity matrix.
+%
+%In data-driven methods historical data is analyzed using various statistical methods in order to identify probable causal relationships. Methods reported in literature include partial correlation \citep{Farenzena2009}, cross correlation time delay estimation \citep{Bauer2008}, nearest neighbors \citep{Bauer2005} as well as the relatively new concept of transfer entropy first introduced by \citet{Schreiber2000} and applied by \citet{Bauer2007}.
+%The significance levels are compared to threshold values obtained by analyzing surrogate random time series data and selecting a required minimum deviation, usually six sigma \citep{Bauer2005}.
+%
+%The transfer entropy method has been shown to be the most robust compared to the cross-correlation and nearest neighbor methods and is also useful in the absence of noticeable time delays between variables \citep{Bauer2005}.
+%\citet{Bauer2005} proposed a modified transfer entropy calculation that allows for estimating the dead time.
+%\citet{Shu2013} proposed an additional modification to this method that has been shown to be more accurate and also reported how the obtained time delays can be used to eliminate redundant connections.
+%
+%\newpage
+%\section{Problem statement and research objectives}
+%
+%Connectivity, historical data and economical attributes should be combined to identify control loops with the greatest influence on profitability and/or stability.
+%This will allow more efficient use of control engineer and instrumentation specialist man hours, in turn leading to safer and more economical plant operation.
+%
+%A good ranking algorithm will identify under-performing control loops and rank them in such an order that the control loop which is affecting the most important variables in the system will be given higher priority than a control loop which may be under-performing to a greater extent but affecting less important variables.
+%
+%It is proposed that by combining the information contained in plant pipeline and instrumentation diagrams (P\&IDs) as well as employing measures to assign a metric of interaction between control loops, the important and time consuming task of addressing the root cause instead of the symptoms can be significantly aided.
+%
+%Comparison of causal map from transfer entropy analysis and that generated by logical and physical connections might indicate some undesired control loop interactions.
+%
+%\newpage
+%\section{Expected contributions}
+%
+%The main contribution of this research project is the integration of various ranking, causal mapping and control loop assessment methods into a tool that can prioritize control loop maintenance on a plant-wide or even site-wide scale.
+%
+%The main output is a definite, regularly updated list of the most important control loops in need of attention that can be forwarded to base layer control engineers and instrumentation specialists.
+%
+%The provision of a connectivity and interaction metric that can assist in troubleshooting procedures that previously relied on intuition acquired by experience is expected to be a significant aid in maintaining contingency with respect to plant operations.
+%This is of special interest in cases were the previous generation of operators is retiring in rapid succession.
+%
+%\newpage
+%\section{Research strategy}
+%
+%\subsection{General approach}
+%
+%In order to prioritize control loops it is necessary to identify control loops with the largest influence which are performing the worst while having the greatest impact on profitability.
+%
+%The ranking algorithm is a generalized eigenvector problem once a suitable connectivity matrix has been identified. Setting up this matrix involves 1) determining the connectivity between process variables and 2) assigning weights and importance scores to the connections between process variables as well as the variables themselves.
+%
+%A metric for the influence of a control loop on a plant-wide scale can be determined by modeling the plant as a directed graph where the nodes represent the variables and the edge connectivity is inferred from the physical and logical structure of the plant.
+%This directed graph may then be used to prioritize control loop maintenance by ranking the relative importance of the nodes in the system using eigenvector analysis.
+%If the actual connectivity is not available, it may be possible to infer it from routine plant data or through direct testing.
+%Methods of determining causality between variables on a plant-wide scale have been an active research topic with various papers being published in literature over the past few years.
+%
+%As the objective is not only to identify control loops that have the greatest influence, but to prioritize loops for maintenance, a performance metric is associated with each control loop.
+%As many industrial operations already employ performance monitoring software the plan is to integrate the connectivity with predetermined performance scores.
+%In addition, safety and profitability triage metrics should be associated with each control loop.
+%Depending on the amount of information available this can be either categorical or numerical.
+%
+%It is proposed that a modified form of the Google PageRank algorithm be used to rank control loops based on their connectivity, interaction and importance scores (weights). This concept has been introduced by \citet{Farenzena2009} who dubbed the method LoopRank. The application of this method to identify the root cause of induced faults of the simulated Tennessee Eastman problem has been successfully demonstrated~\cite{Wilken2012}.
+%
+%\citet{Wilken2012} reported a number of anomalies in the calculation of importance scores if the PageRank algorithm when applied in unaltered form to infer importance. These issues were related to an inability to differentiate importance of inputs as well as assigning equal importance to parallel paths. Although workarounds have been proposed, further research into conditions relating to unrealistic results and potential solutions is warranted to increase the robustness of the ranking method.
+%
+%
+%\subsection{Case studies}
+%
+%The success and usefulness of the integrated holistic approach to control loop maintenance prioritization will be analyzed by simulated scenarios, industrial case studies and interviews with process experts.
+%
+%Numerous case studies will be carried out in order to evaluate the efficiency and industrial usefulness of the interaction metrics developed.
+%A number of custom designed scenarios will likely be used in the initial stages of the project to assess the feasibility of methods and compare results over a wide range of potential problems.
+%Well-known academic example problems such as the Shell control problem as well as the Tennessee-Eastman plant will be studied.
+%
+%Industrial case studies and interviews with process experts will be of significant value in verifying the usefulness and applicability of the developed method.
+%Data sourced from industrial operations will likely be denatured to allow for adherence to intellectual property protocols.
+%However, it should still be useful to determine the real-life usefulness of the developed methodologies in practical industry, and will allow for the methods to be exposed to the difficulties surrounding industry problems, such as limited historian information or low stored sampling intervals and historian data compression.
+
+
+%\section{Conclusion}
+
+%\backmatter
+%\section{References and preliminary bibliography}
+
+\newpage
+\bibliography{library}
+%\bibliographystyle{plainnat}
+\bibliographystyle{agsm}
+
+%\section*{Personal information}
+%
+%\begin{tabbing}
+%  Telephone number: \= 072 712 6845 \= \kill
+%  Full name: \> Simon Jacobus Streicher \\[2ex]
+%  Postal address: \> 15 Van Standen Street \\ \> Vaalpark \\ \>1947 \\[2ex] 
+%  E-mail address: \> streichersj@gmail.com \\[2ex]
+%  Telephone number: \> 072 712 6845 \\[2ex]
+%  Academic record: \> B.Eng.(Chem) (NWU) (\textit{cum laude})
+%\end{tabbing}
+
+\end{document}
+
+
