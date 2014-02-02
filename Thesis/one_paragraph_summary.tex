@@ -1,0 +1,53 @@
+\documentclass{article}
+%\usepackage{syntonly}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+%\syntaxonly
+\usepackage{titling}
+%\usepackage{apalike}
+\usepackage[authoryear,round]{natbib}
+\newcommand{\subtitle}[1]{%
+  \posttitle{%
+    \par\end{center}
+    \begin{center}\Large#1\end{center}
+    \vskip0.5em}%
+  }
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1ex plus 0.5ex minus 0.2ex}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[LE,RO]{\thepage}
+
+\begin{document}
+\pagenumbering{roman}
+
+
+\title{Eigenvector analysis for the ranking of control loop importance}
+\subtitle{One paragraph summary}
+\date{January 27, 2014}
+\author{Simon Jacobus Streicher}
+\maketitle
+\thispagestyle{empty}
+
+%\newpage
+%\tableofcontents
+%\thispagestyle{empty}
+
+%\frontmatter
+
+%\mainmatter
+
+\newpage
+\pagenumbering{arabic}
+\pagestyle{fancy}
+
+% This is intended to serve as an introduction to the project that can easily be copied into correspondence to academics working in related fields.
+
+My research projects relates to the prioritization of base layer control loops from a maintenance perspective on a plant-wide scale.
+The fields of fault detection, fault root cause analysis and process supervision is closely related to this project.
+I plan to make use of a signed directed graph (SDG) of the plant combined with meta-data concerning the performance of individual loops and the economical value of the streams.
+A node-ranking algorithm related to the PageRank algorithm of Google will be adapted to the special considerations involved in chemical plant networks.
+
+\end{document}
+
+
