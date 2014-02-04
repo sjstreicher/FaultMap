@@ -66,11 +66,6 @@ The connectivity between process variables can be determined in at least two dif
 \subsection{Knowledge based methods}
 
 
-
-
-
-
-
 \subsection{Hybrid methods}
 \citet{Yim2006}:
 
@@ -91,19 +86,37 @@ The amount of spurious results can be reduced by combining basic and readily ava
 
 Specifications and standards for engineering data exchange include DIN V 44366 IEC/PAS 62424 which specifies the CAEX (Computer Aided Engineering Exchange) schema as well as the ISO 10303-221 and ISO 15926-7 standard which is represented by XMpLant.
 
+Forward and backwards tests on networks derived from known topological information used in the testing of hypotheses derived from data based methods.
+
 Transfer entropy is used to analyse fault propagation in ABB's Loop Performance Monitor tools.
 
-ABB's Plant Disturbance Analyzser (PDA)
+ABB's Plant Disturbance Analyser (PDA)
 
 
 
 \section{Signed digraphs - theory and application}
 
-Mauraya2003a
-Mauraya2003b
-Mauraya2003c
+
+\citet{Mauraya2003a}
+\citet{Mauraya2003b}:
+\citet{Mauraya2003b} gives a number of algorithms for deriving digraphs as well as signed directed graphs from differential and algebraic equations.
+Inferring the effect of deviations in nodes on the rest of the network by qualitative algebra is also discussed.
+One of these methods focus on the initial response only.
+Finding the length of paths (degree of separation) between nodes by looking at the matrix exponent of the adjacency matrix is also discussed.
+See also \citet{Jiang2009}
+
+A number of means of reducing the amount of spurious results are discussed.
+One such method is the generation of noncausal redundant equations.
+Generating redundant equations by algebraic manipulation on some of the original system equations helps to reduce the number of spurious solutions if it contains a subset of variables different than he subset of variables present in the original equations from which the equation was derived.
+Another means of reducing spurious results is to attach weights to the edges (archs) in the signed digraph so the relative order of magnitude of deviations in different system variables can be compared.
+
+\citet{Mauraya2003c}
 
 \citet{RamMaurya2004}:
+
+\section{Graph search methods}
+
+\subsection{Depth-first search}
 
 
 
