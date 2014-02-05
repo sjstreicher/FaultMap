@@ -1,6 +1,8 @@
-'''
+"""This method is imported by looptest
+
 @author: St. Elmo Wilken, Simon Streicher
-'''
+
+"""
 
 #from visualise import visualiseOpenLoopSystem
 from gainrank import GainRanking
@@ -73,7 +75,7 @@ class LoopRanking:
         normalisedmatrix = transpose(array(normalisedmatrix).reshape(r, c))
         return normalisedmatrix
 
-    def display_contro_importances(self, nocontrolconnectionmatrix,
+    def display_control_importances(self, nocontrolconnectionmatrix,
                                    controlconnectionmatrix):
         """This method will create a graph containing the
         connectivity and importance of the system being displayed.

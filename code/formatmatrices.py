@@ -1,5 +1,7 @@
-"""
+"""This method is imported by looptest
+
 @author: St. Elmo Wilken, Simon Streicher
+
 """
 
 from localgaincalc import localgains
