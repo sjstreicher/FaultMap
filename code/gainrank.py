@@ -1,6 +1,7 @@
-# -*- coding: utf-8 -*-
-"""
+"""Imported by controlranking
+
 @author St. Elmo Wilken, Simon Streicher
+
 """
 
 from numpy import ones, argmax
@@ -28,12 +29,12 @@ class GainRanking:
         """
         # Length of gain matrix = number of nodes
         self.n = len(self.gmatrix)
-        S = (1.0 / self.n) * ones((self.n, self.n))
+        s_matrix = (1.0 / self.n) * ones((self.n, self.n))
         m = 0.15
         # Basic PageRank algorithm
-        self.M = (1 - m) * self.gmatrix + m * S
+        self.m_matrix = (1 - m) * self.gmatrix + m * s_matrix
         # Calculate eigenvalues and eigenvectors as usual
-        [eigval, eigvec] = linalg.eig(self.M)
+        [eigval, eigvec] = linalg.eig(self.m_matrix)
 
         maxeigindex = argmax(eigval)
         # Store value for downstream checking
