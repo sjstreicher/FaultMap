@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 """
 Created on Mon Nov 11 17:35:30 2013
 
-@author: s13071832
+@author: Simon Streicher
 """
 
 from numpy import array, transpose, zeros, hstack
@@ -17,7 +16,7 @@ from math import isnan
 
 #def createCorrelationGainMatrix(statesloc):
 """This method strives to calculate the local gains in terms of the correlation
-between the variables. It uses the partial correlation method (Pearson's 
+between the variables. It uses the partial correlation method (Pearson's
 correlation)."""
 
 n = 53
@@ -47,10 +46,10 @@ for i in range(n):
             correlationmatrix[i,j] = random()*0.01
         else:
             correlationmatrix[i,j] = temp
-    
+
     P = np.linalg.inv(correlationmatrix)
     partialcorrelationmatrix = array(np.empty((n, n)))
-    
+
     for i in range(n):
         for j in range(n):
             if 1 == 1:
@@ -58,7 +57,7 @@ for i in range(n):
                 partialcorrelationmatrix[i,j] = temp
             else:
                 partialcorrelationmatrix[i,j] = 0
-    
+
 #    return correlationmatrix
-    
+
 # Testing script
