@@ -4,8 +4,8 @@ Created on Thu Feb 06 10:50:28 2014
 @author: Simon Streicher
 """
 
-from numpy import loadtxt, vstack
-import numpy as np
+#from numpy import loadtxt, vstack
+#import numpy as np
 from autoregres_gen import autogen
 from transfer_entropy import vectorselection, te
 
@@ -54,21 +54,15 @@ def calculate_te(delay, timelag, samples, sub_samples, ampbins, k=1, l=1):
     return tentropy
 
 # Test code
+
+# FIXME: Find out why only certain combinations of samples, sub_sampels work
+# FIXME: The numbers are not the right order of magnitude, typical 0.01 - 0.10
+
 # Delay = 5, Timelag = 4
-tentropy1 = calculate_te(5, 4, 1000, 500, 10)
+tentropy1 = calculate_te(5, 4, 1000, 400, 10)
 # Delay = 5, Timelag = 5
-tentropy2 = calculate_te(5, 5, 1000, 500, 10)
+tentropy2 = calculate_te(5, 5, 1000, 400, 10)
 # Delay = 5, Timelag = 6
-tentropy3 = calculate_te(5, 6, 1000, 500, 10)
+tentropy3 = calculate_te(5, 6, 1000, 400, 10)
 
 
-#samples = 30
-#delay = 5
-#
-#data = autogen(samples, delay)
-#x = data[0]
-#y = data[1]
-#
-#x_diff = np.zeros_like(x[delay-1:-1])
-#for i in range(delay, len(data[0])):
-#    x_diff[i - delay] = x[i] - x[i - 1]
