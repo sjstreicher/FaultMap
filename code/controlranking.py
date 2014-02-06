@@ -38,7 +38,7 @@ class LoopRanking:
                                        fvariablenames)
         self.backwardgain = GainRanking(self.normalise_matrix(bgainmatrix),
                                         bvariablenames)
-        self.CreateBlendedRanking(nodummyvariablelist, alpha)
+        self.create_blended_ranking(nodummyvariablelist, alpha)
 
     def create_blended_ranking(self, nodummyvariablelist, alpha=0.35):
         """This method creates a blended ranking profile of the object."""
@@ -76,7 +76,7 @@ class LoopRanking:
         return normalisedmatrix
 
     def display_control_importances(self, nocontrolconnectionmatrix,
-                                   controlconnectionmatrix):
+                                    controlconnectionmatrix):
         """This method will create a graph containing the
         connectivity and importance of the system being displayed.
         Edge Attribute: color for control connection
