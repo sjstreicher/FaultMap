@@ -1,13 +1,17 @@
+# -*- coding: utf-8 -*-
 """
 Created on Fri Nov 08 15:37:47 2013
 
-@author: Simon Streicher
+@author: s13071832
 """
 
+"""Calculates transfer entropy between sample signals"""
+
+"""Import classes and modules"""
 import csv
-from numpy import array
-from random import gauss
+from numpy import array, loadtxt
 from scipy import stats
+import scipy
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -17,60 +21,19 @@ import numpy as np
 #from random import random
 #from math import isnan
 
+#original = importcsv('original_data.csv')
+#puredelay = importcsv('puredelay_data.csv')
+#delayedtf = importcsv('delayedtf_data.csv')
+#puretf = importcsv('puretf_data.csv')
 
-def importcsv(filename):
-    """Imports csv data file and returns values in array."""
-    fromfile = csv.reader(open(filename), delimiter=' ')
-    temp = []
-    for row in fromfile:
-        temp.append(float(row[0]))
-    temp = array(temp)
-    return temp
-
-# TODO: Generate this data in Python itself
-#autoregx = importcsv('autoregx_data.csv')
-#autoregy = importcsv('autoregy_data.csv')
-
-# Rather use loadtxt
-#autoregx = loadtxt('autoregx_data.csv')
-#autoregy = loadtxt('autoregy_data.csv')
-
-
-
-def datagen(samples, delay):
-    """Generate an autoregressive set of vectors."""
-
-    y = np.random.randn(samples)
-    x = np.zeros_like(y)
-
-    for i in range(delay, len(y)):
-        x[i] = x[i - 1] + y[i - delay]
-
-    return x, y
-
-#    y = []
-#    while len(y) < samples + (delay + 1):
-#        value = gauss(0, 1)
-#        y.append(value)
-#
-#    # Extract data from end of y vector backwards
-#    x_data = np.zeros(samples)
-#    y_data = np.zeros(samples)
-#    y_data[0] = y
-#
-#    for i in range(delay, samples + delay):
-#        x_data[i] = x_data[i - 1] + y[i - delay]
-#        y_data[i] = y[i]
-#
-#    x = x[len(x) - samples:-1]
-#    y = y()
-#    return autoregx, autoregy
-
-[autoregx, autoregy] = datagen(3000, 5)
+autoregx = loadtxt('autoregx_data.csv')
+autoregy = loadtxt('autoregy_data.csv')
 
 data = np.vstack([autoregx, autoregy])
 #data = np.vstack([puretf, original])
-#kernel = stats.gaussian_kde(data, 'silverman')
+kernel = stats.gaussian_kde(data, 'silverman')
+
+#def multivarPDF(data):
 
 
 def vectorselection(data, timelag, samples, k, l):
@@ -87,9 +50,8 @@ def vectorselection(data, timelag, samples, k, l):
     k refers to the dimension of the historical data to be predicted
     l refers to the dimension of the historical data used to do the prediction
     """
-    sample_n = np.size(data[1, :])
-    x_pred = data[0, (sample_n - samples):sample_n]
-    x_pred = data[0, (sample_n - samples):sample_n]
+    _, sample_n = data.shape
+    x_pred = data[0, :-samples]
 
     x_hist = np.zeros((k, samples))
     y_hist = np.zeros((l, samples))
@@ -122,10 +84,8 @@ def te(x_pred, x_hist, y_hist, ampbins):
     vectors already calculated.
     ampbins is the number of amplitude bins to use over each variable
     First do an example for the case of k = l = 1
-
+    Go smart about the for summing loops to allow for a general case
     """
-
-    # TODO: Sum loops to allow for a general case
 
     # Divide the range of each variable into amplitude bins to sum over
     x_pred_min = x_pred.min()
@@ -202,7 +162,7 @@ def te(x_pred, x_hist, y_hist, ampbins):
 
 
 def pdfcalcs(x_pred, x_hist, y_hist):
-    """Calculates the PDFs required to calculate transfer entropy."""
+    """Calculates the PDFs required to calculate transfer entropy"""
 
     # Get dimensions of vectors
 #    k = np.size(x_hist[:, 1])
@@ -276,12 +236,12 @@ def tecalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val, x_hist_val, y_hist_val):
     logterm_den = (term3 / term4)
     coeff = term1
     sum_element = coeff * np.log(logterm_num / logterm_den)
-
+    
     # Have problems with negative sum elements, not sure if this is realistic
     # Eliminate negative sum terms
     if sum_element < 0:
         sum_element = 0
-
+        
 #        print logterm_num, logterm_den
     print sum_element
 

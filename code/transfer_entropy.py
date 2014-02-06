@@ -6,55 +6,11 @@ Created on Fri Nov 08 15:37:47 2013
 """
 
 import csv
-from numpy import array
+from numpy import array, loadtxt
 from random import gauss
 from scipy import stats
 import matplotlib.pyplot as plt
 import numpy as np
-
-
-def vectorselection(data, timelag, samples, k, l):
-    """Generates sets of vectors for calculating transfer entropy.
-    Takes into account the time lag (number of samples between vectors of the
-    same variable).
-    In this application the prediction horizon is set to equal to the time lag.
-    The first vector in the data array should be the samples of the variable
-    to be predicted while the second vector should be sampled of the vector
-    used to make the prediction.
-    The required number of samples is extracted from the end of the vector.
-    If the vector is longer than the number of samples specified plus the
-    desired time lag then the remained of the data will be discarded.
-    k refers to the dimension of the historical data to be predicted
-    l refers to the dimension of the historical data used to do the prediction
-    """
-    sample_n = np.size(data[1, :])
-    x_pred = data[0, (sample_n - samples):sample_n]
-    x_pred = data[0, (sample_n - samples):sample_n]
-
-    x_hist = np.zeros((k, samples))
-    y_hist = np.zeros((l, samples))
-
-    for n in range(1, (k+1)):
-        # Original form according to Bauer (2007)
-#        x_hist[n-1, :] = data[0, ((sample_n - samples) - timelag * n):
-#                               (sample_n - timelag * n)]
-        # Modified form according to Shu & Zhao (2013)
-        x_hist[n-1, :] = data[0, ((sample_n - samples) - timelag * (n-1) - 1):
-                              (sample_n - timelag * (n-1) - 1)]
-    for m in range(1, (l+1)):
-        y_hist[m-1:, :] = data[1, ((sample_n - samples) - timelag * m):
-                               (sample_n - timelag * m)]
-
-#    for n in range(1, (k+1)):
-#        x_hist = data[0, ((sample_n - samples) - timelag * n):
-#                            (sample_n - timelag * n)]
-#    for m in range(1, (l+1)):
-#        y_hist = data[1, ((sample_n - samples) - timelag * m):
-#                            (sample_n - timelag * m)]
-
-    return x_pred, x_hist, y_hist
-
-#[x_pred, x_hist, y_hist] = vectorselection(data, 10, 3000, 1, 1)
 
 
 def te(x_pred, x_hist, y_hist, ampbins):
@@ -66,7 +22,6 @@ def te(x_pred, x_hist, y_hist, ampbins):
     """
 
     # First do an example for the case of k = l = 1
-
     # TODO: Sum loops to allow for a general case
 
     # Divide the range of each variable into amplitude bins to sum over
@@ -89,7 +44,6 @@ def te(x_pred, x_hist, y_hist, ampbins):
     [pdf_1, pdf_2, pdf_3, pdf_4] = pdfcalcs(x_pred, x_hist, y_hist)
 
     # Consecutive sums
-
     # TODO: Make sure Riemann sum diff elements is handled correctly
 
     tesum = 0
@@ -146,12 +100,12 @@ def te(x_pred, x_hist, y_hist, ampbins):
 def pdfcalcs(x_pred, x_hist, y_hist):
     """Calculates the PDFs required to calculate transfer entropy."""
 
+    # Currently only works for k = 1; l = 1
+    # TODO: Generalize for k and l
+
     # Get dimensions of vectors
 #    k = np.size(x_hist[:, 1])
 #    l = np.size(y_hist[:, 1])
-
-    # Currently only works for k = 1; l = 1
-    # TODO: Generalize for k and l
 
     # Calculate p(x_{i+h}, x_i, y_i)
     data_1 = np.vstack([x_pred, x_hist[0, :], y_hist[0, :]])
@@ -253,8 +207,6 @@ print 'TE: ', float(TE)
 #    return -pdf_4([x])
 #
 #max_x = scipy.optimize.fmin(x_max, 0, args=(x_pred, x_hist, y_hist))
-
-
 
 #[te, sums1, x_pred_space] = te(x_pred, x_hist, y_hist, 100)
 
