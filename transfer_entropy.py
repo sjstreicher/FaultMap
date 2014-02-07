@@ -78,6 +78,8 @@ def pdfcalcs(x_pred, x_hist, y_hist):
 #    l = np.size(y_hist[:, 1])
 
     # Calculate p(x_{i+h}, x_i, y_i)
+
+    # FIXME: The covariance of the data is giving issues
     data_1 = np.vstack([x_pred, x_hist[0, :], y_hist[0, :]])
     pdf_1 = stats.gaussian_kde(data_1, 'silverman')
 
@@ -112,20 +114,7 @@ def te_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val,
     term4 = pdf_4([x_hist_val])
 #    print term1, term2, term3, term4
 
-    # Temporary solution: assigns small values to evaluations
-    # below a certain threshold
-
-    if term1 < 1e-300:
-        term1 = 1e-300
-
-    if term2 < 1e-300:
-        term2 = 1e-300
-
-    if term3 < 1e-300:
-        term3 = 1e-300
-
-    if term4 < 1e-300:
-        term4 = 1e-300
+    # Assign zero value if nan is returned
 
 #    print term1, term2, term3, term4
 #    if term1 == 0 or term2 == 0 or term3 == 0 or term4 == 0:
@@ -144,13 +133,8 @@ def te_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val,
     coeff = term1
     sum_element = coeff * np.log(logterm_num / logterm_den)
 
-    # Have problems with negative sum elements, not sure if this is realistic
-    # Eliminate negative sum terms
-    if sum_element < 0:
+    if sum_element == np.nan:
         sum_element = 0
-
-#        print logterm_num, logterm_den
-#    print sum_element
 
     return sum_element
 
