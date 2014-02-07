@@ -24,6 +24,8 @@ def autogen(samples, delay):
 
     return data
 
+# TODO: Make this a proper assert test and incorporate in Travis
+
 # Some test code
 #SAMPLES = 30
 #DELAY = 5

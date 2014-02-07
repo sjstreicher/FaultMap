@@ -5,11 +5,7 @@ Created on Fri Nov 08 15:37:47 2013
 
 """
 
-import csv
-from numpy import array, loadtxt
-from random import gauss
 from scipy import stats
-import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -43,7 +39,7 @@ def vectorselection(data, timelag, sub_samples, k, l):
 
     """
     _, sample_n = data.shape
-    x_pred = data[0, :-sub_samples]
+    x_pred = data[0, sample_n-sub_samples-1:-1]
 
     x_hist = np.zeros((k, sub_samples))
     y_hist = np.zeros((l, sub_samples))
@@ -159,7 +155,7 @@ def te_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val,
     return sum_element
 
 
-def te(x_pred, x_hist, y_hist, ampbins):
+def te_calc(x_pred, x_hist, y_hist, ampbins):
     """Calculates the transfer entropy between two variables from a set of
     vectors already calculated.
 
@@ -221,7 +217,7 @@ def te(x_pred, x_hist, y_hist, ampbins):
 #                tesum_old = tesum
 #                print tesum
 #                sumelement_store[s1*s2*s3] = sum_element
-    te = tesum * delement
+    tentropy = tesum * delement
 
     # Using local sums
     # (It does give the same result)
@@ -242,7 +238,7 @@ def te(x_pred, x_hist, y_hist, ampbins):
 #        sums1 = sums1 + sums2 * x_hist_diff
 #        te = sums1 * x_pred_diff
 
-    return te
+    return tentropy
 
 
 #"""Testing commands"""

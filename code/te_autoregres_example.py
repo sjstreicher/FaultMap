@@ -7,7 +7,7 @@ Created on Thu Feb 06 10:50:28 2014
 #from numpy import loadtxt, vstack
 #import numpy as np
 from autoregres_gen import autogen
-from transfer_entropy import vectorselection, te
+from transfer_entropy import vectorselection, te_calc
 
 
 def getdata(samples, delay):
@@ -49,9 +49,9 @@ def calculate_te(delay, timelag, samples, sub_samples, ampbins, k=1, l=1):
     [x_pred, x_hist, y_hist] = vectorselection(data, timelag,
                                                sub_samples, k, l)
 
-    tentropy = te(x_pred, x_hist, y_hist, ampbins)
+    transentropy = te_calc(x_pred, x_hist, y_hist, ampbins)
 
-    return tentropy
+    return transentropy
 
 # Test code
 
@@ -59,10 +59,8 @@ def calculate_te(delay, timelag, samples, sub_samples, ampbins, k=1, l=1):
 # FIXME: The numbers are not the right order of magnitude, typical 0.01 - 0.10
 
 # Delay = 5, Timelag = 4
-tentropy1 = calculate_te(5, 4, 1000, 400, 10)
+transentropy1 = calculate_te(5, 4, 1000, 400, 10)
 # Delay = 5, Timelag = 5
-tentropy2 = calculate_te(5, 5, 1000, 400, 10)
+transentropy2 = calculate_te(5, 5, 1000, 400, 10)
 # Delay = 5, Timelag = 6
-tentropy3 = calculate_te(5, 6, 1000, 400, 10)
-
-
+transentropy3 = calculate_te(5, 6, 1000, 400, 10)
