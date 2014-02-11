@@ -1,9 +1,3 @@
-"""
-Created on Fri Nov 08 15:37:47 2013
-
-@author: Simon Streicher
-"""
-
 from numpy import vstack
 import numpy as np
 

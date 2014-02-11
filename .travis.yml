@@ -2,6 +2,11 @@ language: python
 python:
   - "3.3"
   - "2.7"
+virtualenv:
+    system_site_packages: true
+before_install:
+  apt-get install python-numpy
+  apt-get install python-scipy
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install: pip install -r requirements.txt
 # command to run tests, e.g. python setup.py test
