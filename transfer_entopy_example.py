@@ -1,13 +1,34 @@
-"""
-Created on Fri Nov 08 15:37:47 2013
+# -*- coding: utf-8 -*-
+# <nbformat>3.0</nbformat>
 
-@author: Simon Streicher
-
-"""
+# <codecell>
 
 from scipy import stats
 import numpy as np
+from numpy import vstack
 
+# <codecell>
+
+def autogen(samples, delay):
+    """Generate an autoregressive set of vectors."""
+
+    source = np.random.randn(samples + delay + 1)
+    pred = np.zeros_like(source)
+    pred_random_add = np.random.rand(samples + delay + 1)
+
+    for i in range(delay, len(source)):
+        pred[i] = pred[i - 1] + source[i - delay]
+
+    pred = pred[delay:-1]
+    source = source[delay:-1]
+    
+    pred = pred + pred_random_add[delay:-1]
+
+    data = vstack([pred, source])
+
+    return data
+
+# <codecell>
 
 def vectorselection(data, timelag, sub_samples, k=1, l=1):
     """Generates sets of vectors for calculating transfer entropy.
@@ -66,6 +87,7 @@ def vectorselection(data, timelag, sub_samples, k=1, l=1):
 
     return x_pred, x_hist, y_hist
 
+# <codecell>
 
 def pdfcalcs(x_pred, x_hist, y_hist):
     """Calculates the PDFs required to calculate transfer entropy.
@@ -97,6 +119,7 @@ def pdfcalcs(x_pred, x_hist, y_hist):
 
     return pdf_1, pdf_2, pdf_3, pdf_4
 
+# <codecell>
 
 def te_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val,
                    x_hist_val, y_hist_val):
@@ -132,16 +155,17 @@ def te_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val,
     logterm_den = (term3 / term4)
     coeff = term1
     sum_element = coeff * np.log(logterm_num / logterm_den)
-
+    
     #print sum_element
 
     if str(sum_element[0]) == 'nan':
         sum_element = 0
-
+        
     #print sum_element
 
     return sum_element
 
+# <codecell>
 
 def te_calc(x_pred, x_hist, y_hist, ampbins):
     """Calculates the transfer entropy between two variables from a set of
@@ -209,7 +233,7 @@ def te_calc(x_pred, x_hist, y_hist, ampbins):
 #                tesum_old = tesum
 #                print tesum
 #                sumelement_store[s1*s2*s3] = sumelement
-
+        
     tentropy = tesum * delement
 
     # Using local sums
@@ -233,45 +257,122 @@ def te_calc(x_pred, x_hist, y_hist, ampbins):
 
     return tentropy
 
+# <codecell>
 
-#"""Testing commands"""
-#
-#[x_pred, x_hist, y_hist] = vectorselection(data, 4, 3000, 1, 1)
-#
-#TE = te(x_pred, x_hist, y_hist, 25)
-#print 'TE: ', float(TE)
-#
-#[pdf_1, pdf_2, pdf_3, pdf_4] = pdfcalcs(x_pred, x_hist, y_hist)
+def getdata(samples, delay):
+    """Get dataset for testing.
 
-# Plot to see why the PDFs fail repeatedly
+    Select to generate each run or import an existing dataset.
 
-#plt.plot(puretf, original, 'k.')
-#plt.show()
+    """
 
-#plt.plot(range(1, 3001), x_hist[0, :])
-#plt.show()
+    # Generate autoregressive delayed data vectors internally
+    data = autogen(samples, delay)
 
-#def x_max(x, x_pred, x_hist, y_hist):
-#    # There must be a better way than calculating PDFs in each iteration
-#    [pdf_1, pdf_2, pdf_3, pdf_4] = pdfcalcs(x_pred, x_hist, y_hist)
-#    return -pdf_4([x])
-#
-#max_x = scipy.optimize.fmin(x_max, 0, args=(x_pred, x_hist, y_hist))
+    # Alternatively, import data from file
+#    autoregx = loadtxt('autoregx_data.csv')
+#    autoregy = loadtxt('autoregy_data.csv')
 
-#[te, sums1, x_pred_space] = te(x_pred, x_hist, y_hist, 100)
+    return data
 
-#xmin = original.min()
-#xmax = original.max()
-#ymin = puredelay.min()
-#ymax = puredelay.max()
-#X, Y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
-#positions = np.vstack([X.ravel(), Y.ravel()])
-#Z = np.reshape(kernel(positions).T, X.shape)
-#fig = plt.figure()
-#ax = fig.add_subplot(111)
-#ax.imshow(np.rot90(Z), cmap=plt.cm.gist_earth_r,
-#          extent=[xmin, xmax, ymin, ymax])
-#ax.plot(original, puredelay, 'k.', markersize=2)
-#ax.set_xlim([xmin, xmax])
-#ax.set_ylim([ymin, ymax])
-#plt.show()
+# <codecell>
+
+def calculate_te(delay, timelag, samples, sub_samples, ampbins, k=1, l=1):
+    """Calculates the transfer entropy for a specific timelag (equal to
+    prediction horison) for a set of autoregressive data.
+
+    sub_samples is the amount of samples in the dataset used to calculate the
+    transfer entropy between two vectors (taken from the end of the dataset).
+    sub_samples <= samples
+
+    Currently only supports k = 1; l = 1;
+
+    You can search through a set of timelags in an attempt to identify the
+    original delay.
+    The transfer entropy should have a maximum value when timelag = delay
+    used to generate the autoregressive dataset.
+
+    """
+    # Get autoregressive datasets
+    data = getdata(samples, delay)
+
+    [x_pred, x_hist, y_hist] = vectorselection(data, timelag,
+                                               sub_samples, k, l)
+
+    transentropy = te_calc(x_pred, x_hist, y_hist, ampbins)
+
+    return transentropy
+
+# <codecell>
+
+# Calculate transfer entropy
+# Delay = 4
+delay = 4
+DATA = getdata(1000, delay)
+
+# <codecell>
+
+# Timelag = 1
+[X_PRED_1, X_HIST_1, Y_HIST_1] = vectorselection(DATA, 1, 100)
+# Timelag = 2
+[X_PRED_2, X_HIST_2, Y_HIST_2] = vectorselection(DATA, 2, 100)
+# Timelag = 3
+[X_PRED_3, X_HIST_3, Y_HIST_3] = vectorselection(DATA, 3, 100)
+# Timelag = 4
+[X_PRED_4, X_HIST_4, Y_HIST_4] = vectorselection(DATA, 4, 100)
+# Timelag = 5
+[X_PRED_5, X_HIST_5, Y_HIST_5] = vectorselection(DATA, 5, 100)
+# Timelag = 6
+[X_PRED_6, X_HIST_6, Y_HIST_6] = vectorselection(DATA, 6, 100)
+# Timelag = 7
+[X_PRED_7, X_HIST_7, Y_HIST_7] = vectorselection(DATA, 7, 100)
+# Timelag = 8
+[X_PRED_8, X_HIST_8, Y_HIST_8] = vectorselection(DATA, 8, 100)
+# Timelag = 9
+[X_PRED_9, X_HIST_9, Y_HIST_9] = vectorselection(DATA, 9, 100)
+# Timelag = 10
+[X_PRED_10, X_HIST_10, Y_HIST_10] = vectorselection(DATA, 10, 100)
+
+# <codecell>
+
+TRANSENTROPY_1 = te_calc(X_PRED_1, X_HIST_1, Y_HIST_1, 30)
+TRANSENTROPY_2 = te_calc(X_PRED_2, X_HIST_2, Y_HIST_2, 30)
+TRANSENTROPY_3 = te_calc(X_PRED_3, X_HIST_3, Y_HIST_3, 30)
+TRANSENTROPY_4 = te_calc(X_PRED_4, X_HIST_4, Y_HIST_4, 30)
+TRANSENTROPY_5 = te_calc(X_PRED_5, X_HIST_5, Y_HIST_5, 30)
+TRANSENTROPY_6 = te_calc(X_PRED_6, X_HIST_6, Y_HIST_6, 30)
+TRANSENTROPY_7 = te_calc(X_PRED_7, X_HIST_7, Y_HIST_7, 30)
+TRANSENTROPY_8 = te_calc(X_PRED_8, X_HIST_8, Y_HIST_8, 30)
+TRANSENTROPY_9 = te_calc(X_PRED_9, X_HIST_9, Y_HIST_9, 30)
+TRANSENTROPY_10 = te_calc(X_PRED_10, X_HIST_10, Y_HIST_10, 30)
+
+# <codecell>
+
+ENTROPIES = [TRANSENTROPY_1, TRANSENTROPY_2, TRANSENTROPY_3, TRANSENTROPY_4, TRANSENTROPY_5, TRANSENTROPY_6,
+             TRANSENTROPY_7, TRANSENTROPY_8, TRANSENTROPY_9, TRANSENTROPY_10]
+ENTROPIES
+
+# <codecell>
+
+ENTROPIES[delay-1]
+
+# <codecell>
+
+max(ENTROPIES)
+
+# <codecell>
+
+
+# <codecell>
+
+#import unittest
+#assertEqual(ENTROPIES[delay-1], max(ENTROPIES))
+
+# <codecell>
+
+# It appears as if this can't be handled due to the very close covariance
+# Let's attempt to break the close covariance by introducing another small random element
+
+# <codecell>
+
+

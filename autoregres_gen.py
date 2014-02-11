@@ -13,12 +13,15 @@ def autogen(samples, delay):
 
     source = np.random.randn(samples + delay + 1)
     pred = np.zeros_like(source)
+    pred_random_add = np.random.rand(samples + delay + 1)
 
     for i in range(delay, len(source)):
         pred[i] = pred[i - 1] + source[i - delay]
 
     pred = pred[delay:-1]
     source = source[delay:-1]
+
+    pred = pred + pred_random_add[delay:-1]
 
     data = vstack([pred, source])
 
