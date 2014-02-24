@@ -45,8 +45,7 @@ class LoopRanking:
         self.variablelist = nodummyvariablelist
         self.blendedranking = dict()
         for variable in nodummyvariablelist:
-            self.blendedranking[variable] = \
-                ((1 - alpha) *
+            self.blendedranking[variable] = ((1 - alpha) *
                  self.forwardgain.rankdict[variable] + (alpha) *
                  self.backwardgain.rankdict[variable])
 

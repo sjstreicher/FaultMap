@@ -4,49 +4,53 @@
 
 """
 
-from localgaincalc import localgains
+from localgaincalc import LocalGains
 import numpy as np
-from numpy import array, transpose
+from numpy import transpose
 import networkx as nx
 
 
 class FormatMatrix:
     """This class formats the input connection, gain and variable
     name matrices.
-    This should make it such that you will never have to call
-    localgaincalc.
+
     For self made test systems you will have dummy_var_no
     not equal to 0; this is especially true if you have recycle streams.
 
     This class will also "scale" the nodes of out-vertex == 1 nodes.
+
     """
 
-    def __init__(self, connection_loc, states_loc, numberofruns,
-                 dummy_var_no, partialcorrelation=True):
-        """This class assumes you input a connection matrix (ordered according
-        to the statematrix) with the numberofdummy variables being the
-        first N variables which are dummy variables to be stripped.
+    def __init__(self, connection_loc, tags_tsdata,
+                 dummy_var_no):
+        """This class assumes you input a connection matrix (connection_loc)
+        ordered according to the tags_tsdata matrix with the
+        dummy_var_no variables being the first number of variables which are
+        dummy variables to be stripped.
+
+        connection_loc is an adjacency matrix indicating the presence of
+        connections in the system
+
+        tags_tsdata contains the time series data for the tags with variables
+        in colums and sampling instances in rows
 
         """
-        self.initialisesystem(connection_loc, states_loc,
-                              numberofruns, partialcorrelation)
-        self.removedummyvariables(dummy_var_no, partialcorrelation)
+        self.init_system(connection_loc, tags_tsdata)
+        self.removedummyvars(dummy_var_no)
         self.addforwardscale()
         self.addbackwardscale()
 
-    def init_system(self, connection_loc, states_loc,
-                    numberofruns, partialcorrelation=False):
-        """This method creates the orignal gain matrix (incl. dummy gains)
+    def init_system(self, connection_loc, tags_tsdata):
+        """This method creates the orignal gain matrix (including dummy gains)
         and the original connection matrix.
 
         """
-        original = localgains(connection_loc, states_loc,
-                              numberofruns, partialcorrelation)
+        original = LocalGains(connection_loc, tags_tsdata)
         self.originalgain = original.partialcorrelationmatrix
         self.variablelist = original.variables
         self.originalconnection = original.connectionmatrix
 
-    def removedummyvars(self, dummy_var_no, partialcorrelation=False):
+    def removedummyvars(self, dummy_var_no):
         """This method assumed the first variables up to dummy_var_no
         are the dummy variables.
 
