@@ -17,9 +17,11 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
         # Randomly select delay in actual data
         self.delay = np.random.random_integers(10, 15)
         # Calculate transfer entropies in range of +/- 5 from actual delay
-        self.entropies = np.zeros(11)
-        for index, timelag in enumerate(range(self.delay-5, self.delay+6)):
-            self.entropies[index] = te(self.delay, timelag, 3000, 2000, 10000)
+#        self.entropies = np.zeros(11)
+#        for index, timelag in enumerate(range(self.delay-5, self.delay+6)):
+#            self.entropies[index] = te(self.delay, timelag, 3000, 2000, 10000)
+        self.entropies = [te(self.delay, timelag, 3000, 2000, 10000)[0] for
+                          timelag in range(self.delay-5, self.delay+6)]
         print self.entropies
 
     def test_peakentropy(self):
@@ -29,8 +31,8 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
 
     def test_valueinrange(self):
         for entropy in self.entropies:
-            self.assertTrue(entropy <= 1)
-            self.assertTrue(entropy >= 0)
+            self.assertLessEqual(entropy, 1)
+            self.assertGreaterEqual(entropy, 0)
 
 if __name__ == '__main__':
     unittest.main()
