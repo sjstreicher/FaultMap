@@ -7,6 +7,9 @@ def autogen(samples, delay):
 
     source = np.random.randn(samples + delay + 1)
     pred = np.zeros_like(source)
+    # Very close covariance occassionally breaks the kde estimator
+    # Another small random element is added to take care of this
+    # This is not expected to be a problem on any "real" data
     pred_random_add = np.random.rand(samples + delay + 1)
 
     for i in range(delay, len(source)):
@@ -20,16 +23,3 @@ def autogen(samples, delay):
     data = vstack([pred, source])
 
     return data
-
-# TODO: Make this a proper assert test and incorporate in Travis
-
-# Some test code
-#SAMPLES = 30
-#DELAY = 5
-#TEST_DATA = autogen(SAMPLES, DELAY)
-#PRED = TEST_DATA[0]
-#SOURCE = TEST_DATA[1]
-#PRED_DIFF = np.zeros_like(PRED[DELAY-1:-1])
-#for i in range(DELAY, len(TEST_DATA[0])):
-#    PRED_DIFF[i - DELAY] = PRED[i] - PRED[i - 1]
-# Test that the first few PRED_DIFF entries are equal to that of SOURCE
