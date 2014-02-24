@@ -8,6 +8,7 @@ Created on Wed Feb 05 14:53:50 2014
 import random
 import unittest
 
+
 class TestSequenceFunctions(unittest.TestCase):
 
     def setUp(self):
