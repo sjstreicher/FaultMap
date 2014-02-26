@@ -1,19 +1,17 @@
-"""This class is used to run controlranking
+"""This script runs all other scripts required for calculating a ranking
 
 @author: St. Elmo Wilken, Simon Streicher
 
 """
 
-from controlranking import LoopRanking
-from formatmatrices import FormatMatrix
-from numpy import array, transpose, arange, empty
-import networkx as nx
-import matplotlib.pyplot as plt
-from operator import itemgetter
+from ranking.controlranking import LoopRanking
+from ranking.formatmatrices import FormatMatrix
 
+import json
 
+filesloc = json.load(open('config.json'))
 
-datamatrix = FormatMatrix("connectionsTEcontrol_mod.csv", "data_mod.csv", 0)
+datamatrix = FormatMatrix(filesloc['connections'], filesloc['data'], 0)
 controlmatrix = LoopRanking(datamatrix.scaledforwardgain,
                             datamatrix.scaledforwardvariablelist,
                             datamatrix.scaledforwardconnection,
