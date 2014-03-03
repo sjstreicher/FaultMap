@@ -9,7 +9,6 @@ import csv
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
-from scipy.stats.stats import pearsonr
 from random import random
 from math import isnan
 
@@ -77,32 +76,15 @@ class LocalGains:
         in colums and sampling instances in rows
 
         """
-        fromfile = csv.reader(open(tags_tsdata), delimiter=',')
-
-        # TODO: Use better iteration method
-        dataholder = []
-        for row in fromfile:
-            rowfix = row
-            for element in rowfix:
-                dataholder.append(float(element))
+        inputdata = np.loadtxt(tags_tsdata, delimiter=',')
         print "Number of variables: ", self.n
-        print "Total number of data points: ", np.shape(dataholder)[0]
+        print "Total number of data points: ", inputdata.size
 
-        self.inputdata = np.reshape(dataholder, (-1, self.n))
-        self.correlationmatrix = array(np.zeros((self.n, self.n)))
-        for i in range(self.n):
-            for j in range(self.n):
-                temp = pearsonr(self.inputdata[:, i], self.inputdata[:, j])[0]
-                if isnan(temp):
-                    print "Unable to compute correlation between variables ", \
-                    (i+1), " and ", (j+1)
-                    self.correlationmatrix[i, j] = np.nan
-                else:
-                    self.correlationmatrix[i, j] = temp
+        self.correlationmatrix = np.corrcoef(inputdata.T)
 
         np.savetxt("correlation.csv", self.correlationmatrix, delimiter=',')
         p_matrix = np.linalg.inv(self.correlationmatrix)
-        self.partialcorrelationmatrix = array(np.zeros((self.n, self.n)))
+        self.partialcorrelationmatrix = np.zeros_like(self.correlationmatrix)
 
         for i in range(self.n):
             for j in range(self.n):
@@ -110,6 +92,5 @@ class LocalGains:
                     temp = (-1 * p_matrix[i, j] / (abs((p_matrix[i, i] *
                                                    p_matrix[j, j]))**0.5))
                     self.partialcorrelationmatrix[i, j] = temp
-                else:
-                    self.partialcorrelationmatrix[i, j] = 0
+        
         np.savetxt("partialcorr.csv", self.partialcorrelationmatrix, delimiter=',')
