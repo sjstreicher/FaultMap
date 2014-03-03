@@ -6,7 +6,6 @@
 
 from localgaincalc import LocalGains
 import numpy as np
-from numpy import transpose
 import networkx as nx
 
 
@@ -96,10 +95,8 @@ class FormatMatrix:
                 m_graph.add_edge(node, nameofscale, weight=1.0)
                 counter = counter + 1
 
-        self.scaledforwardconnection = transpose(
-            nx.to_numpy_matrix(m_graph, weight=None))
-        self.scaledforwardgain = transpose(
-            nx.to_numpy_matrix(m_graph, weight='weight'))
+        self.scaledforwardconnection = nx.to_numpy_matrix(m_graph, weight=None).T
+        self.scaledforwardgain = nx.to_numpy_matrix(m_graph, weight='weight').T
         self.scaledforwardvariablelist = m_graph.nodes()
 
     def addbackwardscale(self):
@@ -117,8 +114,8 @@ class FormatMatrix:
         """
 
         m_graph = nx.DiGraph()
-        transposedconnection = transpose(self.nodummyconnection)
-        transposedgain = transpose(self.nodummygain)
+        transposedconnection = self.nodummyconnection.T
+        transposedgain = self.nodummygain.T
 
         # Construct the graph with connections
         for u in range(self.nodummy_nodes):
@@ -136,8 +133,6 @@ class FormatMatrix:
                 m_graph.add_edge(node, nameofscale, weight=1.0)
                 counter = counter + 1
 
-        self.scaledbackwardconnection = transpose(
-            nx.to_numpy_matrix(m_graph, weight=None))
-        self.scaledbackwardgain = transpose(
-            nx.to_numpy_matrix(m_graph, weight='weight'))
+        self.scaledbackwardconnection = nx.to_numpy_matrix(m_graph, weight=None).T
+        self.scaledbackwardgain = nx.to_numpy_matrix(m_graph, weight='weight').T
         self.scaledbackwardvariablelist = m_graph.nodes()

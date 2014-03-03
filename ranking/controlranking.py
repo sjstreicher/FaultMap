@@ -6,12 +6,10 @@
 
 #from visualise import visualiseOpenLoopSystem
 from gainrank import GainRanking
-from numpy import array, transpose, arange, empty
-import numpy as np
+from numpy import array
 import networkx as nx
 import matplotlib.pyplot as plt
 from operator import itemgetter
-from itertools import permutations, izip
 import csv
 
 
@@ -75,7 +73,7 @@ class LoopRanking:
                     normalisedmatrix.append(inputmatrix[row, col] / colsum)
                 else:
                     normalisedmatrix.append(0.0)
-        normalisedmatrix = transpose(array(normalisedmatrix).reshape(r, c))
+        normalisedmatrix = array(normalisedmatrix).reshape(r, c).T
         return normalisedmatrix
 
     def display_control_importances(self, nocontrolconnectionmatrix,
