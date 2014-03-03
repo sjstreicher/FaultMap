@@ -46,6 +46,7 @@ class FormatMatrix:
 
         """
         original = LocalGains(connection_loc, tags_tsdata)
+        self.originalcorrelation = original.correlationmatrix
         self.originalgain = original.partialcorrelationmatrix
         self.variablelist = original.variables
         self.originalconnection = original.connectionmatrix
@@ -112,6 +113,7 @@ class FormatMatrix:
 
         Additionally, this method transposes the original no dummy variables to
         generate the reverse option.
+
         """
 
         m_graph = nx.DiGraph()

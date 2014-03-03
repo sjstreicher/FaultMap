@@ -89,19 +89,18 @@ class LocalGains:
         print "Total number of data points: ", np.shape(dataholder)[0]
 
         self.inputdata = np.reshape(dataholder, (-1, self.n))
-        # Used to use np.empty here, possible source of randomness
         self.correlationmatrix = array(np.zeros((self.n, self.n)))
         for i in range(self.n):
             for j in range(self.n):
                 temp = pearsonr(self.inputdata[:, i], self.inputdata[:, j])[0]
-                # TODO: This results in inconsistency and needs to be fixed
                 if isnan(temp):
                     print "Unable to compute correlation between variables ", \
                     (i+1), " and ", (j+1)
-                    break
+                    self.correlationmatrix[i, j] = np.nan
                 else:
                     self.correlationmatrix[i, j] = temp
 
+        np.savetxt("correlation.csv", self.correlationmatrix, delimiter=',')
         p_matrix = np.linalg.inv(self.correlationmatrix)
         self.partialcorrelationmatrix = array(np.zeros((self.n, self.n)))
 
@@ -113,3 +112,4 @@ class LocalGains:
                     self.partialcorrelationmatrix[i, j] = temp
                 else:
                     self.partialcorrelationmatrix[i, j] = 0
+        np.savetxt("partialcorr.csv", self.partialcorrelationmatrix, delimiter=',')

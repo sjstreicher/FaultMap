@@ -7,6 +7,7 @@
 #from visualise import visualiseOpenLoopSystem
 from gainrank import GainRanking
 from numpy import array, transpose, arange, empty
+import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 from operator import itemgetter
@@ -51,13 +52,16 @@ class LoopRanking:
 
         slist = sorted(self.blendedranking.iteritems(), key=itemgetter(1),
                        reverse=True)
+        writer = csv.writer(open('importances.csv', 'wb'))
         for x in slist:
+            writer.writerow(x)
             print(x)
+
         print("Done with controlled importances")
 
     def normalise_matrix(self, inputmatrix):
         """Normalises the absolute value of the input matrix in the columns
-        i.e. all columns will sum to 1.
+        such that all columns will sum to 1.
 
         """
         [r, c] = inputmatrix.shape
@@ -76,7 +80,7 @@ class LoopRanking:
 
     def display_control_importances(self, nocontrolconnectionmatrix,
                                     controlconnectionmatrix):
-        """This method will create a graph containing the
+        """Generates a graph containing the
         connectivity and importance of the system being displayed.
         Edge Attribute: color for control connection
         Node Attribute: node importance
