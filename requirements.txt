@@ -1,1 +1,5 @@
 scikit-learn
+pandas
+numpy
+scipy
+matplotlib
