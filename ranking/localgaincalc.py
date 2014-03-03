@@ -4,14 +4,8 @@
 
 """
 
-from numpy import array, transpose, zeros, hstack
 import csv
 import numpy as np
-import networkx as nx
-import matplotlib.pyplot as plt
-from random import random
-from math import isnan
-
 
 class LocalGains:
     """This class:
@@ -49,23 +43,10 @@ class LocalGains:
         connection matrix match those in the data matrix.
 
         """
-        fromfile = csv.reader(open(connection_loc))
-        # Get rid of that first space. Now the variables are all stored.
-        self.variables = fromfile.next()[1:]
-        self.connectionmatrix = []
-        for row in fromfile:
-            # This gets rid of the variable name on each row
-            # (its there to help create the matrix)
-            col = row[1:]
-            for element in col:
-                if element == '1':
-                    self.connectionmatrix.append(1)
-                else:
-                    self.connectionmatrix.append(0)
-
-        self.n = len(self.variables)
-        self.connectionmatrix = array(self.connectionmatrix).reshape(
-            self.n, self.n)
+        with open(connection_loc) as f:
+            self.variables = csv.reader(f).next()[1:]
+            self.connectionmatrix = np.genfromtxt(f, delimiter=',')[:, 1:]
+            self.n = len(self.variables)
 
     def calc_partialcor_gainmatrix(self, tags_tsdata):
         """This method strives to calculate the local gains in terms of the
