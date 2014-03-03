@@ -84,13 +84,9 @@ class LocalGains:
 
         np.savetxt("correlation.csv", self.correlationmatrix, delimiter=',')
         p_matrix = np.linalg.inv(self.correlationmatrix)
-        self.partialcorrelationmatrix = np.zeros_like(self.correlationmatrix)
+        d = p_matrix.diagonal()
+        self.partialcorrelationmatrix = np.where(self.connectionmatrix, 
+                                                 -p_matrix/np.abs(np.sqrt(np.outer(d, d))),
+                                                 0)
 
-        for i in range(self.n):
-            for j in range(self.n):
-                if self.connectionmatrix[i, j] == 1:
-                    temp = (-1 * p_matrix[i, j] / (abs((p_matrix[i, i] *
-                                                   p_matrix[j, j]))**0.5))
-                    self.partialcorrelationmatrix[i, j] = temp
-        
         np.savetxt("partialcorr.csv", self.partialcorrelationmatrix, delimiter=',')
