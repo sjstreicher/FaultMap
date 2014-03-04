@@ -6,7 +6,7 @@
 
 #from visualise import visualiseOpenLoopSystem
 from gainrank import GainRanking
-from numpy import array
+from numpy import array, asarray
 import networkx as nx
 import matplotlib.pyplot as plt
 from operator import itemgetter
@@ -62,18 +62,12 @@ class LoopRanking:
         such that all columns will sum to 1.
 
         """
-        [r, c] = inputmatrix.shape
-        inputmatrix = abs(inputmatrix)  # Does not affect eigenvalues
-        normalisedmatrix = []
+        inputmatrix = abs(asarray(inputmatrix))  # Does not affect eigenvalues
 
-        for col in range(c):
-            colsum = float(sum(inputmatrix[:, col]))
-            for row in range(r):
-                if (colsum != 0):
-                    normalisedmatrix.append(inputmatrix[row, col] / colsum)
-                else:
-                    normalisedmatrix.append(0.0)
-        normalisedmatrix = array(normalisedmatrix).reshape(r, c).T
+        colsums = inputmatrix.sum(0)
+        normalisedmatrix = inputmatrix/colsums
+        normalisedmatrix[:, colsums==0] = 0
+
         return normalisedmatrix
 
     def display_control_importances(self, nocontrolconnectionmatrix,
