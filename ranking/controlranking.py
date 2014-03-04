@@ -79,27 +79,15 @@ class LoopRanking:
 
         """
         nc_graph = nx.DiGraph()
-        n = len(self.variablelist)
-        for u in range(n):
-            for v in range(n):
-                if nocontrolconnectionmatrix[u, v] == 1:
-                    nc_graph.add_edge(self.variablelist[v],
-                                      self.variablelist[u])
+
+        for u, v in nocontrolconnectionmatrix.nonzero().T:
+            nc_graph.add_edge(self.variablelist[v], self.variablelist[u])
         edgelist_nc = nc_graph.edges()
 
         self.control_graph = nx.DiGraph()
-        for u in range(n):
-            for v in range(n):
-                if controlconnectionmatrix[u, v] == 1:
-                    if (self.variablelist[v], self.variablelist[u]) in \
-                            edgelist_nc:
-                        self.control_graph.add_edge(self.variablelist[v],
-                                                    self.variablelist[u],
-                                                    controlloop=0)
-                    else:
-                        self.control_graph.add_edge(self.variablelist[v],
-                                                    self.variablelist[u],
-                                                    controlloop=1)
+        for u, v in controlconnectionmatrix.nonzero().T:
+            newedge = (self.variablelist[v], self.variablelist[u])
+            self.control_graph.add_edge(*newedge, controlloop=int(newedge in edgelist_nc))
 
         for node in self.control_graph.nodes():
             self.control_graph.add_node(node,
