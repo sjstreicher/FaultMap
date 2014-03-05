@@ -10,6 +10,7 @@ from numpy import array, asarray
 import networkx as nx
 import matplotlib.pyplot as plt
 from operator import itemgetter
+from formatmatrices import normalise_matrix
 import csv
 
 
@@ -26,16 +27,16 @@ class LoopRanking:
     def __init__(self, fgainmatrix, fvariablenames, fconnectionmatrix,
                  bgainmatrix, bvariablenames, bconnectionmatrix,
                  nodummyvariablelist, alpha=0.35):
-        """This constructor creates grapgs with associated node importances
+        """This constructor creates graphs with associated node importances
         based on:
         1) Local gain information
         2) Partial correlation data
 
         """
 
-        self.forwardgain = GainRanking(self.normalise_matrix(fgainmatrix),
+        self.forwardgain = GainRanking(normalise_matrix(fgainmatrix),
                                        fvariablenames)
-        self.backwardgain = GainRanking(self.normalise_matrix(bgainmatrix),
+        self.backwardgain = GainRanking(normalise_matrix(bgainmatrix),
                                         bvariablenames)
         self.create_blended_ranking(nodummyvariablelist, alpha)
 
@@ -57,18 +58,6 @@ class LoopRanking:
 
         print("Done with controlled importances")
 
-    def normalise_matrix(self, inputmatrix):
-        """Normalises the absolute value of the input matrix in the columns
-        such that all columns will sum to 1.
-
-        """
-        inputmatrix = abs(asarray(inputmatrix))  # Does not affect eigenvalues
-
-        colsums = inputmatrix.sum(0)
-        normalisedmatrix = inputmatrix/colsums
-        normalisedmatrix[:, colsums==0] = 0
-
-        return normalisedmatrix
 
     def display_control_importances(self, nocontrolconnectionmatrix,
                                     controlconnectionmatrix):
