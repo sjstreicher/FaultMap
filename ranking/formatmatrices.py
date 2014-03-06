@@ -64,7 +64,7 @@ def addforwardscale(variables, gainmatrix, connections):
     for n, u in enumerate(variables):
         for m, v in enumerate(variables):
             if (connections[n, m] != 0):
-                m_graph.add_edge(u, v, weight=gainmatrix[n, m])
+                m_graph.add_edge(v, u, weight=gainmatrix[n, m])
 
     # Add connections where out degree == 1
     counter = 1
@@ -101,8 +101,8 @@ def addbackwardscale(variables, gainmatrix, connections):
     # Construct the graph with connections
     for n, u in enumerate(variables):
         for m, v in enumerate(variables):
-            if (connections[n, m].T != 0):
-                m_graph.add_edge(u, v, weight=gainmatrix.T[n, m])
+            if (connections.T[n, m] != 0):
+                m_graph.add_edge(v, u, weight=gainmatrix.T[n, m])
 
     # Add connections where out degree == 1
     counter = 1
@@ -118,6 +118,7 @@ def addbackwardscale(variables, gainmatrix, connections):
 
     return scaledbackwardconnection, scaledbackwardgain, \
         scaledbackwardvariablelist
+
 
 
 

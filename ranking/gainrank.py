@@ -31,7 +31,7 @@ def calculate_rank(gainmatrix, variables):
     # Cuts array into the eigenvector corrosponding to the eigenvalue above
     rankarray = eigvec[:, maxeigindex]
     # This is the 1-dimensional array composed of rankings (normalised)
-    rankarray =  rankarray * (1 / sum(rankarray))
+    rankarray = (1 / sum(rankarray)) * rankarray
     # Remove the useless imaginary +0j
     rankarray = rankarray.real
 

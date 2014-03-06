@@ -10,6 +10,7 @@ from ranking.localgaincalc import create_connectionmatrix
 from ranking.localgaincalc import calc_partialcor_gainmatrix
 #from ranking.formatmatrices import removedummyvars
 from ranking.formatmatrices import addforwardscale, addbackwardscale
+from ranking.formatmatrices import normalise_matrix
 from ranking.gainrank import calculate_rank
 from ranking.gainrank import create_blended_ranking
 from ranking.gainrank import create_importance_graph
@@ -38,7 +39,8 @@ dummy_var_no = 0
 # Where did these dummy variables come from?
 #[nodummyvariablelist, nodummygain, nodummyconnection, nodummy_nodes] = \
 #    removedummyvars(partialcorrelationmatrix, connectionmatrix, variables,
-#                    dummy_var_no)
+#                    dummy_var_no)variables, partialcorrelationmatrix, connectionmatrix,
+#                    len(variables)
 
 #scaledforwardconnection, scaledforwardgain, scaledforwardvariablelist = \
 #    addforwardscale(nodummyvariablelist, nodummygain, nodummyconnection,
@@ -76,8 +78,15 @@ scaledbackwardconnection, scaledbackwardgain, scaledbackwardvariablelist = \
 #               scaledbackwardconnection, scaledbackwardgain,
 #               scaledbackwardvariablelist)
 
-forwardrank = calculate_rank(scaledforwardgain, scaledforwardvariablelist)
-backwardrank = calculate_rank(scaledbackwardgain, scaledbackwardvariablelist)
+
+# TODO: Rethink the purpose of normalising scaledforwardgain
+# Results were significantly better without it
+# Does this indicate something about the dummy variables
+# corrupting the rankings?
+forwardrank = calculate_rank(normalise_matrix(scaledforwardgain),
+                             scaledforwardvariablelist)
+backwardrank = calculate_rank(normalise_matrix(scaledbackwardgain),
+                              scaledbackwardvariablelist)
 blendedranking, slist = create_blended_ranking(forwardrank, backwardrank,
                                                variables, alpha=0.35)
 
