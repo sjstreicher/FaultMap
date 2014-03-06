@@ -21,15 +21,22 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 filesloc = json.load(open('config.json'))
-
+# Closedloop connection (adjacency) matrix
 connection_loc = filesloc['closedloop_connections_mod']
+# Openloop connection (adjacency) matrix
+openconnection_loc = filesloc['openloop_connections_mod']
+# Tags time series data
 tags_tsdata = filesloc['data_dist11_mod']
+#Location to store all exported files
+saveloc = filesloc['savelocation']
 
 dummy_var_no = 0
 
-# Get the variables and connectionmatrix and save to file
-[variables, connectionmatrix] = \
-    create_connectionmatrix(connection_loc)
+# Get the variables and clsoedloop connectionmatrix
+[variables, connectionmatrix] = create_connectionmatrix(connection_loc)
+
+# Get the openloop connectionmatrix
+_, openconnectionmatrix = create_connectionmatrix(openconnection_loc)
 
 # Get the correlation and partial correlation matrices
 [correlationmatrix, partialcorrelationmatrix] = \
@@ -90,20 +97,21 @@ backwardrank = calculate_rank(normalise_matrix(scaledbackwardgain),
 blendedranking, slist = create_blended_ranking(forwardrank, backwardrank,
                                                variables, alpha=0.35)
 
-importancegraph, edgelist = create_importance_graph(variables, connectionmatrix,
-                                          blendedranking)
+closedgraph = create_importance_graph(variables, connectionmatrix,
+                                      openconnectionmatrix,
+                                      blendedranking)
 
-writer = csv.writer(open('importances.csv', 'wb'))
+writer = csv.writer(open(saveloc + 'importances.csv', 'wb'))
 for x in slist:
     writer.writerow(x)
     print(x)
 print("Done with controlled importances")
 
-#nx.write_gml(importancegraph, "importancegraph.gml")
+nx.write_gml(closedgraph, saveloc + "closedgraph.gml")
 
-plt.figure("The Controlled System")
-nx.draw_circular(importancegraph)
-plt.show()
+#plt.figure("The Controlled System")
+#nx.draw_circular(importancegraph)
+#plt.show()
 
 #controlmatrix = LoopRanking(scaledforwardgain,
 #                            scaledforwardvariablelist,

@@ -54,21 +54,31 @@ def create_blended_ranking(forwardrank, backwardrank, variablelist, alpha=0.35):
     return blendedranking, slist
     
     
-def create_importance_graph(variablelist, connectionmatrix, ranking):
+def create_importance_graph(variablelist, closedconnections,
+                            openconnections,
+                            ranking):
     """Generates a graph containing the
     connectivity and importance of the system being displayed.
     Edge Attribute: color for control connection
     Node Attribute: node importance
 
     """
-    graph = nx.DiGraph()
-
-    for u, v in izip(connectionmatrix.nonzero()[0],
-                     connectionmatrix.nonzero()[1]):
-        graph.add_edge(variablelist[u], variablelist[v])
-    edgelist = graph.edges()
-
-    for node in graph.nodes():
-        graph.add_node(node, importance=ranking[node])
     
-    return graph, edgelist
+    opengraph = nx.DiGraph()
+    for u, v in izip(openconnections.nonzero()[0],
+                     openconnections.nonzero()[1]):
+        opengraph.add_edge(variablelist[u], variablelist[v])
+    openedgelist = opengraph.edges()
+    
+    closedgraph = nx.DiGraph()
+    for u, v in izip(closedconnections.nonzero()[0],
+                     closedconnections.nonzero()[1]):
+        newedge = (variablelist[u], variablelist[v]) 
+        closedgraph.add_edge(*newedge, controlloop=int(newedge
+                                                       not in openedgelist))
+#    closededgelist = closedgraph.edges()
+
+    for node in closedgraph.nodes():
+        closedgraph.add_node(node, importance=ranking[node])
+    
+    return closedgraph
