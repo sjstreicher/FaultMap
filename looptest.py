@@ -27,7 +27,7 @@ connection_loc = filesloc['closedloop_connections_mod']
 openconnection_loc = filesloc['openloop_connections_mod']
 closedconnection_loc = filesloc['closedloop_connections_mod']
 # Tags time series data
-tags_tsdata = filesloc['data_dist11_mod']
+tags_tsdata = filesloc['data_pressetstep_mod']
 #Location to store all exported files
 saveloc = filesloc['savelocation']
 
@@ -58,6 +58,7 @@ backwardconnection, backwardgain, backwardvariablelist = \
 
 forwardrank = calculate_rank(forwardgain, forwardvariablelist)
 backwardrank = calculate_rank(backwardgain, backwardvariablelist)
+# Why is there no difference?
 blendedranking, slist = create_blended_ranking(forwardrank, backwardrank,
                                                variables, alpha=0.35)
 
@@ -66,6 +67,12 @@ closedgraph, opengraph = create_importance_graph(variables,
                                                  openconnectionmatrix.T,
                                                  gainmatrix,
                                                  blendedranking)
+                                                
+allgraph, allgraph = create_importance_graph(variables,
+                                             connectionmatrix.T,
+                                             connectionmatrix.T,
+                                             gainmatrix,
+                                             blendedranking)
 print "Number of tags: ", len(variables)
 
 with open(saveloc + 'importances.csv', 'wb') as csvfile:
@@ -76,8 +83,9 @@ with open(saveloc + 'importances.csv', 'wb') as csvfile:
 print("Done with controlled importances")
 
 
-nx.write_gml(closedgraph, saveloc + "closedgraph.gml")
-nx.write_gml(opengraph, saveloc + "opengraph.gml")
+#nx.write_gml(closedgraph, saveloc + "closedgraph.gml")
+#nx.write_gml(opengraph, saveloc + "opengraph.gml")
+nx.write_gml(allgraph, saveloc + "allgraph.gml")
 
 #plt.figure("Closedloop System")
 #nx.draw(closedgraph)

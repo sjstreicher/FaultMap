@@ -53,6 +53,11 @@ def calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata):
     partialcorrelationmatrix = \
         np.where(connectionmatrix, -p_matrix/np.abs(np.sqrt(np.outer(d, d))),
                  0)
+    # Removing the sign generally seems to destroy information
+    # However, there is a concern that it can be influenced by time delays
+    # TODO: Search for the maximum absolute value over a range of time delays
+    # and then select the maximum with correct sign.
+#    partialcorrelationmatrix = abs(partialcorrelationmatrix)
 
     return correlationmatrix, partialcorrelationmatrix
 

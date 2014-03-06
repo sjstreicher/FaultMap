@@ -47,8 +47,13 @@ def create_blended_ranking(forwardrank, backwardrank, variablelist, alpha=0.35):
     """This method creates a blended ranking profile of the object."""
     blendedranking = dict()
     for variable in variablelist:
-        blendedranking[variable] = ((1 - alpha) * forwardrank[variable] +
-                                    (alpha) * backwardrank[variable])
+        blendedranking[variable] = abs(((1 - alpha) * forwardrank[variable] +
+                                       (alpha) * backwardrank[variable]))
+    
+    totals = sum(blendedranking.values())
+    # Normalise rankings
+    for variable in variablelist:
+        blendedranking[variable] = blendedranking[variable] / totals
 
     slist = sorted(blendedranking.iteritems(), key=itemgetter(1),
                    reverse=True)
