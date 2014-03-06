@@ -40,23 +40,7 @@ class LoopRanking:
                                         bvariablenames)
         self.create_blended_ranking(nodummyvariablelist, alpha)
 
-    def create_blended_ranking(self, nodummyvariablelist, alpha=0.35):
-        """This method creates a blended ranking profile of the object."""
-        self.variablelist = nodummyvariablelist
-        self.blendedranking = dict()
-        for variable in nodummyvariablelist:
-            self.blendedranking[variable] = ((1 - alpha) *
-                 self.forwardgain.rankdict[variable] + (alpha) *
-                 self.backwardgain.rankdict[variable])
 
-        slist = sorted(self.blendedranking.iteritems(), key=itemgetter(1),
-                       reverse=True)
-        writer = csv.writer(open('importances.csv', 'wb'))
-        for x in slist:
-            writer.writerow(x)
-            print(x)
-
-        print("Done with controlled importances")
 
 
     def display_control_importances(self, nocontrolconnectionmatrix,

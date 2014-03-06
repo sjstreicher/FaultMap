@@ -6,49 +6,69 @@
 
 from numpy import ones, argmax
 from numpy import linalg
+from operator import itemgetter
+from itertools import izip
+import networkx as nx
 
 
-class GainRanking:
-    """Calculates the importance of variables based on their first order
-    local gains.
+def calculate_rank(gainmatrix, variables):
+    """Constructs the ranking dictionary using the eigenvector approach
+    i.e. Ax = x where A is the local gain matrix.
 
     """
-    def __init__(self, localgainmatrix, listofvariables):
-        """Creates a rankings dictionary with the variables as keys and the
-        normlised rank as value.
+    # Length of gain matrix = number of nodes
+    n = len(gainmatrix)
+    s_matrix = (1.0 / n) * ones((n, n))
+    m = 0.15
+    # Basic PageRank algorithm
+    m_matrix = (1 - m) * gainmatrix + m * s_matrix
+    # Calculate eigenvalues and eigenvectors as usual
+    [eigval, eigvec] = linalg.eig(m_matrix)
+    maxeigindex = argmax(eigval)
+    # Store value for downstream checking
+    # TODO: Downstream checking not implemented yet
+#    maxeig = eigval[maxeigindex].real
+    # Cuts array into the eigenvector corrosponding to the eigenvalue above
+    rankarray = eigvec[:, maxeigindex]
+    # This is the 1-dimensional array composed of rankings (normalised)
+    rankarray =  rankarray * (1 / sum(rankarray))
+    # Remove the useless imaginary +0j
+    rankarray = rankarray.real
 
-        """
-        self.gmatrix = localgainmatrix
-        self.gvariables = listofvariables
-        self.construct_rank_array()
+    # Create a dictionary of the rankings with their respective nodes
+    # i.e. {NODE:RANKING}
+    rankdict = dict(zip(variables, rankarray))
+    
+    return rankdict
 
-    def construct_rank_array(self):
-        """Constructs the ranking dictionary using the eigenvector approach
-        i.e. Ax = x where A is the local gain matrix.
 
-        """
-        # Length of gain matrix = number of nodes
-        self.n = len(self.gmatrix)
-        s_matrix = (1.0 / self.n) * ones((self.n, self.n))
-        m = 0.15
-        # Basic PageRank algorithm
-        self.m_matrix = (1 - m) * self.gmatrix + m * s_matrix
-        # Calculate eigenvalues and eigenvectors as usual
-        [eigval, eigvec] = linalg.eig(self.m_matrix)
+def create_blended_ranking(forwardrank, backwardrank, variablelist, alpha=0.35):
+    """This method creates a blended ranking profile of the object."""
+    blendedranking = dict()
+    for variable in variablelist:
+        blendedranking[variable] = ((1 - alpha) * forwardrank[variable] +
+                                    (alpha) * backwardrank[variable])
 
-        maxeigindex = argmax(eigval)
-        # Store value for downstream checking
-        self.maxeig = eigval[maxeigindex].real
-        # Cuts array into the eigenvector corrosponding to the eigenvalue above
-        self.rankarray = eigvec[:, maxeigindex]
-        # This is the 1-dimensional array composed of rankings (normalised)
-        self.rankarray = (1 / sum(self.rankarray)) * self.rankarray
-        # Remove the useless imaginary +0j
-        self.rankarray = self.rankarray.real
+    slist = sorted(blendedranking.iteritems(), key=itemgetter(1),
+                   reverse=True)
+    return blendedranking, slist
+    
+    
+def create_importance_graph(variablelist, connectionmatrix, ranking):
+    """Generates a graph containing the
+    connectivity and importance of the system being displayed.
+    Edge Attribute: color for control connection
+    Node Attribute: node importance
 
-        # Create a dictionary of the rankings with their respective nodes
-        # i.e. {NODE:RANKING}
-        self.rankdict = dict(zip(self.gvariables, self.rankarray))
+    """
+    graph = nx.DiGraph()
 
-        # TODO: Include a test here
-        # print(self.rankdict)
+    for u, v in izip(connectionmatrix.nonzero()[0],
+                     connectionmatrix.nonzero()[1]):
+        graph.add_edge(variablelist[u], variablelist[v])
+    edgelist = graph.edges()
+
+    for node in graph.nodes():
+        graph.add_node(node, importance=ranking[node])
+    
+    return graph, edgelist

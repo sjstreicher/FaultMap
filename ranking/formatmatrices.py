@@ -23,7 +23,7 @@ def normalise_matrix(inputmatrix):
 
     return normalisedmatrix
 
-
+# This might be a depreciated function and will be removed if no use is found
 def removedummyvars(gainmatrix, connectionmatrix, variables,
                     dummy_var_no):
     """This method assumed the first variables up to dummy_var_no
@@ -49,8 +49,7 @@ def removedummyvars(gainmatrix, connectionmatrix, variables,
     return nodummyvariablelist, nodummygain, nodummyconnection, nodummy_nodes
 
 
-def addforwardscale(nodummyvariablelist, nodummygain, nodummyconnection,
-                    nodummy_nodes):
+def addforwardscale(variables, gainmatrix, connections):
     """This method adds a unit gain node to all nodes with an out-degree
     of 1; now all of these nodes should have an out-degree of 2.
     Therefore all nodes with pointers should have 2 or more edges pointing
@@ -62,17 +61,17 @@ def addforwardscale(nodummyvariablelist, nodummygain, nodummyconnection,
     """
     m_graph = nx.DiGraph()
     # Construct the graph with connections
-    for u in range(nodummy_nodes):
-        for v in range(nodummy_nodes):
-            if (nodummyconnection[u, v] != 0):
-                m_graph.add_edge(nodummyvariablelist[v],
-                                 nodummyvariablelist[u],
-                                 weight=nodummygain[u, v])
+    for n, u in enumerate(variables):
+        for m, v in enumerate(variables):
+            if (connections[n, m] != 0):
+                m_graph.add_edge(u, v, weight=gainmatrix[n, m])
+
     # Add connections where out degree == 1
     counter = 1
     for node in m_graph.nodes():
         if m_graph.out_degree(node) == 1:
             nameofscale = 'DV_forward' + str(counter)
+            # TODO: Investigate the effect of different weights
             m_graph.add_edge(node, nameofscale, weight=1.0)
             counter += 1
 
@@ -84,8 +83,7 @@ def addforwardscale(nodummyvariablelist, nodummygain, nodummyconnection,
         scaledforwardvariablelist
 
 
-def addbackwardscale(nodummyvariablelist, nodummygain, nodummyconnection,
-                     nodummy_nodes):
+def addbackwardscale(variables, gainmatrix, connections):
     """This method adds a unit gain node to all nodes with an out-degree
     of 1; now all of these nodes should have an out-degree of 2.
     Therefore all nodes with pointers should have 2 or more edges
@@ -100,16 +98,13 @@ def addbackwardscale(nodummyvariablelist, nodummygain, nodummyconnection,
     """
 
     m_graph = nx.DiGraph()
-
     # Construct the graph with connections
-    for u in range(nodummy_nodes):
-        for v in range(nodummy_nodes):
-            if (nodummyconnection.T[u, v] != 0):
-                m_graph.add_edge(nodummyvariablelist[v],
-                                 nodummyvariablelist[u],
-                                 weight=nodummygain.T[u, v])
+    for n, u in enumerate(variables):
+        for m, v in enumerate(variables):
+            if (connections[n, m].T != 0):
+                m_graph.add_edge(u, v, weight=gainmatrix.T[n, m])
 
-    # Now add connections where out degree == 1
+    # Add connections where out degree == 1
     counter = 1
     for node in m_graph.nodes():
         if m_graph.out_degree(node) == 1:
