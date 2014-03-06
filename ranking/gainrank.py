@@ -4,7 +4,7 @@
 
 """
 
-from numpy import ones, argmax
+from numpy import ones, argmax, asarray
 from numpy import linalg
 from operator import itemgetter
 from itertools import izip
@@ -17,6 +17,7 @@ def calculate_rank(gainmatrix, variables):
 
     """
     # Length of gain matrix = number of nodes
+    gainmatrix = asarray(gainmatrix)
     n = len(gainmatrix)
     s_matrix = (1.0 / n) * ones((n, n))
     m = 0.15
@@ -55,8 +56,7 @@ def create_blended_ranking(forwardrank, backwardrank, variablelist, alpha=0.35):
     
     
 def create_importance_graph(variablelist, closedconnections,
-                            openconnections,
-                            ranking):
+                            openconnections, gainmatrix, ranking):
     """Generates a graph containing the
     connectivity and importance of the system being displayed.
     Edge Attribute: color for control connection
@@ -65,20 +65,22 @@ def create_importance_graph(variablelist, closedconnections,
     """
     
     opengraph = nx.DiGraph()
-    for u, v in izip(openconnections.nonzero()[0],
+    
+    for col, row in izip(openconnections.nonzero()[0],
                      openconnections.nonzero()[1]):
-        opengraph.add_edge(variablelist[u], variablelist[v])
+        opengraph.add_edge(variablelist[col], variablelist[row],
+                           weight=gainmatrix[row, col])
     openedgelist = opengraph.edges()
     
     closedgraph = nx.DiGraph()
-    for u, v in izip(closedconnections.nonzero()[0],
-                     closedconnections.nonzero()[1]):
-        newedge = (variablelist[u], variablelist[v]) 
-        closedgraph.add_edge(*newedge, controlloop=int(newedge
-                                                       not in openedgelist))
+    for col, row in izip(closedconnections.nonzero()[0],
+                         closedconnections.nonzero()[1]):
+        newedge = (variablelist[col], variablelist[row]) 
+        closedgraph.add_edge(*newedge, weight=gainmatrix[row, col],
+                             controlloop=int(newedge not in openedgelist))
 #    closededgelist = closedgraph.edges()
 
     for node in closedgraph.nodes():
         closedgraph.add_node(node, importance=ranking[node])
     
-    return closedgraph
+    return closedgraph, opengraph

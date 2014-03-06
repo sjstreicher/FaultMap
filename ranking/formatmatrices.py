@@ -14,7 +14,12 @@ def normalise_matrix(inputmatrix):
 
 
     """
-    inputmatrix = abs(np.asarray(inputmatrix))  # Does not affect eigenvalues
+    # Taking the absolute does have an effect - it reduces the scaled of the
+    # signed digraph to that of an unsigned digraph.
+    # Thus, information is lost.
+    
+    #This function is still used to normalize the final importance scores.
+    inputmatrix = abs(np.asarray(inputmatrix))
 
     colsums = inputmatrix.sum(0)
     normalisedmatrix = inputmatrix/colsums
@@ -49,7 +54,7 @@ def removedummyvars(gainmatrix, connectionmatrix, variables,
     return nodummyvariablelist, nodummygain, nodummyconnection, nodummy_nodes
 
 
-def rankforward(variables, gainmatrix, connections):
+def rankforward(variables, gainmatrix, connections, dummyweight):
     """This method adds a unit gain node to all nodes with an out-degree
     of 1; now all of these nodes should have an out-degree of 2.
     Therefore all nodes with pointers should have 2 or more edges pointing
@@ -61,10 +66,10 @@ def rankforward(variables, gainmatrix, connections):
     """
     m_graph = nx.DiGraph()
     # Construct the graph with connections
-    for n, u in enumerate(variables):
-        for m, v in enumerate(variables):
-            if (connections[n, m] != 0):
-                m_graph.add_edge(v, u, weight=gainmatrix[n, m])
+    for col, colvar in enumerate(variables):
+        for row, rowvar in enumerate(variables):
+            if (connections[row, col] != 0):
+                m_graph.add_edge(colvar, rowvar, weight=gainmatrix[row, col])
 
     # Add connections where out degree == 1
     counter = 1
@@ -72,7 +77,7 @@ def rankforward(variables, gainmatrix, connections):
         if m_graph.out_degree(node) == 1:
             nameofscale = 'DV_forward' + str(counter)
             # TODO: Investigate the effect of different weights
-            m_graph.add_edge(node, nameofscale, weight=1.0)
+            m_graph.add_edge(node, nameofscale, weight=dummyweight)
             counter += 1
 
     forwardconnection = nx.to_numpy_matrix(m_graph, weight=None).T
@@ -83,7 +88,7 @@ def rankforward(variables, gainmatrix, connections):
         forwardvariablelist
 
 
-def rankbackward(variables, gainmatrix, connections):
+def rankbackward(variables, gainmatrix, connections, dummyweight):
     """This method adds a unit gain node to all nodes with an out-degree
     of 1; now all of these nodes should have an out-degree of 2.
     Therefore all nodes with pointers should have 2 or more edges
@@ -99,17 +104,17 @@ def rankbackward(variables, gainmatrix, connections):
 
     m_graph = nx.DiGraph()
     # Construct the graph with connections
-    for n, u in enumerate(variables):
-        for m, v in enumerate(variables):
-            if (connections.T[n, m] != 0):
-                m_graph.add_edge(v, u, weight=gainmatrix.T[n, m])
+    for col, colvar in enumerate(variables):
+        for row, rowvar in enumerate(variables):
+            if (connections.T[row, col] != 0):
+                m_graph.add_edge(colvar, rowvar, weight=gainmatrix.T[row, col])
 
     # Add connections where out degree == 1
     counter = 1
     for node in m_graph.nodes():
         if m_graph.out_degree(node) == 1:
             nameofscale = 'DV_backward' + str(counter)
-            m_graph.add_edge(node, nameofscale, weight=1.0)
+            m_graph.add_edge(node, nameofscale, weight=dummyweight)
             counter += 1
 
     backwardconnection = nx.to_numpy_matrix(m_graph, weight=None).T

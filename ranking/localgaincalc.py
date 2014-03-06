@@ -30,8 +30,6 @@ def create_connectionmatrix(connection_loc):
         variables = csv.reader(f).next()[1:]
         connectionmatrix = np.genfromtxt(f, delimiter=',')[:, 1:]
 
-    print "Number of tags: ", len(variables)
-
     return variables, connectionmatrix
 
 
