@@ -22,12 +22,12 @@ import matplotlib.pyplot as plt
 
 filesloc = json.load(open('config.json'))
 # Closedloop connection (adjacency) matrix
-connection_loc = filesloc['closedloop_connections_mod']
+connection_loc = filesloc['closedloop_connections_mod_pressup']
 # Openloop connection (adjacency) matrix
 openconnection_loc = filesloc['openloop_connections_mod']
 closedconnection_loc = filesloc['closedloop_connections_mod']
 # Tags time series data
-tags_tsdata = filesloc['data_pressetstep_mod']
+tags_tsdata = filesloc['data_dist11_mod']
 #Location to store all exported files
 saveloc = filesloc['savelocation']
 
@@ -68,7 +68,7 @@ closedgraph, opengraph = create_importance_graph(variables,
                                                  gainmatrix,
                                                  blendedranking)
                                                 
-allgraph, allgraph = create_importance_graph(variables,
+allgraph, _ = create_importance_graph(variables,
                                              connectionmatrix.T,
                                              connectionmatrix.T,
                                              gainmatrix,
