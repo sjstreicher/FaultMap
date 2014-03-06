@@ -23,7 +23,7 @@ def normalise_matrix(inputmatrix):
 
     return normalisedmatrix
 
-# This might be a depreciated function and will be removed if no use is found
+# This might be a deprecated function and will be removed if no use is found
 def removedummyvars(gainmatrix, connectionmatrix, variables,
                     dummy_var_no):
     """This method assumed the first variables up to dummy_var_no

@@ -35,7 +35,7 @@ dummy_var_no = 0
 [correlationmatrix, partialcorrelationmatrix] = \
     calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata)
 
-# Remove dummy variables - possibly depreciated function
+# Remove dummy variables - possibly deprecated function
 # Where did these dummy variables come from?
 #[nodummyvariablelist, nodummygain, nodummyconnection, nodummy_nodes] = \
 #    removedummyvars(partialcorrelationmatrix, connectionmatrix, variables,
@@ -90,7 +90,7 @@ backwardrank = calculate_rank(normalise_matrix(scaledbackwardgain),
 blendedranking, slist = create_blended_ranking(forwardrank, backwardrank,
                                                variables, alpha=0.35)
 
-importancegraph = create_importance_graph(variables, connectionmatrix,
+importancegraph, edgelist = create_importance_graph(variables, connectionmatrix,
                                           blendedranking)
 
 writer = csv.writer(open('importances.csv', 'wb'))
@@ -101,8 +101,9 @@ print("Done with controlled importances")
 
 #nx.write_gml(importancegraph, "importancegraph.gml")
 
-#plt.figure("The Controlled System")
-#nx.draw_circular(importancegraph)
+plt.figure("The Controlled System")
+nx.draw_circular(importancegraph)
+plt.show()
 
 #controlmatrix = LoopRanking(scaledforwardgain,
 #                            scaledforwardvariablelist,
