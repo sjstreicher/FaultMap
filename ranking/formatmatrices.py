@@ -49,7 +49,7 @@ def removedummyvars(gainmatrix, connectionmatrix, variables,
     return nodummyvariablelist, nodummygain, nodummyconnection, nodummy_nodes
 
 
-def addforwardscale(variables, gainmatrix, connections):
+def rankforward(variables, gainmatrix, connections):
     """This method adds a unit gain node to all nodes with an out-degree
     of 1; now all of these nodes should have an out-degree of 2.
     Therefore all nodes with pointers should have 2 or more edges pointing
@@ -75,15 +75,15 @@ def addforwardscale(variables, gainmatrix, connections):
             m_graph.add_edge(node, nameofscale, weight=1.0)
             counter += 1
 
-    scaledforwardconnection = nx.to_numpy_matrix(m_graph, weight=None).T
-    scaledforwardgain = nx.to_numpy_matrix(m_graph, weight='weight').T
-    scaledforwardvariablelist = m_graph.nodes()
+    forwardconnection = nx.to_numpy_matrix(m_graph, weight=None).T
+    forwardgain = nx.to_numpy_matrix(m_graph, weight='weight').T
+    forwardvariablelist = m_graph.nodes()
 
-    return scaledforwardconnection, scaledforwardgain, \
-        scaledforwardvariablelist
+    return forwardconnection, forwardgain, \
+        forwardvariablelist
 
 
-def addbackwardscale(variables, gainmatrix, connections):
+def rankbackward(variables, gainmatrix, connections):
     """This method adds a unit gain node to all nodes with an out-degree
     of 1; now all of these nodes should have an out-degree of 2.
     Therefore all nodes with pointers should have 2 or more edges
@@ -112,12 +112,12 @@ def addbackwardscale(variables, gainmatrix, connections):
             m_graph.add_edge(node, nameofscale, weight=1.0)
             counter += 1
 
-    scaledbackwardconnection = nx.to_numpy_matrix(m_graph, weight=None).T
-    scaledbackwardgain = nx.to_numpy_matrix(m_graph, weight='weight').T
-    scaledbackwardvariablelist = m_graph.nodes()
+    backwardconnection = nx.to_numpy_matrix(m_graph, weight=None).T
+    backwardgain = nx.to_numpy_matrix(m_graph, weight='weight').T
+    backwardvariablelist = m_graph.nodes()
 
-    return scaledbackwardconnection, scaledbackwardgain, \
-        scaledbackwardvariablelist
+    return backwardconnection, backwardgain, \
+        backwardvariablelist
 
 
 
