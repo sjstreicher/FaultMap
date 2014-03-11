@@ -8,6 +8,7 @@ from scipy import stats
 import random
 import mcint
 from autoreg import getdata
+from jpype import *
 
 
 def vectorselection(data, timelag, sub_samples, k=1, l=1):
@@ -104,7 +105,9 @@ def te_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val,
     logterm_num = (term1 / term2)
     logterm_den = (term3 / term4)
     coeff = term1
-    sum_element = coeff * np.log(logterm_num / logterm_den)
+    np.seterr(divide='ignore', invalid='ignore')
+    sum_element = coeff * np.log10(logterm_num / logterm_den)
+    np.seterr(divide=None, invalid=None)
 
     #print sum_element
 
@@ -114,8 +117,8 @@ def te_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val,
     # very similar to the x_pred values.
     # Some very small negative values are sometimes returned.
 
-    if (str(sum_element[0]) == 'nan' or sum_element < 0
-            or str(sum_element[0]) == 'inf'):
+    if (str(sum_element[0]) == 'nan' or str(sum_element[0]) == 'inf' 
+        or sum_element[0] < 0):
         sum_element = 0
 
     return sum_element
@@ -166,6 +169,9 @@ def te_calc(x_pred, x_hist, y_hist, mcsamples):
             yield(s1, s2, s3)
 
     domainsize = x_pred_range * x_hist_range * y_hist_range
+#    domainsize = 1
+    
+#    print domainsize
 
     # Do triple integration using scipy.integrate.tplquad
     # Also do a version using mcint
@@ -177,8 +183,8 @@ def te_calc(x_pred, x_hist, y_hist, mcsamples):
         result, error = mcint.integrate(integrand, sampler(),
                                         measure=domainsize, n=nmc)
 
-        print "Using n = ", nmc
-        print "Result = ", result
+#        print "Using n = ", nmc
+        print "Result = ", result[0]
     return result
 
 
@@ -207,3 +213,47 @@ def calculate_te(delay, timelag, samples, sub_samples, mcsamples, k=1, l=1):
     transentropy = te_calc(x_pred, x_hist, y_hist, mcsamples)
 
     return transentropy
+
+def calc_infodynamics_te(delay, timelag, samples, sub_samples, k=1, l=1):
+    """Calculates the transfer entropy for a specific timelag (equal to
+    prediction horison) for a set of autoregressive data.
+    
+    This implementation makes use of the infodynamics toolkit:
+    https://code.google.com/p/information-dynamics-toolkit/
+    
+    sub_samples is the amount of samples in the dataset used to calculate the
+    transfer entropy between two vectors (taken from the end of the dataset).
+    sub_samples <= samples
+
+    Currently only supports k = 1; l = 1;
+
+    You can search through a set of timelags in an attempt to identify the
+    original delay.
+    The transfer entropy should have a maximum value when timelag = delay
+    used to generate the autoregressive dataset.
+
+    """
+    
+    data = getdata(samples, delay)
+
+    [_, x_hist, y_hist] = vectorselection(data, timelag,
+                                               sub_samples, k, l)
+    # Change location of jar to match yours:
+    jarLocation = "infodynamics.jar"
+    # Start the JVM (add the "-Xmx" option with say 1024M if you get crashes due to not enough memory space)
+    startJVM(getDefaultJVMPath(), "-ea", "-Djava.class.path=" + jarLocation)
+    
+    sourceArray = y_hist.tolist()[0]
+    destArray = x_hist.tolist()[0]    
+    
+    teCalcClass = JPackage("infodynamics.measures.continuous.kernel").TransferEntropyCalculatorKernel
+    teCalc = teCalcClass();
+    teCalc.setProperty("NORMALISE", "true"); # Normalise the individual variables
+    teCalc.initialise(1, 0.5); # Use history length 1 (Schreiber k=1), kernel width of 0.5 normalised units
+    teCalc.setObservations(JArray(JDouble, 1)(sourceArray), JArray(JDouble, 1)(destArray));
+
+    transentropy = teCalc.computeAverageLocalOfObservations();
+    
+    return transentropy
+    
+    
