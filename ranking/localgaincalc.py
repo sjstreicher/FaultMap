@@ -6,6 +6,7 @@
 
 import csv
 import numpy as np
+import h5py
 
 
 def create_connectionmatrix(connection_loc):
@@ -33,7 +34,7 @@ def create_connectionmatrix(connection_loc):
     return variables, connectionmatrix
 
 
-def calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata):
+def calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, datasetname):
     """Calculates the local gains in terms of the partial (Pearson's)
     correlation between the variables.
 
@@ -43,7 +44,9 @@ def calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata):
     in colums and sampling instances in rows
 
     """
-    inputdata = np.loadtxt(tags_tsdata, delimiter=',')
+    
+    inputdata = np.array(h5py.File(tags_tsdata, 'r')[datasetname])
+#    inputdata = np.loadtxt(tags_tsdata, delimiter=',')
     print "Total number of data points: ", inputdata.size
     # Calculate correlation matrix
     correlationmatrix = np.corrcoef(inputdata.T)

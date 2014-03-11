@@ -27,7 +27,8 @@ connection_loc = filesloc['closedloop_connections_mod_pressup']
 openconnection_loc = filesloc['openloop_connections_mod']
 closedconnection_loc = filesloc['closedloop_connections_mod']
 # Tags time series data
-tags_tsdata = filesloc['data_dist11_mod']
+datasetname = 'data_dist11_mod'
+tags_tsdata = filesloc[datasetname]
 #Location to store all exported files
 saveloc = filesloc['savelocation']
 
@@ -47,7 +48,7 @@ _, closedconnectionmatrix = create_connectionmatrix(closedconnection_loc)
 
 # Get the correlation and partial correlation matrices
 _, gainmatrix = \
-    calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata)
+    calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, datasetname)
 np.savetxt(saveloc + "gainmatrix.csv", gainmatrix,
            delimiter=',')
 
