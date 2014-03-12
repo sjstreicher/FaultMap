@@ -11,7 +11,6 @@ from ranking.localgaincalc import calc_partialcor_gainmatrix
 #from ranking.formatmatrices import removedummyvars
 from ranking.formatmatrices import split_tsdata
 from ranking.formatmatrices import rankforward, rankbackward
-from ranking.formatmatrices import normalise_matrix
 from ranking.gainrank import calculate_rank
 from ranking.gainrank import create_blended_ranking
 from ranking.gainrank import calc_transient_importancediffs
@@ -41,14 +40,10 @@ samplerate = 5e-4
 # (determined by process knowledge).
 # Time delays may influence signs in correlations(??)
 
-# Get the variables and clsoedloop connectionmatrix
+# Get the variables and closedloop connectionmatrix
 [variables, connectionmatrix] = create_connectionmatrix(connection_loc)
-
 # Get the openloop connectionmatrix
 _, openconnectionmatrix = create_connectionmatrix(openconnection_loc)
-#np.savetxt(saveloc + "openconnectmatrix.csv", openconnectionmatrix,
-#           delimiter=',')
-
 _, closedconnectionmatrix = create_connectionmatrix(closedconnection_loc)
 
 # Split the tags_tsdata into sets useful for calculating
@@ -56,7 +51,6 @@ _, closedconnectionmatrix = create_connectionmatrix(closedconnection_loc)
 boxes = split_tsdata(tags_tsdata, datasetname, samplerate, 2, 10)
 
 # Calculate gain matrix for each box
-
 gainmatrices = [calc_partialcor_gainmatrix(connectionmatrix, box,
                                            datasetname)[1]
                 for box in boxes]
@@ -91,62 +85,3 @@ print("Done with controlled importances")
 
 transientdict, basevaldict = \
     calc_transient_importancediffs(rankingdicts, variables)
-
-
-
-#closedgraph, opengraph = create_importance_graph(variables,
-#                                                 closedconnectionmatrix.T,
-#                                                 openconnectionmatrix.T,
-#                                                 gainmatrix,
-#                                                 blendedranking)
-#
-#allgraph, _ = create_importance_graph(variables,
-#                                             connectionmatrix.T,
-#                                             connectionmatrix.T,
-#                                             gainmatrix,
-#                                             blendedranking)
-#print "Number of tags: ", len(variables)
-
-#with open(saveloc + 'importances.csv', 'wb') as csvfile:
-#    writer = csv.writer(csvfile, delimiter=',')
-#    for x in slist:
-#        writer.writerow(x)
-#        print(x)
-#print("Done with controlled importances")
-
-
-#nx.write_gml(closedgraph, saveloc + "closedgraph.gml")
-#nx.write_gml(opengraph, saveloc + "opengraph.gml")
-#nx.write_gml(allgraph, saveloc + "allgraph.gml")
-
-#plt.figure("Closedloop System")
-#nx.draw(closedgraph)
-#plt.show()
-#
-#plt.figure("Openloop System")
-
-
-#def write_to_files(variables, connectionmatrix, correlationmatrix,
-#                   partialcorrelationmatrix,
-#                   scaledforwardconnection, scaledforwardgain,
-#                   scaledforwardvariablelist,
-#                   scaledbackwardconnection, scaledbackwardgain,
-#                   scaledbackwardvariablelist):
-#    """Writes the list of variables, connectionmatrix, correlationmatrix
-#    as well as partial correlation matrix to file.
-#
-#    """
-#    with open('vars.csv', 'wb') as csvfile:
-#        writer = csv.writer(csvfile, delimiter=',')
-#        writer.writerow(variables)
-#    np.savetxt("connectmatrix.csv", connectionmatrix, delimiter=',')
-#    np.savetxt("correlmat.csv", correlationmatrix, delimiter=',')
-#    np.savetxt("partialcorrelmat.csv", partialcorrelationmatrix, delimiter=',')
-#    np.savetxt("forwardconnection.csv", scaledforwardconnection, delimiter=',')
-#
-#write_to_files(variables, connectionmatrix, correlationmatrix,
-#               partialcorrelationmatrix,
-#               scaledforwardconnection, scaledforwardgain,
-#               scaledforwardvariablelist,
-#               scaledbackwardconnection, scaledbackwardgain,
-#               scaledbackwardvariablelist)

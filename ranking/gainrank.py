@@ -82,7 +82,7 @@ def calc_transient_importancediffs(rankingdicts, variablelist):
 
     return transientdict, basevaldict
 
-def plot_transient_importances(transientdict, basevaldict):
+#def plot_transient_importances(transientdict, basevaldict):
 
 
 

@@ -9,52 +9,6 @@ import networkx as nx
 import h5py
 
 
-def normalise_matrix(inputmatrix):
-    """Normalises the absolute value of the input matrix in the columns
-    such that all columns will sum to 1.
-
-
-    """
-    # Taking the absolute does have an effect - it reduces the scaled of the
-    # signed digraph to that of an unsigned digraph.
-    # Thus, information is lost.
-
-    #This function is still used to normalize the final importance scores.
-    inputmatrix = abs(np.asarray(inputmatrix))
-
-    colsums = inputmatrix.sum(0)
-    normalisedmatrix = inputmatrix/colsums
-    # Remove nan values that entered due to division by zero
-    normalisedmatrix[:, colsums == 0] = 0
-
-    return normalisedmatrix
-
-# This might be a deprecated function and will be removed if no use is found
-def removedummyvars(gainmatrix, connectionmatrix, variables,
-                    dummy_var_no):
-    """This method assumed the first variables up to dummy_var_no
-    are the dummy variables.
-
-    """
-    nodummyvariablelist = []  # Necessary for a list copy
-    nodummyvariablelist.extend(variables)
-    nodummygain = gainmatrix.copy()
-    nodummyconnection = connectionmatrix.copy()
-    for index in range(dummy_var_no):
-        nodummyvariablelist.pop(0)
-        nodummygain = np.delete(nodummygain, 0, 0)
-        nodummygain = np.delete(nodummygain, 0, 1)
-        nodummyconnection = np.delete(nodummyconnection, 0, 0)
-        nodummyconnection = np.delete(nodummyconnection, 0, 1)
-
-    [r, c] = nodummyconnection.shape
-    nodummy_nodes = r
-
-    print "Number of dummy nodes: ", nodummy_nodes
-
-    return nodummyvariablelist, nodummygain, nodummyconnection, nodummy_nodes
-
-
 def rankforward(variables, gainmatrix, connections, dummyweight):
     """This method adds a unit gain node to all nodes with an out-degree
     of 1; now all of these nodes should have an out-degree of 2.
