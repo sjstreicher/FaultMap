@@ -98,10 +98,10 @@ def split_tsdata(tags_tsdata, datasetname, samplerate, boxsize, boxnum):
     inputdata = np.array(h5py.File(tags_tsdata, 'r')[datasetname])
     # Get total number of samples
     samples = len(inputdata)
-    print "Number of samples: ", samples
+#    print "Number of samples: ", samples
     # Convert boxsize to number of samples
     boxsizesamples = int(round(boxsize / samplerate))
-    print "Box size in samples: ", boxsizesamples
+#    print "Box size in samples: ", boxsizesamples
     # Calculate starting index for each box
     boxstartindex = np.empty((1, boxnum))[0]
     boxstartindex[:] = np.NAN

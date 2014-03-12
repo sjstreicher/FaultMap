@@ -34,7 +34,7 @@ def create_connectionmatrix(connection_loc):
     return variables, connectionmatrix
 
 
-def calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, datasetname):
+def calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, dataset):
     """Calculates the local gains in terms of the partial (Pearson's)
     correlation between the variables.
 
@@ -47,9 +47,8 @@ def calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, datasetname):
     if isinstance(tags_tsdata, np.ndarray):
         inputdata = tags_tsdata
     else:
-        inputdata = np.array(h5py.File(tags_tsdata, 'r')[datasetname])
-#    inputdata = np.loadtxt(tags_tsdata, delimiter=',')
-    print "Total number of data points: ", inputdata.size
+        inputdata = np.array(h5py.File(tags_tsdata, 'r')[dataset])
+#    print "Total number of data points: ", inputdata.size
     # Calculate correlation matrix
     correlationmatrix = np.corrcoef(inputdata.T)
     # Calculate partial correlation matrix
@@ -58,11 +57,6 @@ def calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, datasetname):
     partialcorrelationmatrix = \
         np.where(connectionmatrix, -p_matrix/np.abs(np.sqrt(np.outer(d, d))),
                  0)
-    # Removing the sign generally seems to destroy information
-    # However, there is a concern that it can be influenced by time delays
-    # TODO: Search for the maximum absolute value over a range of time delays
-    # and then select the maximum with correct sign.
-#    partialcorrelationmatrix = abs(partialcorrelationmatrix)
 
     return correlationmatrix, partialcorrelationmatrix
 
@@ -85,14 +79,12 @@ def calc_partialcor_delayed(causevarindex, affectedvarindex, tags_tsdata,
     causevardata = inputdata[:, causevarindex]
     affectedvardata = inputdata[:, affectedvarindex]
     # Truncate the colums appropriately
-    causevardata = inputdata[:, causevarindex][:end-sample_delay]
+    causevardata = inputdata[:, causevarindex][:-1-sample_delay]
     affectedvardata = inputdata[:, affectedvarindex][sample_delay:]
     # Calculate covariance
     correlationmatrix = np.corrcoef(causevardata.T, affectedvardata.T)
 
     return correlationmatrix
-
-
 
 
 def calc_transentropy_gainmatrix(connectionmatrix, tags_tsdata):
