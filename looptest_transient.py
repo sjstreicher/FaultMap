@@ -33,6 +33,9 @@ tags_tsdata = filesloc[datasetname]
 #Location to store all exported files
 saveloc = filesloc['savelocation']
 
+# Define sample rate in terms of base time unit
+samplerate = 5e-4
+
 # TODO: Include sign of action in adjacency matrix
 # (determined by process knowledge).
 # Time delays may influence signs in correlations(??)
@@ -47,6 +50,15 @@ _, openconnectionmatrix = create_connectionmatrix(openconnection_loc)
 
 _, closedconnectionmatrix = create_connectionmatrix(closedconnection_loc)
 
+# Split the tags_tsdata into sets useful for calculating
+# transient correlations.
+boxes = split_tsdata(tags_tsdata, datasetname, samplerate, 2, 10)
+
+# Calculate gain matrix for each box
+
+gainmatrices = [calc_partialcor_gainmatrix(connectionmatrix, box,
+                                           datasetname)[1]
+                for box in boxes]
 
 # Get the correlation and partial correlation matrices
 _, gainmatrix = \

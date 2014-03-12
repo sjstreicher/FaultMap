@@ -44,8 +44,10 @@ def calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, datasetname):
     in colums and sampling instances in rows
 
     """
-    
-    inputdata = np.array(h5py.File(tags_tsdata, 'r')[datasetname])
+    if isinstance(tags_tsdata, np.ndarray):
+        inputdata = tags_tsdata
+    else:
+        inputdata = np.array(h5py.File(tags_tsdata, 'r')[datasetname])
 #    inputdata = np.loadtxt(tags_tsdata, delimiter=',')
     print "Total number of data points: ", inputdata.size
     # Calculate correlation matrix
@@ -63,6 +65,34 @@ def calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, datasetname):
 #    partialcorrelationmatrix = abs(partialcorrelationmatrix)
 
     return correlationmatrix, partialcorrelationmatrix
+
+
+def calc_partialcor_delayed(causevarindex, affectedvarindex, tags_tsdata,
+                            sample_delay, datasetname):
+    """Calculates the partial (Pearson's) correlation between a specified
+    cause variable (columns) and affected variable (rows) for a specific
+    delay in terms of samples.
+
+    The cause variable lags behind the affected variable by the sample_delay.
+
+    The end of the affected variable is cut so that the two datasets match.
+
+    """
+    # Get the tags time series data
+    # TODO: Make faster by selecting only the columns required.
+    inputdata = np.array(h5py.File(tags_tsdata, 'r')[datasetname])
+    # Select the approproate columns
+    causevardata = inputdata[:, causevarindex]
+    affectedvardata = inputdata[:, affectedvarindex]
+    # Truncate the colums appropriately
+    causevardata = inputdata[:, causevarindex][:end-sample_delay]
+    affectedvardata = inputdata[:, affectedvarindex][sample_delay:]
+    # Calculate covariance
+    correlationmatrix = np.corrcoef(causevardata.T, affectedvardata.T)
+
+    return correlationmatrix
+
+
 
 
 def calc_transentropy_gainmatrix(connectionmatrix, tags_tsdata):
