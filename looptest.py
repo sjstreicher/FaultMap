@@ -9,6 +9,7 @@
 from ranking.localgaincalc import create_connectionmatrix
 from ranking.localgaincalc import calc_partialcor_gainmatrix
 #from ranking.formatmatrices import removedummyvars
+from ranking.formatmatrices import split_tsdata
 from ranking.formatmatrices import rankforward, rankbackward
 from ranking.formatmatrices import normalise_matrix
 from ranking.gainrank import calculate_rank
@@ -32,6 +33,9 @@ tags_tsdata = filesloc[datasetname]
 #Location to store all exported files
 saveloc = filesloc['savelocation']
 
+# Define sample rate in terms of base time unit
+samplerate = 5e-4
+
 # TODO: Include sign of action in adjacency matrix
 # (determined by process knowledge).
 # Time delays may influence signs in correlations(??)
@@ -45,6 +49,10 @@ _, openconnectionmatrix = create_connectionmatrix(openconnection_loc)
 #           delimiter=',')
 
 _, closedconnectionmatrix = create_connectionmatrix(closedconnection_loc)
+
+# Split the tags_tsdata into sets useful for calculating
+# transient correlations.
+boxes = split_tsdata(tags_tsdata, datasetname, samplerate, 2, 10)
 
 # Get the correlation and partial correlation matrices
 _, gainmatrix = \
@@ -68,7 +76,7 @@ closedgraph, opengraph = create_importance_graph(variables,
                                                  openconnectionmatrix.T,
                                                  gainmatrix,
                                                  blendedranking)
-                                                
+
 allgraph, _ = create_importance_graph(variables,
                                              connectionmatrix.T,
                                              connectionmatrix.T,
