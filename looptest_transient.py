@@ -60,47 +60,58 @@ gainmatrices = [calc_partialcor_gainmatrix(connectionmatrix, box,
                                            datasetname)[1]
                 for box in boxes]
 
-# Get the correlation and partial correlation matrices
-_, gainmatrix = \
-    calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, datasetname)
-np.savetxt(saveloc + "gainmatrix.csv", gainmatrix,
-           delimiter=',')
+rankinglists = []
+rankingdicts = []
+for index, gainmatrix in enumerate(gainmatrices):
+    # Store the gainmatrix
+    np.savetxt(saveloc + "gainmatrix_" + str(index) + ".csv", gainmatrix,
+               delimiter=',')
+    # Get everything needed to calculate slist
 
-forwardconnection, forwardgain, forwardvariablelist = \
-    rankforward(variables, gainmatrix, connectionmatrix, 0.01)
-backwardconnection, backwardgain, backwardvariablelist = \
-    rankbackward(variables, gainmatrix, connectionmatrix, 0.01)
+    forwardconnection, forwardgain, forwardvariablelist = \
+        rankforward(variables, gainmatrix, connectionmatrix, 0.01)
+    backwardconnection, backwardgain, backwardvariablelist = \
+        rankbackward(variables, gainmatrix, connectionmatrix, 0.01)
 
-forwardrank = calculate_rank(forwardgain, forwardvariablelist)
-backwardrank = calculate_rank(backwardgain, backwardvariablelist)
-# Why is there no difference?
-blendedranking, slist = create_blended_ranking(forwardrank, backwardrank,
-                                               variables, alpha=0.35)
+    forwardrank = calculate_rank(forwardgain, forwardvariablelist)
+    backwardrank = calculate_rank(backwardgain, backwardvariablelist)
+    # Why is there no difference?
+    blendedranking, slist = create_blended_ranking(forwardrank, backwardrank,
+                                                   variables, alpha=0.35)
+    rankinglists.append(slist)
+    with open(saveloc + 'importances_' + str(index) + '.csv', 'wb') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',')
+        for x in slist:
+            writer.writerow(x)
+#            print(x)
+    rankingdicts.append(blendedranking)
 
-closedgraph, opengraph = create_importance_graph(variables,
-                                                 closedconnectionmatrix.T,
-                                                 openconnectionmatrix.T,
-                                                 gainmatrix,
-                                                 blendedranking)
-
-allgraph, _ = create_importance_graph(variables,
-                                             connectionmatrix.T,
-                                             connectionmatrix.T,
-                                             gainmatrix,
-                                             blendedranking)
-print "Number of tags: ", len(variables)
-
-with open(saveloc + 'importances.csv', 'wb') as csvfile:
-    writer = csv.writer(csvfile, delimiter=',')
-    for x in slist:
-        writer.writerow(x)
-        print(x)
 print("Done with controlled importances")
+
+#closedgraph, opengraph = create_importance_graph(variables,
+#                                                 closedconnectionmatrix.T,
+#                                                 openconnectionmatrix.T,
+#                                                 gainmatrix,
+#                                                 blendedranking)
+#
+#allgraph, _ = create_importance_graph(variables,
+#                                             connectionmatrix.T,
+#                                             connectionmatrix.T,
+#                                             gainmatrix,
+#                                             blendedranking)
+#print "Number of tags: ", len(variables)
+
+#with open(saveloc + 'importances.csv', 'wb') as csvfile:
+#    writer = csv.writer(csvfile, delimiter=',')
+#    for x in slist:
+#        writer.writerow(x)
+#        print(x)
+#print("Done with controlled importances")
 
 
 #nx.write_gml(closedgraph, saveloc + "closedgraph.gml")
 #nx.write_gml(opengraph, saveloc + "opengraph.gml")
-nx.write_gml(allgraph, saveloc + "allgraph.gml")
+#nx.write_gml(allgraph, saveloc + "allgraph.gml")
 
 #plt.figure("Closedloop System")
 #nx.draw(closedgraph)
