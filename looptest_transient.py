@@ -14,6 +14,7 @@ from ranking.formatmatrices import rankforward, rankbackward
 from ranking.formatmatrices import normalise_matrix
 from ranking.gainrank import calculate_rank
 from ranking.gainrank import create_blended_ranking
+from ranking.gainrank import calc_transient_importancediffs
 from ranking.gainrank import create_importance_graph
 import json
 import csv
@@ -87,6 +88,11 @@ for index, gainmatrix in enumerate(gainmatrices):
     rankingdicts.append(blendedranking)
 
 print("Done with controlled importances")
+
+transientdict, basevaldict = \
+    calc_transient_importancediffs(rankingdicts, variables)
+
+
 
 #closedgraph, opengraph = create_importance_graph(variables,
 #                                                 closedconnectionmatrix.T,
