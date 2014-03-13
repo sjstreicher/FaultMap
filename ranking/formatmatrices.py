@@ -25,6 +25,16 @@ def buildcase(dummyweight, m_graph, name):
     return connection, gain, variablelist
 
 
+def buildgraph(variables, gainmatrix, connections):
+    m_graph = nx.DiGraph()
+    # Construct the graph with connections
+    for col, colvar in enumerate(variables):
+        for row, rowvar in enumerate(variables):
+            if (connections[row, col] != 0):
+                m_graph.add_edge(colvar, rowvar, weight=gainmatrix[row, col])
+    return m_graph
+
+
 def rankforward(variables, gainmatrix, connections, dummyweight):
     """This method adds a unit gain node to all nodes with an out-degree
     of 1; now all of these nodes should have an out-degree of 2.
@@ -33,21 +43,12 @@ def rankforward(variables, gainmatrix, connections, dummyweight):
 
     It uses the number of dummy variables to construct these gain,
     connection and variable name matrices.
-
     """
-    m_graph = nx.DiGraph()
-    # Construct the graph with connections
-    for col, colvar in enumerate(variables):
-        for row, rowvar in enumerate(variables):
-            if (connections[row, col] != 0):
-                m_graph.add_edge(colvar, rowvar, weight=gainmatrix[row, col])
-
-    # Add connections where out degree == 1
-    forwardconnection, forwardgain, forwardvariablelist = buildcase(dummyweight, m_graph, 'DV_forward')
-
-    return forwardconnection, forwardgain, \
-        forwardvariablelist
-
+    
+    #TODO: Rework calls of this code to reduce redundancy
+    
+    m_graph = buildgraph(variables, gainmatrix, connections) 
+    return buildcase(dummyweight, m_graph, 'DV_forward')
 
 
 def rankbackward(variables, gainmatrix, connections, dummyweight):
@@ -64,17 +65,10 @@ def rankbackward(variables, gainmatrix, connections, dummyweight):
 
     """
 
-    m_graph = nx.DiGraph()
-    # Construct the graph with connections
-    for col, colvar in enumerate(variables):
-        for row, rowvar in enumerate(variables):
-            if (connections.T[row, col] != 0):
-                m_graph.add_edge(colvar, rowvar, weight=gainmatrix.T[row, col])
+    #TODO: Rework calls of this code to reduce redundancy
 
-    backwardconnection, backwardgain, backwardvariablelist = buildcase(dummyweight, m_graph, 'DV_backward')
-
-    return backwardconnection, backwardgain, \
-        backwardvariablelist
+    m_graph = buildgraph(variables, gainmatrix.T, connections.T)
+    return buildcase(dummyweight, m_graph, 'DV_backward')
 
 
 def split_tsdata(tags_tsdata, datasetname, samplerate, boxsize, boxnum):
