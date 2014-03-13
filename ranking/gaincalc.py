@@ -103,7 +103,7 @@ def calc_max_partialcor(variables, connectionmatrix, tags_tsdata,
     datastore = []
     actual_delays = [int(round(delay/sampling_rate)) * sampling_rate
                      for delay in delays]
-    for causevarindex, causevar in enumerate(variables[1:3]):
+    for causevarindex, causevar in enumerate(variables):
         logging.info("Analysing effect of: " + causevar)
         for affectedvarindex, affectedvar in enumerate(variables):
             if not(connectionmatrix[affectedvarindex, causevarindex] == 0):
