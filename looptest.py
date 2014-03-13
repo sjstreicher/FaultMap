@@ -17,6 +17,8 @@ import csv
 import numpy as np
 
 import os
+import logging
+logging.basicConfig(level=logging.INFO)
 
 # Load directories config file
 dirs = json.load(open('config.json'))
@@ -61,7 +63,7 @@ def looprank_single(case):
     savename = os.path.join(saveloc, case + '_importances.csv')
     writecsv(savename, slist)
     
-    print("Done with single ranking")
+    logging.info("Done with single ranking")
 
 def looprank_transient(case, samplerate, boxsize, boxnum):
     # Split the tags_tsdata into sets (boxes) useful for calculating
@@ -97,13 +99,14 @@ def looprank_transient(case, samplerate, boxsize, boxnum):
 
         rankingdicts.append(blendedranking)
     
-    print("Done with transient rankings")
+    logging.info("Done with transient rankings")
     
     transientdict, basevaldict = \
         calc_transient_importancediffs(rankingdicts, variables)
 
 for case in cases:
     # Get connection (adjacency) matrix
+    logging.info("Running case {}".format(case))
     connectionloc = os.path.join(plantdir, 'connections',
                                  caseconfig[case]['connections'])
     # Get time series data
@@ -112,7 +115,7 @@ for case in cases:
     dataset = caseconfig[case]['dataset']
     # Get the variables and connection matrix
     [variables, connectionmatrix] = create_connectionmatrix(connectionloc)
-    print "Number of tags: ", len(variables)
+    logging.info("Number of tags: {}".format(len(variables)))
     boxnum = caseconfig[case]['boxnum']
     boxsize = caseconfig[case]['boxsize']    
     
