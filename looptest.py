@@ -34,13 +34,16 @@ caseconfig = json.load(open(os.path.join(plantdir, plant + '.json')))
 # Get sampling rate
 sampling_rate = caseconfig['sampling_rate']
 
+def writecsv(filename, items):
+    with open(filename, 'wb') as f:
+        csv.writer(f).writerows(items)
 
 def looprank_single(case):
     # Get the correlation and partial correlation matrices
     _, gainmatrix = \
         calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, dataset)
-    np.savetxt(os.path.join(saveloc, "gainmatrix.csv"), gainmatrix,
-               delimiter=',')
+    savename = os.path.join(saveloc, "gainmatrix.csv")
+    np.savetxt(savename, gainmatrix, delimiter=',')
     
     # TODO: The forward, backward and blended ranking will all be folded
     # into a single method, currently isolated for ease of access to
@@ -55,11 +58,9 @@ def looprank_single(case):
     blendedranking, slist = create_blended_ranking(forwardrank, backwardrank,
                                                    variables, alpha=0.35)   
     
-    with open(os.path.join(saveloc, case + '_importances.csv'), 'wb') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',')
-        for x in slist:
-            writer.writerow(x)
-#            print(x)
+    savename = os.path.join(saveloc, case + '_importances.csv')
+    writecsv(savename, slist)
+    
     print("Done with single ranking")
 
 def looprank_transient(case, samplerate, boxsize, boxnum):
@@ -75,8 +76,8 @@ def looprank_transient(case, samplerate, boxsize, boxnum):
     rankingdicts = []
     for index, gainmatrix in enumerate(gainmatrices):
         # Store the gainmatrix
-        np.savetxt(os.path.join(saveloc, "{}_gainmatrix_{:03d}.csv".format(case, index)),
-                   gainmatrix, delimiter=',')
+        gain_filename = os.path.join(saveloc, "{}_gainmatrix_{:03d}.csv".format(case, index))
+        np.savetxt(gain_filename, gainmatrix, delimiter=',')
         # Get everything needed to calculate slist
         # TODO: remove clone between this and similar code found in
         # looprank_single
@@ -91,12 +92,9 @@ def looprank_transient(case, samplerate, boxsize, boxnum):
                                                        backwardrank,
                                                        variables, alpha=0.35)
         rankinglists.append(slist)
-        with open(os.path.join(saveloc, 'importances_{:03d}.csv'.format(index)), 'wb') \
-            as csvfile:
-            writer = csv.writer(csvfile, delimiter=',')
-            for x in slist:
-                writer.writerow(x)
-    #            print(x)
+        savename = os.path.join(saveloc, 'importances_{:03d}.csv'.format(index))
+        writecsv(savename, slist)
+
         rankingdicts.append(blendedranking)
     
     print("Done with transient rankings")
