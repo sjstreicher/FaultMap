@@ -42,13 +42,7 @@ def writecsv(filename, items):
         csv.writer(f).writerows(items)
 
 
-def looprank_single(case):
-    # Get the correlation and partial correlation matrices
-    _, gainmatrix = \
-        calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, dataset)
-    savename = os.path.join(saveloc, case + "gainmatrix.csv")
-    np.savetxt(savename, gainmatrix, delimiter=',')
-
+def gainrank(gainmatrix):
     # TODO: The forward, backward and blended ranking will all be folded
     # into a single method, currently isolated for ease of access to
     # intermediate results
@@ -56,11 +50,22 @@ def looprank_single(case):
         rankforward(variables, gainmatrix, connectionmatrix, 0.01)
     backwardconnection, backwardgain, backwardvariablelist = \
         rankbackward(variables, gainmatrix, connectionmatrix, 0.01)
-
     forwardrank = calculate_rank(forwardgain, forwardvariablelist)
     backwardrank = calculate_rank(backwardgain, backwardvariablelist)
     blendedranking, slist = create_blended_ranking(forwardrank, backwardrank,
                                                    variables, alpha=0.35)
+    return blendedranking, slist
+
+
+def looprank_single(case):
+    # Get the correlation and partial correlation matrices
+    _, gainmatrix = \
+        calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, dataset)
+
+    savename = os.path.join(saveloc, "gainmatrix.csv")
+    np.savetxt(savename, gainmatrix, delimiter=',')
+
+    _, slist = gainrank(gainmatrix)
 
     savename = os.path.join(saveloc, case + '_importances.csv')
     writecsv(savename, slist)
@@ -85,24 +90,16 @@ def looprank_transient(case, samplerate, boxsize, boxnum):
             os.path.join(saveloc,
                          "{}_gainmatrix_{:03d}.csv".format(case, index))
         np.savetxt(gain_filename, gainmatrix, delimiter=',')
-        # Get everything needed to calculate slist
-        # TODO: remove clone between this and similar code found in
-        # looprank_single
-        forwardconnection, forwardgain, forwardvariablelist = \
-            rankforward(variables, gainmatrix, connectionmatrix, 0.01)
-        backwardconnection, backwardgain, backwardvariablelist = \
-            rankbackward(variables, gainmatrix, connectionmatrix, 0.01)
 
-        forwardrank = calculate_rank(forwardgain, forwardvariablelist)
-        backwardrank = calculate_rank(backwardgain, backwardvariablelist)
-        blendedranking, slist = create_blended_ranking(forwardrank,
-                                                       backwardrank,
-                                                       variables, alpha=0.35)
+        blendedranking, slist = gainrank(gainmatrix)
         rankinglists.append(slist)
-        savename = os.path.join(saveloc, case + 'importances_{:03d}.csv'.format(index))
+        savename = os.path.join(saveloc,
+                                'importances_{:03d}.csv'.format(index))
         writecsv(savename, slist)
 
         rankingdicts.append(blendedranking)
+
+    logging.info("Done with transient rankings")
 
     transientdict, basevaldict = \
         calc_transient_importancediffs(rankingdicts, variables)
@@ -127,5 +124,4 @@ for case in cases:
 
     looprank_single(case)
     looprank_transient(case, sampling_rate, boxsize, boxnum)
-
 
