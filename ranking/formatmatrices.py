@@ -9,6 +9,22 @@ import networkx as nx
 import h5py
 
 
+
+def buildcase(dummyweight, m_graph, name):
+    counter = 1
+    for node in m_graph.nodes():
+        if m_graph.out_degree(node) == 1:
+            # TODO: Investigate the effect of different weights
+            nameofscale = name + str(counter) 
+            m_graph.add_edge(node, nameofscale, weight=dummyweight)
+            counter += 1
+    
+    connection = nx.to_numpy_matrix(m_graph, weight=None).T
+    gain = nx.to_numpy_matrix(m_graph, weight='weight').T
+    variablelist = m_graph.nodes()
+    return connection, gain, variablelist
+
+
 def rankforward(variables, gainmatrix, connections, dummyweight):
     """This method adds a unit gain node to all nodes with an out-degree
     of 1; now all of these nodes should have an out-degree of 2.
@@ -27,20 +43,11 @@ def rankforward(variables, gainmatrix, connections, dummyweight):
                 m_graph.add_edge(colvar, rowvar, weight=gainmatrix[row, col])
 
     # Add connections where out degree == 1
-    counter = 1
-    for node in m_graph.nodes():
-        if m_graph.out_degree(node) == 1:
-            nameofscale = 'DV_forward' + str(counter)
-            # TODO: Investigate the effect of different weights
-            m_graph.add_edge(node, nameofscale, weight=dummyweight)
-            counter += 1
-
-    forwardconnection = nx.to_numpy_matrix(m_graph, weight=None).T
-    forwardgain = nx.to_numpy_matrix(m_graph, weight='weight').T
-    forwardvariablelist = m_graph.nodes()
+    forwardconnection, forwardgain, forwardvariablelist = buildcase(dummyweight, m_graph, 'DV_forward')
 
     return forwardconnection, forwardgain, \
         forwardvariablelist
+
 
 
 def rankbackward(variables, gainmatrix, connections, dummyweight):
@@ -64,17 +71,7 @@ def rankbackward(variables, gainmatrix, connections, dummyweight):
             if (connections.T[row, col] != 0):
                 m_graph.add_edge(colvar, rowvar, weight=gainmatrix.T[row, col])
 
-    # Add connections where out degree == 1
-    counter = 1
-    for node in m_graph.nodes():
-        if m_graph.out_degree(node) == 1:
-            nameofscale = 'DV_backward' + str(counter)
-            m_graph.add_edge(node, nameofscale, weight=dummyweight)
-            counter += 1
-
-    backwardconnection = nx.to_numpy_matrix(m_graph, weight=None).T
-    backwardgain = nx.to_numpy_matrix(m_graph, weight='weight').T
-    backwardvariablelist = m_graph.nodes()
+    backwardconnection, backwardgain, backwardvariablelist = buildcase(dummyweight, m_graph, 'DV_backward')
 
     return backwardconnection, backwardgain, \
         backwardvariablelist
