@@ -10,8 +10,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json
 
+import os
+
 filesloc = json.load(open('config.json'))
-saveloc = filesloc['savelocation']
+saveloc = os.path.expanduser(filesloc['saveloc'])
 
 testgraph = nx.DiGraph()
 
@@ -32,6 +34,6 @@ for col, colvar in enumerate(variables):
             # the convention that columns are sources and rows are sinks
             testgraph.add_edge(colvar, rowvar, weight=gainmatrix[row, col])
 
-nx.write_gml(testgraph, saveloc + "testgraph.gml")
+nx.write_gml(testgraph, os.path.join(saveloc, "testgraph.gml"))
 nx.draw(testgraph)
 plt.show()
