@@ -11,6 +11,7 @@ from ranking.formatmatrices import split_tsdata
 from ranking.noderank import calculate_rank
 from ranking.noderank import create_blended_ranking
 from ranking.noderank import calc_transient_importancediffs
+from ranking.noderank import plot_transient_importances
 
 import json
 import csv
@@ -18,8 +19,12 @@ import numpy as np
 
 import os
 import logging
+
 logging.basicConfig(level=logging.INFO)
 
+# Optional methods
+# Save plots of transient rankings
+transientplots = True
 # Load directories config file
 dirs = json.load(open('config.json'))
 # Get data and preferred export directories from directories config file
@@ -99,13 +104,12 @@ def looprank_transient(case, samplerate, boxsize, boxnum):
 
         rankingdicts.append(blendedranking)
 
-    logging.info("Done with transient rankings")
-
     transientdict, basevaldict = \
         calc_transient_importancediffs(rankingdicts, variables)
 
     logging.info("Done with transient rankings")
 
+    return transientdict, basevaldict
 
 for case in cases:
     # Get connection (adjacency) matrix
@@ -123,5 +127,18 @@ for case in cases:
     boxsize = caseconfig[case]['boxsize']
 
     looprank_single(case)
-    looprank_transient(case, sampling_rate, boxsize, boxnum)
+
+    [transientdict, basevaldict] = looprank_transient(case, sampling_rate,
+                                                      boxsize, boxnum)
+
+    if transientplots:
+        diffplot, absplot = plot_transient_importances(variables,
+                                                       transientdict,
+                                                       basevaldict)
+        diffplot_filename = os.path.join(saveloc,
+                                         "{}_diffplot.pdf".format(case))
+        absplot_filename = os.path.join(saveloc,
+                                        "{}_absplot.pdf".format(case))
+        diffplot.savefig(diffplot_filename)
+        absplot.savefig(absplot_filename)
 
