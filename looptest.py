@@ -44,7 +44,7 @@ def looprank_single(case):
     # Get the correlation and partial correlation matrices
     _, gainmatrix = \
         calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, dataset)
-    savename = os.path.join(saveloc, "gainmatrix.csv")
+    savename = os.path.join(saveloc, case + "gainmatrix.csv")
     np.savetxt(savename, gainmatrix, delimiter=',')
     
     # TODO: The forward, backward and blended ranking will all be folded
@@ -94,7 +94,7 @@ def looprank_transient(case, samplerate, boxsize, boxnum):
                                                        backwardrank,
                                                        variables, alpha=0.35)
         rankinglists.append(slist)
-        savename = os.path.join(saveloc, 'importances_{:03d}.csv'.format(index))
+        savename = os.path.join(saveloc, case + 'importances_{:03d}.csv'.format(index))
         writecsv(savename, slist)
 
         rankingdicts.append(blendedranking)
