@@ -72,7 +72,7 @@ def calc_transient_importancediffs(rankingdicts, variablelist):
     for variable in variablelist:
         diffvect = np.empty((1, len(rankingdicts)-1))[0]
         diffvect[:] = np.NAN
-        basevaldict[variable ] = rankingdicts[0][variable]
+        basevaldict[variable] = rankingdicts[0][variable]
         # Get initial previous importance
         prev_importance = basevaldict[variable]
         for index, rankingdict in enumerate(rankingdicts[1:]):
