@@ -16,49 +16,58 @@ import json
 import csv
 import numpy as np
 
+import os
+import logging
+logging.basicConfig(level=logging.INFO)
+
 # Load directories config file
 dirs = json.load(open('config.json'))
 # Get data and preferred export directories from directories config file
-dataloc = dirs['dataloc']
-saveloc = dirs['saveloc']
+dataloc = os.path.expanduser(dirs['dataloc'])
+saveloc = os.path.expanduser(dirs['saveloc'])
 # Define plant and case names to run
 plant = 'tennessee_eastman'
 # Define plant data directory
-plantdir = dataloc + 'plants/' + plant + '/'
+plantdir = os.path.join(dataloc, 'plants', plant)
 cases = ['dist11_closedloop', 'dist11_closedloop_pressup', 'dist11_full',
          'presstep_closedloop', 'presstep_full']
 # Load plant config file
-caseconfig = json.load(open(plantdir + plant + '.json'))
+caseconfig = json.load(open(os.path.join(plantdir, plant + '.json')))
 # Get sampling rate
 sampling_rate = caseconfig['sampling_rate']
+
+def writecsv(filename, items):
+    with open(filename, 'wb') as f:
+        csv.writer(f).writerows(items)
+
+
+def gainrank(gainmatrix):
+    # TODO: The forward, backward and blended ranking will all be folded
+    # into a single method, currently isolated for ease of access to
+    # intermediate results
+    forwardconnection, forwardgain, forwardvariablelist = rankforward(variables, gainmatrix, connectionmatrix, 0.01)
+    backwardconnection, backwardgain, backwardvariablelist = rankbackward(variables, gainmatrix, connectionmatrix, 0.01)
+    forwardrank = calculate_rank(forwardgain, forwardvariablelist)
+    backwardrank = calculate_rank(backwardgain, backwardvariablelist)
+    blendedranking, slist = create_blended_ranking(forwardrank, backwardrank, 
+        variables, alpha=0.35)
+    return blendedranking, slist
 
 
 def looprank_single(case):
     # Get the correlation and partial correlation matrices
     _, gainmatrix = \
         calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, dataset)
-    np.savetxt(saveloc + "gainmatrix.csv", gainmatrix,
-               delimiter=',')
+    savename = os.path.join(saveloc, "gainmatrix.csv")
+    np.savetxt(savename, gainmatrix, delimiter=',')
     
-    # TODO: The forward, backward and blended ranking will all be folded
-    # into a single method, currently isolated for ease of access to
-    # intermediate results
-    forwardconnection, forwardgain, forwardvariablelist = \
-        rankforward(variables, gainmatrix, connectionmatrix, 0.01)
-    backwardconnection, backwardgain, backwardvariablelist = \
-        rankbackward(variables, gainmatrix, connectionmatrix, 0.01)
+    _, slist = gainrank(gainmatrix)
     
-    forwardrank = calculate_rank(forwardgain, forwardvariablelist)
-    backwardrank = calculate_rank(backwardgain, backwardvariablelist)
-    blendedranking, slist = create_blended_ranking(forwardrank, backwardrank,
-                                                   variables, alpha=0.35)   
+    savename = os.path.join(saveloc, case + '_importances.csv')
+    writecsv(savename, slist)
     
-    with open(saveloc + case + '_importances.csv', 'wb') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',')
-        for x in slist:
-            writer.writerow(x)
-#            print(x)
-    print("Done with single ranking")
+    logging.info("Done with single ranking")
+
 
 def looprank_transient(case, samplerate, boxsize, boxnum):
     # Split the tags_tsdata into sets (boxes) useful for calculating
@@ -73,47 +82,33 @@ def looprank_transient(case, samplerate, boxsize, boxnum):
     rankingdicts = []
     for index, gainmatrix in enumerate(gainmatrices):
         # Store the gainmatrix
-        np.savetxt(saveloc + case + "_gainmatrix_" + str(index) + ".csv",
-                   gainmatrix, delimiter=',')
-        # Get everything needed to calculate slist
-        # TODO: remove clone between this and similar code found in
-        # looprank_single
-        forwardconnection, forwardgain, forwardvariablelist = \
-            rankforward(variables, gainmatrix, connectionmatrix, 0.01)
-        backwardconnection, backwardgain, backwardvariablelist = \
-            rankbackward(variables, gainmatrix, connectionmatrix, 0.01)
-    
-        forwardrank = calculate_rank(forwardgain, forwardvariablelist)
-        backwardrank = calculate_rank(backwardgain, backwardvariablelist)
-        blendedranking, slist = create_blended_ranking(forwardrank,
-                                                       backwardrank,
-                                                       variables, alpha=0.35)
+        gain_filename = os.path.join(saveloc, "{}_gainmatrix_{:03d}.csv".format(case, index))
+        np.savetxt(gain_filename, gainmatrix, delimiter=',')
+
+        blendedranking, slist = gainrank(gainmatrix)
         rankinglists.append(slist)
-        with open(saveloc + 'importances_' + str(index) + '.csv', 'wb') \
-            as csvfile:
-            writer = csv.writer(csvfile, delimiter=',')
-            for x in slist:
-                writer.writerow(x)
-    #            print(x)
+        savename = os.path.join(saveloc, 'importances_{:03d}.csv'.format(index))
+        writecsv(savename, slist)
+
         rankingdicts.append(blendedranking)
     
-    print("Done with transient rankings")
+    logging.info("Done with transient rankings")
     
     transientdict, basevaldict = \
         calc_transient_importancediffs(rankingdicts, variables)
 
 for case in cases:
     # Get connection (adjacency) matrix
-    connectionloc = (plantdir + 'connections/' +
-                     caseconfig[case]['connections'])
+    logging.info("Running case {}".format(case))
+    connectionloc = os.path.join(plantdir, 'connections',
+                                 caseconfig[case]['connections'])
     # Get time series data
-    tags_tsdata = (plantdir + 'data/' +
-                   caseconfig[case]['data'])
+    tags_tsdata = os.path.join(plantdir, 'data', caseconfig[case]['data'])
     # Get dataset name
     dataset = caseconfig[case]['dataset']
     # Get the variables and connection matrix
     [variables, connectionmatrix] = create_connectionmatrix(connectionloc)
-    print "Number of tags: ", len(variables)
+    logging.info("Number of tags: {}".format(len(variables)))
     boxnum = caseconfig[case]['boxnum']
     boxsize = caseconfig[case]['boxsize']    
     
