@@ -19,6 +19,7 @@ import csv
 import numpy as np
 import os
 import logging
+import h5py
 logging.basicConfig(level=logging.INFO)
 
 
@@ -51,20 +52,22 @@ stageone = [val * (2.0/3600.0) for val in range(100)]
 stagetwo = [val * (10.0/3600.0) + stageone[-1] for val in range(1000)]
 delays = list(np.hstack((stageone, stagetwo)))
 
-for case in cases[1:2]:
+for case in [cases[3]]:
     logging.info("Running case {}".format(case))
     # Get connection (adjacency) matrix
     connectionloc = os.path.join(plantdir, 'connections',
                                  caseconfig[case]['connections'])
     # Get time series data
     tags_tsdata = os.path.join(plantdir, 'data', caseconfig[case]['data'])
-    # Get dataset name
     dataset = caseconfig[case]['dataset']
+    inputdata = np.array(h5py.File(tags_tsdata, 'r')[dataset])
+    # Get dataset name
+
     # Get the variables and connection matrix
     [variables, connectionmatrix] = create_connectionmatrix(connectionloc)
 
     [max_val_array, max_delay_array, datastore, data_header] = \
-        calc_max_partialcor(variables, connectionmatrix, tags_tsdata,
+        calc_max_partialcor(variables, connectionmatrix, inputdata,
                             dataset, sampling_rate, delays)
 
     # Define export direcories and filenames

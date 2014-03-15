@@ -62,7 +62,7 @@ def calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, dataset):
     return correlationmatrix, partialcorrelationmatrix
 
 
-def calc_partialcor_delayed(causevarindex, affectedvarindex, tags_tsdata,
+def calc_partialcor_delayed(causevarindex, affectedvarindex, inputdata,
                             sample_delay, datasetname):
     """Calculates the partial (Pearson's) correlation between a specified
     cause variable (columns) and affected variable (rows) for a specific
@@ -75,11 +75,12 @@ def calc_partialcor_delayed(causevarindex, affectedvarindex, tags_tsdata,
     """
     # Get the tags time series data
     # TODO: Make faster by selecting only the columns required.
-    inputdata = np.array(h5py.File(tags_tsdata, 'r')[datasetname])
+#    inputdata = np.array(h5py.File(tags_tsdata, 'r')[datasetname])
     # Select the approproate columns
     causevardata = inputdata[:, causevarindex]
     affectedvardata = inputdata[:, affectedvarindex]
     # Truncate the colums appropriately
+    # The causevardata must be behind the affectedvardata
     causevardata = inputdata[:, causevarindex][:-1-sample_delay]
     affectedvardata = inputdata[:, affectedvarindex][sample_delay+1:]
     # Calculate covariance
@@ -87,7 +88,7 @@ def calc_partialcor_delayed(causevarindex, affectedvarindex, tags_tsdata,
     return corrval
 
 
-def calc_max_partialcor(variables, connectionmatrix, tags_tsdata,
+def calc_max_partialcor(variables, connectionmatrix, inputdata,
                         dataset, sampling_rate, delays):
     logging.basicConfig(level=logging.INFO)
     max_val_array = np.empty((len(variables), len(variables)))
@@ -113,7 +114,7 @@ def calc_max_partialcor(variables, connectionmatrix, tags_tsdata,
                     corrval = \
                         calc_partialcor_delayed(causevarindex,
                                                 affectedvarindex,
-                                                tags_tsdata, sample_delay,
+                                                inputdata, sample_delay,
                                                 dataset)
                     corrlist.append(corrval)
 
