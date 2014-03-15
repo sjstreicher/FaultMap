@@ -61,35 +61,41 @@ def calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, dataset):
 
     return correlationmatrix, partialcorrelationmatrix
 
-
-def calc_partialcor_delayed(causevarindex, affectedvarindex, inputdata,
-                            sample_delay, datasetname):
-    """Calculates the partial (Pearson's) correlation between a specified
-    cause variable (columns) and affected variable (rows) for a specific
-    delay in terms of samples.
-
-    The cause variable lags behind the affected variable by the sample_delay.
-
-    The end of the affected variable is cut so that the two datasets match.
-
-    """
-    # Get the tags time series data
-    # TODO: Make faster by selecting only the columns required.
-#    inputdata = np.array(h5py.File(tags_tsdata, 'r')[datasetname])
-    # Select the approproate columns
-    causevardata = inputdata[:, causevarindex]
-    affectedvardata = inputdata[:, affectedvarindex]
-    # Truncate the colums appropriately
-    # The causevardata must be behind the affectedvardata
-    causevardata = inputdata[:, causevarindex][:-1-sample_delay]
-    affectedvardata = inputdata[:, affectedvarindex][sample_delay+1:]
-    # Calculate covariance
-    corrval = np.corrcoef(causevardata.T, affectedvardata.T)[1, 0]
-    return corrval
+#Deprecated
+#def calc_partialcor_delayed(causevarindex, affectedvarindex, inputdata,
+#                            sample_delay, datasetname, size):
+#    """Calculates the partial (Pearson's) correlation between a specified
+#    cause variable (columns) and affected variable (rows) for a specific
+#    delay in terms of samples.
+#
+#    The cause variable lags behind the affected variable by the sample_delay.
+#
+#    The end of the affected variable is cut so that the two datasets match.
+#
+#    """
+#    # Get the tags time series data
+#    # TODO: Make faster by selecting only the columns required.
+##    inputdata = np.array(h5py.File(tags_tsdata, 'r')[datasetname])
+#    # Select the approproate columns
+#    causevardata = inputdata[:, causevarindex]
+#    affectedvardata = inputdata[:, affectedvarindex]
+#    # Truncate the colums appropriately
+#    # The causevardata must be behind the affectedvardata
+#
+#    # Calculate covariance
+#    corrval = np.corrcoef(causevardata.T, affectedvardata.T)[1, 0]
+#    return corrval
 
 
 def calc_max_partialcor(variables, connectionmatrix, inputdata,
-                        dataset, sampling_rate, delays):
+                        dataset, sampling_rate, delays, size):
+    """Determines the maximum partial correlation between two variables.
+
+    size refers to the number of elements of two time series data vectors used
+    It is kept constant so as to eliminate any effect that different
+    vector length might have on partial correlation
+
+    """
     logging.basicConfig(level=logging.INFO)
     max_val_array = np.empty((len(variables), len(variables)))
     max_delay_array = np.empty((len(variables), len(variables)))
@@ -111,11 +117,14 @@ def calc_max_partialcor(variables, connectionmatrix, inputdata,
                 corrlist = []
                 for delay in delays:
                     sample_delay = int(round(delay/sampling_rate))
+                    causevardata = \
+                        inputdata[:, causevarindex][-(size+sample_delay):
+                                                    -1-sample_delay]
+                    affectedvardata = \
+                        inputdata[:, affectedvarindex][sample_delay+1:
+                                                       sample_delay+size]
                     corrval = \
-                        calc_partialcor_delayed(causevarindex,
-                                                affectedvarindex,
-                                                inputdata, sample_delay,
-                                                dataset)
+                        np.corrcoef(causevardata.T, affectedvardata.T)[1, 0]
                     corrlist.append(corrval)
 
                 corrlist_abs = [abs(val) for val in corrlist]

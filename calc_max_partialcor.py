@@ -32,7 +32,7 @@ def writecsv(filename, items, header):
 dirs = json.load(open('config.json'))
 # Get data and preferred export directories from directories config file
 dataloc = os.path.expanduser(dirs['dataloc'])
-saveloc = os.path.expanduser(dirs['saveloc'])
+saveloc = os.path.expanduser(dirs['saveloc']) + 'max_partialcorr'
 # Define plant and case names to run
 plant = 'tennessee_eastman'
 # Define plant data directory
@@ -51,8 +51,9 @@ stageone = [val * (2.0/3600.0) for val in range(100)]
 # After that, inlcude 1000 10-second shifts
 stagetwo = [val * (10.0/3600.0) + stageone[-1] for val in range(1000)]
 delays = list(np.hstack((stageone, stagetwo)))
+size = 50000
 
-for case in [cases[3]]:
+for case in cases:
     logging.info("Running case {}".format(case))
     # Get connection (adjacency) matrix
     connectionloc = os.path.join(plantdir, 'connections',
@@ -68,7 +69,7 @@ for case in [cases[3]]:
 
     [max_val_array, max_delay_array, datastore, data_header] = \
         calc_max_partialcor(variables, connectionmatrix, inputdata,
-                            dataset, sampling_rate, delays)
+                            dataset, sampling_rate, delays, size)
 
     # Define export direcories and filenames
     datasavename = os.path.join(saveloc,
