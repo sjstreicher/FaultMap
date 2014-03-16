@@ -60,7 +60,8 @@ elif delaytype == 'timevalues':
 
 size = 50000
 
-for case in cases:
+# Only do a single case in the demo for coverage analysis purposes
+for case in [cases[1]]:
     logging.info("Running case {}".format(case))
     # Get connection (adjacency) matrix
     connectionloc = os.path.join(plantdir, 'connections',
