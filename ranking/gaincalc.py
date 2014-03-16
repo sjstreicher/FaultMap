@@ -61,39 +61,16 @@ def calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, dataset):
 
     return correlationmatrix, partialcorrelationmatrix
 
-#Deprecated
-#def calc_partialcor_delayed(causevarindex, affectedvarindex, inputdata,
-#                            sample_delay, datasetname, size):
-#    """Calculates the partial (Pearson's) correlation between a specified
-#    cause variable (columns) and affected variable (rows) for a specific
-#    delay in terms of samples.
-#
-#    The cause variable lags behind the affected variable by the sample_delay.
-#
-#    The end of the affected variable is cut so that the two datasets match.
-#
-#    """
-#    # Get the tags time series data
-#    # TODO: Make faster by selecting only the columns required.
-##    inputdata = np.array(h5py.File(tags_tsdata, 'r')[datasetname])
-#    # Select the approproate columns
-#    causevardata = inputdata[:, causevarindex]
-#    affectedvardata = inputdata[:, affectedvarindex]
-#    # Truncate the colums appropriately
-#    # The causevardata must be behind the affectedvardata
-#
-#    # Calculate covariance
-#    corrval = np.corrcoef(causevardata.T, affectedvardata.T)[1, 0]
-#    return corrval
-
 
 def calc_max_partialcor(variables, connectionmatrix, inputdata,
-                        dataset, sampling_rate, delays, size):
+                        dataset, sampling_rate, delays, size, delaytype):
     """Determines the maximum partial correlation between two variables.
 
     size refers to the number of elements of two time series data vectors used
     It is kept constant so as to eliminate any effect that different
     vector length might have on partial correlation
+
+    inputdata should be normalised (mean centered and variance scaled)
 
     """
     logging.basicConfig(level=logging.INFO)
@@ -108,15 +85,21 @@ def calc_max_partialcor(variables, connectionmatrix, inputdata,
                    'signchange']
 
     datastore = []
-    actual_delays = [int(round(delay/sampling_rate)) * sampling_rate
-                     for delay in delays]
+    if delaytype == 'datapoints':
+        actual_delays = [delay * sampling_rate for delay in delays]
+    elif delaytype == 'timevalues':
+        actual_delays = [int(round(delay/sampling_rate)) * sampling_rate
+                         for delay in delays]
     for causevarindex, causevar in enumerate(variables):
         logging.info("Analysing effect of: " + causevar)
         for affectedvarindex, affectedvar in enumerate(variables):
             if not(connectionmatrix[affectedvarindex, causevarindex] == 0):
                 corrlist = []
                 for delay in delays:
-                    sample_delay = int(round(delay/sampling_rate))
+                    if delaytype == 'datapoints':
+                        sample_delay = delay
+                    else:
+                        sample_delay = int(round(delay/sampling_rate))
                     causevardata = \
                         inputdata[:, causevarindex][-(size+sample_delay):
                                                     -1-sample_delay]
