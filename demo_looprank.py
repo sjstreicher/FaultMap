@@ -47,11 +47,6 @@ def writecsv(filename, items):
         csv.writer(f).writerows(items)
 
 
-def writecsv(filename, items):
-    with open(filename, 'wb') as f:
-        csv.writer(f).writerows(items)
-
-
 def gainrank(gainmatrix):
     # TODO: The forward, backward and blended ranking will all be folded
     # into a single method, currently isolated for ease of access to
