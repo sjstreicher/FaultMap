@@ -10,13 +10,11 @@ Created on Thu Mar 13 09:44:16 2014
 @author: Simon
 """
 
-#from ranking.gaincalc import calc_partialcor_delayed
+from demo_setup import runsetup
 from ranking.gaincalc import create_connectionmatrix
 from ranking.gaincalc import calc_max_partialcorr_delay
 
 from sklearn import preprocessing
-
-import json
 import csv
 import numpy as np
 import os
@@ -30,21 +28,7 @@ def writecsv(filename, items, header):
         csv.writer(f).writerow(header)
         csv.writer(f).writerows(items)
 
-# Load directories config file
-dirs = json.load(open('config.json'))
-# Get data and preferred export directories from directories config file
-dataloc = os.path.expanduser(dirs['dataloc'])
-saveloc = os.path.expanduser(dirs['saveloc'])
-# Define plant and case names to run
-plant = 'tennessee_eastman'
-# Define plant data directory
-plantdir = os.path.join(dataloc, 'plants', plant)
-cases = ['dist11_closedloop', 'dist11_closedloop_pressup', 'dist11_full',
-         'presstep_closedloop', 'presstep_full']
-# Load plant config file
-caseconfig = json.load(open(os.path.join(plantdir, plant + '.json')))
-# Get sampling rate
-sampling_rate = caseconfig['sampling_rate']
+cases, saveloc, caseconfig, plantdir, sampling_rate = runsetup()
 
 # Specify delay type either as 'datapoints' or 'timevalues'
 delaytype = 'datapoints'
