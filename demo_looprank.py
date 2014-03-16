@@ -121,8 +121,7 @@ def looprank_transient(case, samplerate, boxsize, boxnum, variables,
 
     return transientdict, basevaldict
 
-# Only do a single case in the demo for coverage analysis purposes
-for case in [cases[1]]:
+for case in cases:
     # Get connection (adjacency) matrix
     logging.info("Running case {}".format(case))
     connectionloc = os.path.join(plantdir, 'connections',

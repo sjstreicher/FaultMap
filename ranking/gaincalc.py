@@ -87,6 +87,9 @@ def calc_max_partialcorr_delay(variables, connectionmatrix, inputdata,
     threshcorr = (1.85*(size**(-0.41))) + (2.37*(size**(-0.53)))
     threshdir = 0.46*(size**(-0.16))
 
+    logging.info("Directionbality threshold: " + str(threshdir))
+    logging.info("Correlation threshold: " + str(threshcorr))
+
     datastore = []
     if delaytype == 'datapoints':
         actual_delays = [delay * sampling_rate for delay in delays]
@@ -161,10 +164,8 @@ def calc_max_partialcorr_delay(variables, connectionmatrix, inputdata,
                              str(delay_index))
                 logging.info("The correlation with no delay is: "
                              + str(corrlist[0]))
-#                logging.info("Correlation threshold: " + str(threshcorr))
                 logging.info("Correlation threshold passed: " +
                              str(corrthreshpass))
-#                logging.info("Directionbality threshold: " + str(threshdir))
                 logging.info("Directionality value: " + str(directionindex))
                 logging.info("Directionality threshold passed: " +
                              str(dirthreshpass))
