@@ -101,6 +101,6 @@ def split_tsdata(tags_tsdata, datasetname, samplerate, boxsize, boxnum):
     samplesbetween = int(round(boxstartindex[-1]/(boxnum-1)))
     boxstartindex[1:-1] = [(samplesbetween * index)
                            for index in range(1, boxnum-1)]
-    boxes = [inputdata[boxstartindex[i]:boxstartindex[i] + boxsizesamples]
-             for i in range(0, boxnum)]
+    boxes = [inputdata[int(boxstartindex[i]):int(boxstartindex[i]) + int(boxsizesamples)]
+             for i in range(int(boxnum))]
     return boxes

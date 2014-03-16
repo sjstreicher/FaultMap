@@ -76,8 +76,6 @@ for case in [cases[1]]:
 
     # Get the variables and connection matrix
     [variables, connectionmatrix] = create_connectionmatrix(connectionloc)
-    # Only do first two variables for coverage analysis purposes
-    variables = variables[:1]
 
     [corr_array, delay_array, datastore, data_header] = \
         calc_max_partialcorr_delay(variables, connectionmatrix, inputdata_norm,

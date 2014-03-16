@@ -53,7 +53,7 @@ def writecsv(filename, items):
         csv.writer(f).writerows(items)
 
 
-def gainrank(gainmatrix):
+def gainrank(gainmatrix, variables, connectionmatrix):
     # TODO: The forward, backward and blended ranking will all be folded
     # into a single method, currently isolated for ease of access to
     # intermediate results
@@ -68,14 +68,15 @@ def gainrank(gainmatrix):
     return rankingdict, slist
 
 
-def looprank_single(case):
+def looprank_single(case, variables, connectionmatrix, tags_tsdata, dataset):
     # Get the correlation and partial correlation matrices
     _, gainmatrix = \
         calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, dataset)
     savename = os.path.join(saveloc, "gainmatrix.csv")
     np.savetxt(savename, gainmatrix, delimiter=',')
 
-    rankingdict, rankinglist = gainrank(gainmatrix)
+    rankingdict, rankinglist = gainrank(gainmatrix, variables,
+                                        connectionmatrix)
 
     savename = os.path.join(saveloc, case + '_importances.csv')
     writecsv(savename, rankinglist)
@@ -84,7 +85,8 @@ def looprank_single(case):
     return gainmatrix, rankingdict
 
 
-def looprank_transient(case, samplerate, boxsize, boxnum):
+def looprank_transient(case, samplerate, boxsize, boxnum, variables,
+                       connectionmatrix, tags_tsdata, dataset):
     # Split the tags_tsdata into sets (boxes) useful for calculating
     # transient correlations
     boxes = split_tsdata(tags_tsdata, dataset, samplerate,
@@ -102,7 +104,8 @@ def looprank_transient(case, samplerate, boxsize, boxnum):
                          "{}_gainmatrix_{:03d}.csv".format(case, index))
         np.savetxt(gain_filename, gainmatrix, delimiter=',')
 
-        blendedranking, slist = gainrank(gainmatrix)
+        blendedranking, slist = gainrank(gainmatrix, variables,
+                                         connectionmatrix)
         rankinglists.append(slist)
 
         savename = os.path.join(saveloc,
@@ -118,7 +121,8 @@ def looprank_transient(case, samplerate, boxsize, boxnum):
 
     return transientdict, basevaldict
 
-for case in cases:
+# Only do a single case in the demo for coverage analysis purposes
+for case in [cases[1]]:
     # Get connection (adjacency) matrix
     logging.info("Running case {}".format(case))
     connectionloc = os.path.join(plantdir, 'connections',
@@ -135,10 +139,13 @@ for case in cases:
     boxnum = caseconfig[case]['boxnum']
     boxsize = caseconfig[case]['boxsize']
 
-    gainmatrix, rankingdict = looprank_single(case)
+    gainmatrix, rankingdict = looprank_single(case, variables,
+                                              connectionmatrix,
+                                              tags_tsdata, dataset)
 
-    [transientdict, basevaldict] = looprank_transient(case, sampling_rate,
-                                                      boxsize, boxnum)
+    [transientdict, basevaldict] = \
+        looprank_transient(case, sampling_rate, boxsize, boxnum, variables,
+                           connectionmatrix, tags_tsdata, dataset)
 
     if transientplots:
         diffplot, absplot = plot_transient_importances(variables,
