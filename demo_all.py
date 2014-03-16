@@ -7,4 +7,4 @@ Created on Sun Mar 16 17:29:06 2014
 """
 
 execfile("demo_looprank.py")
-execfile("demo_partialcorr_delay.py")
+execfile("demo_estimate_delay.py")
