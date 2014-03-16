@@ -3,3 +3,5 @@ pandas
 numpy
 scipy
 matplotlib
+jpype
+networkx
