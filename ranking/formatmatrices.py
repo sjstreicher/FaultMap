@@ -9,16 +9,16 @@ import networkx as nx
 import h5py
 
 
-
 def buildcase(dummyweight, m_graph, name):
     counter = 1
     for node in m_graph.nodes():
         if m_graph.out_degree(node) == 1:
             # TODO: Investigate the effect of different weights
-            nameofscale = name + str(counter) 
+
+            nameofscale = name + str(counter)
             m_graph.add_edge(node, nameofscale, weight=dummyweight)
             counter += 1
-    
+
     connection = nx.to_numpy_matrix(m_graph, weight=None).T
     gain = nx.to_numpy_matrix(m_graph, weight='weight').T
     variablelist = m_graph.nodes()
@@ -44,10 +44,10 @@ def rankforward(variables, gainmatrix, connections, dummyweight):
     It uses the number of dummy variables to construct these gain,
     connection and variable name matrices.
     """
-    
+
     #TODO: Rework calls of this code to reduce redundancy
-    
-    m_graph = buildgraph(variables, gainmatrix, connections) 
+
+    m_graph = buildgraph(variables, gainmatrix, connections)
     return buildcase(dummyweight, m_graph, 'DV_forward')
 
 
@@ -104,14 +104,3 @@ def split_tsdata(tags_tsdata, datasetname, samplerate, boxsize, boxnum):
     boxes = [inputdata[boxstartindex[i]:boxstartindex[i] + boxsizesamples]
              for i in range(0, boxnum)]
     return boxes
-
-
-
-
-
-
-
-
-
-
-
