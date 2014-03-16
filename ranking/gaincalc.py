@@ -174,19 +174,3 @@ def calc_max_partialcorr_delay(variables, connectionmatrix, inputdata,
                 delay_array[affectedvarindex, causevarindex] = np.NAN
 
     return corr_array, delay_array, datastore, data_header
-
-
-def calc_transentropy_gainmatrix(connectionmatrix, tags_tsdata):
-    """Calculates the local gains in terms of the transfer entropy between
-    the variables.
-
-    connectionmatrix is the adjacency matrix
-
-    tags_tsdata contains the time series data for the tags with variables
-    in colums and sampling instances in rows
-
-    """
-
-    #TODO: To be completed
-
-    return None
