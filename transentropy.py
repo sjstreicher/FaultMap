@@ -117,14 +117,87 @@ def te_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val,
     # very similar to the x_pred values.
     # Some very small negative values are sometimes returned.
 
-    if (str(sum_element[0]) == 'nan' or str(sum_element[0]) == 'inf' 
-        or sum_element[0] < 0):
+    if (str(sum_element[0]) == 'nan' or str(sum_element[0]) == 'inf'
+            or sum_element[0] < 0):
         sum_element = 0
 
     return sum_element
 
 
-def te_calc(x_pred, x_hist, y_hist, mcsamples):
+def autoreg_datagen(delay, timelag, samples, sub_samples, k=1, l=1):
+    """Generates autoreg data for a specific timelag (equal to
+    prediction horison) for a set of autoregressive data.
+
+    sub_samples is the amount of samples in the dataset used to calculate the
+    transfer entropy between two vectors (taken from the end of the dataset).
+    sub_samples <= samples
+
+    Currently only supports k = 1; l = 1
+
+    You can search through a set of timelags in an attempt to identify the
+    original delay.
+    The transfer entropy should have a maximum value when timelag = delay
+    used to generate the autoregressive dataset.
+
+    """
+
+    data = getdata(samples, delay)
+
+    [x_pred, x_hist, y_hist] = vectorselection(data, timelag,
+                                               sub_samples, k, l)
+
+    return x_pred, x_hist, y_hist
+
+
+def setup_infodynamics_te():
+    # Change location of jar to match yours:
+    jarLocation = "infodynamics.jar"
+    # Start the JVM (add the "-Xmx" option with say 1024M if you get crashes due to not enough memory space)
+    startJVM(getDefaultJVMPath(), "-ea", "-Djava.class.path=" + jarLocation)
+
+    teCalcClass = JPackage("infodynamics.measures.continuous.kernel").TransferEntropyCalculatorKernel
+    teCalc = teCalcClass()
+    # Normalise the individual variables
+    teCalc.setProperty("NORMALISE", "true")
+    # Use history length 1 (Schreiber k=1), kernel width of 0.5 normalised units
+    teCalc.initialise(1, 0.5)
+
+    return teCalc
+
+
+def calc_infodynamics_te(teCalc, x_hist, y_hist):
+    """Calculates the transfer entropy for a specific timelag (equal to
+    prediction horison) for a set of autoregressive data.
+
+    This implementation makes use of the infodynamics toolkit:
+    https://code.google.com/p/information-dynamics-toolkit/
+
+    sub_samples is the amount of samples in the dataset used to calculate the
+    transfer entropy between two vectors (taken from the end of the dataset).
+    sub_samples <= samples
+
+    Currently only supports k = 1; l = 1;
+
+    You can search through a set of timelags in an attempt to identify the
+    original delay.
+    The transfer entropy should have a maximum value when timelag = delay
+    used to generate the autoregressive dataset.
+
+    """
+
+    sourceArray = y_hist.tolist()
+    destArray = x_hist.tolist()
+
+    teCalc.setObservations(JArray(JDouble, 1)(sourceArray),
+                           JArray(JDouble, 1)(destArray))
+
+    transentropy = teCalc.computeAverageLocalOfObservations()
+    print transentropy
+
+    return transentropy
+
+
+def calc_custom_te(x_pred, x_hist, y_hist, mcsamples):
     """Calculates the transfer entropy between two variables from a set of
     vectors already calculated.
 
@@ -170,7 +243,7 @@ def te_calc(x_pred, x_hist, y_hist, mcsamples):
 
     domainsize = x_pred_range * x_hist_range * y_hist_range
 #    domainsize = 1
-    
+
 #    print domainsize
 
     # Do triple integration using scipy.integrate.tplquad
@@ -186,74 +259,3 @@ def te_calc(x_pred, x_hist, y_hist, mcsamples):
 #        print "Using n = ", nmc
         print "Result = ", result[0]
     return result
-
-
-def calculate_te(delay, timelag, samples, sub_samples, mcsamples, k=1, l=1):
-    """Calculates the transfer entropy for a specific timelag (equal to
-    prediction horison) for a set of autoregressive data.
-
-    sub_samples is the amount of samples in the dataset used to calculate the
-    transfer entropy between two vectors (taken from the end of the dataset).
-    sub_samples <= samples
-
-    Currently only supports k = 1; l = 1;
-
-    You can search through a set of timelags in an attempt to identify the
-    original delay.
-    The transfer entropy should have a maximum value when timelag = delay
-    used to generate the autoregressive dataset.
-
-    """
-    # Get autoregressive datasets
-    data = getdata(samples, delay)
-
-    [x_pred, x_hist, y_hist] = vectorselection(data, timelag,
-                                               sub_samples, k, l)
-
-    transentropy = te_calc(x_pred, x_hist, y_hist, mcsamples)
-
-    return transentropy
-
-def calc_infodynamics_te(delay, timelag, samples, sub_samples, k=1, l=1):
-    """Calculates the transfer entropy for a specific timelag (equal to
-    prediction horison) for a set of autoregressive data.
-    
-    This implementation makes use of the infodynamics toolkit:
-    https://code.google.com/p/information-dynamics-toolkit/
-    
-    sub_samples is the amount of samples in the dataset used to calculate the
-    transfer entropy between two vectors (taken from the end of the dataset).
-    sub_samples <= samples
-
-    Currently only supports k = 1; l = 1;
-
-    You can search through a set of timelags in an attempt to identify the
-    original delay.
-    The transfer entropy should have a maximum value when timelag = delay
-    used to generate the autoregressive dataset.
-
-    """
-    
-    data = getdata(samples, delay)
-
-    [_, x_hist, y_hist] = vectorselection(data, timelag,
-                                               sub_samples, k, l)
-    # Change location of jar to match yours:
-    jarLocation = "infodynamics.jar"
-    # Start the JVM (add the "-Xmx" option with say 1024M if you get crashes due to not enough memory space)
-    startJVM(getDefaultJVMPath(), "-ea", "-Djava.class.path=" + jarLocation)
-    
-    sourceArray = y_hist.tolist()[0]
-    destArray = x_hist.tolist()[0]    
-    
-    teCalcClass = JPackage("infodynamics.measures.continuous.kernel").TransferEntropyCalculatorKernel
-    teCalc = teCalcClass();
-    teCalc.setProperty("NORMALISE", "true"); # Normalise the individual variables
-    teCalc.initialise(1, 0.5); # Use history length 1 (Schreiber k=1), kernel width of 0.5 normalised units
-    teCalc.setObservations(JArray(JDouble, 1)(sourceArray), JArray(JDouble, 1)(destArray));
-
-    transentropy = teCalc.computeAverageLocalOfObservations();
-    
-    return transentropy
-    
-    

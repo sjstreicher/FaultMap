@@ -4,6 +4,7 @@
 
 """
 
+from demo_setup import runsetup
 from ranking.gaincalc import create_connectionmatrix
 from ranking.gaincalc import calc_partialcor_gainmatrix
 from ranking.formatmatrices import rankforward, rankbackward
@@ -14,7 +15,6 @@ from ranking.noderank import calc_transient_importancediffs
 from ranking.noderank import plot_transient_importances
 from ranking.noderank import create_importance_graph
 
-import json
 import csv
 import numpy as np
 import networkx as nx
@@ -28,21 +28,10 @@ logging.basicConfig(level=logging.INFO)
 # Save plots of transient rankings
 transientplots = True
 importancegraph = True
-# Load directories config file
-dirs = json.load(open('config.json'))
-# Get data and preferred export directories from directories config file
-dataloc = os.path.expanduser(dirs['dataloc'])
-saveloc = os.path.expanduser(dirs['saveloc'])
-# Define plant and case names to run
-plant = 'tennessee_eastman'
-# Define plant data directory
-plantdir = os.path.join(dataloc, 'plants', plant)
-cases = ['dist11_closedloop', 'dist11_closedloop_pressup', 'dist11_full',
-         'presstep_closedloop', 'presstep_full']
-# Load plant config file
-caseconfig = json.load(open(os.path.join(plantdir, plant + '.json')))
-# Get sampling rate
-sampling_rate = caseconfig['sampling_rate']
+
+
+cases, saveloc, caseconfig, plantdir, sampling_rate = runsetup()
+
 openconnectionloc = os.path.join(plantdir, 'connections',
                                  caseconfig['open_connections'])
 [_, openconnectionmatrix] = create_connectionmatrix(openconnectionloc)
