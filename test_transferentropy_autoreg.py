@@ -24,8 +24,8 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
 #        self.entropies_infodyn = [te_info(self.delay, timelag, 3000, 2000) for
 #                          timelag in range(self.delay-5, self.delay+6)]
 #        print self.entropies_infodyn
-        self.entropies = [te(self.delay, timelag, 3000, 2000, 10000)[0] for
-                          timelag in range(self.delay-5, self.delay+6)]        
+        self.entropies = [te(self.delay, timelag, 3000, 2000, 1000)[0] for
+                          timelag in range(self.delay-5, self.delay+6)]
         print self.entropies
 
     def test_peakentropy(self):

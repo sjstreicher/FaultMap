@@ -76,6 +76,8 @@ for case in [cases[1]]:
 
     # Get the variables and connection matrix
     [variables, connectionmatrix] = create_connectionmatrix(connectionloc)
+    # Only do first two variables for coverage analysis purposes
+    variables = variables[:1]
 
     [corr_array, delay_array, datastore, data_header] = \
         calc_max_partialcorr_delay(variables, connectionmatrix, inputdata_norm,
@@ -83,11 +85,11 @@ for case in [cases[1]]:
                                    size, delaytype)
 
     # Define export direcories and filenames
-    datasavename = os.path.join(saveloc, '/max_partialcorr/',
+    datasavename = os.path.join(saveloc, 'max_partialcorr',
                                 '{}_max_partial_data.csv'.format(case))
-    value_array_savename = os.path.join(saveloc, '/max_partialcorr/',
+    value_array_savename = os.path.join(saveloc, 'max_partialcorr',
                                         '{}_maxcorr_array.csv'.format(case))
-    delay_array_savename = os.path.join(saveloc, '/max_partialcorr/'
+    delay_array_savename = os.path.join(saveloc, 'max_partialcorr',
                                         '{}_delay_array.csv'.format(case))
     # Write arrays to file
     np.savetxt(value_array_savename, corr_array, delimiter=',')
