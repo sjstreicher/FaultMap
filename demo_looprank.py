@@ -12,10 +12,12 @@ from ranking.noderank import calculate_rank
 from ranking.noderank import create_blended_ranking
 from ranking.noderank import calc_transient_importancediffs
 from ranking.noderank import plot_transient_importances
+from ranking.noderank import create_importance_graph
 
 import json
 import csv
 import numpy as np
+import networkx as nx
 
 import os
 import logging
@@ -25,6 +27,7 @@ logging.basicConfig(level=logging.INFO)
 # Optional methods
 # Save plots of transient rankings
 transientplots = True
+importancegraph = True
 # Load directories config file
 dirs = json.load(open('config.json'))
 # Get data and preferred export directories from directories config file
@@ -40,6 +43,9 @@ cases = ['dist11_closedloop', 'dist11_closedloop_pressup', 'dist11_full',
 caseconfig = json.load(open(os.path.join(plantdir, plant + '.json')))
 # Get sampling rate
 sampling_rate = caseconfig['sampling_rate']
+openconnectionloc = os.path.join(plantdir, 'connections',
+                                 caseconfig['open_connections'])
+[_, openconnectionmatrix] = create_connectionmatrix(openconnectionloc)
 
 
 def writecsv(filename, items):
@@ -57,9 +63,9 @@ def gainrank(gainmatrix):
         rankbackward(variables, gainmatrix, connectionmatrix, 0.01)
     forwardrank = calculate_rank(forwardgain, forwardvariablelist)
     backwardrank = calculate_rank(backwardgain, backwardvariablelist)
-    blendedranking, slist = create_blended_ranking(forwardrank, backwardrank,
-                                                   variables, alpha=0.35)
-    return blendedranking, slist
+    rankingdict, slist = create_blended_ranking(forwardrank, backwardrank,
+                                                variables, alpha=0.35)
+    return rankingdict, slist
 
 
 def looprank_single(case):
@@ -69,11 +75,13 @@ def looprank_single(case):
     savename = os.path.join(saveloc, "gainmatrix.csv")
     np.savetxt(savename, gainmatrix, delimiter=',')
 
-    _, slist = gainrank(gainmatrix)
+    rankingdict, rankinglist = gainrank(gainmatrix)
 
     savename = os.path.join(saveloc, case + '_importances.csv')
-    writecsv(savename, slist)
+    writecsv(savename, rankinglist)
     logging.info("Done with single ranking")
+
+    return gainmatrix, rankingdict
 
 
 def looprank_transient(case, samplerate, boxsize, boxnum):
@@ -115,17 +123,19 @@ for case in cases:
     logging.info("Running case {}".format(case))
     connectionloc = os.path.join(plantdir, 'connections',
                                  caseconfig[case]['connections'])
+
     # Get time series data
     tags_tsdata = os.path.join(plantdir, 'data', caseconfig[case]['data'])
     # Get dataset name
     dataset = caseconfig[case]['dataset']
     # Get the variables and connection matrix
     [variables, connectionmatrix] = create_connectionmatrix(connectionloc)
+
     logging.info("Number of tags: {}".format(len(variables)))
     boxnum = caseconfig[case]['boxnum']
     boxsize = caseconfig[case]['boxsize']
 
-    looprank_single(case)
+    gainmatrix, rankingdict = looprank_single(case)
 
     [transientdict, basevaldict] = looprank_transient(case, sampling_rate,
                                                       boxsize, boxnum)
@@ -140,3 +150,16 @@ for case in cases:
                                         "{}_absplot.pdf".format(case))
         diffplot.savefig(diffplot_filename)
         absplot.savefig(absplot_filename)
+
+    if importancegraph:
+        closedgraph, opengraph = \
+            create_importance_graph(variables, connectionmatrix,
+                                    openconnectionmatrix, gainmatrix,
+                                    rankingdict)
+        closedgraph_filename = os.path.join(saveloc,
+                                            "{}_closedgraph.gml".format(case))
+        opengraph_filename = os.path.join(saveloc,
+                                          "{}_opengraph.gml".format(case))
+
+        nx.readwrite.write_gml(closedgraph, closedgraph_filename)
+        nx.readwrite.write_gml(opengraph, opengraph_filename)

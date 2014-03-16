@@ -48,19 +48,19 @@ def calculate_rank(gainmatrix, variables):
 def create_blended_ranking(forwardrank, backwardrank, variablelist,
                            alpha=0.35):
     """This method creates a blended ranking profile of the object."""
-    blendedranking = dict()
+    rankingdict = dict()
     for variable in variablelist:
-        blendedranking[variable] = abs(((1 - alpha) * forwardrank[variable] +
-                                       (alpha) * backwardrank[variable]))
+        rankingdict[variable] = abs(((1 - alpha) * forwardrank[variable] +
+                                     (alpha) * backwardrank[variable]))
 
-    totals = sum(blendedranking.values())
+    totals = sum(rankingdict.values())
     # Normalise rankings
     for variable in variablelist:
-        blendedranking[variable] = blendedranking[variable] / totals
+        rankingdict[variable] = rankingdict[variable] / totals
 
-    slist = sorted(blendedranking.iteritems(), key=itemgetter(1),
-                   reverse=True)
-    return blendedranking, slist
+    rankinglist = sorted(rankingdict.iteritems(), key=itemgetter(1),
+                         reverse=True)
+    return rankingdict, rankinglist
 
 
 def calc_transient_importancediffs(rankingdicts, variablelist):
