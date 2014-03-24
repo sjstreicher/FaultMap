@@ -7,6 +7,8 @@ import numpy as np
 from scipy import stats
 import jpype
 from sklearn import preprocessing
+import random
+import mcint
 
 
 def vectorselection(data, timelag, sub_samples, k=1, l=1):
@@ -91,8 +93,8 @@ def pdfcalcs(x_pred, x_hist, y_hist):
     return pdf_1, pdf_2, pdf_3, pdf_4
 
 
-def te_local_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val,
-                         x_hist_val, y_hist_val):
+def te_eq8_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val,
+                       x_hist_val, y_hist_val):
     """Calculate elements for summation for a specific set of coordinates"""
 
     # Function evaluations
@@ -121,8 +123,8 @@ def te_local_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val,
     return sum_element
 
 
-def te_overall_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val,
-                           x_hist_val, y_hist_val):
+def te_eq4_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val,
+                       x_hist_val, y_hist_val):
     """Calculate elements for summation for a specific set of coordinates"""
 
     # Function evaluations
@@ -150,7 +152,7 @@ def te_overall_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val,
     return sum_element
 
 
-def calc_custom_local_te(x_pred, x_hist, y_hist):
+def calc_custom_eq8_te(x_pred, x_hist, y_hist):
     """Calculates the local transfer entropy between two variables.
 
     See Lizier2008 Eq. 8 for implementation reference.
@@ -183,17 +185,17 @@ def calc_custom_local_te(x_pred, x_hist, y_hist):
                                                   x_hist_norm[0],
                                                   y_hist_norm[0]):
 
-        tesum += te_local_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4,
-                                      x_pred_val, x_hist_val, y_hist_val)
+        tesum += te_eq8_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4,
+                                    x_pred_val, x_hist_val, y_hist_val)
     transent = tesum / numobs
 
     return transent
 
 
-def calc_custom_overall_te(x_pred, x_hist, y_hist):
+def calc_custom_eq4_te(x_pred, x_hist, y_hist, mcsamples):
     """Calculates the transfer entropy between two variables.
 
-    See Shu2013 Eq. 1 for implementation reference.
+    See Lizier2008 Eq. 4 for implementation reference.
 
     The x_pred, x_hist and y_hist vectors need to be determined externally.
 
@@ -208,13 +210,44 @@ def calc_custom_overall_te(x_pred, x_hist, y_hist):
     x_hist_norm = preprocessing.scale(x_hist, axis=1)
     y_hist_norm = preprocessing.scale(y_hist, axis=1)
 
+    x_pred_min = x_pred_norm.min()
+    x_pred_max = x_pred_norm.max()
+    x_hist_min = x_hist_norm.min()
+    x_hist_max = x_hist_norm.max()
+    y_hist_min = y_hist_norm.min()
+    y_hist_max = y_hist_norm.max()
+
+    x_pred_range = x_pred_max - x_pred_min
+    x_hist_range = x_hist_max - x_hist_min
+    y_hist_range = y_hist_max - y_hist_min
+
     # Calculate PDFs for all combinations required
     [pdf_1, pdf_2, pdf_3, pdf_4] = pdfcalcs(x_pred_norm,
                                             x_hist_norm, y_hist_norm)
 
-    # Needs to be completed (reverted to mcint)
+    def integrand(x):
+        s1 = x[0]
+        s2 = x[1]
+        s3 = x[2]
 
-    return None
+        return te_eq4_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4,
+                                  s1, s2, s3)
+
+    def sampler():
+        while True:
+            s1 = random.uniform(x_pred_min, x_pred_max)
+            s2 = random.uniform(x_hist_min, x_hist_max)
+            s3 = random.uniform(y_hist_min, y_hist_max)
+            yield(s1, s2, s3)
+
+    domainsize = x_pred_range * x_hist_range * y_hist_range
+
+    for nmc in [mcsamples]:
+        random.seed(1)
+        result, error = mcint.integrate(integrand, sampler(),
+                                        measure=domainsize, n=nmc)
+
+    return result
 
 
 def setup_infodynamics_te():

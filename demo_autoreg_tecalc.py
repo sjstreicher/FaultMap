@@ -9,10 +9,11 @@ from autoreg import autoreg_gen
 from transentropy import setup_infodynamics_te
 from transentropy import vectorselection
 from transentropy import calc_infodynamics_te
-from transentropy import calc_custom_local_te
+from transentropy import calc_custom_eq4_te
+from transentropy import calc_custom_eq8_te
+
 import jpype
 from sklearn import preprocessing
-import numpy as np
 
 # TODO: This script must become a test case
 
@@ -73,12 +74,23 @@ jpype.startJVM(jpype.getDefaultJVMPath(), "-ea",
 teCalc = setup_infodynamics_te()
 
 result = calc_infodynamics_te(teCalc, x_hist_norm, y_hist_norm)
-print("Infodyanmics TE result: %.4f bits" % (result))
+print("Infodynamics TE result: %.4f bits" % (result))
 
 jpype.shutdownJVM()
 
 
-# Calculate transfer entropy according to custom implementation:
+# Calculate transfer entropy according to custom overall implementation:
 
-result = calc_custom_local_te(x_pred_norm, x_hist_norm, y_hist_norm)
-print("Custom TE result: %.4f bits" % (result))
+result = calc_custom_eq4_te(x_pred_norm, x_hist_norm, y_hist_norm, 10000)
+print("Custom Eq. 4 TE result: %.4f bits" % (result))
+
+
+# Calculate transfer entropy accordint to custom local implementation:
+
+result = calc_custom_eq8_te(x_pred_norm, x_hist_norm, y_hist_norm)
+print("Custom Eq. 8 TE result: %.4f bits" % (result))
+
+# It is observed that the calc_custom_eq4_te calculation approaches that
+# of calc_custom_eq8_te if the number of samples is increased.
+# This is expected from the transformation between between Lizier2008 Eq. 4
+# and Lizier2008 Eq. 8.
