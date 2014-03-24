@@ -11,6 +11,7 @@ from transentropy import vectorselection
 from transentropy import calc_infodynamics_te
 from transentropy import calc_custom_eq4_te
 from transentropy import calc_custom_eq8_te
+from transentropy import calc_custom_shu_te
 
 import jpype
 from sklearn import preprocessing
@@ -79,13 +80,13 @@ print("Infodynamics TE result: %.4f bits" % (result))
 jpype.shutdownJVM()
 
 
-# Calculate transfer entropy according to custom overall implementation:
+# Calculate transfer entropy according to custom Lizier Eq. 4 implementation:
 
 result = calc_custom_eq4_te(x_pred_norm, x_hist_norm, y_hist_norm, 10000)
 print("Custom Eq. 4 TE result: %.4f bits" % (result))
 
 
-# Calculate transfer entropy accordint to custom local implementation:
+# Calculate transfer entropy according to custom Lizier Eq. 8 implementation:
 
 result = calc_custom_eq8_te(x_pred_norm, x_hist_norm, y_hist_norm)
 print("Custom Eq. 8 TE result: %.4f bits" % (result))
@@ -93,4 +94,12 @@ print("Custom Eq. 8 TE result: %.4f bits" % (result))
 # It is observed that the calc_custom_eq4_te calculation approaches that
 # of calc_custom_eq8_te if the number of samples is increased.
 # This is expected from the transformation between between Lizier2008 Eq. 4
-# and Lizier2008 Eq. 8.
+# and Lizier2008 Eq. 8 and the fact that Mc integration instead of full
+# summation is used in the implementation of the Eq. 4 method.
+
+# Calculate transfer entropy according to custom Shu Eq. 2 implementation:
+# (This is very slow)
+# Do not believe it will be that helpful
+
+#result = calc_custom_shu_te(x_pred_norm, x_hist_norm, y_hist_norm)
+#print("Custom Shu TE result: %.4f bits" % (result))
