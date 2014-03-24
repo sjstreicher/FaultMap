@@ -236,7 +236,7 @@ def estimate_delay(variables, connectionmatrix, inputdata,
 
                     elif method == 'transfer_entropy':
                         # Setup Java class for infodynamics toolkit
-                        teCalc = te_setup(infodynamicsloc)
+                        teCalc = te_setup()
                         transent = \
                             te_infodyns(teCalc,
                                         affectedvardata.T, causevardata.T)

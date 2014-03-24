@@ -452,8 +452,10 @@ def calc_infodynamics_te(teCalc, affected_data, causal_data):
     """
 
     # Normalise data to be safe
-    affected_data_norm = preprocessing.scale(affected_data, axis=1)
-    causal_data_norm = preprocessing.scale(causal_data, axis=1)
+    affected_data_norm = preprocessing.scale(affected_data[np.newaxis, :],
+                                             axis=1)
+    causal_data_norm = preprocessing.scale(causal_data[np.newaxis, :],
+                                           axis=1)
 
     # Use history length 1 (Schreiber k=1),
     # kernel width of 0.5 normalised units
