@@ -15,6 +15,7 @@ def runsetup():
     # Get data and preferred export directories from directories config file
     dataloc = os.path.expanduser(dirs['dataloc'])
     saveloc = os.path.expanduser(dirs['saveloc'])
+    infodynamicsloc = os.path.expanduser(dirs['infodynamicsloc'])
     # Define plant and case names to run
     plant = 'tennessee_eastman'
     # Define plant data directory
@@ -42,4 +43,4 @@ def runsetup():
     # Get sampling rate
     sampling_rate = caseconfig['sampling_rate']
 
-    return cases, saveloc, caseconfig, plantdir, sampling_rate
+    return cases, saveloc, caseconfig, plantdir, sampling_rate, infodynamicsloc

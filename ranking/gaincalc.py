@@ -11,6 +11,7 @@ import logging
 
 from transentropy import calc_infodynamics_te as te_infodyns
 from transentropy import setup_infodynamics_te as te_setup
+from jpype import *
 
 
 def create_connectionmatrix(connection_loc):
@@ -165,7 +166,7 @@ def transent_reporting(weightlist, actual_delays, weight_array, delay_array,
 
 def estimate_delay(variables, connectionmatrix, inputdata,
                    dataset, sampling_rate, delays,
-                   size, delaytype, method):
+                   size, delaytype, method, infodynamicsloc):
     """Determines the maximum partial correlation between two variables.
 
     size refers to the number of elements of two time series data vectors used
@@ -198,7 +199,7 @@ def estimate_delay(variables, connectionmatrix, inputdata,
         threshent = 0.0
 
         # Setup Java class for infodynamics toolkit
-        teCalc = te_setup()
+        teCalc = te_setup(infodynamicsloc)
 
         data_header = ['causevar', 'affectedvar', 'base_ent',
                        'max_ent', 'max_delay', 'max_index', 'threshpass']
@@ -235,7 +236,7 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                     elif method == 'transfer_entropy':
                         transent = \
                             te_infodyns(teCalc,
-                                        affectedvardata.T, causevardata.T, )
+                                        affectedvardata.T, causevardata.T)
                         weightlist.append(transent)
 
                 if method == 'partial_correlation':
@@ -255,5 +256,8 @@ def estimate_delay(variables, connectionmatrix, inputdata,
             else:
                 weight_array[affectedvarindex, causevarindex] = np.NAN
                 delay_array[affectedvarindex, causevarindex] = np.NAN
+
+#    if method == 'transfer_entropy':
+#        shutdownJVM()
 
     return weight_array, delay_array, datastore, data_header

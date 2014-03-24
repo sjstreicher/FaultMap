@@ -8,6 +8,7 @@ from scipy import stats
 import random
 import mcint
 from autoreg import getdata
+import json
 from jpype import *
 
 
@@ -149,23 +150,19 @@ def autoreg_datagen(delay, timelag, samples, sub_samples, k=1, l=1):
     return x_pred, x_hist, y_hist
 
 
-def setup_infodynamics_te():
-    # Change location of jar to match yours:
-    jarLocation = "infodynamics.jar"
-    # Start the JVM (add the "-Xmx" option with say 1024M if you get crashes due to not enough memory space)
-    startJVM(getDefaultJVMPath(), "-ea", "-Djava.class.path=" + jarLocation)
+def setup_infodynamics_te(infodynamicsloc):
+
+    jpype.System.gc()
 
     teCalcClass = JPackage("infodynamics.measures.continuous.kernel").TransferEntropyCalculatorKernel
     teCalc = teCalcClass()
     # Normalise the individual variables
     teCalc.setProperty("NORMALISE", "true")
-    # Use history length 1 (Schreiber k=1), kernel width of 0.5 normalised units
-    teCalc.initialise(1, 0.5)
 
     return teCalc
 
 
-def calc_infodynamics_te(teCalc, x_hist, y_hist):
+def calc_infodynamics_te(teCalc, affected_data, causal_data):
     """Calculates the transfer entropy for a specific timelag (equal to
     prediction horison) for a set of autoregressive data.
 
@@ -185,14 +182,16 @@ def calc_infodynamics_te(teCalc, x_hist, y_hist):
 
     """
 
-    sourceArray = y_hist.tolist()
-    destArray = x_hist.tolist()
+    # Use history length 1 (Schreiber k=1), kernel width of 0.5 normalised units
+    teCalc.initialise(1, 0.5)
+
+    sourceArray = causal_data.tolist()
+    destArray = affected_data.tolist()
 
     teCalc.setObservations(JArray(JDouble, 1)(sourceArray),
                            JArray(JDouble, 1)(destArray))
 
     transentropy = teCalc.computeAverageLocalOfObservations()
-    print transentropy
 
     return transentropy
 
