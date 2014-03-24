@@ -8,14 +8,24 @@ from numpy import vstack
 import numpy as np
 
 
-def autogen(samples, delay):
-    """Generate an autoregressive set of vectors."""
+def autoreg_gen(samples, delay):
+    """Generate an autoregressive set of vectors.
+
+    A constant seed is used for testing comparison purposes.
+
+    """
+
+    # Define seed for initial source data
+    np.random.seed(35)
 
     source = np.random.randn(samples + delay + 1)
     pred = np.zeros_like(source)
     # Very close covariance occassionally breaks the kde estimator
     # Another small random element is added to take care of this
     # This is not expected to be a problem on any "real" data
+
+    # Define seed for noise data
+    np.random.seed(42)
     pred_random_add = np.random.rand(samples + delay + 1)
 
     for i in range(delay, len(source)):
@@ -27,22 +37,5 @@ def autogen(samples, delay):
     pred = pred + pred_random_add[delay:-1]
 
     data = vstack([pred, source])
-
-    return data
-
-
-def getdata(samples, delay):
-    """Get dataset for testing.
-
-    Select to generate each run or import an existing dataset.
-
-    """
-
-    # Generate autoregressive delayed data vectors internally
-    data = autogen(samples, delay)
-
-    # Alternatively, import data from file
-#    autoregx = loadtxt('autoregx_data.csv')
-#    autoregy = loadtxt('autoregy_data.csv')
 
     return data
