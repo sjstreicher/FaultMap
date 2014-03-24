@@ -5,8 +5,8 @@ Created on Mon Feb 24 15:18:33 2014
 """
 import numpy as np
 from scipy import stats
-from autoreg import autoreg_gen
 import jpype
+from sklearn import preprocessing
 
 
 def vectorselection(data, timelag, sub_samples, k=1, l=1):
@@ -60,31 +60,6 @@ def vectorselection(data, timelag, sub_samples, k=1, l=1):
     return x_pred, x_hist, y_hist
 
 
-def autoreg_datagen(delay, timelag, samples, sub_samples, k=1, l=1):
-    """Generates autoreg data for a specific timelag (equal to
-    prediction horison) for a set of autoregressive data.
-
-    sub_samples is the amount of samples in the dataset used to calculate the
-    transfer entropy between two vectors (taken from the end of the dataset).
-    sub_samples <= samples
-
-    Currently only supports k = 1; l = 1
-
-    You can search through a set of timelags in an attempt to identify the
-    original delay.
-    The transfer entropy should have a maximum value when timelag = delay
-    used to generate the autoregressive dataset.
-
-    """
-
-    data = autoreg_gen(samples, delay)
-
-    [x_pred, x_hist, y_hist] = vectorselection(data, timelag,
-                                               sub_samples, k, l)
-
-    return x_pred, x_hist, y_hist
-
-
 def pdfcalcs(x_pred, x_hist, y_hist):
     """Calculates the PDFs required to calculate transfer entropy.
 
@@ -116,8 +91,38 @@ def pdfcalcs(x_pred, x_hist, y_hist):
     return pdf_1, pdf_2, pdf_3, pdf_4
 
 
-def te_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val,
-                   x_hist_val, y_hist_val):
+def te_local_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val,
+                         x_hist_val, y_hist_val):
+    """Calculate elements for summation for a specific set of coordinates"""
+
+    # Function evaluations
+    term1 = pdf_1([x_pred_val, x_hist_val, y_hist_val])
+    term2 = pdf_2([x_hist_val, y_hist_val])
+    term3 = pdf_3([x_pred_val, x_hist_val])
+    term4 = pdf_4([x_hist_val])
+
+    logterm_num = (term1 / term2)
+    logterm_den = (term3 / term4)
+    np.seterr(divide='ignore', invalid='ignore')
+    sum_element = np.log2(logterm_num / logterm_den)
+    np.seterr(divide=None, invalid=None)
+
+    #print sum_element
+
+    # TODO: Need to find a proper way to correct for cases when PDFs return
+    # nan or inf values.
+    # Most of the PDF issues are associated with the x_hist values being
+    # very similar to the x_pred values.
+    # Some very small negative values are sometimes returned.
+
+    if (str(sum_element[0]) == 'nan' or str(sum_element[0]) == 'inf'):
+        sum_element = 0
+
+    return sum_element
+
+
+def te_overall_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val,
+                           x_hist_val, y_hist_val):
     """Calculate elements for summation for a specific set of coordinates"""
 
     # Function evaluations
@@ -130,10 +135,8 @@ def te_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val,
     logterm_den = (term3 / term4)
     coeff = term1
     np.seterr(divide='ignore', invalid='ignore')
-    sum_element = coeff * np.log10(logterm_num / logterm_den)
+    sum_element = coeff * np.log2(logterm_num / logterm_den)
     np.seterr(divide=None, invalid=None)
-
-    #print sum_element
 
     # TODO: Need to find a proper way to correct for cases when PDFs return
     # nan or inf values.
@@ -141,15 +144,16 @@ def te_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val,
     # very similar to the x_pred values.
     # Some very small negative values are sometimes returned.
 
-    if (str(sum_element[0]) == 'nan' or str(sum_element[0]) == 'inf'
-            or sum_element[0] < 0):
+    if (str(sum_element[0]) == 'nan' or str(sum_element[0]) == 'inf'):
         sum_element = 0
 
     return sum_element
 
 
-def calc_custom_te(x_pred, x_hist, y_hist, mcsamples):
-    """Calculates the transfer entropy between two variables.
+def calc_custom_local_te(x_pred, x_hist, y_hist):
+    """Calculates the local transfer entropy between two variables.
+
+    See Lizier2008 Eq. 8 for implementation reference.
 
     The x_pred, x_hist and y_hist vectors need to be determined externally.
 
@@ -159,15 +163,64 @@ def calc_custom_te(x_pred, x_hist, y_hist, mcsamples):
 
     # TODO: Make this general for k and l
 
+    # TODO: Review implementation - something is very wrong here with the scale
+    # of the result
+
+    # Normalise data
+    x_pred_norm = preprocessing.scale(x_pred, axis=1)
+    x_hist_norm = preprocessing.scale(x_hist, axis=1)
+    y_hist_norm = preprocessing.scale(y_hist, axis=1)
+
+    # Get the number of observations
+    numobs = x_pred.shape[1]
+
     # Calculate PDFs for all combinations required
-    [pdf_1, pdf_2, pdf_3, pdf_4] = pdfcalcs(x_pred, x_hist, y_hist)
+    [pdf_1, pdf_2, pdf_3, pdf_4] = pdfcalcs(x_pred_norm,
+                                            x_hist_norm, y_hist_norm)
+
+    tesum = 0.0
+    for x_pred_val, x_hist_val, y_hist_val in zip(x_pred_norm[0],
+                                                  x_hist_norm[0],
+                                                  y_hist_norm[0]):
+
+        tesum += te_local_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4,
+                                      x_pred_val, x_hist_val, y_hist_val)
+    transent = tesum / numobs
+
+    return transent
+
+
+def calc_custom_overall_te(x_pred, x_hist, y_hist):
+    """Calculates the transfer entropy between two variables.
+
+    See Shu2013 Eq. 1 for implementation reference.
+
+    The x_pred, x_hist and y_hist vectors need to be determined externally.
+
+    """
+
+    # First do an example for the case of k = l = 1
+
+    # TODO: Make this general for k and l
+
+    # Normalise data
+    x_pred_norm = preprocessing.scale(x_pred, axis=1)
+    x_hist_norm = preprocessing.scale(x_hist, axis=1)
+    y_hist_norm = preprocessing.scale(y_hist, axis=1)
+
+    # Calculate PDFs for all combinations required
+    [pdf_1, pdf_2, pdf_3, pdf_4] = pdfcalcs(x_pred_norm,
+                                            x_hist_norm, y_hist_norm)
+
+    # Needs to be completed (reverted to mcint)
 
     return None
 
 
-def setup_infodynamics_te(infodynamicsloc):
+def setup_infodynamics_te():
 
-    teCalcClass = jpype.JPackage("infodynamics.measures.continuous.kernel").TransferEntropyCalculatorKernel
+    teCalcClass = jpype.JPackage("infodynamics.measures.continuous.kernel") \
+                       .TransferEntropyCalculatorKernel
     teCalc = teCalcClass()
     # Normalise the individual variables
     teCalc.setProperty("NORMALISE", "true")
@@ -195,11 +248,16 @@ def calc_infodynamics_te(teCalc, affected_data, causal_data):
 
     """
 
-    # Use history length 1 (Schreiber k=1), kernel width of 0.5 normalised units
+    # Normalise data to be safe
+    affected_data_norm = preprocessing.scale(affected_data, axis=1)
+    causal_data_norm = preprocessing.scale(causal_data, axis=1)
+
+    # Use history length 1 (Schreiber k=1),
+    # kernel width of 0.5 normalised units
     teCalc.initialise(1, 0.5)
 
-    sourceArray = causal_data.tolist()
-    destArray = affected_data.tolist()
+    sourceArray = causal_data_norm[0].tolist()
+    destArray = affected_data_norm[0].tolist()
 
     teCalc.setObservations(jpype.JArray(jpype.JDouble, 1)(sourceArray),
                            jpype.JArray(jpype.JDouble, 1)(destArray))
