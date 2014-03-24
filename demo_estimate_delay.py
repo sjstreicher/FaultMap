@@ -21,7 +21,7 @@ import numpy as np
 import os
 import logging
 import h5py
-from jpype import *
+import jpype
 
 logging.basicConfig(level=logging.INFO)
 
@@ -57,8 +57,11 @@ size = 400
 if method == 'transfer_entropy':
     # Change location of jar to match yours:
     jarLocation = infodynamicsloc
-    # Start the JVM (add the "-Xmx" option with say 1024M if you get crashes due to not enough memory space)
-    startJVM(getDefaultJVMPath(), "-ea", "-Djava.class.path=" + jarLocation)
+    # Start the JVM
+    # (add the "-Xmx" option with say 1024M if you get crashes
+    # due to not enough memory space)
+    jpype.startJVM(jpype.getDefaultJVMPath(), "-ea",
+                   "-Djava.class.path=" + jarLocation)
 
 # Only do a single case in the demo for coverage analysis purposes
 for case in cases:

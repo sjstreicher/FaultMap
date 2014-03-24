@@ -9,9 +9,9 @@ import numpy as np
 import h5py
 import logging
 
+from sklearn import preprocessing
 from transentropy import calc_infodynamics_te as te_infodyns
 from transentropy import setup_infodynamics_te as te_setup
-from jpype import *
 
 
 def create_connectionmatrix(connection_loc):
@@ -182,6 +182,9 @@ def estimate_delay(variables, connectionmatrix, inputdata,
     weight_array[:] = np.NAN
     delay_array[:] = np.NAN
 
+    # Normalise inputdata to be safe
+    inputdata = preprocessing.scale(inputdata)
+
     if method == 'partial_correlation':
 
         threshcorr = (1.85*(size**(-0.41))) + (2.37*(size**(-0.53)))
@@ -198,9 +201,6 @@ def estimate_delay(variables, connectionmatrix, inputdata,
         # TODO: Get transfer entropy threshold from Bauer2005
         threshent = 0.0
 
-        # Setup Java class for infodynamics toolkit
-        teCalc = te_setup(infodynamicsloc)
-
         data_header = ['causevar', 'affectedvar', 'base_ent',
                        'max_ent', 'max_delay', 'max_index', 'threshpass']
 
@@ -213,6 +213,7 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                          for delay in delays]
         sample_delay = [int(round(delay/sampling_rate))
                         for delay in delays]
+
     for causevarindex, causevar in enumerate(variables):
         logging.info("Analysing effect of: " + causevar)
         for affectedvarindex, affectedvar in enumerate(variables):
@@ -234,10 +235,15 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                         weightlist.append(corrval)
 
                     elif method == 'transfer_entropy':
+                        # Setup Java class for infodynamics toolkit
+                        teCalc = te_setup(infodynamicsloc)
                         transent = \
                             te_infodyns(teCalc,
                                         affectedvardata.T, causevardata.T)
                         weightlist.append(transent)
+                        # Delete teCalc class in order to allow
+                        # garbage data to be removed
+                        del teCalc
 
                 if method == 'partial_correlation':
                     [weight_array, delay_array, datastore] = \

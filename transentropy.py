@@ -5,11 +5,8 @@ Created on Mon Feb 24 15:18:33 2014
 """
 import numpy as np
 from scipy import stats
-import random
-import mcint
-from autoreg import getdata
-import json
-from jpype import *
+from autoreg import autoreg_gen
+import jpype
 
 
 def vectorselection(data, timelag, sub_samples, k=1, l=1):
@@ -43,6 +40,7 @@ def vectorselection(data, timelag, sub_samples, k=1, l=1):
     """
     _, sample_n = data.shape
     x_pred = data[0, sample_n-sub_samples-1:-1]
+    x_pred = x_pred[np.newaxis, :]
 
     x_hist = np.zeros((k, sub_samples))
     y_hist = np.zeros((l, sub_samples))
@@ -58,6 +56,31 @@ def vectorselection(data, timelag, sub_samples, k=1, l=1):
         y_hist[m-1:, :] = data[1, ((sample_n - sub_samples) -
                                timelag * (m) - 1):
                                (sample_n - timelag * (m) - 1)]
+
+    return x_pred, x_hist, y_hist
+
+
+def autoreg_datagen(delay, timelag, samples, sub_samples, k=1, l=1):
+    """Generates autoreg data for a specific timelag (equal to
+    prediction horison) for a set of autoregressive data.
+
+    sub_samples is the amount of samples in the dataset used to calculate the
+    transfer entropy between two vectors (taken from the end of the dataset).
+    sub_samples <= samples
+
+    Currently only supports k = 1; l = 1
+
+    You can search through a set of timelags in an attempt to identify the
+    original delay.
+    The transfer entropy should have a maximum value when timelag = delay
+    used to generate the autoregressive dataset.
+
+    """
+
+    data = autoreg_gen(samples, delay)
+
+    [x_pred, x_hist, y_hist] = vectorselection(data, timelag,
+                                               sub_samples, k, l)
 
     return x_pred, x_hist, y_hist
 
@@ -125,36 +148,26 @@ def te_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val,
     return sum_element
 
 
-def autoreg_datagen(delay, timelag, samples, sub_samples, k=1, l=1):
-    """Generates autoreg data for a specific timelag (equal to
-    prediction horison) for a set of autoregressive data.
+def calc_custom_te(x_pred, x_hist, y_hist, mcsamples):
+    """Calculates the transfer entropy between two variables.
 
-    sub_samples is the amount of samples in the dataset used to calculate the
-    transfer entropy between two vectors (taken from the end of the dataset).
-    sub_samples <= samples
-
-    Currently only supports k = 1; l = 1
-
-    You can search through a set of timelags in an attempt to identify the
-    original delay.
-    The transfer entropy should have a maximum value when timelag = delay
-    used to generate the autoregressive dataset.
+    The x_pred, x_hist and y_hist vectors need to be determined externally.
 
     """
 
-    data = getdata(samples, delay)
+    # First do an example for the case of k = l = 1
 
-    [x_pred, x_hist, y_hist] = vectorselection(data, timelag,
-                                               sub_samples, k, l)
+    # TODO: Make this general for k and l
 
-    return x_pred, x_hist, y_hist
+    # Calculate PDFs for all combinations required
+    [pdf_1, pdf_2, pdf_3, pdf_4] = pdfcalcs(x_pred, x_hist, y_hist)
+
+    return None
 
 
 def setup_infodynamics_te(infodynamicsloc):
 
-    jpype.System.gc()
-
-    teCalcClass = JPackage("infodynamics.measures.continuous.kernel").TransferEntropyCalculatorKernel
+    teCalcClass = jpype.JPackage("infodynamics.measures.continuous.kernel").TransferEntropyCalculatorKernel
     teCalc = teCalcClass()
     # Normalise the individual variables
     teCalc.setProperty("NORMALISE", "true")
@@ -188,73 +201,9 @@ def calc_infodynamics_te(teCalc, affected_data, causal_data):
     sourceArray = causal_data.tolist()
     destArray = affected_data.tolist()
 
-    teCalc.setObservations(JArray(JDouble, 1)(sourceArray),
-                           JArray(JDouble, 1)(destArray))
+    teCalc.setObservations(jpype.JArray(jpype.JDouble, 1)(sourceArray),
+                           jpype.JArray(jpype.JDouble, 1)(destArray))
 
     transentropy = teCalc.computeAverageLocalOfObservations()
 
     return transentropy
-
-
-def calc_custom_te(x_pred, x_hist, y_hist, mcsamples):
-    """Calculates the transfer entropy between two variables from a set of
-    vectors already calculated.
-
-    ampbins is the number of amplitude bins to use over each variable
-
-    """
-
-    # First do an example for the case of k = l = 1
-    # TODO: Sum loops to allow for a general case
-
-    # Divide the range of each variable into amplitude bins to sum over
-
-    # TODO: Will make this general
-
-    x_pred_min = x_pred.min()
-    x_pred_max = x_pred.max()
-    x_hist_min = x_hist.min()
-    x_hist_max = x_hist.max()
-    y_hist_min = y_hist.min()
-    y_hist_max = y_hist.max()
-
-    x_pred_range = x_pred_max - x_pred_min
-    x_hist_range = x_hist_max - x_hist_min
-    y_hist_range = y_hist_max - y_hist_min
-
-    # Calculate PDFs for all combinations required
-    [pdf_1, pdf_2, pdf_3, pdf_4] = pdfcalcs(x_pred, x_hist, y_hist)
-
-    def integrand(x):
-        s1 = x[0]
-        s2 = x[1]
-        s3 = x[2]
-
-        return te_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4,
-                              s1, s2, s3)
-
-    def sampler():
-        while True:
-            s1 = random.uniform(x_pred_min, x_pred_max)
-            s2 = random.uniform(x_hist_min, x_hist_max)
-            s3 = random.uniform(y_hist_min, y_hist_max)
-            yield(s1, s2, s3)
-
-    domainsize = x_pred_range * x_hist_range * y_hist_range
-#    domainsize = 1
-
-#    print domainsize
-
-    # Do triple integration using scipy.integrate.tplquad
-    # Also do a version using mcint
-    # See this for higher orders:
-    # http://stackoverflow.com/questions/14071704/integrating-a-multidimensional-integral-in-scipy
-
-    for nmc in [mcsamples]:
-        random.seed(1)
-        result, error = mcint.integrate(integrand, sampler(),
-                                        measure=domainsize, n=nmc)
-
-#        print "Using n = ", nmc
-        print "Result = ", result[0]
-    return result
