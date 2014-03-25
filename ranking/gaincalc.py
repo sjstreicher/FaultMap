@@ -81,7 +81,8 @@ def partialcorr_reporting(weightlist, actual_delays, weight_array, delay_array,
         maxcorr = minval
     # Bauer2008 eq. 4
     maxcorr_abs = max(maxval, abs(minval))
-    bestdelay = actual_delays[delay_index]
+    # +1 needed due to the way delays defined in atx function - revise
+    bestdelay = actual_delays[delay_index+1]
     directionindex = 2 * (abs(maxval + minval) /
                           (maxval + abs(minval)))
     weight_array[affectedvarindex, causevarindex] = maxcorr
@@ -113,10 +114,11 @@ def partialcorr_reporting(weightlist, actual_delays, weight_array, delay_array,
     logging.info("Minimum correlation value: " + str(minval))
     logging.info("The maximum correlation between " + causevar +
                  " and " + affectedvar + " is: " + str(maxcorr))
+    # +1 needed due to the way delays defined in atx function
     logging.info("The corresponding delay is: " +
                  str(bestdelay*3600) +
                  " seconds, delay index number: " +
-                 str(delay_index))
+                 str(delay_index+1))
     logging.info("The correlation with no delay is: "
                  + str(weightlist[0]))
     logging.info("Correlation threshold passed: " +
@@ -149,17 +151,15 @@ def transent_reporting(weightlist, actual_delays, weight_array, delay_array,
                 threshpass]
     datastore.append(dataline)
 
-    logging.info("Maximum transent value: " + str(maxval))
     logging.info("The maximum TE between " + causevar +
                  " and " + affectedvar + " is: " + str(maxval))
-    logging.info("The corresponding delay is: " +
-                 str(bestdelay*3600) +
-                 " seconds, delay index number: " +
-                 str(delay_index))
+    # +1 needed due to the way delays defined in atx function
+    logging.info("The corresponding delay is delay index number: " +
+                 str(delay_index+1))
     logging.info("The TE with no delay is: "
                  + str(weightlist[0]))
-    logging.info("TE threshold passed: " +
-                 str(threshpass))
+#    logging.info("TE threshold passed: " +
+#                 str(threshpass))
 
     return weight_array, delay_array, datastore
 
@@ -185,7 +185,7 @@ def estimate_delay(variables, connectionmatrix, inputdata,
     delay_array[:] = np.NAN
 
     # Normalise inputdata to be safe
-    inputdata = preprocessing.scale(inputdata)
+    inputdata = preprocessing.scale(inputdata, axis=0)
 
     if method == 'partial_correlation':
 
@@ -223,12 +223,15 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                 weightlist = []
                 for delay in sample_delay:
 
+                    # This is similar to the vectorselection function in
+                    # the transentropy module
+
                     causevardata = \
-                        inputdata[:, causevarindex][-(size+delay):
-                                                    -1-delay]
+                        inputdata[:, causevarindex][-(size+delay+1):-(delay+1)]
+                    print len(causevardata)
                     affectedvardata = \
-                        inputdata[:, affectedvarindex][delay+1:
-                                                       delay+size]
+                        inputdata[:, affectedvarindex][-(size+1):-1]
+                    print len(affectedvardata)
 
                     if method == 'partial_correlation':
                         corrval = \

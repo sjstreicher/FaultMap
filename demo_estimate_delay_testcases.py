@@ -56,6 +56,7 @@ datatype = 'function'
 #datatype = 'file'
 
 # Value chosen for demonstration purposes only
+# Similar to subsamples in vectorselection
 size = 2000
 
 if method == 'transfer_entropy':
@@ -67,6 +68,7 @@ if method == 'transfer_entropy':
     jpype.startJVM(jpype.getDefaultJVMPath(), "-ea",
                    "-Djava.class.path=" + jarLocation)
 
+# Only running first case while still debugging
 for case in [cases[0]]:
     logging.info("Running case {}".format(case))
     # Get connection (adjacency) matrix
@@ -80,7 +82,7 @@ for case in [cases[0]]:
         inputdata = np.array(h5py.File(tags_tsdata, 'r')[dataset])
     elif datatype == 'function':
         tags_tsdata_gen = caseconfig[case]['datagen']
-        samples = 2000
+        samples = 5000
         delay = 5
         inputdata = eval(tags_tsdata_gen)(samples, delay)
 
