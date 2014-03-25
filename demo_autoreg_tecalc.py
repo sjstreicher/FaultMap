@@ -5,7 +5,7 @@ Created on Tue Mar 11 01:27:15 2014
 @author: Simon
 """
 
-from autoreg import autoreg_gen
+from datagen import autoreg_gen
 from transentropy import setup_infodynamics_te
 from transentropy import vectorselection
 from transentropy import calc_infodynamics_te
@@ -36,7 +36,7 @@ def autoreg_datagen(delay, timelag, samples, sub_samples, k=1, l=1):
 
     """
 
-    data = autoreg_gen(samples, delay)
+    data = autoreg_gen(samples, delay).T
 
     [x_pred, x_hist, y_hist] = vectorselection(data, timelag,
                                                sub_samples, k, l)
@@ -73,7 +73,7 @@ for timelag in range(0, 11):
 
     teCalc = setup_infodynamics_te()
 
-    result = calc_infodynamics_te(teCalc, x_hist_norm, y_hist_norm)
+    result = calc_infodynamics_te(teCalc, x_hist_norm[0], y_hist_norm[0])
     print("Infodynamics TE result: %.4f bits" % (result))
 
     # Calculate transfer entropy according to custom

@@ -165,9 +165,11 @@ def transent_reporting(weightlist, actual_delays, weight_array, delay_array,
 
 
 def estimate_delay(variables, connectionmatrix, inputdata,
-                   dataset, sampling_rate, delays,
-                   size, delaytype, method, infodynamicsloc):
-    """Determines the maximum partial correlation between two variables.
+                   sampling_rate, size, delays, delaytype, method):
+    """Determines the maximum weight between two variables by searching through
+    a specified set of delays.
+
+    method can be either 'partial_correlation' or 'transfer_entropy'
 
     size refers to the number of elements of two time series data vectors used
     It is kept constant so as to eliminate any effect that different

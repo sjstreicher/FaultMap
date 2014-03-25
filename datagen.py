@@ -38,4 +38,4 @@ def autoreg_gen(samples, delay):
 
     data = vstack([pred, source])
 
-    return data
+    return data.T
