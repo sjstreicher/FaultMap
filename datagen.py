@@ -25,7 +25,7 @@ def autoreg_gen(samples, delay):
     # This is not expected to be a problem on any "real" data
 
     # Define seed for noise data
-    np.random.seed(42)
+    np.random.seed(88)
     affected_random_add = np.random.rand(samples + delay)
 
     for i in range(delay, len(cause)):
@@ -58,7 +58,7 @@ def delay_gen(samples, delay):
     # This is not expected to be a problem on any "real" data
 
     # Define seed for noise data
-    np.random.seed(42)
+    np.random.seed(88)
     affected_random_add = np.random.rand(samples + delay)
 
     for i in range(delay, len(cause)):
@@ -70,5 +70,21 @@ def delay_gen(samples, delay):
     affected = affected + affected_random_add[delay:]
 
     data = vstack([affected, cause])
+
+    return data.T
+
+
+def random_gen(samples, delay):
+    """Generates two completely independent random data vectors."""
+
+    # Generate first vector
+    np.random.seed(35)
+    x1 = np.random.randn(samples)
+
+    # Generate second vector
+    np.random.seed(88)
+    x2 = np.random.randn(samples)
+
+    data = vstack([x1, x2])
 
     return data.T
