@@ -41,7 +41,7 @@ def vectorselection(data, timelag, sub_samples, k=1, l=1):
 
     """
     _, sample_n = data.shape
-    x_pred = data[0, sample_n-sub_samples-1:-1]
+    x_pred = data[0, sample_n-sub_samples:]
     x_pred = x_pred[np.newaxis, :]
 
     x_hist = np.zeros((k, sub_samples))
@@ -49,11 +49,10 @@ def vectorselection(data, timelag, sub_samples, k=1, l=1):
 
     for n in range(1, (k+1)):
         # Original form according to Bauer (2007)
-#        x_hist[n-1, :] = data[0, ((sample_n - samples) - timelag * n):
-#                               (sample_n - timelag * n)]
+        # TODO: Provide for comparison
         # Modified form according to Shu & Zhao (2013)
         x_hist[n-1, :] = data[0, ((sample_n - sub_samples) - timelag *
-                                  (n-1) - 2):(sample_n - timelag * (n-1) - 2)]
+                                  (n-1) - 1):(sample_n - timelag * (n-1) - 1)]
     for m in range(1, (l+1)):
         y_hist[m-1:, :] = data[1, ((sample_n - sub_samples) -
                                timelag * (m) - 1):
