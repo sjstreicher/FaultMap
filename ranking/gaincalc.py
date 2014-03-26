@@ -192,7 +192,8 @@ def estimate_delay(variables, connectionmatrix, inputdata,
 
         data_header = ['causevar', 'affectedvar', 'base_corr',
                        'max_corr', 'max_delay', 'max_index',
-                       'signchange', 'corrthreshpass', 'dirrthreshpass', 'dirval']
+                       'signchange', 'corrthreshpass',
+                       'dirrthreshpass', 'dirval']
 
     elif method == 'transfer_entropy':
         # TODO: Get transfer entropy threshold from Bauer2005
@@ -225,20 +226,16 @@ def estimate_delay(variables, connectionmatrix, inputdata,
 
                     causevardata = \
                         inputdata[:, causevarindex][-(size+delay):causeoffset]
+                    affectedvardata = \
+                        inputdata[:, affectedvarindex][-(size):]
 
                     if method == 'partial_correlation':
-                        affectedvardata = \
-                            inputdata[:, affectedvarindex][-(size):]
-
                         corrval = \
                             np.corrcoef(causevardata.T,
                                         affectedvardata.T)[1, 0]
                         weightlist.append(corrval)
 
                     elif method == 'transfer_entropy':
-                        affectedvardata = \
-                            inputdata[:, affectedvarindex][-(size+1):-1]
-
                         # Setup Java class for infodynamics toolkit
                         teCalc = te_setup()
                         transent = \
