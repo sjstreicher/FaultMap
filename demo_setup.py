@@ -9,7 +9,8 @@ import json
 import os
 
 
-def runsetup(mode='test_cases'):
+def runsetup(mode='plants'):
+    """Mode can be either 'test_cases' or 'plants'"""
     # Load directories config file
     dirs = json.load(open('config.json'))
     # Get data and preferred export directories from directories config file
@@ -17,15 +18,18 @@ def runsetup(mode='test_cases'):
     saveloc = os.path.expanduser(dirs['saveloc'])
     infodynamicsloc = os.path.expanduser(dirs['infodynamicsloc'])
 
-    # Define plant and or test case name to run
-    case = 'autoreg_2x2'
-    # Define plant data directory
+    # Define plant or test case name to run
+    case = 'tennessee_eastman'
+    # Define case data directory
     casedir = os.path.join(dataloc, mode, case)
-    scenarios = ['fullconn', 'correctconn', 'reverseconn']
     # Load scenario config file
     scenconfig = json.load(open(os.path.join(casedir, case + '.json')))
+    # Get scenarios
+    scenarios = scenconfig['scenarios']
     # Get sampling rate
     sampling_rate = scenconfig['sampling_rate']
+    # Get data type
+    datatype = scenconfig['datatype']
 
     return scenarios, saveloc, scenconfig, casedir, sampling_rate, \
-        infodynamicsloc
+        infodynamicsloc, datatype

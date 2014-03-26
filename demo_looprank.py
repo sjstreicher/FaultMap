@@ -30,7 +30,7 @@ transientplots = True
 importancegraph = True
 
 
-cases, saveloc, caseconfig, plantdir, sampling_rate, _ = runsetup()
+cases, saveloc, caseconfig, plantdir, sampling_rate, _, _, = runsetup()
 
 openconnectionloc = os.path.join(plantdir, 'connections',
                                  caseconfig['open_connections'])

@@ -34,15 +34,13 @@ def writecsv(filename, items, header):
         csv.writer(f).writerow(header)
         csv.writer(f).writerows(items)
 
-cases, saveloc, caseconfig, plantdir, sampling_rate, infodynamicsloc = \
-    runsetup()
+cases, saveloc, caseconfig, plantdir, sampling_rate, infodynamicsloc, \
+    datatype = runsetup()
 
 # Specify delay type either as 'datapoints' or 'timevalues'
 delaytype = 'datapoints'
-delays = []
 
 # Specify method either as 'partial_correlation' or 'transfer_entropy'
-# TODO: Store this in the case configuration file
 method = 'transfer_entropy'
 #method = 'partial_correlation'
 logging.info("Method: " + method)
@@ -53,9 +51,6 @@ if delaytype == 'datapoints':
 elif delaytype == 'timevalues':
 # Include first n 10-second shifts
     delays = [val * (10.0/3600.0) for val in range(1000)]
-
-#datatype = 'function'
-datatype = 'file'
 
 # Value chosen for demonstration purposes only
 # Similar to subsamples in vectorselection function
