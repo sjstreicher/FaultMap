@@ -9,7 +9,7 @@ import numpy as np
 
 
 def autoreg_gen(samples, delay):
-    """Generate an autoregressive set of vectors.
+    """Generates an autoregressive set of vectors.
 
     A constant seed is used for testing comparison purposes.
 
@@ -18,24 +18,57 @@ def autoreg_gen(samples, delay):
     # Define seed for initial source data
     np.random.seed(35)
 
-    source = np.random.randn(samples + delay + 1)
-    pred = np.zeros_like(source)
+    cause = np.random.randn(samples + delay)
+    affected = np.zeros_like(cause)
     # Very close covariance occassionally breaks the kde estimator
     # Another small random element is added to take care of this
     # This is not expected to be a problem on any "real" data
 
     # Define seed for noise data
     np.random.seed(42)
-    pred_random_add = np.random.rand(samples + delay + 1)
+    affected_random_add = np.random.rand(samples + delay)
 
-    for i in range(delay, len(source)):
-        pred[i] = pred[i - 1] + source[i - delay]
+    for i in range(delay, len(cause)):
+        affected[i] = affected[i - 1] + cause[i - delay]
 
-    pred = pred[delay:-1]
-    source = source[delay:-1]
+    affected = affected[delay:]
+    cause = cause[delay:]
 
-    pred = pred + pred_random_add[delay:-1]
+    affected = affected + affected_random_add[delay:]
 
-    data = vstack([pred, source])
+    data = vstack([affected, cause])
+
+    return data.T
+
+
+def delay_gen(samples, delay):
+    """Generates a random data vector and a pure delay companion.
+
+    A constant seed is used for testing comparison purposes/
+
+    """
+
+    # Define seed for initial source data
+    np.random.seed(35)
+
+    cause = np.random.randn(samples + delay)
+    affected = np.zeros_like(cause)
+    # Very close covariance occassionally breaks the kde estimator
+    # Another small random element is added to take care of this
+    # This is not expected to be a problem on any "real" data
+
+    # Define seed for noise data
+    np.random.seed(42)
+    affected_random_add = np.random.rand(samples + delay)
+
+    for i in range(delay, len(cause)):
+        affected[i] = cause[i - delay]
+
+    affected = affected[delay:]
+    cause = cause[delay:]
+
+    affected = affected + affected_random_add[delay:]
+
+    data = vstack([affected, cause])
 
     return data.T
