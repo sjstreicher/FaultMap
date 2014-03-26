@@ -9,8 +9,14 @@ import json
 import os
 
 
-def runsetup(mode='plants'):
-    """Mode can be either 'test_cases' or 'plants'"""
+def runsetup(mode='test_cases', case='random_2x2'):
+    """Gets all required parameters from the case configuration file.
+
+    Mode can be either 'test_cases' or 'plants' as required to get to the
+    correct directory.
+
+    """
+
     # Load directories config file
     dirs = json.load(open('config.json'))
     # Get data and preferred export directories from directories config file
@@ -18,8 +24,6 @@ def runsetup(mode='plants'):
     saveloc = os.path.expanduser(dirs['saveloc'])
     infodynamicsloc = os.path.expanduser(dirs['infodynamicsloc'])
 
-    # Define plant or test case name to run
-    case = 'tennessee_eastman'
     # Define case data directory
     casedir = os.path.join(dataloc, mode, case)
     # Load scenario config file
