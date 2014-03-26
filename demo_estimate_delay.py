@@ -34,8 +34,11 @@ def writecsv(filename, items, header):
         csv.writer(f).writerow(header)
         csv.writer(f).writerows(items)
 
-cases, saveloc, caseconfig, plantdir, sampling_rate, infodynamicsloc, \
-    datatype = runsetup()
+mode = 'test_cases'
+case = 'random_2x2'
+
+scenarios, saveloc, caseconfig, plantdir, sampling_rate, infodynamicsloc, \
+    datatype = runsetup(mode, case)
 
 # Specify delay type either as 'datapoints' or 'timevalues'
 delaytype = 'datapoints'
@@ -47,7 +50,7 @@ logging.info("Method: " + method)
 
 if delaytype == 'datapoints':
 # Include first n sampling intervals
-    delays = range(11)
+    delays = range(51)
 elif delaytype == 'timevalues':
 # Include first n 10-second shifts
     delays = [val * (10.0/3600.0) for val in range(1000)]
@@ -65,21 +68,22 @@ if method == 'transfer_entropy':
     jpype.startJVM(jpype.getDefaultJVMPath(), "-ea",
                    "-Djava.class.path=" + jarLocation)
 
-# Only running first case while still debugging
-for case in [cases[0]]:
-    logging.info("Running case {}".format(case))
+for scenario in scenarios:
+    logging.info("Running scenario {}".format(scenario))
     # Get connection (adjacency) matrix
     connectionloc = os.path.join(plantdir, 'connections',
-                                 caseconfig[case]['connections'])
+                                 caseconfig[scenario]['connections'])
     # Get time series data
     if datatype == 'file':
-        tags_tsdata = os.path.join(plantdir, 'data', caseconfig[case]['data'])
+        tags_tsdata = os.path.join(plantdir, 'data',
+                                   caseconfig[scenario]['data'])
         # Get dataset name
-        dataset = caseconfig[case]['dataset']
+        dataset = caseconfig[scenario]['dataset']
         inputdata = np.array(h5py.File(tags_tsdata, 'r')[dataset])
     elif datatype == 'function':
-        tags_tsdata_gen = caseconfig[case]['datagen']
-        samples = 5000
+        tags_tsdata_gen = caseconfig['datagen']
+        # TODO: Store function arguments in scenario config file
+        samples = 3000
         delay = 5
         inputdata = eval(tags_tsdata_gen)(samples, delay)
 
@@ -96,13 +100,13 @@ for case in [cases[0]]:
     # Define export directories and filenames
     datasavename = \
         os.path.join(saveloc, 'estimate_delay',
-                     '{}_{}_estimate_delay_data.csv'.format(case, method))
+                     '{}_{}_{}_estimate_delay_data.csv'.format(case, scenario, method))
     value_array_savename = \
         os.path.join(saveloc, 'estimate_delay',
-                     '{}_{}_maxweight_array.csv'.format(case, method))
+                     '{}_{}_{}_maxweight_array.csv'.format(case, scenario, method))
     delay_array_savename = \
         os.path.join(saveloc, 'estimate_delay',
-                     '{}_{}_delay_array.csv'.format(case, method))
+                     '{}_{}_{}_delay_array.csv'.format(case, scenario, method))
 
     # Write arrays to file
     np.savetxt(value_array_savename, weight_array, delimiter=',')
