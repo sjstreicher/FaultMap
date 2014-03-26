@@ -105,8 +105,8 @@ def partialcorr_reporting(weightlist, actual_delays, weight_array, delay_array,
         # TODO: Don't use the shifted correlation
 
     dataline = [causevar, affectedvar, str(weightlist[0]),
-                maxcorr, str(bestdelay*3600), str(delay_index),
-                signchange, corrthreshpass, dirthreshpass]
+                maxcorr, str(bestdelay), str(delay_index),
+                signchange, corrthreshpass, dirthreshpass, directionindex]
 
     datastore.append(dataline)
     logging.info("Maximum correlation value: " + str(maxval))
@@ -114,9 +114,7 @@ def partialcorr_reporting(weightlist, actual_delays, weight_array, delay_array,
     logging.info("The maximum correlation between " + causevar +
                  " and " + affectedvar + " is: " + str(maxcorr))
     logging.info("The corresponding delay is: " +
-                 str(bestdelay*3600) +
-                 " seconds, delay index number: " +
-                 str(delay_index))
+                 str(bestdelay))
     logging.info("The correlation with no delay is: "
                  + str(weightlist[0]))
     logging.info("Correlation threshold passed: " +
@@ -145,7 +143,7 @@ def transent_reporting(weightlist, actual_delays, weight_array, delay_array,
         threshpass = False
 
     dataline = [causevar, affectedvar, str(weightlist[0]),
-                maxval, str(bestdelay*3600), str(delay_index),
+                maxval, str(bestdelay), str(delay_index),
                 threshpass]
     datastore.append(dataline)
 
@@ -189,12 +187,12 @@ def estimate_delay(variables, connectionmatrix, inputdata,
         threshcorr = (1.85*(size**(-0.41))) + (2.37*(size**(-0.53)))
         threshdir = 0.46*(size**(-0.16))
 
-        logging.info("Directionbality threshold: " + str(threshdir))
+        logging.info("Directionality threshold: " + str(threshdir))
         logging.info("Correlation threshold: " + str(threshcorr))
 
         data_header = ['causevar', 'affectedvar', 'base_corr',
                        'max_corr', 'max_delay', 'max_index',
-                       'signchange', 'corrthreshpass', 'dirrthreshpass']
+                       'signchange', 'corrthreshpass', 'dirrthreshpass', 'dirval']
 
     elif method == 'transfer_entropy':
         # TODO: Get transfer entropy threshold from Bauer2005
@@ -228,16 +226,19 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                     causevardata = \
                         inputdata[:, causevarindex][-(size+delay):causeoffset]
 
-                    affectedvardata = \
-                        inputdata[:, affectedvarindex][-(size):]
-
                     if method == 'partial_correlation':
+                        affectedvardata = \
+                            inputdata[:, affectedvarindex][-(size):]
+
                         corrval = \
                             np.corrcoef(causevardata.T,
                                         affectedvardata.T)[1, 0]
                         weightlist.append(corrval)
 
                     elif method == 'transfer_entropy':
+                        affectedvardata = \
+                            inputdata[:, affectedvarindex][-(size+1):-1]
+
                         # Setup Java class for infodynamics toolkit
                         teCalc = te_setup()
                         transent = \
