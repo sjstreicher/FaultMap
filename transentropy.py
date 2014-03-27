@@ -51,10 +51,10 @@ def vectorselection(data, timelag, sub_samples, k=1, l=1):
         # Original form according to Bauer (2007)
         # TODO: Provide for comparison
         # Modified form according to Shu & Zhao (2013)
-        x_hist[n-1, :] = data[0, ((sample_n - sub_samples) - timelag *
+        x_hist[n-1, :] = data[1, ((sample_n - sub_samples) - timelag *
                                   (n-1) - 1):(sample_n - timelag * (n-1) - 1)]
     for m in range(1, (l+1)):
-        y_hist[m-1:, :] = data[1, ((sample_n - sub_samples) -
+        y_hist[m-1:, :] = data[0, ((sample_n - sub_samples) -
                                timelag * (m) - 1):
                                (sample_n - timelag * (m) - 1)]
 
@@ -321,8 +321,9 @@ def calc_custom_eq8_te(x_pred, x_hist, y_hist):
                                                   x_hist_norm[0],
                                                   y_hist_norm[0]):
 
-        tesum += te_eq8_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4,
-                                    x_pred_val, x_hist_val, y_hist_val)
+        sumelement = te_eq8_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4,
+                                        x_pred_val, x_hist_val, y_hist_val)
+        tesum += sumelement
     transent = tesum / numobs
 
     return transent
