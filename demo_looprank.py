@@ -24,16 +24,19 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
+mode = 'test_cases'
+case = 'autoreg_2x2'
+
 # Optional methods
 # Save plots of transient rankings
 transientplots = True
 importancegraph = True
 
+scenarios, saveloc, scenconfig, casedir, sampling_rate, \
+    infodynamicsloc, datatype = runsetup(mode, case)
 
-cases, saveloc, caseconfig, plantdir, sampling_rate, _, _, = runsetup()
-
-openconnectionloc = os.path.join(plantdir, 'connections',
-                                 caseconfig['open_connections'])
+openconnectionloc = os.path.join(casedir, 'connections',
+                                 scenconfig['open_connections'])
 [_, openconnectionmatrix] = create_connectionmatrix(openconnectionloc)
 
 
@@ -57,7 +60,8 @@ def gainrank(gainmatrix, variables, connectionmatrix):
     return rankingdict, slist
 
 
-def looprank_single(case, variables, connectionmatrix, tags_tsdata, dataset):
+def looprank_single(scenario, variables, connectionmatrix,
+                    tags_tsdata, dataset):
     # Get the correlation and partial correlation matrices
     _, gainmatrix = \
         calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, dataset)
@@ -67,14 +71,14 @@ def looprank_single(case, variables, connectionmatrix, tags_tsdata, dataset):
     rankingdict, rankinglist = gainrank(gainmatrix, variables,
                                         connectionmatrix)
 
-    savename = os.path.join(saveloc, case + '_importances.csv')
+    savename = os.path.join(saveloc, scenario + '_importances.csv')
     writecsv(savename, rankinglist)
     logging.info("Done with single ranking")
 
     return gainmatrix, rankingdict
 
 
-def looprank_transient(case, samplerate, boxsize, boxnum, variables,
+def looprank_transient(scenario, samplerate, boxsize, boxnum, variables,
                        connectionmatrix, tags_tsdata, dataset):
     # Split the tags_tsdata into sets (boxes) useful for calculating
     # transient correlations
@@ -90,7 +94,7 @@ def looprank_transient(case, samplerate, boxsize, boxnum, variables,
         # Store the gainmatrix
         gain_filename = \
             os.path.join(saveloc,
-                         "{}_gainmatrix_{:03d}.csv".format(case, index))
+                         "{}_gainmatrix_{:03d}.csv".format(scenario, index))
         np.savetxt(gain_filename, gainmatrix, delimiter=',')
 
         blendedranking, slist = gainrank(gainmatrix, variables,
@@ -110,29 +114,30 @@ def looprank_transient(case, samplerate, boxsize, boxnum, variables,
 
     return transientdict, basevaldict
 
-for case in cases:
+for scenario in scenarios:
     # Get connection (adjacency) matrix
-    logging.info("Running case {}".format(case))
-    connectionloc = os.path.join(plantdir, 'connections',
-                                 caseconfig[case]['connections'])
+    logging.info("Running scenario {}".format(scenario))
+    # Get connection (adjacency) matrix
+    connectionloc = os.path.join(casedir, 'connections',
+                                 scenconfig[scenario]['connections'])
 
     # Get time series data
-    tags_tsdata = os.path.join(plantdir, 'data', caseconfig[case]['data'])
+    tags_tsdata = os.path.join(casedir, 'data', scenconfig[scenario]['data'])
     # Get dataset name
-    dataset = caseconfig[case]['dataset']
+    dataset = scenconfig[scenario]['dataset']
     # Get the variables and connection matrix
     [variables, connectionmatrix] = create_connectionmatrix(connectionloc)
 
     logging.info("Number of tags: {}".format(len(variables)))
-    boxnum = caseconfig[case]['boxnum']
-    boxsize = caseconfig[case]['boxsize']
+    boxnum = scenconfig[scenario]['boxnum']
+    boxsize = scenconfig[scenario]['boxsize']
 
-    gainmatrix, rankingdict = looprank_single(case, variables,
+    gainmatrix, rankingdict = looprank_single(scenario, variables,
                                               connectionmatrix,
                                               tags_tsdata, dataset)
 
     [transientdict, basevaldict] = \
-        looprank_transient(case, sampling_rate, boxsize, boxnum, variables,
+        looprank_transient(scenario, sampling_rate, boxsize, boxnum, variables,
                            connectionmatrix, tags_tsdata, dataset)
 
     if transientplots:
@@ -140,9 +145,9 @@ for case in cases:
                                                        transientdict,
                                                        basevaldict)
         diffplot_filename = os.path.join(saveloc,
-                                         "{}_diffplot.pdf".format(case))
+                                         "{}_diffplot.pdf".format(scenario))
         absplot_filename = os.path.join(saveloc,
-                                        "{}_absplot.pdf".format(case))
+                                        "{}_absplot.pdf".format(scenario))
         diffplot.savefig(diffplot_filename)
         absplot.savefig(absplot_filename)
 
@@ -152,9 +157,9 @@ for case in cases:
                                     openconnectionmatrix, gainmatrix,
                                     rankingdict)
         closedgraph_filename = os.path.join(saveloc,
-                                            "{}_closedgraph.gml".format(case))
+                                            "{}_closedgraph.gml".format(scenario))
         opengraph_filename = os.path.join(saveloc,
-                                          "{}_opengraph.gml".format(case))
+                                          "{}_opengraph.gml".format(scenario))
 
         nx.readwrite.write_gml(closedgraph, closedgraph_filename)
         nx.readwrite.write_gml(opengraph, opengraph_filename)
