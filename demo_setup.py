@@ -26,14 +26,14 @@ def runsetup(mode='test_cases', case='random_2x2'):
 
     # Define case data directory
     casedir = os.path.join(dataloc, mode, case)
-    # Load scenario config file
-    scenconfig = json.load(open(os.path.join(casedir, case + '.json')))
+    # Load case config file
+    caseconfig = json.load(open(os.path.join(casedir, case + '.json')))
     # Get scenarios
-    scenarios = scenconfig['scenarios']
+    scenarios = caseconfig['scenarios']
     # Get sampling rate
-    sampling_rate = scenconfig['sampling_rate']
+    sampling_rate = caseconfig['sampling_rate']
     # Get data type
-    datatype = scenconfig['datatype']
+    datatype = caseconfig['datatype']
 
-    return scenarios, saveloc, scenconfig, casedir, sampling_rate, \
+    return scenarios, saveloc, caseconfig, casedir, sampling_rate, \
         infodynamicsloc, datatype
