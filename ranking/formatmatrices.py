@@ -9,15 +9,17 @@ import networkx as nx
 import h5py
 
 
-def buildcase(dummyweight, digraph, name):
-    counter = 1
-    for node in digraph.nodes():
-        if digraph.out_degree(node) == 1:
-            # TODO: Investigate the effect of different weights
+def buildcase(dummyweight, digraph, name, dummycreation):
+    
+    if dummycreation:
+        counter = 1
+        for node in digraph.nodes():
+            if digraph.out_degree(node) == 1:
+                # TODO: Investigate the effect of different weights
 
-            nameofscale = name + str(counter)
-            digraph.add_edge(node, nameofscale, weight=dummyweight)
-            counter += 1
+                nameofscale = name + str(counter)
+                digraph.add_edge(node, nameofscale, weight=dummyweight)
+                counter += 1
 
     connection = nx.to_numpy_matrix(digraph, weight=None).T
     gain = nx.to_numpy_matrix(digraph, weight='weight').T
@@ -37,7 +39,8 @@ def buildgraph(variables, gainmatrix, connections):
     return digraph
 
 
-def rankforward(variables, gainmatrix, connections, dummyweight):
+def rankforward(variables, gainmatrix, connections,
+                dummyweight, dummycreation):
     """This method adds a unit gain node to all nodes with an out-degree
     of 1; now all of these nodes should have an out-degree of 2.
     Therefore all nodes with pointers should have 2 or more edges pointing
@@ -49,11 +52,12 @@ def rankforward(variables, gainmatrix, connections, dummyweight):
 
     #TODO: Rework calls of this code to reduce redundancy
 
-    m_graph = buildgraph(variables, gainmatrix, connections)
-    return buildcase(dummyweight, m_graph, 'DV_forward')
+    digraph = buildgraph(variables, gainmatrix, connections)
+    return buildcase(dummyweight, digraph, 'DV_forward', dummycreation)
 
 
-def rankbackward(variables, gainmatrix, connections, dummyweight):
+def rankbackward(variables, gainmatrix, connections,
+                 dummyweight, dummycreation):
     """This method adds a unit gain node to all nodes with an out-degree
     of 1; now all of these nodes should have an out-degree of 2.
     Therefore all nodes with pointers should have 2 or more edges
@@ -69,8 +73,8 @@ def rankbackward(variables, gainmatrix, connections, dummyweight):
 
     #TODO: Rework calls of this code to reduce redundancy
 
-    m_graph = buildgraph(variables, gainmatrix.T, connections.T)
-    return buildcase(dummyweight, m_graph, 'DV_backward')
+    digraph = buildgraph(variables, gainmatrix.T, connections.T)
+    return buildcase(dummyweight, digraph, 'DV_backward', dummycreation)
 
 
 def split_tsdata(tags_tsdata, datasetname, samplerate, boxsize, boxnum):

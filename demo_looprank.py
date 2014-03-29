@@ -32,6 +32,9 @@ case = 'series'
 #method = 'transfer_entropy'
 method = 'partial_correlation'
 
+# Choose whether to add dummy variables or not
+dummycreation = False
+
 # Optional methods
 # Do a single ranking on all data
 singleranking = True
