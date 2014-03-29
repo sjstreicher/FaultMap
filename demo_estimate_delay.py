@@ -13,13 +13,13 @@ Created on Thu Mar 13 09:44:16 2014
 from demo_setup import runsetup
 from ranking.gaincalc import create_connectionmatrix
 from ranking.gaincalc import estimate_delay
+from ranking.formatmatrices import writecsv
 # Import all test data generator functions that may be called
 # via the config file
 from datagen import *
 
 from sklearn import preprocessing
 
-import csv
 import numpy as np
 import os
 import logging
@@ -27,12 +27,6 @@ import h5py
 import jpype
 
 logging.basicConfig(level=logging.INFO)
-
-
-def writecsv(filename, items, header):
-    with open(filename, 'wb') as f:
-        csv.writer(f).writerow(header)
-        csv.writer(f).writerows(items)
 
 mode = 'test_cases'
 case = 'random_2x2'

@@ -9,13 +9,13 @@ from ranking.gaincalc import create_connectionmatrix
 from ranking.gaincalc import calc_partialcor_gainmatrix
 from ranking.formatmatrices import rankforward, rankbackward
 from ranking.formatmatrices import split_tsdata
+from ranking.formatmatrices import writecsv
 from ranking.noderank import calc_simple_rank
 from ranking.noderank import calc_blended_rank
 from ranking.noderank import calc_transient_importancediffs
 from ranking.noderank import plot_transient_importances
 from ranking.noderank import create_importance_graph
 
-import csv
 import numpy as np
 import networkx as nx
 
@@ -26,6 +26,9 @@ logging.basicConfig(level=logging.INFO)
 
 mode = 'test_cases'
 case = 'series'
+
+scenarios, saveloc, caseconfig, casedir, sampling_rate, \
+    infodynamicsloc, datatype = runsetup(mode, case)
 
 # Define the method for determining the gainmatrix
 # TODO: Include this in the case configuration file
@@ -42,13 +45,6 @@ singleranking = True
 transientranking = False
 # Save plots of transient rankings
 transientplots = False
-
-scenarios, saveloc, caseconfig, casedir, sampling_rate, \
-    infodynamicsloc, datatype = runsetup(mode, case)
-
-def writecsv(filename, items):
-    with open(filename, 'wb') as f:
-        csv.writer(f).writerows(items)
 
 def gainrank(gainmatrix, variables, connectionmatrix,
              alpha=0.50, dummyweight=1.0):
