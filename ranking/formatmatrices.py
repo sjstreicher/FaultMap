@@ -9,30 +9,32 @@ import networkx as nx
 import h5py
 
 
-def buildcase(dummyweight, m_graph, name):
+def buildcase(dummyweight, digraph, name):
     counter = 1
-    for node in m_graph.nodes():
-        if m_graph.out_degree(node) == 1:
+    for node in digraph.nodes():
+        if digraph.out_degree(node) == 1:
             # TODO: Investigate the effect of different weights
 
             nameofscale = name + str(counter)
-            m_graph.add_edge(node, nameofscale, weight=dummyweight)
+            digraph.add_edge(node, nameofscale, weight=dummyweight)
             counter += 1
 
-    connection = nx.to_numpy_matrix(m_graph, weight=None).T
-    gain = nx.to_numpy_matrix(m_graph, weight='weight').T
-    variablelist = m_graph.nodes()
+    connection = nx.to_numpy_matrix(digraph, weight=None).T
+    gain = nx.to_numpy_matrix(digraph, weight='weight').T
+    variablelist = digraph.nodes()
     return connection, gain, variablelist
 
 
 def buildgraph(variables, gainmatrix, connections):
-    m_graph = nx.DiGraph()
+    digraph = nx.DiGraph()
     # Construct the graph with connections
     for col, colvar in enumerate(variables):
         for row, rowvar in enumerate(variables):
+            # The node order is source, sink according to
+            # the convention that columns are sources and rows are sinks
             if (connections[row, col] != 0):
-                m_graph.add_edge(colvar, rowvar, weight=gainmatrix[row, col])
-    return m_graph
+                digraph.add_edge(colvar, rowvar, weight=gainmatrix[row, col])
+    return digraph
 
 
 def rankforward(variables, gainmatrix, connections, dummyweight):
