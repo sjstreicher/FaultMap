@@ -13,16 +13,18 @@ import networkx as nx
 from matplotlib import pyplot as plt
 
 
-def calculate_rank(gainmatrix, variables):
+def calc_simple_rank(gainmatrix, variables, m=0.15):
     """Constructs the ranking dictionary using the eigenvector approach
     i.e. Ax = x where A is the local gain matrix.
+    
+    m is the weight of the full connectivity matrix used to ensure
+    graph is not sub-stochastic
 
     """
     # Length of gain matrix = number of nodes
     gainmatrix = asarray(gainmatrix)
     n = len(gainmatrix)
     s_matrix = (1.0 / n) * ones((n, n))
-    m = 0.15
     # Basic PageRank algorithm
     m_matrix = (1 - m) * gainmatrix + m * s_matrix
     # Calculate eigenvalues and eigenvectors as usual
@@ -40,12 +42,15 @@ def calculate_rank(gainmatrix, variables):
 
     # Create a dictionary of the rankings with their respective nodes
     # i.e. {NODE:RANKING}
-    rankdict = dict(zip(variables, rankarray))
+    rankingdict = dict(zip(variables, rankarray))
+    
+    rankinglist = sorted(rankingdict.iteritems(), key=itemgetter(1),
+                         reverse=True)
 
-    return rankdict
+    return rankingdict, rankinglist
 
 
-def create_blended_ranking(forwardrank, backwardrank, variablelist,
+def calc_blended_rank(forwardrank, backwardrank, variablelist,
                            alpha=0.35):
     """This method creates a blended ranking profile of the object."""
     rankingdict = dict()
@@ -60,8 +65,9 @@ def create_blended_ranking(forwardrank, backwardrank, variablelist,
 
     rankinglist = sorted(rankingdict.iteritems(), key=itemgetter(1),
                          reverse=True)
+                         
     return rankingdict, rankinglist
-
+    
 
 def calc_transient_importancediffs(rankingdicts, variablelist):
     """Creates dictionary with a vector of successive differences in importance
