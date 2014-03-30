@@ -15,6 +15,10 @@ from ranking.noderank import calc_blended_rank
 from ranking.noderank import calc_transient_importancediffs
 from ranking.noderank import plot_transient_importances
 from ranking.noderank import create_importance_graph
+from ranking.noderank import normalise_rankinglist
+# Import all test network generator functions that may be called
+# via the config file
+from networkgen import *
 
 import numpy as np
 import networkx as nx
@@ -46,31 +50,34 @@ transientranking = False
 # Save plots of transient rankings
 transientplots = False
 
-def gainrank(gainmatrix, variables, connectionmatrix,
-             alpha=0.50, dummyweight=1.0):
+def gainrank(gainmatrix, variables, connectionmatrix, dummycreation=True,
+             alpha=0.5, dummyweight=1.0, m=0.15):
     # TODO: The forward, backward and blended ranking will all be folded
     # into a single method, currently isolated for ease of access to
     # intermediate results
     forwardconnection, forwardgain, forwardvariablelist = \
-        rankforward(variables, gainmatrix, connectionmatrix, dummyweight)
+        rankforward(variables, gainmatrix, connectionmatrix, dummyweight, dummycreation)
         
     backwardconnection, backwardgain, backwardvariablelist = \
-        rankbackward(variables, gainmatrix, connectionmatrix, dummyweight)
+        rankbackward(variables, gainmatrix, connectionmatrix, dummyweight, dummycreation)
         
     forwardrankingdict, forwardrankinglist = \
-        calc_simple_rank(forwardgain, forwardvariablelist)
+        calc_simple_rank(forwardgain, forwardvariablelist, m)
     
     backwardrankingdict, backwardrankinglist = \
-        calc_simple_rank(backwardgain, backwardvariablelist)
+        calc_simple_rank(backwardgain, backwardvariablelist, m)
         
     blendedrankingdict, blendedrankinglist = \
         calc_blended_rank(forwardrankingdict, backwardrankingdict,
                           variables, alpha)
     
     rankingdicts = [blendedrankingdict, forwardrankingdict, backwardrankingdict]    
-    rankinglists = [blendedrankinglist, forwardrankinglist, backwardrankinglist] 
+    rankinglists = [blendedrankinglist, forwardrankinglist, backwardrankinglist]
+    connections = [connectionmatrix, forwardconnection, backwardconnection]
+    variables = [variables, forwardvariablelist, backwardvariablelist]
+    gains = [gainmatrix, np.array(forwardgain), np.array(backwardgain)]
     
-    return rankingdicts, rankinglists
+    return rankingdicts, rankinglists, connections, variables, gains
 
 
 def calc_gainmatrix(connectionmatrix, tags_tsdata, dataset,
@@ -97,7 +104,7 @@ def calc_gainmatrix(connectionmatrix, tags_tsdata, dataset,
     return gainmatrix
     
     
-def looprank_single(scenario, variables, connectionmatrix, gainmatrix):
+def looprank_single(scenario, variablelist, connectionmatrix, gainmatrix):
     """Ranks the nodes in a network given a gainmatrix, connectionmatrix
     and a list of variables.
     
@@ -105,27 +112,62 @@ def looprank_single(scenario, variables, connectionmatrix, gainmatrix):
     
     # TODO: Refactor some more main loop functions here
     
-    rankingdicts, rankinglists = gainrank(gainmatrix, variables,
-                                          connectionmatrix)                          
+    rankingdicts, rankinglists, connections, variables, gains = \
+        gainrank(gainmatrix, variablelist, connectionmatrix, dummycreation)
     
+    # Export graph files with dummy variables included in forward and backward
+    # rankings if available
     directions = ['blended', 'forward', 'backward']                                    
-    for direction, rankinglist, rankingdict in zip(directions, rankinglists, rankingdicts):
+    for direction, rankinglist, rankingdict, connection, variable, gain in zip(directions, rankinglists, rankingdicts, connections, variables, gains):
         # Save the ranking list to file        
         savename = os.path.join(saveloc, scenario + '_{}_importances.csv'.format(direction))
         writecsv(savename, rankinglist)
         # Save the graphs to file
-        closedgraph, _ = \
-                create_importance_graph(variables, connectionmatrix,
-                                        connectionmatrix, gainmatrix,
+        graph, _ = \
+                create_importance_graph(variable, connection,
+                                        connection, gain,
                                         rankingdict)
-        closedgraph_filename = os.path.join(saveloc,
-                                            "{}_{}_closedgraph.gml".format(scenario, direction))
+        graph_filename = os.path.join(saveloc,
+                                      "{}_{}_graph.gml".format(scenario, direction))
 
-        nx.readwrite.write_gml(closedgraph, closedgraph_filename)
+        nx.readwrite.write_gml(graph, graph_filename)
+    
+    # Export forward and backward ranking graphs without dummy variables
+    # Forward ranking graph
+    direction = directions[1]
+    rankingdict = rankingdicts[1]
+    graph, _ = create_importance_graph(variablelist, connectionmatrix,
+                                       connectionmatrix, gainmatrix,
+                                       rankingdict)
+    graph_filename = os.path.join(saveloc,
+                                  "{}_{}_graph_dumsup.gml".format(scenario, direction))
+
+    nx.readwrite.write_gml(graph, graph_filename)
+    
+    # Backward ranking graph
+    direction = directions[2]
+    rankingdict = rankingdicts[2]
+    connectionmatrix = connectionmatrix.T
+    gainmatrix = gainmatrix.T
+    graph, _ = create_importance_graph(variablelist, connectionmatrix,
+                                       connectionmatrix, gainmatrix,
+                                       rankingdict)
+    graph_filename = os.path.join(saveloc,
+                                  "{}_{}_graph_dumsup.gml".format(scenario, direction))
+    
+    nx.readwrite.write_gml(graph, graph_filename)
+    
+    # Calculate and export normalised ranking lists dummy variables
+    # exluded for forwardranking and backwardranking results    
+    for direction, rankingdict in zip(directions[1:], rankingdicts[1:]):
+        normalised_rankinglist = normalise_rankinglist(rankingdict, variablelist)
+        
+        savename = os.path.join(saveloc, scenario + '_{}_importances_dumsup.csv'.format(direction))
+        writecsv(savename, normalised_rankinglist)
    
     logging.info("Done with single ranking")
     
-    return None
+    return
 
 
 def looprank_transient(scenario, samplerate, boxsize, boxnum, variables,
@@ -204,7 +246,7 @@ for scenario in scenarios:
         # For the test cases the openloop connection matrix is kept identical
         # to the closedloop connection matrix
         network_gen = caseconfig[scenario]['networkgen']
-        connectionmatrix, gainmatrix, variables, _ = eval(network_gen)
+        connectionmatrix, gainmatrix, variables, _ = eval(network_gen)()
 
     logging.info("Number of tags: {}".format(len(variables)))
 
