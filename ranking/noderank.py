@@ -52,22 +52,37 @@ def calc_simple_rank(gainmatrix, variables, m=0.15):
 
 def calc_blended_rank(forwardrank, backwardrank, variablelist,
                            alpha=0.35):
-    """This method creates a blended ranking profile of the object."""
+    """This method creates a blended ranking profile."""
     rankingdict = dict()
     for variable in variablelist:
         rankingdict[variable] = abs(((1 - alpha) * forwardrank[variable] +
                                      (alpha) * backwardrank[variable]))
 
-    totals = sum(rankingdict.values())
+    total = sum(rankingdict.values())
     # Normalise rankings
     for variable in variablelist:
-        rankingdict[variable] = rankingdict[variable] / totals
+        rankingdict[variable] = rankingdict[variable] / total
 
     rankinglist = sorted(rankingdict.iteritems(), key=itemgetter(1),
                          reverse=True)
                          
     return rankingdict, rankinglist
+
+
+def normalise_rankinglist(rankingdict, originalvariables):
+    normalised_rankingdict = dict()
+    for variable in originalvariables:
+        normalised_rankingdict[variable] = rankingdict[variable]
     
+    # Normalise rankings
+    total = sum(normalised_rankingdict.values())
+    for variable in originalvariables:
+        normalised_rankingdict[variable] = normalised_rankingdict[variable] / total
+    
+    normalised_rankinglist = sorted(normalised_rankingdict.iteritems(), key=itemgetter(1),
+                                    reverse=True)
+                                    
+    return normalised_rankinglist
 
 def calc_transient_importancediffs(rankingdicts, variablelist):
     """Creates dictionary with a vector of successive differences in importance
@@ -129,15 +144,16 @@ def create_importance_graph(variablelist, closedconnections,
 
     opengraph = nx.DiGraph()
 
-    for col, row in izip(openconnections.nonzero()[0],
-                         openconnections.nonzero()[1]):
+    for col, row in izip(openconnections.nonzero()[1],
+                         openconnections.nonzero()[0]):
+                             
         opengraph.add_edge(variablelist[col], variablelist[row],
                            weight=gainmatrix[row, col])
     openedgelist = opengraph.edges()
 
     closedgraph = nx.DiGraph()
-    for col, row in izip(closedconnections.nonzero()[0],
-                         closedconnections.nonzero()[1]):
+    for col, row in izip(closedconnections.nonzero()[1],
+                         closedconnections.nonzero()[0]):
         newedge = (variablelist[col], variablelist[row])
         closedgraph.add_edge(*newedge, weight=gainmatrix[row, col],
                              controlloop=int(newedge not in openedgelist))
