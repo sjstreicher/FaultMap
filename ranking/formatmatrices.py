@@ -30,7 +30,7 @@ def buildcase(dummyweight, digraph, name, dummycreation):
     connection = nx.to_numpy_matrix(digraph, weight=None).T
     gain = nx.to_numpy_matrix(digraph, weight='weight').T
     variablelist = digraph.nodes()
-    return connection, gain, variablelist
+    return np.array(connection), gain, variablelist
 
 
 def buildgraph(variables, gainmatrix, connections):
@@ -59,7 +59,7 @@ def rankforward(variables, gainmatrix, connections,
     #TODO: Rework calls of this code to reduce redundancy
 
     digraph = buildgraph(variables, gainmatrix, connections)
-    return buildcase(dummyweight, digraph, 'DV_forward', dummycreation)
+    return buildcase(dummyweight, digraph, 'DV FWD ', dummycreation)
 
 
 def rankbackward(variables, gainmatrix, connections,
@@ -80,7 +80,7 @@ def rankbackward(variables, gainmatrix, connections,
     #TODO: Rework calls of this code to reduce redundancy
 
     digraph = buildgraph(variables, gainmatrix.T, connections.T)
-    return buildcase(dummyweight, digraph, 'DV_backward', dummycreation)
+    return buildcase(dummyweight, digraph, 'DV BWD ', dummycreation)
 
 
 def split_tsdata(tags_tsdata, datasetname, samplerate, boxsize, boxnum):
