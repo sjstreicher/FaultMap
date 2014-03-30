@@ -59,4 +59,128 @@ def series_equal():
     nx.draw(testgraph)
     
     return connections, gainmatrix, variables, testgraph
+
+
+def series_incomingon2nd():
+    """Creates five tags connected in series with unit weights on
+    all edges.
+    
+    """
+    
+    variables = ['X 1', 'X 2', 'X 3', 'X 4', 'X 5', 'I 1']
+    
+    connections =  np.array([[0, 0, 0, 0, 0, 0],
+                             [1, 0, 0, 0, 0, 1],
+                             [0, 1, 0, 0, 0, 0],
+                             [0, 0, 1, 0, 0, 0],
+                             [0, 0, 0, 1, 0, 0],
+                             [0, 0, 0, 0, 0, 0]])
+                              
+    gainmatrix = np.array([[0, 0, 0, 0, 0, 0],
+                           [1, 0, 0, 0, 0, 1],
+                           [0, 1, 0, 0, 0, 0],
+                           [0, 0, 1, 0, 0, 0],
+                           [0, 0, 0, 1, 0, 0],
+                           [0, 0, 0, 0, 0, 0]])
+    
+    testgraph = buildgraph(variables, gainmatrix, connections)
+
+    nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
+                                         "series_incomingon2nd.gml"))
+    nx.draw(testgraph)
+    
+    return connections, gainmatrix, variables, testgraph
+    
+    
+def series_incomingon3rd():
+    """Creates five tags connected in series with unit weights on
+    all edges.
+    
+    """
+    
+    variables = ['X 1', 'X 2', 'X 3', 'X 4', 'X 5', 'I 1']
+    
+    connections =  np.array([[0, 0, 0, 0, 0, 0],
+                             [1, 0, 0, 0, 0, 0],
+                             [0, 1, 0, 0, 0, 1],
+                             [0, 0, 1, 0, 0, 0],
+                             [0, 0, 0, 1, 0, 0],
+                             [0, 0, 0, 0, 0, 0]])
+                              
+    gainmatrix = np.array([[0, 0, 0, 0, 0, 0],
+                           [1, 0, 0, 0, 0, 0],
+                           [0, 1, 0, 0, 0, 1],
+                           [0, 0, 1, 0, 0, 0],
+                           [0, 0, 0, 1, 0, 0],
+                           [0, 0, 0, 0, 0, 0]])
+    
+    testgraph = buildgraph(variables, gainmatrix, connections)
+
+    nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
+                                         "series_incomingon3rd.gml"))
+    nx.draw(testgraph)
+    
+    return connections, gainmatrix, variables, testgraph
+
+
+def series_incomingon2ndand3rd():
+    """Creates five tags connected in series with unit weights on
+    all edges.
+    
+    """
+    
+    variables = ['X 1', 'X 2', 'X 3', 'X 4', 'X 5', 'I 1']
+    
+    connections =  np.array([[0, 0, 0, 0, 0, 0],
+                             [1, 0, 0, 0, 0, 1],
+                             [0, 1, 0, 0, 0, 1],
+                             [0, 0, 1, 0, 0, 0],
+                             [0, 0, 0, 1, 0, 0],
+                             [0, 0, 0, 0, 0, 0]])
+                              
+    gainmatrix = np.array([[0, 0, 0, 0, 0, 0],
+                           [1, 0, 0, 0, 0, 1],
+                           [0, 1, 0, 0, 0, 1],
+                           [0, 0, 1, 0, 0, 0],
+                           [0, 0, 0, 1, 0, 0],
+                           [0, 0, 0, 0, 0, 0]])
+    
+    testgraph = buildgraph(variables, gainmatrix, connections)
+
+    nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
+                                         "series_incomingon2ndand3rd.gml"))
+    nx.draw(testgraph)
+    
+    return connections, gainmatrix, variables, testgraph
+
+
+def series_incomingon2ndand4th():
+    """Creates five tags connected in series with unit weights on
+    all edges.
+    
+    """
+    
+    variables = ['X 1', 'X 2', 'X 3', 'X 4', 'X 5', 'I 1']
+    
+    connections =  np.array([[0, 0, 0, 0, 0, 0],
+                             [1, 0, 0, 0, 0, 1],
+                             [0, 1, 0, 0, 0, 0],
+                             [0, 0, 1, 0, 0, 1],
+                             [0, 0, 0, 1, 0, 0],
+                             [0, 0, 0, 0, 0, 0]])
+                              
+    gainmatrix = np.array([[0, 0, 0, 0, 0, 0],
+                           [1, 0, 0, 0, 0, 1],
+                           [0, 1, 0, 0, 0, 0],
+                           [0, 0, 1, 0, 0, 1],
+                           [0, 0, 0, 1, 0, 0],
+                           [0, 0, 0, 0, 0, 0]])
+    
+    testgraph = buildgraph(variables, gainmatrix, connections)
+
+    nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
+                                         "series_incomingon2ndand4th.gml"))
+    nx.draw(testgraph)
+    
+    return connections, gainmatrix, variables, testgraph
     
