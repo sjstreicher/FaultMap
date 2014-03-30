@@ -31,3 +31,32 @@ def fullconn_equal():
     nx.draw(testgraph)
     
     return connections, gainmatrix, variables, testgraph
+
+def series_equal():
+    """Creates five tags connected in series with unit weights on
+    all edges.
+    
+    """
+    
+    variables = ['X 1', 'X 2', 'X 3', 'X 4', 'X 5']
+    
+    connections =  np.array([[0, 0, 0, 0, 0],
+                             [1, 0, 0, 0, 0],
+                             [0, 1, 0, 0, 0],
+                             [0, 0, 1, 0, 0],
+                             [0, 0, 0, 1, 0]])
+                              
+    gainmatrix = np.array([[0, 0, 0, 0, 0],
+                           [1, 0, 0, 0, 0],
+                           [0, 1, 0, 0, 0],
+                           [0, 0, 1, 0, 0],
+                           [0, 0, 0, 1, 0]])
+    
+    testgraph = buildgraph(variables, gainmatrix, connections)
+
+    nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
+                                         "series_equal.gml"))
+    nx.draw(testgraph)
+    
+    return connections, gainmatrix, variables, testgraph
+    
