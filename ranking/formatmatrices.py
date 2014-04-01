@@ -5,18 +5,12 @@
 """
 
 import numpy as np
-import csv
 import networkx as nx
 import h5py
 
 
-def writecsv(filename, items):
-    with open(filename, 'wb') as f:
-        csv.writer(f).writerows(items)
-        
-        
 def buildcase(dummyweight, digraph, name, dummycreation):
-    
+
     if dummycreation:
         counter = 1
         for node in digraph.nodes():
