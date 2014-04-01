@@ -7,6 +7,8 @@ Created on Mon Feb 24 15:27:21 2014
 from numpy import vstack
 import numpy as np
 
+from transentropy import vectorselection
+
 
 def connectionmatrix_2x2():
     """Generates a 2x2 connection matrix for use in tests."""
@@ -98,3 +100,28 @@ def random_gen(samples, delay):
     data = vstack([x1, x2])
 
     return data.T
+
+
+def autoreg_datagen(delay, timelag, samples, sub_samples, k=1, l=1):
+    """Generates autoreg data for a specific timelag (equal to
+    prediction horison) for a set of autoregressive data.
+
+    sub_samples is the amount of samples in the dataset used to calculate the
+    transfer entropy between two vectors (taken from the end of the dataset).
+    sub_samples <= samples
+
+    Currently only supports k = 1; l = 1
+
+    You can search through a set of timelags in an attempt to identify the
+    original delay.
+    The transfer entropy should have a maximum value when timelag = delay
+    used to generate the autoregressive dataset.
+
+    """
+
+    data = autoreg_gen(samples, delay).T
+
+    [x_pred, x_hist, y_hist] = vectorselection(data, timelag,
+                                               sub_samples, k, l)
+
+    return x_pred, x_hist, y_hist
