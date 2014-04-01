@@ -8,6 +8,16 @@ from numpy import vstack
 import numpy as np
 
 
+def connectionmatrix_2x2():
+    """Generates a 2x2 connection matrix for use in tests."""
+
+    variables = ['X 1', 'X 2']
+    connectionmatrix = np.array([[1, 1],
+                                 [1, 1]])
+
+    return variables, connectionmatrix
+
+
 def autoreg_gen(samples, delay):
     """Generates an autoregressive set of vectors.
 
