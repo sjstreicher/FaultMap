@@ -2,12 +2,16 @@
   "datatype": "function",
   "sampling_rate": 1,
   "scenarios": [
+      "fullconn_equal",
       "series_equal",
 	  "series_incomingon2nd",
 	  "series_incomingon3rd",
 	  "series_incomingon2ndand3rd",
 	  "series_incomingon2ndand4th"
   ],
+  "fullconn_equal": {
+    "networkgen": "fullconn_equal"
+  },
   "series_equal": {
     "networkgen": "series_equal"
   },
