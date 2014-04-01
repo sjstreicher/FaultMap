@@ -26,6 +26,7 @@ import os
 import logging
 import h5py
 import jpype
+import json
 
 
 def writecsv(filename, items, header):
@@ -36,8 +37,12 @@ def writecsv(filename, items, header):
 logging.basicConfig(level=logging.INFO)
 
 
-def weightcalc(mode, case, writeoutput='False'):
-    saveloc, caseconfig, casedir, infodynamicsloc = runsetup(mode, case)
+def weightcalc(mode, case, writeoutput=False):
+
+    saveloc, casedir, infodynamicsloc = runsetup(mode, case)
+
+    # Load case config file
+    caseconfig = json.load(open(os.path.join(casedir, case + '.json')))
 
     # Get scenarios
     scenarios = caseconfig['scenarios']
@@ -141,5 +146,5 @@ def weightcalc(mode, case, writeoutput='False'):
 
 if __name__ == '__main__':
     mode = 'test_cases'
-    case = 'weight_tests'
-    weightcalc(mode, case, 'True')
+    case = 'weightcalc_tests'
+    weightcalc(mode, case, False)
