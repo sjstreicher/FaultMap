@@ -275,6 +275,7 @@ def looprank_static(mode, case, dummycreation, writeoutput=False):
                 create_connectionmatrix(connectionloc)
 
             # Calculate the gainmatrix
+            # TODO: Use result from weightcalc as gainmatrix
             gainmatrix = calc_gainmatrix(connectionmatrix,
                                          tags_tsdata, dataset)
             if writeoutput:
@@ -395,7 +396,7 @@ def looprank_transient(mode, case, dummycreation, writeoutput=False,
     # Get data type
     datatype = caseconfig['datatype']
     # Get sample rate
-    samplerate = caseconfig['samplerate']
+    samplerate = caseconfig['sampling_rate']
 
     for scenario in scenarios:
         logging.info("Running scenario {}".format(scenario))
@@ -447,20 +448,21 @@ def looprank_transient(mode, case, dummycreation, writeoutput=False,
         for index, gainmatrix in enumerate(gainmatrices):
             # Store the gainmatrix
             gain_filename = \
-                os.path.join(saveloc,
+                os.path.join(saveloc, 'weightcalc',
                              "{}_gainmatrix_{:03d}.csv"
                              .format(scenario, index))
             np.savetxt(gain_filename, gainmatrix, delimiter=',')
 
-            blendedranking, slist = calc_gainrank(gainmatrix, variablelist,
-                                                  connectionmatrix)
-            rankinglists.append(slist)
+            rankingdict, rankinglist, _, _, _ = \
+                calc_gainrank(gainmatrix, variablelist, connectionmatrix)
+
+            rankinglists.append(rankinglist[0])
 
             savename = os.path.join(saveloc,
                                     'importances_{:03d}.csv'.format(index))
-            writecsv_looprank(savename, slist)
+            writecsv_looprank(savename, rankinglist[0])
 
-            rankingdicts.append(blendedranking)
+            rankingdicts.append(rankingdict[0])
 
         transientdict, basevaldict = \
             calc_transient_importancediffs(rankingdicts, variablelist)
