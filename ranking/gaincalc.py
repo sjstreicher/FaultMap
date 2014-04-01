@@ -12,12 +12,13 @@ import logging
 import jpype
 import json
 
-from datagen import *
-
 from sklearn import preprocessing
 from transentropy import calc_infodynamics_te as te_infodyns
 from transentropy import setup_infodynamics_te as te_setup
 from config_setup import runsetup
+
+# Import all test data geneartors that may be called
+from datagen import *
 
 
 def create_connectionmatrix(connection_loc):
@@ -335,6 +336,7 @@ def weightcalc(mode, case, writeoutput=False):
 
         # Get time series data
         if datatype == 'file':
+            # Get time series data
             tags_tsdata = os.path.join(casedir, 'data',
                                        caseconfig[scenario]['data'])
             # Get connection (adjacency) matrix
