@@ -307,7 +307,7 @@ def looprank_static(mode, case, dummycreation, writeoutput=False):
                 variable, gain in zip(directions, rankinglists, rankingdicts,
                                       connections, variables, gains):
                 # Save the ranking list to file
-                savename = os.path.join(saveloc,
+                savename = os.path.join(saveloc, 'noderank',
                                         '{}_{}_importances_{}.csv'
                                         .format(scenario, direction,
                                                 dummystatus))
@@ -316,7 +316,7 @@ def looprank_static(mode, case, dummycreation, writeoutput=False):
                 graph, _ = create_importance_graph(variable, connection,
                                                    connection, gain,
                                                    rankingdict)
-                graph_filename = os.path.join(saveloc,
+                graph_filename = os.path.join(saveloc, 'noderank',
                                               "{}_{}_graph_{}.gml"
                                               .format(scenario, direction,
                                                       dummystatus))
@@ -336,7 +336,7 @@ def looprank_static(mode, case, dummycreation, writeoutput=False):
                                                    connectionmatrix,
                                                    gainmatrix,
                                                    rankingdict)
-                graph_filename = os.path.join(saveloc,
+                graph_filename = os.path.join(saveloc, 'noderank',
                                               "{}_{}_graph_dumsup.gml"
                                               .format(scenario, direction))
 
@@ -352,7 +352,7 @@ def looprank_static(mode, case, dummycreation, writeoutput=False):
                                                    connectionmatrix,
                                                    gainmatrix,
                                                    rankingdict)
-                graph_filename = os.path.join(saveloc,
+                graph_filename = os.path.join(saveloc, 'noderank',
                                               "{}_{}_graph_dumsup.gml"
                                               .format(scenario, direction))
 
@@ -365,7 +365,7 @@ def looprank_static(mode, case, dummycreation, writeoutput=False):
                     normalised_rankinglist = \
                         normalise_rankinglist(rankingdict, variablelist)
 
-                    savename = os.path.join(saveloc,
+                    savename = os.path.join(saveloc, 'noderank',
                                             '{}_{}_importances_dumsup.csv'
                                             .format(scenario, direction))
                     writecsv_looprank(savename, normalised_rankinglist)

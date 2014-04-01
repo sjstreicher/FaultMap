@@ -375,15 +375,15 @@ def weightcalc(mode, case, writeoutput=False):
             if writeoutput:
                 # Define export directories and filenames
                 datasavename = \
-                    os.path.join(saveloc, 'estimate_delay',
-                                 '{}_{}_{}_estimate_delay_data.csv'
+                    os.path.join(saveloc, 'weightcalc',
+                                 '{}_{}_{}_weightcalc_data.csv'
                                  .format(case, scenario, method))
                 value_array_savename = \
-                    os.path.join(saveloc, 'estimate_delay',
+                    os.path.join(saveloc, 'weightcalc',
                                  '{}_{}_{}_maxweight_array.csv'
                                  .format(case, scenario, method))
                 delay_array_savename = \
-                    os.path.join(saveloc, 'estimate_delay',
+                    os.path.join(saveloc, 'weightcalc',
                                  '{}_{}_{}_delay_array.csv'
                                  .format(case, scenario, method))
 
