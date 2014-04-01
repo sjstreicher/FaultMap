@@ -5,7 +5,7 @@ Created on Tue Mar 11 01:27:15 2014
 @author: Simon
 """
 
-from datagen import autoreg_gen
+from datagen import autoreg_datagen
 from transentropy import setup_infodynamics_te
 from transentropy import vectorselection
 from transentropy import calc_infodynamics_te
@@ -15,34 +15,6 @@ from transentropy import calc_custom_shu_te
 
 import jpype
 from sklearn import preprocessing
-
-# TODO: This script must become a test case
-
-
-def autoreg_datagen(delay, timelag, samples, sub_samples, k=1, l=1):
-    """Generates autoreg data for a specific timelag (equal to
-    prediction horison) for a set of autoregressive data.
-
-    sub_samples is the amount of samples in the dataset used to calculate the
-    transfer entropy between two vectors (taken from the end of the dataset).
-    sub_samples <= samples
-
-    Currently only supports k = 1; l = 1
-
-    You can search through a set of timelags in an attempt to identify the
-    original delay.
-    The transfer entropy should have a maximum value when timelag = delay
-    used to generate the autoregressive dataset.
-
-    """
-
-    data = autoreg_gen(samples, delay).T
-
-    [x_pred, x_hist, y_hist] = vectorselection(data, timelag,
-                                               sub_samples, k, l)
-
-    return x_pred, x_hist, y_hist
-
 
 # Change location of jar to match yours:
 infodynamicsloc = "infodynamics.jar"
