@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
+"""
+@author: Simon Streicher
+
 """
 
-Created on Thu Mar 13 09:44:16 2014
-
-@author: Simon
-"""
 
 from ranking.gaincalc import weightcalc
 
