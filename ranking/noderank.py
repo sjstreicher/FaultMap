@@ -293,77 +293,82 @@ def looprank_static(mode, case, dummycreation, writeoutput=False):
             calc_gainrank(gainmatrix, variablelist, connectionmatrix,
                           dummycreation)
 
-    if writeoutput:
-        # Export graph files with dummy variables included in
-        # forward and backward rankings if available
-        directions = ['blended', 'forward', 'backward']
+        if writeoutput:
+            # Export graph files with dummy variables included in
+            # forward and backward rankings if available
+            directions = ['blended', 'forward', 'backward']
 
-        if dummycreation:
-            dummystatus = 'withdummies'
-        else:
-            dummystatus = 'nodummies'
+            if dummycreation:
+                dummystatus = 'withdummies'
+            else:
+                dummystatus = 'nodummies'
 
-        for direction, rankinglist, rankingdict, connection, variable, gain \
-            in zip(directions, rankinglists, rankingdicts, connections,
-                   variables, gains):
-            # Save the ranking list to file
-            savename = os.path.join(saveloc,
-                                    '{}_{}_importances_{}.csv'
-                                    .format(scenario, direction, dummystatus))
-            writecsv_looprank(savename, rankinglist)
-            # Save the graphs to file
-            graph, _ = create_importance_graph(variable, connection,
-                                               connection, gain,
-                                               rankingdict)
-            graph_filename = os.path.join(saveloc,
-                                          "{}_{}_graph_{}.gml"
-                                          .format(scenario, direction,
-                                                  dummystatus))
-
-            nx.readwrite.write_gml(graph, graph_filename)
-
-        if dummycreation:
-
-            # Export forward and backward ranking graphs
-            # without dummy variables visible
-
-            # Forward ranking graph
-            direction = directions[1]
-            rankingdict = rankingdicts[1]
-            graph, _ = create_importance_graph(variablelist, connectionmatrix,
-                                               connectionmatrix, gainmatrix,
-                                               rankingdict)
-            graph_filename = os.path.join(saveloc,
-                                          "{}_{}_graph_dumsup.gml"
-                                          .format(scenario, direction))
-
-            nx.readwrite.write_gml(graph, graph_filename)
-
-            # Backward ranking graph
-            direction = directions[2]
-            rankingdict = rankingdicts[2]
-            connectionmatrix = connectionmatrix.T
-            gainmatrix = gainmatrix.T
-            graph, _ = create_importance_graph(variablelist, connectionmatrix,
-                                               connectionmatrix, gainmatrix,
-                                               rankingdict)
-            graph_filename = os.path.join(saveloc,
-                                          "{}_{}_graph_dumsup.gml"
-                                          .format(scenario, direction))
-
-            nx.readwrite.write_gml(graph, graph_filename)
-
-            # Calculate and export normalised ranking lists
-            # with dummy variables exluded from results
-            for direction, rankingdict in zip(directions[1:],
-                                              rankingdicts[1:]):
-                normalised_rankinglist = normalise_rankinglist(rankingdict,
-                                                               variablelist)
-
+            for direction, rankinglist, rankingdict, connection, \
+                variable, gain in zip(directions, rankinglists, rankingdicts,
+                                      connections, variables, gains):
+                # Save the ranking list to file
                 savename = os.path.join(saveloc,
-                                        '{}_{}_importances_dumsup.csv'
-                                        .format(scenario, direction))
-                writecsv_looprank(savename, normalised_rankinglist)
+                                        '{}_{}_importances_{}.csv'
+                                        .format(scenario, direction,
+                                                dummystatus))
+                writecsv_looprank(savename, rankinglist)
+                # Save the graphs to file
+                graph, _ = create_importance_graph(variable, connection,
+                                                   connection, gain,
+                                                   rankingdict)
+                graph_filename = os.path.join(saveloc,
+                                              "{}_{}_graph_{}.gml"
+                                              .format(scenario, direction,
+                                                      dummystatus))
+
+                nx.readwrite.write_gml(graph, graph_filename)
+
+            if dummycreation:
+
+                # Export forward and backward ranking graphs
+                # without dummy variables visible
+
+                # Forward ranking graph
+                direction = directions[1]
+                rankingdict = rankingdicts[1]
+                graph, _ = create_importance_graph(variablelist,
+                                                   connectionmatrix,
+                                                   connectionmatrix,
+                                                   gainmatrix,
+                                                   rankingdict)
+                graph_filename = os.path.join(saveloc,
+                                              "{}_{}_graph_dumsup.gml"
+                                              .format(scenario, direction))
+
+                nx.readwrite.write_gml(graph, graph_filename)
+
+                # Backward ranking graph
+                direction = directions[2]
+                rankingdict = rankingdicts[2]
+                connectionmatrix = connectionmatrix.T
+                gainmatrix = gainmatrix.T
+                graph, _ = create_importance_graph(variablelist,
+                                                   connectionmatrix,
+                                                   connectionmatrix,
+                                                   gainmatrix,
+                                                   rankingdict)
+                graph_filename = os.path.join(saveloc,
+                                              "{}_{}_graph_dumsup.gml"
+                                              .format(scenario, direction))
+
+                nx.readwrite.write_gml(graph, graph_filename)
+
+                # Calculate and export normalised ranking lists
+                # with dummy variables exluded from results
+                for direction, rankingdict in zip(directions[1:],
+                                                  rankingdicts[1:]):
+                    normalised_rankinglist = \
+                        normalise_rankinglist(rankingdict, variablelist)
+
+                    savename = os.path.join(saveloc,
+                                            '{}_{}_importances_dumsup.csv'
+                                            .format(scenario, direction))
+                    writecsv_looprank(savename, normalised_rankinglist)
 
     logging.info("Done with static ranking")
 
