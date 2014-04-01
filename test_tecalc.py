@@ -29,9 +29,13 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
         # Calculate transfer entropies in range of +/- 5 from actual delay
         # Use infodynamics package
         # Start JVM
-        jarLocation = "infodynamics.jar"
-        jpype.startJVM(jpype.getDefaultJVMPath(), "-ea",
-                       "-Djava.class.path=" + jarLocation)
+        infodynamicsloc = "infodynamics.jar"
+        if not jpype.isJVMStarted():
+            # Start the JVM
+            # (add the "-Xmx" option with say 1024M if you get crashes
+            # due to not enough memory space)
+            jpype.startJVM(jpype.getDefaultJVMPath(), "-ea",
+                           "-Djava.class.path=" + infodynamicsloc)
 
         self.entropies_infodyn = []
         for timelag in range(self.delay-5, self.delay+6):

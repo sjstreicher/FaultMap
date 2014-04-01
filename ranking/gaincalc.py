@@ -325,11 +325,12 @@ def weightcalc(mode, case, writeoutput=False):
     if 'transfer_entropy' in methods:
         # Change location of jar to match yours:
         jarLocation = infodynamicsloc
-        # Start the JVM
-        # (add the "-Xmx" option with say 1024M if you get crashes
-        # due to not enough memory space)
-        jpype.startJVM(jpype.getDefaultJVMPath(), "-ea",
-                       "-Djava.class.path=" + jarLocation)
+        if not jpype.isJVMStarted():
+            # Start the JVM
+            # (add the "-Xmx" option with say 1024M if you get crashes
+            # due to not enough memory space)
+            jpype.startJVM(jpype.getDefaultJVMPath(), "-ea",
+                           "-Djava.class.path=" + jarLocation)
 
     for scenario in scenarios:
         logging.info("Running scenario {}".format(scenario))
@@ -395,6 +396,6 @@ def weightcalc(mode, case, writeoutput=False):
                 writecsv_weightcalc(datasavename, datastore, data_header)
 
     # Stop JVM if required
-    if 'transfer_entropy' in methods:
-        # Shutdown the JVM
-        jpype.shutdownJVM()
+#    if 'transfer_entropy' in methods:
+#        # Shutdown the JVM
+#        jpype.shutdownJVM()

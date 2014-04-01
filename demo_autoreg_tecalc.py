@@ -7,7 +7,6 @@ Created on Tue Mar 11 01:27:15 2014
 
 from datagen import autoreg_datagen
 from transentropy import setup_infodynamics_te
-from transentropy import vectorselection
 from transentropy import calc_infodynamics_te
 from transentropy import calc_custom_eq4_te
 from transentropy import calc_custom_eq8_te
@@ -19,15 +18,17 @@ from sklearn import preprocessing
 # Change location of jar to match yours:
 infodynamicsloc = "infodynamics.jar"
 
-# Start the JVM
-# (add the "-Xmx" option with say 1024M if you get crashes
-# due to not enough memory space)
-jpype.startJVM(jpype.getDefaultJVMPath(), "-ea",
-               "-Djava.class.path=" + infodynamicsloc)
+if not jpype.isJVMStarted():
+    # Start the JVM
+    # (add the "-Xmx" option with say 1024M if you get crashes
+    # due to not enough memory space)
+    jpype.startJVM(jpype.getDefaultJVMPath(), "-ea",
+                   "-Djava.class.path=" + infodynamicsloc)
 
 delay = 5
 samples = 2500
-sub_samples = 2000
+# Low value selected for demonstration purposes only
+sub_samples = 10
 for timelag in range(0, 11):
     print "Results for timelag of: ", str(timelag)
     [x_pred, x_hist, y_hist] = autoreg_datagen(delay, timelag,
@@ -51,8 +52,8 @@ for timelag in range(0, 11):
     # Calculate transfer entropy according to custom
     # Lizier Eq. 4 implementation:
 
-    #result = calc_custom_eq4_te(x_pred_norm, x_hist_norm, y_hist_norm, 10000)
-    #print("Custom Eq. 4 TE result: %.4f bits" % (result))
+    result = calc_custom_eq4_te(x_pred_norm, x_hist_norm, y_hist_norm, 10000)
+    print("Custom Eq. 4 TE result: %.4f bits" % (result))
 
     # Calculate transfer entropy according to custom
     # Lizier Eq. 8 implementation:
@@ -70,7 +71,7 @@ for timelag in range(0, 11):
     # (This is very slow)
     # Do not believe it will be that helpful
 
-    #result = calc_custom_shu_te(x_pred_norm, x_hist_norm, y_hist_norm)
-    #print("Custom Shu TE result: %.4f bits" % (result))
+    result = calc_custom_shu_te(x_pred_norm, x_hist_norm, y_hist_norm)
+    print("Custom Shu TE result: %.4f bits" % (result))
 
-jpype.shutdownJVM()
+#jpype.shutdownJVM()
