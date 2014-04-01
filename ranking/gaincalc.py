@@ -17,8 +17,11 @@ from transentropy import calc_infodynamics_te as te_infodyns
 from transentropy import setup_infodynamics_te as te_setup
 from config_setup import runsetup
 
+from jpype import *
+
 # Import all test data geneartors that may be called
 from datagen import *
+
 
 
 def create_connectionmatrix(connection_loc):
@@ -251,7 +254,10 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                         weightlist.append(transent)
                         # Delete teCalc class in order to allow
                         # garbage data to be removed
+                        # TODO: Find a method that works
+                        teCalc = None
                         del teCalc
+                        jpype.java.lang.System.gc()
 
                 if method == 'partial_correlation':
                     [weight_array, delay_array, datastore] = \
@@ -324,13 +330,12 @@ def weightcalc(mode, case, writeoutput=False):
     # Start JVM if required
     if 'transfer_entropy' in methods:
         # Change location of jar to match yours:
-        jarLocation = infodynamicsloc
         if not jpype.isJVMStarted():
             # Start the JVM
             # (add the "-Xmx" option with say 1024M if you get crashes
             # due to not enough memory space)
             jpype.startJVM(jpype.getDefaultJVMPath(), "-ea",
-                           "-Djava.class.path=" + jarLocation)
+                           "-Djava.class.path=" + infodynamicsloc)
 
     for scenario in scenarios:
         logging.info("Running scenario {}".format(scenario))
@@ -394,8 +399,3 @@ def weightcalc(mode, case, writeoutput=False):
 
                 # Write datastore to file
                 writecsv_weightcalc(datasavename, datastore, data_header)
-
-    # Stop JVM if required
-#    if 'transfer_entropy' in methods:
-#        # Shutdown the JVM
-#        jpype.shutdownJVM()

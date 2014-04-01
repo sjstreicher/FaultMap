@@ -10,6 +10,8 @@ from sklearn import preprocessing
 import random
 import mcint
 
+from jpype import *
+
 
 def vectorselection(data, timelag, sub_samples, k=1, l=1):
     """Generates sets of vectors for calculating transfer entropy.
@@ -427,6 +429,10 @@ def setup_infodynamics_te():
     teCalc = teCalcClass()
     # Normalise the individual variables
     teCalc.setProperty("NORMALISE", "true")
+
+    teCalcClass = None
+    del teCalcClass
+    jpype.java.lang.System.gc()
 
     return teCalc
 
