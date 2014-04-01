@@ -9,7 +9,7 @@ import json
 import os
 
 
-def runsetup(mode='test_cases', case='random_2x2'):
+def runsetup(mode='test_cases', case='delaytests'):
     """Gets all required parameters from the case configuration file.
 
     Mode can be either 'test_cases' or 'plants' as required to get to the
@@ -28,12 +28,5 @@ def runsetup(mode='test_cases', case='random_2x2'):
     casedir = os.path.join(dataloc, mode, case)
     # Load case config file
     caseconfig = json.load(open(os.path.join(casedir, case + '.json')))
-    # Get scenarios
-    scenarios = caseconfig['scenarios']
-    # Get sampling rate
-    sampling_rate = caseconfig['sampling_rate']
-    # Get data type
-    datatype = caseconfig['datatype']
 
-    return scenarios, saveloc, caseconfig, casedir, sampling_rate, \
-        infodynamicsloc, datatype
+    return saveloc, caseconfig, casedir, infodynamicsloc
