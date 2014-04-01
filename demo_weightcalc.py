@@ -6,8 +6,13 @@
 
 from ranking.gaincalc import weightcalc
 
-if __name__ == '__main__':
-    mode = 'test_cases'
-    case = 'weightcalc_tests'
-    writeoutput = True
-    weightcalc(mode, case, writeoutput)
+writeoutput = True
+
+
+mode = 'test_cases'
+case = 'weightcalc_tests'
+weightcalc(mode, case, writeoutput)
+
+mode = 'plants'
+case = 'tennessee_eastman'
+weightcalc(mode, case, writeoutput)

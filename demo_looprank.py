@@ -4,16 +4,19 @@
 """
 
 from ranking.noderank import looprank_static
+from ranking.noderank import looprank_transient
 
-if __name__ == '__main__':
-    mode = 'test_cases'
-    case = 'noderank_tests'
-    writeoutput = True
+writeoutput = True
 
-    # Run without dummy creation
-    dummycreation = False
+mode = 'test_cases'
+case = 'noderank_tests'
+
+for dummycreation in [False, True]:
     looprank_static(mode, case, dummycreation, writeoutput)
 
-    # Run with dummy creation
-    dummycreation = True
+mode = 'plants'
+case = 'tennessee_eastman'
+
+for dummycreation in [False, True]:
     looprank_static(mode, case, dummycreation, writeoutput)
+    looprank_transient(mode, case, dummycreation, writeoutput, True)
