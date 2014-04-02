@@ -422,8 +422,8 @@ def looprank_transient(mode, case, dummycreation, writeoutput=False,
                 savename = os.path.join(saveloc, "gainmatrix.csv")
                 np.savetxt(savename, gainmatrix, delimiter=',')
 
-            boxnum = caseconfig[scenario]['boxnum']
-            boxsize = caseconfig[scenario]['boxsize']
+            boxnum = caseconfig['boxnum']
+            boxsize = caseconfig['boxsize']
 
         elif datatype == 'function':
             # Get variables, connection matrix and gainmatrix
