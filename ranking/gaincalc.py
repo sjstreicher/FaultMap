@@ -17,11 +17,8 @@ from transentropy import calc_infodynamics_te as te_infodyns
 from transentropy import setup_infodynamics_te as te_setup
 from config_setup import runsetup
 
-from jpype import *
-
 # Import all test data geneartors that may be called
 from datagen import *
-
 
 
 def create_connectionmatrix(connection_loc):
@@ -255,9 +252,12 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                         # Delete teCalc class in order to allow
                         # garbage data to be removed
                         # TODO: Find a method that works
-                        teCalc = None
-                        del teCalc
-                        jpype.java.lang.System.gc()
+                        # This does not have any effect at all
+#                        transent = None
+#                        del transent
+#                        teCalc = None
+#                        del teCalc
+#                        jpype.java.lang.System.gc()
 
                 if method == 'partial_correlation':
                     [weight_array, delay_array, datastore] = \
@@ -334,7 +334,15 @@ def weightcalc(mode, case, writeoutput=False):
             # Start the JVM
             # (add the "-Xmx" option with say 1024M if you get crashes
             # due to not enough memory space)
-            jpype.startJVM(jpype.getDefaultJVMPath(), "-ea",
+#            jpype.startJVM(jpype.getDefaultJVMPath(), "-ea",
+#                           "-Djava.class.path=" + infodynamicsloc)
+            jpype.startJVM(jpype.getDefaultJVMPath(),
+                           "-XX:+HeapDumpOnOutOfMemoryError",
+                           "-XX:HeapDumpPath=C:/Repos/LoopRank/dumps",
+                           "-verbose:gc",
+                           "-Xms4M",
+                           "-Xmx32M",
+                           "-ea",
                            "-Djava.class.path=" + infodynamicsloc)
 
     for scenario in scenarios:
