@@ -7,7 +7,12 @@
 	  "series_incomingon2nd",
 	  "series_incomingon3rd",
 	  "series_incomingon2ndand3rd",
-	  "series_incomingon2ndand4th"
+	  "series_incomingon2ndand4th",
+	  "series_disjoint_equal",
+	  "series_disjoint_unequal",
+	  "series_disjoint_unequalsource",
+	  "circle_equal",
+	  "circle_unequalon2to3"
   ],
   "fullconn_equal": {
     "networkgen": "fullconn_equal"
@@ -26,5 +31,20 @@
   },
   "series_incomingon2ndand4th": {
     "networkgen": "series_incomingon2ndand4th"
+  },
+  "circle_equal": {
+    "networkgen": "circle_equal"
+  },
+  "circle_unequalon2to3": {
+    "networkgen": "circle_unequalon2to3"
+  },
+  "series_disjoint_equal": {
+    "networkgen": "series_disjoint_equal"
+  },
+  "series_disjoint_unequal": {
+    "networkgen": "series_disjoint_unequal"
+  },
+  "series_disjoint_unequalsource": {
+    "networkgen": "series_disjoint_unequalsource"
   }
 }
