@@ -5,6 +5,8 @@
 
 
 from ranking.gaincalc import weightcalc
+import logging
+logging.basicConfig(level=logging.INFO)
 
 writeoutput = True
 

@@ -5,6 +5,8 @@
 
 from ranking.noderank import looprank_static
 from ranking.noderank import looprank_transient
+import logging
+logging.basicConfig(level=logging.INFO)
 
 writeoutput = True
 

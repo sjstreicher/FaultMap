@@ -9,6 +9,8 @@ import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 import json
+import logging
+logging.basicConfig(level=logging.INFO)
 
 import os
 

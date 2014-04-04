@@ -180,7 +180,6 @@ def estimate_delay(variables, connectionmatrix, inputdata,
     inputdata should be normalised (mean centered and variance scaled)
 
     """
-    logging.basicConfig(level=logging.INFO)
     weight_array = np.empty((len(variables), len(variables)))
     delay_array = np.empty((len(variables), len(variables)))
     weight_array[:] = np.NAN
@@ -296,8 +295,6 @@ def weightcalc(mode, case, writeoutput=False):
     Also reports whether the sign changed compared to no delay.
 
     """
-
-    logging.basicConfig(level=logging.INFO)
 
     saveloc, casedir, infodynamicsloc = runsetup(mode, case)
 

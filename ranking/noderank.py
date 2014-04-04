@@ -247,8 +247,6 @@ def looprank_static(mode, case, dummycreation, writeoutput=False):
 
     """
 
-    logging.basicConfig(level=logging.INFO)
-
     saveloc, casedir, infodynamicsloc = runsetup(mode, case)
 
     # Load case config file
@@ -384,8 +382,6 @@ def looprank_transient(mode, case, dummycreation, writeoutput=False,
 
     # Note: This is still a work in progress
     # TODO: Rewrite to make use of multiple calls of looprank_static
-
-    logging.basicConfig(level=logging.INFO)
 
     saveloc, casedir, infodynamicsloc = runsetup(mode, case)
 
