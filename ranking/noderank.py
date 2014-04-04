@@ -17,7 +17,7 @@ import networkx as nx
 from matplotlib import pyplot as plt
 
 from ranking.formatmatrices import rankforward, rankbackward
-from config_setup import runsetup
+from config_setup import runsetup, ensure_existance
 from gaincalc import calc_partialcor_gainmatrix
 from gaincalc import create_connectionmatrix
 from formatmatrices import split_tsdata
@@ -302,23 +302,23 @@ def looprank_static(mode, case, dummycreation, writeoutput=False):
             else:
                 dummystatus = 'nodummies'
 
+            savedir = ensure_existance(os.path.join(saveloc, 'noderank'),
+                                       make=True)
+            csvfile_template = os.path.join(savedir, '{}_{}_importances_{}.csv')
+            graphfile_template = os.path.join(savedir, '{}_{}_graph_{}.gml')
+
             for direction, rankinglist, rankingdict, connection, \
                 variable, gain in zip(directions, rankinglists, rankingdicts,
                                       connections, variables, gains):
+                idtuple = (scenario, direction, dummystatus)
                 # Save the ranking list to file
-                savename = os.path.join(saveloc, 'noderank',
-                                        '{}_{}_importances_{}.csv'
-                                        .format(scenario, direction,
-                                                dummystatus))
+                savename = csvfile_template.format(*idtuple)
                 writecsv_looprank(savename, rankinglist)
                 # Save the graphs to file
                 graph, _ = create_importance_graph(variable, connection,
                                                    connection, gain,
                                                    rankingdict)
-                graph_filename = os.path.join(saveloc, 'noderank',
-                                              "{}_{}_graph_{}.gml"
-                                              .format(scenario, direction,
-                                                      dummystatus))
+                graph_filename = graphfile_template.format(*idtuple)
 
                 nx.readwrite.write_gml(graph, graph_filename)
 
@@ -441,12 +441,14 @@ def looprank_transient(mode, case, dummycreation, writeoutput=False,
         rankinglists = []
         rankingdicts = []
 
+        weightdir = ensure_existance(os.path.join(saveloc, 'weightcalc'), 
+                                     make=True)
+        gain_template = os.path.join(weightdir, '{}_gainmatrix_{:03d}.csv')
+        rank_template = os.path.join(saveloc, 'importances_{:03d}.csv')
+
         for index, gainmatrix in enumerate(gainmatrices):
             # Store the gainmatrix
-            gain_filename = \
-                os.path.join(saveloc, 'weightcalc',
-                             "{}_gainmatrix_{:03d}.csv"
-                             .format(scenario, index))
+            gain_filename = gain_template.format(scenario, index)
             np.savetxt(gain_filename, gainmatrix, delimiter=',')
 
             rankingdict, rankinglist, _, _, _ = \
@@ -454,8 +456,7 @@ def looprank_transient(mode, case, dummycreation, writeoutput=False,
 
             rankinglists.append(rankinglist[0])
 
-            savename = os.path.join(saveloc,
-                                    'importances_{:03d}.csv'.format(index))
+            savename = rank_template.format(index)
             writecsv_looprank(savename, rankinglist[0])
 
             rankingdicts.append(rankingdict[0])

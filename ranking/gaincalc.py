@@ -11,6 +11,7 @@ import h5py
 import logging
 import jpype
 import json
+from config_setup import ensure_existance
 
 from sklearn import preprocessing
 from transentropy import calc_infodynamics_te as te_infodyns
@@ -385,22 +386,16 @@ def weightcalc(mode, case, writeoutput=False):
 
             if writeoutput:
                 # Define export directories and filenames
-                datasavename = \
-                    os.path.join(saveloc, 'weightcalc',
-                                 '{}_{}_{}_weightcalc_data.csv'
-                                 .format(case, scenario, method))
-                value_array_savename = \
-                    os.path.join(saveloc, 'weightcalc',
-                                 '{}_{}_{}_maxweight_array.csv'
-                                 .format(case, scenario, method))
-                delay_array_savename = \
-                    os.path.join(saveloc, 'weightcalc',
-                                 '{}_{}_{}_delay_array.csv'
-                                 .format(case, scenario, method))
+                weightdir = ensure_existance(os.path.join(saveloc, 'weightcalc'),
+                                             make=True)
+                filename_template = os.path.join(weightdir, '{}_{}_{}_{}.csv')
+
+                def filename(name):
+                    return filename_template.format(case, scenario, method, name)
 
                 # Write arrays to file
-                np.savetxt(value_array_savename, weight_array, delimiter=',')
-                np.savetxt(delay_array_savename, delay_array, delimiter=',')
+                np.savetxt(filename('maxweight_array'), weight_array, delimiter=',')
+                np.savetxt(filename('delay_array'), delay_array, delimiter=',')
 
                 # Write datastore to file
-                writecsv_weightcalc(datasavename, datastore, data_header)
+                writecsv_weightcalc(filename('weightcalc_data'), datastore, data_header)

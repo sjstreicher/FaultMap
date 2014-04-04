@@ -9,6 +9,14 @@ import json
 import os
 
 
+def ensure_existance(location, make=False):
+    if not os.path.exists(location):
+        if make:
+            os.makedirs(location)
+        else:
+            raise IOError("File does not exists: {}".format(location))
+    return location
+
 def runsetup(mode='test_cases', case='weightcalc_tests'):
     """Gets all required parameters from the case configuration file.
 
@@ -28,10 +36,11 @@ def runsetup(mode='test_cases', case='weightcalc_tests'):
         dirs = json.load(open('config.json'))
         # Get data and preferred export directories from
         # directories config file
-        dataloc = os.path.expanduser(dirs['dataloc'])
-        saveloc = os.path.expanduser(dirs['saveloc'])
-        infodynamicsloc = os.path.expanduser(dirs['infodynamicsloc'])
+        locations = [ensure_existance(os.path.expanduser(dirs[location]))
+                     for location in ['dataloc', 'saveloc', 'infodynamicsloc']]
+        dataloc, saveloc, infodynamicsloc = locations
+
         # Define case data directory
-        casedir = os.path.join(dataloc, mode, case)
+        casedir = ensure_existance(os.path.join(dataloc, mode, case), make=True)
 
     return saveloc, casedir, infodynamicsloc
