@@ -18,10 +18,8 @@ def runsetup(mode='test_cases', case='weightcalc_tests'):
     """
 
     if mode == 'test_cases':
-#        saveloc = os.path.join(os.path.dirname(__file__), 'texports')
-        saveloc = os.path.join('test_exports')
-#        casedir = os.path.join(os.path.dirname(__file__), 'tconfigs', case)
-        casedir = os.path.join('test_configs')
+        saveloc = 'test_exports'
+        casedir = 'test_configs'
         infodynamicsloc = 'infodynamics.jar'
 
     elif mode == 'plants':
