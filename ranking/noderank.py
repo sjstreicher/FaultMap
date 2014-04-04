@@ -262,7 +262,7 @@ def looprank_static(mode, case, dummycreation, writeoutput=False):
         logging.info("Running scenario {}".format(scenario))
         if datatype == 'file':
 
-             # Get time series data
+            # Get time series data
             tags_tsdata = os.path.join(casedir, 'data',
                                        caseconfig[scenario]['data'])
             # Get connection (adjacency) matrix
