@@ -19,7 +19,7 @@ from matplotlib import pyplot as plt
 from ranking.formatmatrices import rankforward, rankbackward
 from config_setup import runsetup, ensure_existance
 from gaincalc import calc_partialcor_gainmatrix
-from gaincalc import create_connectionmatrix
+from formatmatrices import create_connectionmatrix
 from formatmatrices import split_tsdata
 
 # Import all test network generator functions that may be called
