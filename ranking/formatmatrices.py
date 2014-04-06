@@ -7,6 +7,31 @@
 import numpy as np
 import networkx as nx
 import h5py
+import csv
+
+def create_connectionmatrix(connection_loc):
+    """This method imports the connection scheme for the data.
+    The format should be:
+    empty space, var1, var2, etc... (first row)
+    var1, value, value, value, etc... (second row)
+    var2, value, value, value, etc... (third row)
+    etc...
+
+    Value is 1 if column variable points to row variable
+    (causal relationship)
+    Value is 0 otherwise
+
+    This method also stores the names of all the variables in the
+    connection matrix.
+    It is important that the order of the variables in the
+    connection matrix match those in the data matrix.
+
+    """
+    with open(connection_loc) as f:
+        variables = csv.reader(f).next()[1:]
+        connectionmatrix = np.genfromtxt(f, delimiter=',')[:, 1:]
+
+    return variables, connectionmatrix
 
 
 def buildcase(dummyweight, digraph, name, dummycreation):

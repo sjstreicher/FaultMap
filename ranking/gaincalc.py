@@ -17,34 +17,10 @@ from sklearn import preprocessing
 from transentropy import calc_infodynamics_te as te_infodyns
 from transentropy import setup_infodynamics_te as te_setup
 from config_setup import runsetup
+from formatmatrices import create_connectionmatrix
 
 # Import all test data geneartors that may be called
 from datagen import *
-
-
-def create_connectionmatrix(connection_loc):
-    """This method imports the connection scheme for the data.
-    The format should be:
-    empty space, var1, var2, etc... (first row)
-    var1, value, value, value, etc... (second row)
-    var2, value, value, value, etc... (third row)
-    etc...
-
-    Value is 1 if column variable points to row variable
-    (causal relationship)
-    Value is 0 otherwise
-
-    This method also stores the names of all the variables in the
-    connection matrix.
-    It is important that the order of the variables in the
-    connection matrix match those in the data matrix.
-
-    """
-    with open(connection_loc) as f:
-        variables = csv.reader(f).next()[1:]
-        connectionmatrix = np.genfromtxt(f, delimiter=',')[:, 1:]
-
-    return variables, connectionmatrix
 
 
 def calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, dataset):
@@ -168,7 +144,7 @@ def transent_reporting(weightlist, actual_delays, weight_array, delay_array,
 
 
 def estimate_delay(variables, connectionmatrix, inputdata,
-                   sampling_rate, size, delays, delaytype, method):
+                   sampling_rate, size, delays, delaytype, method, startindex):
     """Determines the maximum weight between two variables by searching through
     a specified set of delays.
 
@@ -231,10 +207,16 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                     else:
                         causeoffset = -delay
 
+#                    causevardata = \
+#                        inputdata[:, causevarindex][-(size+delay):causeoffset]
+#                    affectedvardata = \
+#                        inputdata[:, affectedvarindex][-(size):]
+                    
                     causevardata = \
-                        inputdata[:, causevarindex][-(size+delay):causeoffset]
+                        inputdata[:, causevarindex][startindex:startindex+size]
                     affectedvardata = \
-                        inputdata[:, affectedvarindex][-(size):]
+                        inputdata[:, affectedvarindex][startindex+delay:startindex+size+delay]
+
 
                     if method == 'partial_correlation':
                         corrval = \
@@ -249,16 +231,7 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                             te_infodyns(teCalc,
                                         affectedvardata.T, causevardata.T)
                         weightlist.append(transent)
-                        # Delete teCalc class in order to allow
-                        # garbage data to be removed
-                        # TODO: Find a method that works
-                        # This does not have any effect at all
-#                        transent = None
-#                        del transent
-#                        teCalc = None
-#                        del teCalc
-#                        jpype.java.lang.System.gc()
-
+                        
                 if method == 'partial_correlation':
                     [weight_array, delay_array, datastore] = \
                         partialcorr_reporting(weightlist, actual_delays,
@@ -316,7 +289,7 @@ def weightcalc(mode, case, writeoutput=False):
     # Must be smaller than number of samples generated
     testsize = caseconfig['testsize']
     # Get number of delays to test
-    test_delays = caseconfig['test_delays']
+    test_delays = caseconfig['test_delays']    
 
     if delaytype == 'datapoints':
     # Include first n sampling intervals
@@ -337,9 +310,9 @@ def weightcalc(mode, case, writeoutput=False):
             jpype.startJVM(jpype.getDefaultJVMPath(),
                            "-XX:+HeapDumpOnOutOfMemoryError",
                            "-XX:HeapDumpPath=C:/Repos/LoopRank/dumps",
-                           "-verbose:gc",
+#                           "-verbose:gc",
                            "-Xms4M",
-                           "-Xmx32M",
+                           "-Xmx512M",
                            "-ea",
                            "-Djava.class.path=" + infodynamicsloc)
 
@@ -356,6 +329,8 @@ def weightcalc(mode, case, writeoutput=False):
                                          caseconfig[scenario]['connections'])
             # Get dataset name
             dataset = caseconfig[scenario]['dataset']
+            # Get starting index
+            startindex = caseconfig['startindex']
             # Get inputdata
             inputdata = np.array(h5py.File(tags_tsdata, 'r')[dataset])
             # Get the variables and connection matrix
@@ -382,7 +357,7 @@ def weightcalc(mode, case, writeoutput=False):
             [weight_array, delay_array, datastore, data_header] = \
                 estimate_delay(variables, connectionmatrix, inputdata_norm,
                                sampling_rate, testsize, delays, delaytype,
-                               method)
+                               method, startindex)
 
             if writeoutput:
                 # Define export directories and filenames
