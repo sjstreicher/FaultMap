@@ -9,7 +9,8 @@ import networkx as nx
 import h5py
 import csv
 
-def create_connectionmatrix(connection_loc):
+
+def read_connectionmatrix(connection_loc):
     """This method imports the connection scheme for the data.
     The format should be:
     empty space, var1, var2, etc... (first row)
@@ -32,6 +33,17 @@ def create_connectionmatrix(connection_loc):
         connectionmatrix = np.genfromtxt(f, delimiter=',')[:, 1:]
 
     return variables, connectionmatrix
+
+
+def read_gainmatrix(gainmatrix_loc):
+    """This method a gainmatrix scheme for a specific scenario.
+
+
+    """
+    with open(gainmatrix_loc) as f:
+        gainmatrix = np.genfromtxt(f, delimiter=',')
+
+    return gainmatrix
 
 
 def buildcase(dummyweight, digraph, name, dummycreation):
