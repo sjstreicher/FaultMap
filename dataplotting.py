@@ -15,7 +15,7 @@ import h5py
 import matplotlib.pyplot as plt
 
 from config_setup import runsetup
-from ranking.formatmatrices import create_connectionmatrix
+from ranking.formatmatrices import read_connectionmatrix
 from config_setup import ensure_existance
 
 # Define the mode and case for plot generation
@@ -54,7 +54,7 @@ for scenario in scenarios:
         inputdata = np.array(h5py.File(tags_tsdata, 'r')[dataset])
         # Get the variables and connection matrix
         [variables, connectionmatrix] = \
-            create_connectionmatrix(connectionloc)
+            read_connectionmatrix(connectionloc)
 
     elif datatype == 'function':
         tags_tsdata_gen = caseconfig[scenario]['datagen']
@@ -68,25 +68,29 @@ for scenario in scenarios:
         [variables, connectionmatrix] = eval(connectionloc)()
 
     # Normalise (mean centre and variance scale) the input data
-    inputdata_norm = preprocessing.scale(inputdata[5100:5300], axis=0)
-    
-    for causevarindex, causevar in enumerate(variables[0:7]):
+    inputdata = inputdata[5200:5300]
+    inputdata_norm = preprocessing.scale(inputdata, axis=0)
+#    inputdata_norm = inputdata
+
+    for causevarindex in [31, 32]:
+        causevar = variables[causevarindex]
         logging.info("Analysing effect of: " + causevar)
-        for affectedvarindex, affectedvar in enumerate(variables[0:7]):
+        for affectedvarindex in [11]:
+            affectedvar = variables[affectedvarindex]
             if not(connectionmatrix[affectedvarindex, causevarindex] == 0):
-                
+
                 if delay == 0:
                     offset = None
                 else:
                     offset = -delay
-                
+
                 causevardata = \
                     inputdata_norm[:, causevarindex]
                 affectedvardata = \
                     inputdata_norm[:, affectedvarindex]
-                
+
                 time = range(len(causevardata))
-                
+
                 plt.figure(1)
                 plt.plot(time, causevardata, 'b', label=causevar)
                 plt.hold(True)
@@ -94,17 +98,17 @@ for scenario in scenarios:
                 plt.xlabel('Time (minutes)')
                 plt.ylabel('Normalised value')
                 plt.legend()
-                
-                
+
+
                 plotdir = ensure_existance(os.path.join(saveloc, 'plots'),
                                            make=True)
-                                     
+
                 filename_template = os.path.join(plotdir, '{}_{}_{}_{}.pdf')
-                
+
                 def filename(causename, affectedname):
                     return filename_template.format(case, scenario,
                                                     causename, affectedname)
 
                 plt.savefig(filename(causevar, affectedvar))
-                
+
                 plt.clf()
