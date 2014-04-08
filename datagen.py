@@ -20,6 +20,19 @@ def connectionmatrix_2x2():
     return variables, connectionmatrix
 
 
+def connectionmatrix_5x5():
+    """Generates a 5x5 connection matrix for use in tests."""
+
+    variables = ['X 1', 'X 2', 'X 3', 'X 4', 'X 5']
+    connectionmatrix = np.array([[1, 1, 1, 1, 1],
+                                 [1, 1, 1, 1, 1],
+                                 [1, 1, 1, 1, 1],
+                                 [1, 1, 1, 1, 1],
+                                 [1, 1, 1, 1, 1]])
+
+    return variables, connectionmatrix
+
+
 def autoreg_gen(samples, delay):
     """Generates an autoregressive set of vectors.
 
@@ -98,6 +111,37 @@ def random_gen(samples, delay):
     x2 = np.random.randn(samples)
 
     data = vstack([x1, x2])
+
+    return data.T
+
+
+def random_gen_5x5(samples, delay):
+    """Generates five completely independent random data vectors.
+
+
+    """
+
+    # Generate first vector
+    np.random.seed(35)
+    x1 = np.random.randn(samples)
+
+    # Generate second vector
+    np.random.seed(88)
+    x2 = np.random.randn(samples)
+
+    # Generate second vector
+    np.random.seed(107)
+    x3 = np.random.randn(samples)
+
+    # Generate second vector
+    np.random.seed(52)
+    x4 = np.random.randn(samples)
+
+    # Generate second vector
+    np.random.seed(98)
+    x5 = np.random.randn(samples)
+
+    data = vstack([x1, x2, x3, x4, x5])
 
     return data.T
 
