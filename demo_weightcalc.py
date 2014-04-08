@@ -22,4 +22,3 @@ writeoutput = True
 mode = 'plants'
 case = 'epu5_compressor'
 weightcalc(mode, case, writeoutput)
-
