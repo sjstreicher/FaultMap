@@ -17,7 +17,7 @@ from sklearn import preprocessing
 from transentropy import calc_infodynamics_te as te_infodyns
 from transentropy import setup_infodynamics_te as te_setup
 from config_setup import runsetup
-from formatmatrices import create_connectionmatrix
+from formatmatrices import read_connectionmatrix
 
 # Import all test data geneartors that may be called
 from datagen import *
@@ -211,7 +211,7 @@ def estimate_delay(variables, connectionmatrix, inputdata,
 #                        inputdata[:, causevarindex][-(size+delay):causeoffset]
 #                    affectedvardata = \
 #                        inputdata[:, affectedvarindex][-(size):]
-                    
+
                     causevardata = \
                         inputdata[:, causevarindex][startindex:startindex+size]
                     affectedvardata = \
@@ -231,7 +231,7 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                             te_infodyns(teCalc,
                                         affectedvardata.T, causevardata.T)
                         weightlist.append(transent)
-                        
+
                 if method == 'partial_correlation':
                     [weight_array, delay_array, datastore] = \
                         partialcorr_reporting(weightlist, actual_delays,
@@ -289,7 +289,7 @@ def weightcalc(mode, case, writeoutput=False):
     # Must be smaller than number of samples generated
     testsize = caseconfig['testsize']
     # Get number of delays to test
-    test_delays = caseconfig['test_delays']    
+    test_delays = caseconfig['test_delays']
 
     if delaytype == 'datapoints':
     # Include first n sampling intervals
@@ -335,7 +335,7 @@ def weightcalc(mode, case, writeoutput=False):
             inputdata = np.array(h5py.File(tags_tsdata, 'r')[dataset])
             # Get the variables and connection matrix
             [variables, connectionmatrix] = \
-                create_connectionmatrix(connectionloc)
+                read_connectionmatrix(connectionloc)
 
         elif datatype == 'function':
             tags_tsdata_gen = caseconfig[scenario]['datagen']
@@ -347,6 +347,7 @@ def weightcalc(mode, case, writeoutput=False):
             inputdata = eval(tags_tsdata_gen)(samples, delay)
             # Get the variables and connection matrix
             [variables, connectionmatrix] = eval(connectionloc)()
+            startindex = 0
 
         # Normalise (mean centre and variance scale) the input data
         inputdata_norm = preprocessing.scale(inputdata, axis=0)
@@ -361,16 +362,20 @@ def weightcalc(mode, case, writeoutput=False):
 
             if writeoutput:
                 # Define export directories and filenames
-                weightdir = ensure_existance(os.path.join(saveloc, 'weightcalc'),
+                weightdir = ensure_existance(os.path.join(saveloc,
+                                             'weightcalc'),
                                              make=True)
                 filename_template = os.path.join(weightdir, '{}_{}_{}_{}.csv')
 
                 def filename(name):
-                    return filename_template.format(case, scenario, method, name)
+                    return filename_template.format(case, scenario, method,
+                                                    name)
 
                 # Write arrays to file
-                np.savetxt(filename('maxweight_array'), weight_array, delimiter=',')
+                np.savetxt(filename('maxweight_array'), weight_array,
+                           delimiter=',')
                 np.savetxt(filename('delay_array'), delay_array, delimiter=',')
 
                 # Write datastore to file
-                writecsv_weightcalc(filename('weightcalc_data'), datastore, data_header)
+                writecsv_weightcalc(filename('weightcalc_data'), datastore,
+                                    data_header)
