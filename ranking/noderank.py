@@ -19,7 +19,8 @@ from matplotlib import pyplot as plt
 from ranking.formatmatrices import rankforward, rankbackward
 from config_setup import runsetup, ensure_existance
 from gaincalc import calc_partialcor_gainmatrix
-from formatmatrices import create_connectionmatrix
+from formatmatrices import read_connectionmatrix
+from formatmatrices import read_gainmatrix
 from formatmatrices import split_tsdata
 
 # Import all test network generator functions that may be called
@@ -241,7 +242,7 @@ def calc_gainrank(gainmatrix, variables, connectionmatrix, dummycreation=True,
 
 
 def looprank_static(mode, case, dummycreation, writeoutput=False):
-    """Ranks the nodes in a network based on the specified samples.
+    """Ranks the nodes in a network based on a single gain matrix calculation.
 
     For calculation of rank over time, see looprank_transient.
 
@@ -250,7 +251,8 @@ def looprank_static(mode, case, dummycreation, writeoutput=False):
     saveloc, casedir, infodynamicsloc = runsetup(mode, case)
 
     # Load case config file
-    caseconfig = json.load(open(os.path.join(casedir, case + '.json')))
+    caseconfig = json.load(open(os.path.join(casedir, case + '_noderank' +
+                                             '.json')))
     # Get scenarios
     scenarios = caseconfig['scenarios']
     # Get data type
@@ -261,21 +263,25 @@ def looprank_static(mode, case, dummycreation, writeoutput=False):
         if datatype == 'file':
 
             # Get time series data
-            tags_tsdata = os.path.join(casedir, 'data',
-                                       caseconfig[scenario]['data'])
+#            tags_tsdata = os.path.join(casedir, 'data',
+#                                       caseconfig[scenario]['data'])
             # Get connection (adjacency) matrix
             connectionloc = os.path.join(casedir, 'connections',
                                          caseconfig[scenario]['connections'])
             # Get dataset name
-            dataset = caseconfig[scenario]['dataset']
+#            dataset = caseconfig[scenario]['dataset']
             # Get the variables and connection matrix
             [variablelist, connectionmatrix] = \
-                create_connectionmatrix(connectionloc)
+                read_connectionmatrix(connectionloc)
 
             # Calculate the gainmatrix
             # TODO: Use result from weightcalc as gainmatrix
-            gainmatrix = calc_gainmatrix(connectionmatrix,
-                                         tags_tsdata, dataset)
+            gainloc = os.path.join(casedir, 'gainmatrix',
+                                   caseconfig[scenario]['gainmatrix'])
+
+            gainmatrix = read_gainmatrix(gainloc)
+#            gainmatrix = calc_gainmatrix(connectionmatrix,
+#                                         tags_tsdata, dataset)
             if writeoutput:
             # TODO: Refine name
                 savename = os.path.join(saveloc, "gainmatrix.csv")
@@ -304,7 +310,8 @@ def looprank_static(mode, case, dummycreation, writeoutput=False):
 
             savedir = ensure_existance(os.path.join(saveloc, 'noderank'),
                                        make=True)
-            csvfile_template = os.path.join(savedir, '{}_{}_importances_{}.csv')
+            csvfile_template = os.path.join(savedir,
+                                            '{}_{}_importances_{}.csv')
             graphfile_template = os.path.join(savedir, '{}_{}_graph_{}.gml')
 
             for direction, rankinglist, rankingdict, connection, \
@@ -408,7 +415,7 @@ def looprank_transient(mode, case, dummycreation, writeoutput=False,
             dataset = caseconfig[scenario]['dataset']
             # Get the variables and connection matrix
             [variablelist, connectionmatrix] = \
-                create_connectionmatrix(connectionloc)
+                read_connectionmatrix(connectionloc)
 
             # Calculate the gainmatrix
             gainmatrix = calc_gainmatrix(connectionmatrix,
@@ -441,7 +448,7 @@ def looprank_transient(mode, case, dummycreation, writeoutput=False,
         rankinglists = []
         rankingdicts = []
 
-        weightdir = ensure_existance(os.path.join(saveloc, 'weightcalc'), 
+        weightdir = ensure_existance(os.path.join(saveloc, 'weightcalc'),
                                      make=True)
         gain_template = os.path.join(weightdir, '{}_gainmatrix_{:03d}.csv')
         rank_template = os.path.join(saveloc, 'importances_{:03d}.csv')
