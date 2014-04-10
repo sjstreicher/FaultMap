@@ -37,6 +37,7 @@ scenarios = caseconfig['scenarios']
 # Get data type
 datatype = caseconfig['datatype']
 testsize = caseconfig['testsize']
+sampling_rate = caseconfig['sampling_rate']
 
 for scenario in scenarios:
     logging.info("Running scenario {}".format(scenario))
@@ -68,7 +69,7 @@ for scenario in scenarios:
         [variables, connectionmatrix] = eval(connectionloc)()
 
     # Normalise (mean centre and variance scale) the input data
-    inputdata = inputdata[5200:5300]
+    inputdata = inputdata[5200:7200]
     inputdata_norm = preprocessing.scale(inputdata, axis=0)
 #    inputdata_norm = inputdata
 
@@ -89,7 +90,9 @@ for scenario in scenarios:
                 affectedvardata = \
                     inputdata_norm[:, affectedvarindex]
 
-                time = range(len(causevardata))
+                # Create and save time series data plot
+                timespace = range(len(causevardata))
+                time = [sampling_rate * timepoint for timepoint in timespace]
 
                 plt.figure(1)
                 plt.plot(time, causevardata, 'b', label=causevar)
@@ -99,11 +102,40 @@ for scenario in scenarios:
                 plt.ylabel('Normalised value')
                 plt.legend()
 
-
                 plotdir = ensure_existance(os.path.join(saveloc, 'plots'),
                                            make=True)
 
-                filename_template = os.path.join(plotdir, '{}_{}_{}_{}.pdf')
+                filename_template = os.path.join(plotdir, 'TS_{}_{}_{}_{}.pdf')
+
+                def filename(causename, affectedname):
+                    return filename_template.format(case, scenario,
+                                                    causename, affectedname)
+
+                plt.savefig(filename(causevar, affectedvar))
+                plt.clf()
+
+                # Create and safe FFT plot
+
+                # Compute FFT
+
+                causevar_fft = abs(np.fft.rfft(causevardata)) * \
+                    (2. / len(causevardata))
+                affectedvar_fft = abs(np.fft.rfft(affectedvardata)) * \
+                    (2. / len(affectedvardata))
+
+                freqlist = [1.0/(time[-1]) * index
+                            for index in range((len(causevardata)/2) + 1)]
+
+                plt.figure(1)
+                plt.plot(freqlist, causevar_fft, 'b', label=causevar)
+                plt.hold(True)
+                plt.plot(freqlist, affectedvar_fft, 'r', label=affectedvar)
+                plt.xlabel('Frequency (1/minutes)')
+                plt.ylabel('Normalised value')
+                plt.legend()
+
+                filename_template = os.path.join(plotdir,
+                                                 'FFT_{}_{}_{}_{}.pdf')
 
                 def filename(causename, affectedname):
                     return filename_template.format(case, scenario,
