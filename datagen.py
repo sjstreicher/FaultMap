@@ -7,6 +7,8 @@ Created on Mon Feb 24 15:27:21 2014
 from numpy import vstack
 import numpy as np
 
+from control.matlab import *
+
 from transentropy import vectorselection
 
 
@@ -69,7 +71,7 @@ def autoreg_gen(samples, delay):
 def delay_gen(samples, delay):
     """Generates a random data vector and a pure delay companion.
 
-    A constant seed is used for testing comparison purposes/
+    A constant seed is used for testing comparison purposes.
 
     """
 
@@ -146,7 +148,7 @@ def random_gen_5x5(samples, delay):
     return data.T
 
 
-def autoreg_datagen(delay, timelag, samples, sub_samples, k=1, l=1):
+def autoreg_gen(delay, timelag, samples, sub_samples, k=1, l=1):
     """Generates autoreg data for a specific timelag (equal to
     prediction horison) for a set of autoregressive data.
 
@@ -169,3 +171,98 @@ def autoreg_datagen(delay, timelag, samples, sub_samples, k=1, l=1):
                                                sub_samples, k, l)
 
     return x_pred, x_hist, y_hist
+
+
+def sinusoid_gen(samples, delay, period=0.01, noiseamp=1.0):
+    """Generates a sinusoid, with delayed noise companion
+    and a closed loop sinusoid with delay and noise.
+
+    period is the number of cycles for each sample
+
+    noiseamp is the standard deviation of the noise added to the signal
+
+    """
+
+    tspan = range(samples + delay)
+
+    cause = [np.sin(period * t*2*np.pi) for t in tspan]
+
+    affected = np.zeros_like(cause)
+
+    cause_closed = np.zeros_like(cause)
+
+    for i in range(delay, len(cause)):
+        affected[i] = cause[i - delay]
+
+    np.random.seed(117)
+    affected_random_add = (np.random.rand(samples + delay) - 0.5) * noiseamp
+
+    affected = affected + affected_random_add
+
+    for i in range(delay, len(cause)):
+        cause_closed[i] = affected[i] + cause[i]
+
+    affected = affected[delay:]
+    cause = cause[delay:]
+    cause_closed = cause_closed[delay:]
+
+    return tspan[:-delay], cause, affected, cause_closed
+
+
+def firstorder_gen(samples, delay, period=0.01, noiseamp=1.0):
+    """Simple first order transfer function affected variable
+    with sinusoid cause.
+
+    """
+
+    P1 = tf([10], [100, 1])
+
+    timepoints = np.array(range(samples + delay))
+
+    sine_input = np.array([np.sin(period * t*2*np.pi) for t in timepoints])
+
+    P1_response = lsim(P1, sine_input, timepoints)
+
+    np.random.seed(51)
+    affected_random_add = (np.random.rand(samples + delay) - 0.5) * noiseamp
+
+    cause = sine_input[:samples]
+
+    if delay == 0:
+        offset = None
+    else:
+        offset = samples
+
+    affected = P1_response[0][delay:] + affected_random_add[delay:]
+
+    tspan = P1_response[1][:offset]
+
+    return tspan, cause, affected
+
+
+def oscillating_feedback_5x5(samples, delays=[3, 2, 5, 4], period=0.01,
+                             noiseamp=1.0):
+    """Passes sine source signal through a number of transfer functions
+    before connecting back on itself.
+
+    delays is a list of length 4 and specifies the delays between each of the
+    transfer functions, i.e. delay[0] is the delay between the first and second
+    transfer functions.
+
+    """
+
+    # TODO: Make use of previously defined functions to build this one
+
+    timepoints = range(samples + sum(delays))
+
+    # Define source node as pure sine wave
+    sine_source = np.array([np.sin(period * t*2*np.pi) for t in timepoints])
+
+    # Calculate response of first transfer function on pure sine signal
+    TF_1 = tf([2], [3, 1])
+    P1_response = lsim(TF_1, sine_source, timepoints)
+    np.random.seed(45)
+    P1_response_random_add = (np.random.rand(len(timepoints)) - 0.5) * noiseamp
+    TF_1_output_firstpass = P1_response[0] + P1_response_random_add
+
+    return None
