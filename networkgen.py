@@ -11,8 +11,8 @@ import json
 import os
 from config_setup import ensure_existance
 
-filesloc = json.load(open('config.json'))
-saveloc = os.path.expanduser(filesloc['saveloc'])
+#filesloc = json.load(open('config.json'))
+#saveloc = os.path.expanduser(filesloc['saveloc'])
 
 
 def fullconn_equal():
@@ -305,9 +305,9 @@ def circle_equal():
 
     testgraph = buildgraph(variables, gainmatrix, connections)
 
-    savedir = ensure_existance(os.path.join(saveloc, 'testgraphs'), make=True)
-    nx.write_gml(testgraph, os.path.join(savedir, "circle_equal.gml"))
-    nx.draw(testgraph)
+#    savedir = ensure_existance(os.path.join(saveloc, 'testgraphs'), make=True)
+#    nx.write_gml(testgraph, os.path.join(savedir, "circle_equal.gml"))
+#    nx.draw(testgraph)
 
     return connections, gainmatrix, variables, testgraph
 
@@ -334,8 +334,8 @@ def circle_unequalon2to3():
 
     testgraph = buildgraph(variables, gainmatrix, connections)
 
-    nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
-                                         "circle_unequalon2to3.gml"))
-    nx.draw(testgraph)
+#    nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
+#                                         "circle_unequalon2to3.gml"))
+#    nx.draw(testgraph)
 
     return connections, gainmatrix, variables, testgraph
