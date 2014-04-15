@@ -123,7 +123,7 @@ def transent_reporting(weightlist, actual_delays, weight_array, delay_array,
     bestdelay = actual_delays[delay_index]
     delay_array[affectedvarindex, causevarindex] = bestdelay
 
-    print "The threshold is: " + str(threshent)
+    logging.info("The TE threshold is: " + str(threshent))
 
     if maxval >= threshent:
         threshpass = True
@@ -345,7 +345,8 @@ def weightcalc(mode, case, writeoutput=False):
     saveloc, casedir, infodynamicsloc = runsetup(mode, case)
 
     # Load case config file
-    caseconfig = json.load(open(os.path.join(casedir, case + '.json')))
+    caseconfig = json.load(open(os.path.join(casedir, case + '_weightcalc' +
+                                '.json')))
 
     # Get scenarios
     scenarios = caseconfig['scenarios']
@@ -383,7 +384,7 @@ def weightcalc(mode, case, writeoutput=False):
                            "-XX:+HeapDumpOnOutOfMemoryError",
                            "-XX:HeapDumpPath=C:/Repos/LoopRank/dumps",
 #                           "-verbose:gc",
-                           "-Xms4M",
+                           "-Xms32M",
                            "-Xmx512M",
                            "-ea",
                            "-Djava.class.path=" + infodynamicsloc)
