@@ -8,8 +8,6 @@ Created on Mon Feb 24 14:56:25 2014
 
 from transentropy import setup_infodynamics_te as te_info_setup
 from transentropy import calc_infodynamics_te as te_info
-from transentropy import calc_custom_shu_te as te_shu
-from transentropy import calc_custom_eq8_te as te_eq8
 from datagen import autoreg_datagen
 from sklearn import preprocessing
 import unittest
@@ -24,7 +22,7 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
         # Define number of samples to generate
         self.samples = 2500
         # Define number of samples to analyse
-        self.sub_samples = 200
+        self.sub_samples = 2000
         # Delay in actul data
         self.delay = 5
 
@@ -40,8 +38,6 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
                            "-Djava.class.path=" + infodynamicsloc)
 
         self.entropies_infodyn = []
-        self.entropies_shu = []
-        self.entropies_eq8 = []
         for timelag in range(self.delay-5, self.delay+6):
             print "Results for timelag of: ", str(timelag)
             [x_pred, x_hist, y_hist] = autoreg_datagen(self.delay, timelag,
@@ -53,7 +49,6 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
             # setProperty("NORMALISE", "true" is called), but good practice
             # for general example.
 
-            x_pred_norm = preprocessing.scale(x_pred, axis=1)
             x_hist_norm = preprocessing.scale(x_hist, axis=1)
             y_hist_norm = preprocessing.scale(y_hist, axis=1)
 
@@ -66,28 +61,12 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
             self.entropies_infodyn.append(result_infodyn)
             print("Infodynamics TE result: %.4f bits" % (result_infodyn))
 
-            result_eq8 = te_eq8(x_pred_norm, x_hist_norm, y_hist_norm)
-            self.entropies_eq8.append(result_eq8)
-            print("Eq8 TE result: %.4f bits" % (result_eq8))
-
-            result_shu = te_shu(x_pred_norm, x_hist_norm, y_hist_norm)
-            self.entropies_shu.append(result_shu)
-            print("Shu TE result: %.4f bits" % (result_shu))
-
         print self.entropies_infodyn
-        print self.entropies_eq8
-        print self.entropies_shu
 
     def test_peakentropy_infodyn(self):
         maxval = max(self.entropies_infodyn)
         # The maximum lags with one sample
         delayedval = self.entropies_infodyn[self.delay-1]
-        self.assertEqual(maxval, delayedval)
-
-    def test_peakentropy_shu(self):
-        maxval = max(self.entropies_shu)
-        # The maximum lags with one sample
-        delayedval = self.entropies_infodyn[self.delay]
         self.assertEqual(maxval, delayedval)
 
 if __name__ == '__main__':
