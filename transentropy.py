@@ -389,7 +389,7 @@ def calc_custom_eq4_te(x_pred, x_hist, y_hist, mcsamples):
     return result
 
 
-def calc_custom_shu_te(x_pred, x_hist, y_hist):
+def calc_custom_shu_te(x_pred, x_hist, y_hist, approach='averageoflocal'):
     """Calculates the transfer entropy between two variables from a set of
     vectors already calculated.
 
@@ -398,26 +398,43 @@ def calc_custom_shu_te(x_pred, x_hist, y_hist):
     # First do an example for the case of k = l = 1
     # TODO: Sum loops to allow for a general case
 
-    # Consecutive sums
-    # TODO: Make sure Riemann sum diff elements is handled correctly
-
     # Normalise data
     x_pred_norm = preprocessing.scale(x_pred, axis=1)
     x_hist_norm = preprocessing.scale(x_hist, axis=1)
     y_hist_norm = preprocessing.scale(y_hist, axis=1)
 
-    tesum = 0
-    counter = 0
-    print ((counter / len(x_pred_norm[0])) * 100), '%'
-    for s1 in x_pred_norm[0]:
-        counter += 1.0
-        for s2 in x_hist_norm[0]:
-            for s3 in y_hist_norm[0]:
-                sum_element = te_shu_elementcalc(x_pred_norm, x_hist_norm,
-                                                 y_hist_norm, s1, s2, s3)
-                tesum = tesum + sum_element
+    # Get the number of observations
+    numobs = x_pred.shape[1]
+
+    if approach == 'averageoflocal':
+
+        tesum = 0.0
+        for x_pred_val, x_hist_val, y_hist_val in zip(x_pred_norm[0],
+                                                      x_hist_norm[0],
+                                                      y_hist_norm[0]):
+
+            sumelement = te_eq8_elementcalc(x_pred_norm, x_hist_norm,
+                                            y_hist_norm,
+                                            x_pred_val, x_hist_val, y_hist_val)
+            tesum += sumelement
+        tentropy = tesum / numobs
+
+    elif approach == 'allsums':
+
+        tesum = 0
+        counter = 0
         print ((counter / len(x_pred_norm[0])) * 100), '%'
-    tentropy = tesum
+        for x_pred_val in x_pred_norm[0]:
+            counter += 1.0
+            for x_hist_val in x_hist_norm[0]:
+                for y_hist_val in y_hist_norm[0]:
+                    sum_element = te_shu_elementcalc(x_pred_norm, x_hist_norm,
+                                                     y_hist_norm,
+                                                     x_pred_val, x_hist_val,
+                                                     y_hist_val)
+                    tesum = tesum + sum_element
+            print ((counter / len(x_pred_norm[0])) * 100), '%'
+        tentropy = tesum
 
     return tentropy
 
@@ -458,7 +475,8 @@ def calc_infodynamics_te(teCalc, affected_data, causal_data):
     """
 
     # Normalise data to be safe
-    affected_data_norm = preprocessing.scale(affected_data[np.newaxis, :], axis=1)
+    affected_data_norm = preprocessing.scale(affected_data[np.newaxis, :],
+                                             axis=1)
     causal_data_norm = preprocessing.scale(causal_data[np.newaxis, :], axis=1)
 
     # Use history length 1 (Schreiber k=1),
