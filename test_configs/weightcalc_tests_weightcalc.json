@@ -1,9 +1,9 @@
 {
   "datatype": "function",
   "delaytype": "datapoints",
-  "test_delays": 50,
+  "test_delays": 10,
   "sampling_rate": 1,
-  "testsize": 500,
+  "testsize": 2000,
   "gensamples": 3000,
   "delay": 5,
   "methods": [
