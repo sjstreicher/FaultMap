@@ -413,7 +413,7 @@ def calc_custom_shu_te(x_pred, x_hist, y_hist, approach='averageoflocal'):
                                                       x_hist_norm[0],
                                                       y_hist_norm[0]):
 
-            sumelement = te_eq8_elementcalc(x_pred_norm, x_hist_norm,
+            sumelement = te_shu_elementcalc(x_pred_norm, x_hist_norm,
                                             y_hist_norm,
                                             x_pred_val, x_hist_val, y_hist_val)
             tesum += sumelement
