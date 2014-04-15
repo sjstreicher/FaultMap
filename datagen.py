@@ -148,7 +148,7 @@ def random_gen_5x5(samples, delay):
     return data.T
 
 
-def autoreg_gen(delay, timelag, samples, sub_samples, k=1, l=1):
+def autoreg_datagen(delay, timelag, samples, sub_samples, k=1, l=1):
     """Generates autoreg data for a specific timelag (equal to
     prediction horison) for a set of autoregressive data.
 
