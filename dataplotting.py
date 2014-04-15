@@ -60,7 +60,8 @@ for scenario in scenarios:
     elif datatype == 'function':
         tags_tsdata_gen = caseconfig[scenario]['datagen']
         connectionloc = caseconfig[scenario]['connections']
-        # TODO: Store function arguments ifrom config_setup import ensure_existancen scenario config file
+        # TODO: Store function arguments ifrom config_setup import
+        # ensure_existence scenario config file
         samples = caseconfig['gensamples']
         delay = caseconfig['delay']
         # Get inputdata
@@ -69,14 +70,16 @@ for scenario in scenarios:
         [variables, connectionmatrix] = eval(connectionloc)()
 
     # Normalise (mean centre and variance scale) the input data
-    inputdata = inputdata[5200:7200]
-    inputdata_norm = preprocessing.scale(inputdata, axis=0)
-#    inputdata_norm = inputdata
+    inputdata = inputdata[5200:5400]
+    if normalise is True:
+        inputdata_norm = preprocessing.scale(inputdata, axis=0)
+    else:
+        inputdata_norm = inputdata
 
-    for causevarindex in [31, 32]:
+    for causevarindex in [29]:
         causevar = variables[causevarindex]
         logging.info("Analysing effect of: " + causevar)
-        for affectedvarindex in [11]:
+        for affectedvarindex in [31]:
             affectedvar = variables[affectedvarindex]
             if not(connectionmatrix[affectedvarindex, causevarindex] == 0):
 
@@ -94,7 +97,7 @@ for scenario in scenarios:
                 timespace = range(len(causevardata))
                 time = [sampling_rate * timepoint for timepoint in timespace]
 
-                plt.figure(1)
+                plt.figure()
                 plt.plot(time, causevardata, 'b', label=causevar)
                 plt.hold(True)
                 plt.plot(time, affectedvardata, 'r', label=affectedvar)
@@ -112,21 +115,16 @@ for scenario in scenarios:
                                                     causename, affectedname)
 
                 plt.savefig(filename(causevar, affectedvar))
-                plt.clf()
 
                 # Create and safe FFT plot
-
                 # Compute FFT
-
                 causevar_fft = abs(np.fft.rfft(causevardata)) * \
                     (2. / len(causevardata))
                 affectedvar_fft = abs(np.fft.rfft(affectedvardata)) * \
                     (2. / len(affectedvardata))
+                freqlist = np.fft.rfftfreq(len(causevardata), sampling_rate)
 
-                freqlist = [1.0/(time[-1]) * index
-                            for index in range((len(causevardata)/2) + 1)]
-
-                plt.figure(1)
+                plt.figure()
                 plt.plot(freqlist, causevar_fft, 'b', label=causevar)
                 plt.hold(True)
                 plt.plot(freqlist, affectedvar_fft, 'r', label=affectedvar)
@@ -142,5 +140,3 @@ for scenario in scenarios:
                                                     causename, affectedname)
 
                 plt.savefig(filename(causevar, affectedvar))
-
-                plt.clf()
