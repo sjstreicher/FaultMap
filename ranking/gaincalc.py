@@ -18,8 +18,9 @@ from transentropy import calc_infodynamics_te as te_infodyns
 from transentropy import setup_infodynamics_te as te_setup
 from config_setup import runsetup
 from formatmatrices import read_connectionmatrix
+from pygeonetwork.surrogates import *
 
-# Import all test data geneartors that may be called
+# Import all test data generators that may be called
 from datagen import *
 
 
@@ -80,13 +81,14 @@ def partialcorr_reporting(weightlist, actual_delays, weight_array, delay_array,
         corrthreshpass = True
     else:
         corrthreshpass = False
-        # TODO: Don't use the shifted correlation
 
     if directionindex >= threshdir:
         dirthreshpass = True
     else:
         dirthreshpass = False
-        # TODO: Don't use the shifted correlation
+
+    if corrthreshpass or dirthreshpass is False:
+        maxcorr = 0
 
     dataline = [causevar, affectedvar, str(weightlist[0]),
                 maxcorr, str(bestdelay), str(delay_index),
@@ -121,10 +123,13 @@ def transent_reporting(weightlist, actual_delays, weight_array, delay_array,
     bestdelay = actual_delays[delay_index]
     delay_array[affectedvarindex, causevarindex] = bestdelay
 
+    print "The threshold is: " + str(threshent)
+
     if maxval >= threshent:
         threshpass = True
     else:
         threshpass = False
+        maxval = 0
 
     dataline = [causevar, affectedvar, str(weightlist[0]),
                 maxval, str(bestdelay), str(delay_index),
@@ -137,14 +142,78 @@ def transent_reporting(weightlist, actual_delays, weight_array, delay_array,
                  str(bestdelay))
     logging.info("The TE with no delay is: "
                  + str(weightlist[0]))
-#    logging.info("TE threshold passed: " +
-#                 str(threshpass))
+    logging.info("TE threshold passed: " +
+                 str(threshpass))
 
     return weight_array, delay_array, datastore
 
 
+def calc_te_thresh_rankorder(teCalc, affected_data, causal_data):
+    """Calculates the minimum threshold required for a transfer entropy
+    value to be considered significant.
+
+    Makes use of a 95% single-sided certainty and a rank-order method.
+    This correlates to taking the maximum transfer entropy from 19 surrogate
+    transfer entropy calculations as the threshold, see Schreiber2000a.
+
+    """
+
+    surrte = calc_surr_te(teCalc, affected_data, causal_data, 19)
+
+    threshent = max(surrte)
+
+    return threshent
+
+
+def calc_te_thresh_sixsigma(teCalc, affected_data, causal_data):
+    """Calculates the minimum threshold required for a transfer entropy
+    value to be considered significant.
+
+    Makes use of a six sigma Gaussian check as done in Bauer2005 with 30
+    samples of surrogate data.
+
+    """
+
+    surrte = calc_surr_te(teCalc, affected_data, causal_data, 30)
+
+    surrte_mean = np.mean(surrte)
+    surrte_stdev = np.std(surrte)
+
+    threshent = (6 * surrte_stdev) + surrte_mean
+
+    return threshent
+
+
+def calc_surr_te(teCalc, affected_data, causal_data, num=19):
+    """Calculates surrogate transfer entropy values for significance threshold
+    purposes.
+
+    Generates surrogate time series data by making use of the iAAFT method
+    (see Schreiber 2000a)
+
+    Returns list of surrogate tranfer entropy values of length num.
+
+    """
+    # TODO: Research required number of iterations for good surrogate data
+    tsdata = np.array([affected_data, causal_data])
+
+    surr_tsdata = \
+        [Surrogates.SmallTestData().get_refined_AAFT_surrogates(tsdata, 10)
+         for n in range(num)]
+
+    surr_te_fwd = [te_infodyns(teCalc, surr_tsdata[n][0], surr_tsdata[n][1])
+                   for n in range(num)]
+    surr_te_bwd = [te_infodyns(teCalc, surr_tsdata[n][1], surr_tsdata[n][0])
+                   for n in range(num)]
+
+    surr_te = [surr_te_fwd[n] - surr_te_bwd[n] for n in range(num)]
+
+    return surr_te
+
+
 def estimate_delay(variables, connectionmatrix, inputdata,
-                   sampling_rate, size, delays, delaytype, method, startindex):
+                   sampling_rate, size, delays, delaytype, method, startindex,
+                   te_thresh_method='rankorder'):
     """Determines the maximum weight between two variables by searching through
     a specified set of delays.
 
@@ -166,7 +235,6 @@ def estimate_delay(variables, connectionmatrix, inputdata,
     inputdata = preprocessing.scale(inputdata, axis=0)
 
     if method == 'partial_correlation':
-
         threshcorr = (1.85*(size**(-0.41))) + (2.37*(size**(-0.53)))
         threshdir = 0.46*(size**(-0.16))
 
@@ -179,9 +247,6 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                        'dirrthreshpass', 'dirval']
 
     elif method == 'transfer_entropy':
-        # TODO: Get transfer entropy threshold from Bauer2005
-        threshent = 0.0
-
         data_header = ['causevar', 'affectedvar', 'base_ent',
                        'max_ent', 'max_delay', 'max_index', 'threshpass']
 
@@ -202,21 +267,11 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                 weightlist = []
                 for delay in sample_delay:
 
-                    if delay == 0:
-                        causeoffset = None
-                    else:
-                        causeoffset = -delay
-
-#                    causevardata = \
-#                        inputdata[:, causevarindex][-(size+delay):causeoffset]
-#                    affectedvardata = \
-#                        inputdata[:, affectedvarindex][-(size):]
-
                     causevardata = \
                         inputdata[:, causevarindex][startindex:startindex+size]
                     affectedvardata = \
-                        inputdata[:, affectedvarindex][startindex+delay:startindex+size+delay]
-
+                        inputdata[:, affectedvarindex][startindex+delay:
+                                                       startindex+size+delay]
 
                     if method == 'partial_correlation':
                         corrval = \
@@ -227,10 +282,27 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                     elif method == 'transfer_entropy':
                         # Setup Java class for infodynamics toolkit
                         teCalc = te_setup()
-                        transent = \
+                        # Calculate transfer entropy as the difference
+                        # between the forward and backwards entropy
+                        transent_fwd = \
                             te_infodyns(teCalc,
                                         affectedvardata.T, causevardata.T)
+                        transent_bwd = \
+                            te_infodyns(teCalc,
+                                        causevardata.T, affectedvardata.T)
+                        transent = transent_fwd - transent_bwd
                         weightlist.append(transent)
+
+                        # Calculate threshold for transfer entropy
+                        if te_thresh_method == 'rankorder':
+                            threshent = \
+                                calc_te_thresh_rankorder(
+                                    teCalc, affectedvardata.T, causevardata.T)
+
+                        elif te_thresh_method == 'sixsigma':
+                            threshent = \
+                                calc_te_thresh_sixsigma(
+                                    teCalc, affectedvardata.T, causevardata.T)
 
                 if method == 'partial_correlation':
                     [weight_array, delay_array, datastore] = \
