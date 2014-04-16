@@ -106,9 +106,12 @@ def calc_infodynamics_te(teCalc, affected_data, causal_data):
 
     sourceArray = causal_data_norm[0].tolist()
     destArray = affected_data_norm[0].tolist()
+    
+    sourceArrayJava = jpype.JArray(jpype.JDouble, 1)(sourceArray)
+    destArrayJava = jpype.JArray(jpype.JDouble, 1)(destArray)
 
-    teCalc.setObservations(jpype.JArray(jpype.JDouble, 1)(sourceArray),
-                           jpype.JArray(jpype.JDouble, 1)(destArray))
+    teCalc.setObservations(sourceArrayJava,
+                           destArrayJava)
 
     transentropy = teCalc.computeAverageLocalOfObservations()
 
