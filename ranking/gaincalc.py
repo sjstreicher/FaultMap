@@ -123,9 +123,9 @@ def transent_reporting(weightlist, actual_delays, weight_array, delay_array,
     bestdelay = actual_delays[delay_index]
     delay_array[affectedvarindex, causevarindex] = bestdelay
 
-    logging.info("The TE threshold is: " + str(threshlist(delay_index)))
+    logging.info("The TE threshold is: " + str(threshlist[delay_index]))
 
-    if maxval >= threshlist(delay_index):
+    if maxval >= threshlist[delay_index]:
         threshpass = True
     else:
         threshpass = False
