@@ -20,9 +20,9 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
         """Generate list of entropies to test"""
 
         # Define number of samples to generate
-        self.samples = 2500
+        self.samples = 10000
         # Define number of samples to analyse
-        self.sub_samples = 2000
+        self.sub_samples = 5000
         # Delay in actul data
         self.delay = 5
 

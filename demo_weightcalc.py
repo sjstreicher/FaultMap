@@ -3,7 +3,6 @@
 
 """
 
-
 from ranking.gaincalc import weightcalc
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -26,3 +25,9 @@ if 'epu5_compressor' in runs:
     mode = 'plants'
     case = 'epu5_compressor'
     weightcalc(mode, case, writeoutput)
+
+if 'u238_alcoholrecovery' in runs:
+    mode = 'plants'
+    case = 'u238_alcoholrecovery'
+    weightcalc(mode, case, writeoutput)
+    

@@ -113,7 +113,7 @@ def partialcorr_reporting(weightlist, actual_delays, weight_array, delay_array,
 
 
 def transent_reporting(weightlist, actual_delays, weight_array, delay_array,
-                       threshent, affectedvarindex, causevarindex,
+                       threshlist, affectedvarindex, causevarindex,
                        datastore, causevar, affectedvar):
 
     maxval = max(weightlist)
@@ -123,9 +123,9 @@ def transent_reporting(weightlist, actual_delays, weight_array, delay_array,
     bestdelay = actual_delays[delay_index]
     delay_array[affectedvarindex, causevarindex] = bestdelay
 
-    logging.info("The TE threshold is: " + str(threshent))
+    logging.info("The TE threshold is: " + str(threshlist(delay_index)))
 
-    if maxval >= threshent:
+    if maxval >= threshlist(delay_index):
         threshpass = True
     else:
         threshpass = False
@@ -265,7 +265,9 @@ def estimate_delay(variables, connectionmatrix, inputdata,
         for affectedvarindex, affectedvar in enumerate(variables):
             if not(connectionmatrix[affectedvarindex, causevarindex] == 0):
                 weightlist = []
+                threshlist = []
                 for delay in sample_delay:
+                    
 
                     causevardata = \
                         inputdata[:, causevarindex][startindex:startindex+size]
@@ -280,6 +282,7 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                         weightlist.append(corrval)
 
                     elif method == 'transfer_entropy':
+                        logging.info("Analysing delay " + str(delay))
                         # Setup Java class for infodynamics toolkit
                         teCalc = te_setup()
                         # Calculate transfer entropy as the difference
@@ -298,11 +301,13 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                             threshent = \
                                 calc_te_thresh_rankorder(
                                     teCalc, affectedvardata.T, causevardata.T)
+                            threshlist.append(threshent)
 
                         elif te_thresh_method == 'sixsigma':
                             threshent = \
                                 calc_te_thresh_sixsigma(
                                     teCalc, affectedvardata.T, causevardata.T)
+                            threshlist.append(threshent)
 
                 if method == 'partial_correlation':
                     [weight_array, delay_array, datastore] = \
@@ -315,7 +320,7 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                     [weight_array, delay_array, datastore] = \
                         transent_reporting(weightlist, actual_delays,
                                            weight_array, delay_array,
-                                           threshent, affectedvarindex,
+                                           threshlist, affectedvarindex,
                                            causevarindex, datastore, causevar,
                                            affectedvar)
             else:
