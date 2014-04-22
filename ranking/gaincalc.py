@@ -114,7 +114,7 @@ def partialcorr_reporting(weightlist, actual_delays, weight_array, delay_array,
 
 def transent_reporting(weightlist, actual_delays, weight_array, delay_array,
                        threshlist, affectedvarindex, causevarindex,
-                       datastore, causevar, affectedvar):
+                       datastore, causevar, affectedvar, calctethresh):
 
     maxval = max(weightlist)
     weight_array[affectedvarindex, causevarindex] = maxval
@@ -123,13 +123,16 @@ def transent_reporting(weightlist, actual_delays, weight_array, delay_array,
     bestdelay = actual_delays[delay_index]
     delay_array[affectedvarindex, causevarindex] = bestdelay
 
-    logging.info("The TE threshold is: " + str(threshlist[delay_index]))
+    if calctethresh:
+        logging.info("The TE threshold is: " + str(threshlist[delay_index]))
 
-    if maxval >= threshlist[delay_index]:
-        threshpass = True
+        if maxval >= threshlist[delay_index]:
+            threshpass = True
+        else:
+            threshpass = False
+            maxval = 0
     else:
-        threshpass = False
-        maxval = 0
+        threshpass = "Not tested"
 
     dataline = [causevar, affectedvar, str(weightlist[0]),
                 maxval, str(bestdelay), str(delay_index),
@@ -213,7 +216,7 @@ def calc_surr_te(teCalc, affected_data, causal_data, num=19):
 
 def estimate_delay(variables, connectionmatrix, inputdata,
                    sampling_rate, size, delays, delaytype, method, startindex,
-                   te_thresh_method='rankorder'):
+                   te_thresh_method='rankorder', calctethresh=False):
     """Determines the maximum weight between two variables by searching through
     a specified set of delays.
 
@@ -267,7 +270,6 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                 weightlist = []
                 threshlist = []
                 for delay in sample_delay:
-                    
 
                     causevardata = \
                         inputdata[:, causevarindex][startindex:startindex+size]
@@ -297,17 +299,20 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                         weightlist.append(transent)
 
                         # Calculate threshold for transfer entropy
-                        if te_thresh_method == 'rankorder':
-                            threshent = \
-                                calc_te_thresh_rankorder(
-                                    teCalc, affectedvardata.T, causevardata.T)
-                            threshlist.append(threshent)
+                        if calctethresh:
+                            if te_thresh_method == 'rankorder':
+                                threshent = \
+                                    calc_te_thresh_rankorder(
+                                        teCalc, affectedvardata.T,
+                                        causevardata.T)
+                                threshlist.append(threshent)
 
-                        elif te_thresh_method == 'sixsigma':
-                            threshent = \
-                                calc_te_thresh_sixsigma(
-                                    teCalc, affectedvardata.T, causevardata.T)
-                            threshlist.append(threshent)
+                            elif te_thresh_method == 'sixsigma':
+                                threshent = \
+                                    calc_te_thresh_sixsigma(
+                                        teCalc, affectedvardata.T,
+                                        causevardata.T)
+                                threshlist.append(threshent)
 
                 if method == 'partial_correlation':
                     [weight_array, delay_array, datastore] = \
@@ -322,7 +327,7 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                                            weight_array, delay_array,
                                            threshlist, affectedvarindex,
                                            causevarindex, datastore, causevar,
-                                           affectedvar)
+                                           affectedvar, calctethresh)
             else:
                 weight_array[affectedvarindex, causevarindex] = np.NAN
                 delay_array[affectedvarindex, causevarindex] = np.NAN
