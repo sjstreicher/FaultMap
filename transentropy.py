@@ -11,7 +11,8 @@ from jpype import *
 
 
 def vectorselection(data, timelag, sub_samples, k=1, l=1):
-    """Generates sets of vectors for calculating transfer entropy.
+    """Generates sets of vectors from tags time series data
+    for calculating transfer entropy.
 
     For notation references see Shu2013.
 
@@ -26,12 +27,12 @@ def vectorselection(data, timelag, sub_samples, k=1, l=1):
     used to make the prediction (y).
 
     sub_samples is the amount of samples in the dataset used to calculate the
-    transfer entropy between two vectors.
+    transfer entropy between two vectors and must satisfy
+    sub_samples <= samples
+
     The required number of samples is extracted from the end of the vector.
     If the vector is longer than the number of samples specified plus the
     desired time lag then the remained of the data will be discarded.
-    sub_samples <= samples
-
 
     k refers to the dimension of the historical data to be predicted (x)
 
@@ -61,6 +62,10 @@ def vectorselection(data, timelag, sub_samples, k=1, l=1):
 
 
 def setup_infodynamics_te():
+    """Prepares the teCalc class of the infodynamics toolkit in order to
+    calculate transfer entropy according to the kernel method.
+
+    """
 
     teCalcClass = jpype.JPackage("infodynamics.measures.continuous.kernel") \
                        .TransferEntropyCalculatorKernel
@@ -77,21 +82,24 @@ def setup_infodynamics_te():
 
 def calc_infodynamics_te(teCalc, affected_data, causal_data):
     """Calculates the transfer entropy for a specific timelag (equal to
-    prediction horison) for a set of autoregressive data.
+    prediction horison) between two sets of time series data.
 
     This implementation makes use of the infodynamics toolkit:
     https://code.google.com/p/information-dynamics-toolkit/
 
     sub_samples is the amount of samples in the dataset used to calculate the
-    transfer entropy between two vectors (taken from the end of the dataset).
-    sub_samples <= samples
+    transfer entropy between two vectors (taken from the end of the dataset)
+    and must satisfy sub_samples <= samples
 
-    Currently only supports k = 1; l = 1;
+    Currently only supports k = 1 and l = 1
 
-    You can search through a set of timelags in an attempt to identify the
-    original delay.
+    Used to search through a set of timelags in an attempt to identify the
+    original delay, as well as to assign a weight to the causal relationship
+    between two tags.
+
     The transfer entropy should have a maximum value when timelag = delay
-    used to generate the autoregressive dataset.
+    used to generate the autoregressive dataset, or will otherwise indicate the
+    dead time between data indicating a causal relationship.
 
     """
 
@@ -106,7 +114,7 @@ def calc_infodynamics_te(teCalc, affected_data, causal_data):
 
     sourceArray = causal_data_norm[0].tolist()
     destArray = affected_data_norm[0].tolist()
-    
+
     sourceArrayJava = jpype.JArray(jpype.JDouble, 1)(sourceArray)
     destArrayJava = jpype.JArray(jpype.JDouble, 1)(destArray)
 
