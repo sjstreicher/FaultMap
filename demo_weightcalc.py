@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.INFO)
 
 writeoutput = True
 
-runs = ['epu5_compressor']
+runs = ['u238_alcoholrecovery']
 
 if 'weightcalc_tests' in runs:
     mode = 'test_cases'
@@ -30,4 +30,3 @@ if 'u238_alcoholrecovery' in runs:
     mode = 'plants'
     case = 'u238_alcoholrecovery'
     weightcalc(mode, case, writeoutput)
-    
