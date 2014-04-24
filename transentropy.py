@@ -8,8 +8,6 @@ import numpy as np
 import jpype
 from sklearn import preprocessing
 
-from jpype import *
-
 
 def vectorselection(data, timelag, sub_samples, k=1, l=1):
     """Generates sets of vectors from tags time series data
