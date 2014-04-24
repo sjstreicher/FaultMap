@@ -118,7 +118,7 @@ def transent_reporting(weightlist, actual_delays, weight_array, delay_array,
                        startindex, size, inputdata, teCalc):
 
     maxval = max(weightlist)
-    weight_array[affectedvarindex, causevarindex] = maxval
+
 
     delay_index = weightlist.index(maxval)
     bestdelay = actual_delays[delay_index]
@@ -140,8 +140,8 @@ def transent_reporting(weightlist, actual_delays, weight_array, delay_array,
     elif te_thresh_method == 'sixsigma':
         threshent = \
             calc_te_thresh_sixsigma(
-                teCalc, affectedvardata.T,
-                causevardata.T)
+                teCalc, thresh_affectedvardata.T,
+                thresh_causevardata.T)
 
     logging.info("The TE threshold is: " + str(threshent))
 
@@ -150,6 +150,8 @@ def transent_reporting(weightlist, actual_delays, weight_array, delay_array,
     else:
         threshpass = False
         maxval = 0
+
+    weight_array[affectedvarindex, causevarindex] = maxval
 
     dataline = [causevar, affectedvar, str(weightlist[0]),
                 maxval, str(bestdelay), str(delay_index),
@@ -233,6 +235,7 @@ def calc_surr_te(teCalc, affected_data, causal_data, num=19):
 
 def estimate_delay(variables, connectionmatrix, inputdata,
                    sampling_rate, size, delays, delaytype, method, startindex,
+                   causevarindexes, affectedvarindexes,
                    te_thresh_method='rankorder'):
     """Determines the maximum weight between two variables by searching through
     a specified set of delays.
@@ -280,9 +283,11 @@ def estimate_delay(variables, connectionmatrix, inputdata,
         sample_delay = [int(round(delay/sampling_rate))
                         for delay in delays]
 
-    for causevarindex, causevar in enumerate(variables):
+    for causevarindex in causevarindexes:
+        causevar = variables[causevarindex]
         logging.info("Analysing effect of: " + causevar)
-        for affectedvarindex, affectedvar in enumerate(variables):
+        for affectedvarindex in affectedvarindexes:
+            affectedvar = variables[affectedvarindex]
             if not(connectionmatrix[affectedvarindex, causevarindex] == 0):
                 weightlist = []
                 for delay in sample_delay:
@@ -433,6 +438,20 @@ def weightcalc(mode, case, writeoutput=False):
             [variables, connectionmatrix] = eval(connectionloc)()
             startindex = 0
 
+        causevarindexes = caseconfig[scenario]['causevarindexes']
+        if causevarindexes == 'all':
+            causevarindexes = range(len(variables))
+        affectedvarindexes = caseconfig[scenario]['affectedvarindexes']
+        if affectedvarindexes == 'all':
+            affectedvarindexes = range(len(variables))
+
+#        causevars = []
+#        for causevarindex in causevarindexes:
+#            causevars.append(variables[causevarindex])
+#        affectedvars = []
+#        for affectedvarindex in affectedvarindexes:
+#            affectedvars.append(variables[affecedvarindex])
+
         # Normalise (mean centre and variance scale) the input data
         inputdata_norm = preprocessing.scale(inputdata, axis=0)
 
@@ -442,7 +461,8 @@ def weightcalc(mode, case, writeoutput=False):
             [weight_array, delay_array, datastore, data_header] = \
                 estimate_delay(variables, connectionmatrix, inputdata_norm,
                                sampling_rate, testsize, delays, delaytype,
-                               method, startindex)
+                               method, startindex,
+                               causevarindexes, affectedvarindexes)
 
             if writeoutput:
                 # Define export directories and filenames
