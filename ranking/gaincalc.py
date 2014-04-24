@@ -256,7 +256,7 @@ def estimate_delay(variables, connectionmatrix, inputdata,
     # Normalise inputdata to be safe
     inputdata = preprocessing.scale(inputdata, axis=0)
 
-    if method == 'pearson_correlation' or 'partial_correlation':
+    if method == 'pearson_correlation' or method == 'partial_correlation':
         threshcorr = (1.85*(size**(-0.41))) + (2.37*(size**(-0.53)))
         threshdir = 0.46*(size**(-0.16))
 
@@ -320,7 +320,7 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                                         affectedvardata.T)[1, 0]
                         weightlist.append(corrval)
 
-                    if method == 'partial_correlation':
+                    elif method == 'partial_correlation':
                         # Currently defunct
                         partialcorrval = \
                             partialcorrmats[sample_delays.index(delay)][
@@ -329,7 +329,7 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                         weightlist.append(partialcorrval)
 
                     elif method == 'transfer_entropy':
-                        logging.info("Analysing delay " + str(delay))
+#                        logging.info("Analysing delay " + str(delay))
                         # Setup Java class for infodynamics toolkit
                         teCalc = te_setup()
                         # Calculate transfer entropy as the difference
@@ -343,7 +343,8 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                         transent = transent_fwd - transent_bwd
                         weightlist.append(transent)
 
-                if method == 'pearson_correlation' or 'partial_correlation':
+                if method == 'pearson_correlation' or \
+                        method == 'partial_correlation':
                     [weight_array, delay_array, datastore] = \
                         corr_reporting(weightlist, actual_delays,
                                        weight_array, delay_array,
