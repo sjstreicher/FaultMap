@@ -119,7 +119,6 @@ def transent_reporting(weightlist, actual_delays, weight_array, delay_array,
 
     maxval = max(weightlist)
 
-
     delay_index = weightlist.index(maxval)
     bestdelay = actual_delays[delay_index]
     delay_array[affectedvarindex, causevarindex] = bestdelay
@@ -298,10 +297,18 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                         inputdata[:, affectedvarindex][startindex+delay:
                                                        startindex+size+delay]
 
-                    if method == 'partial_correlation':
+                    if method == 'pearson_correlation':
                         corrval = \
                             np.corrcoef(causevardata.T,
                                         affectedvardata.T)[1, 0]
+                        weightlist.append(corrval)
+
+                    if method == 'partial_correlation':
+                        # TODO: Implemenet partial correlation testing
+                        # This was erroneously only normal correlation before.
+                        # Will probably require prefiltering of data
+                        # to eliminate constant tag streams.
+                        corrval = 0
                         weightlist.append(corrval)
 
                     elif method == 'transfer_entropy':
@@ -444,13 +451,6 @@ def weightcalc(mode, case, writeoutput=False):
         affectedvarindexes = caseconfig[scenario]['affectedvarindexes']
         if affectedvarindexes == 'all':
             affectedvarindexes = range(len(variables))
-
-#        causevars = []
-#        for causevarindex in causevarindexes:
-#            causevars.append(variables[causevarindex])
-#        affectedvars = []
-#        for affectedvarindex in affectedvarindexes:
-#            affectedvars.append(variables[affecedvarindex])
 
         # Normalise (mean centre and variance scale) the input data
         inputdata_norm = preprocessing.scale(inputdata, axis=0)
