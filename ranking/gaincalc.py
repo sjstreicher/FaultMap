@@ -24,7 +24,7 @@ from pygeonetwork.surrogates import *
 from datagen import *
 
 
-def calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, dataset):
+def calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, *dataset):
     """Calculates the local gains in terms of the partial (Pearson's)
     correlation between the variables.
 
@@ -51,10 +51,10 @@ def calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, dataset):
     return correlationmatrix, partialcorrelationmatrix
 
 
-def partialcorr_reporting(weightlist, actual_delays, weight_array, delay_array,
-                          threshcorr, threshdir,
-                          affectedvarindex, causevarindex, datastore,
-                          causevar, affectedvar):
+def corr_reporting(weightlist, actual_delays, weight_array, delay_array,
+                   threshcorr, threshdir,
+                   affectedvarindex, causevarindex, datastore,
+                   causevar, affectedvar):
 
     maxval = max(weightlist)
     minval = min(weightlist)
@@ -256,7 +256,7 @@ def estimate_delay(variables, connectionmatrix, inputdata,
     # Normalise inputdata to be safe
     inputdata = preprocessing.scale(inputdata, axis=0)
 
-    if method == 'partial_correlation':
+    if method == 'pearson_correlation' or method == 'partial_correlation':
         threshcorr = (1.85*(size**(-0.41))) + (2.37*(size**(-0.53)))
         threshdir = 0.46*(size**(-0.16))
 
@@ -275,12 +275,29 @@ def estimate_delay(variables, connectionmatrix, inputdata,
     datastore = []
     if delaytype == 'datapoints':
         actual_delays = [delay * sampling_rate for delay in delays]
-        sample_delay = delays
+        sample_delays = delays
     elif delaytype == 'timevalues':
         actual_delays = [int(round(delay/sampling_rate)) * sampling_rate
                          for delay in delays]
-        sample_delay = [int(round(delay/sampling_rate))
-                        for delay in delays]
+        sample_delays = [int(round(delay/sampling_rate))
+                         for delay in delays]
+
+    # For the partial correlation method, the whole matrix needs
+    # to be calculated at once in order to consider the effect of all other
+    # variables.
+    # Therefore, the partial correlation matrices for all delays and all
+    # variables involved are calculated first and then simply called in the
+    # next routine.
+    # Still need to decide how to calculate partial
+    # correlation with respect to delays in
+    # other variables.
+
+    if method == 'partial_correlation':
+        partialcorrmats = []
+        for delay in sample_delays:
+            _, partialcorrelationmatrix = \
+                calc_partialcor_gainmatrix(connectionmatrix, inputdata)
+            partialcorrmats.append(partialcorrelationmatrix)
 
     for causevarindex in causevarindexes:
         causevar = variables[causevarindex]
@@ -289,7 +306,7 @@ def estimate_delay(variables, connectionmatrix, inputdata,
             affectedvar = variables[affectedvarindex]
             if not(connectionmatrix[affectedvarindex, causevarindex] == 0):
                 weightlist = []
-                for delay in sample_delay:
+                for delay in sample_delays:
 
                     causevardata = \
                         inputdata[:, causevarindex][startindex:startindex+size]
@@ -303,16 +320,16 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                                         affectedvardata.T)[1, 0]
                         weightlist.append(corrval)
 
-                    if method == 'partial_correlation':
-                        # TODO: Implemenet partial correlation testing
-                        # This was erroneously only normal correlation before.
-                        # Will probably require prefiltering of data
-                        # to eliminate constant tag streams.
-                        corrval = 0
-                        weightlist.append(corrval)
+                    elif method == 'partial_correlation':
+                        # Currently defunct
+                        partialcorrval = \
+                            partialcorrmats[sample_delays.index(delay)][
+                                affectedvarindex, causevarindex]
+                        partialcorrval = 0  # Safety until properly coded
+                        weightlist.append(partialcorrval)
 
                     elif method == 'transfer_entropy':
-                        logging.info("Analysing delay " + str(delay))
+#                        logging.info("Analysing delay " + str(delay))
                         # Setup Java class for infodynamics toolkit
                         teCalc = te_setup()
                         # Calculate transfer entropy as the difference
@@ -326,13 +343,15 @@ def estimate_delay(variables, connectionmatrix, inputdata,
                         transent = transent_fwd - transent_bwd
                         weightlist.append(transent)
 
-                if method == 'partial_correlation':
+                if method == 'pearson_correlation' or \
+                        method == 'partial_correlation':
                     [weight_array, delay_array, datastore] = \
-                        partialcorr_reporting(weightlist, actual_delays,
-                                              weight_array, delay_array,
-                                              threshcorr, threshdir,
-                                              affectedvarindex, causevarindex,
-                                              datastore, causevar, affectedvar)
+                        corr_reporting(weightlist, actual_delays,
+                                       weight_array, delay_array,
+                                       threshcorr, threshdir,
+                                       affectedvarindex, causevarindex,
+                                       datastore, causevar, affectedvar)
+
                 elif method == 'transfer_entropy':
                     [weight_array, delay_array, datastore] = \
                         transent_reporting(weightlist, actual_delays,
