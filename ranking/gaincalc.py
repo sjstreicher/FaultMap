@@ -424,9 +424,6 @@ def weightcalc(mode, case, writeoutput=False):
 #            jpype.startJVM(jpype.getDefaultJVMPath(), "-ea",
 #                           "-Djava.class.path=" + infodynamicsloc)
             jpype.startJVM(jpype.getDefaultJVMPath(),
-                           "-XX:+HeapDumpOnOutOfMemoryError",
-                           "-XX:HeapDumpPath=C:/Repos/LoopRank/dumps",
-#                           "-verbose:gc",
                            "-Xms32M",
                            "-Xmx512M",
                            "-ea",
