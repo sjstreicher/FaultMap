@@ -143,6 +143,8 @@ def transent_reporting(weightlist, actual_delays, weight_array, delay_array,
                 thresh_causevardata.T)
 
     logging.info("The TE threshold is: " + str(threshent))
+    logging.info("The maximum TE between " + causevar +
+                 " and " + affectedvar + " is: " + str(maxval))
 
     if maxval >= threshent:
         threshpass = True
@@ -157,8 +159,6 @@ def transent_reporting(weightlist, actual_delays, weight_array, delay_array,
                 threshpass]
     datastore.append(dataline)
 
-    logging.info("The maximum TE between " + causevar +
-                 " and " + affectedvar + " is: " + str(maxval))
     logging.info("The corresponding delay is: " +
                  str(bestdelay))
     logging.info("The TE with no delay is: "
@@ -406,6 +406,7 @@ def weightcalc(mode, case, writeoutput=False):
     # Get number of delays to test
     test_delays = caseconfig['test_delays']
 
+
     if delaytype == 'datapoints':
     # Include first n sampling intervals
         delays = range(test_delays + 1)
@@ -472,7 +473,15 @@ def weightcalc(mode, case, writeoutput=False):
             affectedvarindexes = range(len(variables))
 
         # Normalise (mean centre and variance scale) the input data
-        inputdata_norm = preprocessing.scale(inputdata, axis=0)
+        inputdata_norm_original = preprocessing.scale(inputdata, axis=0)
+
+        # Subsample data if required
+        # Get sub_sampling interval
+        sub_sampling_interval = \
+            caseconfig[scenario]['sub_sampling_interval']
+        # TOOD: Use proper pandas.tseries.resample techniques
+            # if it will really add any functionality
+        inputdata_norm = inputdata_norm_original[0::sub_sampling_interval]
 
         for method in methods:
             logging.info("Method: " + method)

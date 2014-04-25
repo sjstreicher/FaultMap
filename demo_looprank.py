@@ -4,7 +4,6 @@
 """
 
 from ranking.noderank import looprank_static
-from ranking.noderank import looprank_transient
 import logging
 logging.basicConfig(level=logging.INFO)
 
@@ -29,4 +28,3 @@ case = 'epu5_compressor'
 
 for dummycreation in [False, True]:
     looprank_static(mode, case, dummycreation, writeoutput)
-#    looprank_transient(mode, case, dummycreation, writeoutput, True)
