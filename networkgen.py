@@ -11,11 +11,11 @@ import json
 import os
 from config_setup import ensure_existance
 
-#filesloc = json.load(open('config.json'))
-#saveloc = os.path.expanduser(filesloc['saveloc'])
+filesloc = json.load(open('config.json'))
+saveloc = os.path.expanduser(filesloc['saveloc'])
 
 
-def fullconn_equal():
+def fullconn_equal(draw=False):
     """Creates a fully connected 5x5 digraph with unit weights
     on all edges.
 
@@ -28,14 +28,15 @@ def fullconn_equal():
 
     testgraph = buildgraph(variables, gainmatrix, connections)
 
-#    nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
-#                                         "fullconn_equal.gml"))
-#    nx.draw(testgraph)
+    if draw:
+        nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
+                                             "fullconn_equal.gml"))
+        nx.draw(testgraph)
 
     return connections, gainmatrix, variables, testgraph
 
 
-def series_equal():
+def series_equal(draw=False):
     """Creates five tags connected in series with unit weights on
     all edges.
 
@@ -57,14 +58,15 @@ def series_equal():
 
     testgraph = buildgraph(variables, gainmatrix, connections)
 
-#    nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
-#                                         "series_equal.gml"))
-#    nx.draw(testgraph)
+    if draw:
+        nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
+                                             "series_equal.gml"))
+        nx.draw(testgraph)
 
     return connections, gainmatrix, variables, testgraph
 
 
-def series_incomingon2nd():
+def series_incomingon2nd(draw=False):
     """Creates five tags connected in series with unit weights on
     all edges.
 
@@ -88,14 +90,15 @@ def series_incomingon2nd():
 
     testgraph = buildgraph(variables, gainmatrix, connections)
 
-#    nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
-#                                         "series_incomingon2nd.gml"))
-#    nx.draw(testgraph)
+    if draw:
+        nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
+                                             "series_incomingon2nd.gml"))
+        nx.draw(testgraph)
 
     return connections, gainmatrix, variables, testgraph
 
 
-def series_incomingon3rd():
+def series_incomingon3rd(draw=False):
     """Creates five tags connected in series with unit weights on
     all edges.
 
@@ -119,14 +122,15 @@ def series_incomingon3rd():
 
     testgraph = buildgraph(variables, gainmatrix, connections)
 
-#    nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
-#                                         "series_incomingon3rd.gml"))
-#    nx.draw(testgraph)
+    if draw:
+        nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
+                                             "series_incomingon3rd.gml"))
+        nx.draw(testgraph)
 
     return connections, gainmatrix, variables, testgraph
 
 
-def series_incomingon2ndand3rd():
+def series_incomingon2ndand3rd(draw=False):
     """Creates five tags connected in series with unit weights on
     all edges.
 
@@ -150,14 +154,15 @@ def series_incomingon2ndand3rd():
 
     testgraph = buildgraph(variables, gainmatrix, connections)
 
-#    nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
-#                                         "series_incomingon2ndand3rd.gml"))
-#    nx.draw(testgraph)
+    if draw:
+        nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
+                                             "series_incomingon2ndand3rd.gml"))
+        nx.draw(testgraph)
 
     return connections, gainmatrix, variables, testgraph
 
 
-def series_incomingon2ndand4th():
+def series_incomingon2ndand4th(draw=False):
     """Creates five tags connected in series with unit weights on
     all edges.
 
@@ -181,14 +186,15 @@ def series_incomingon2ndand4th():
 
     testgraph = buildgraph(variables, gainmatrix, connections)
 
-#    nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
-#                                         "series_incomingon2ndand4th.gml"))
-#    nx.draw(testgraph)
+    if draw:
+        nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
+                                             "series_incomingon2ndand4th.gml"))
+        nx.draw(testgraph)
 
     return connections, gainmatrix, variables, testgraph
 
 
-def series_disjoint_equal():
+def series_disjoint_equal(draw=False):
     """Creates two sets of three tags connected in series with unit weights on
     all edges.
 
@@ -212,14 +218,15 @@ def series_disjoint_equal():
 
     testgraph = buildgraph(variables, gainmatrix, connections)
 
-#    nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
-#                                         "series_disjoint_equal.gml"))
-#    nx.draw(testgraph)
+    if draw:
+        nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
+                                             "series_disjoint_equal.gml"))
+        nx.draw(testgraph)
 
     return connections, gainmatrix, variables, testgraph
 
 
-def series_disjoint_unequal():
+def series_disjoint_unequal(draw=False):
     """Creates two sets of three tags connected in series with unit weights on
     the edges of one series and weights of 2 on that of the other.
 
@@ -243,14 +250,15 @@ def series_disjoint_unequal():
 
     testgraph = buildgraph(variables, gainmatrix, connections)
 
-#    nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
-#                                         "series_disjoint_equal.gml"))
-#    nx.draw(testgraph)
+    if draw:
+        nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
+                                             "series_disjoint_unequal.gml"))
+        nx.draw(testgraph)
 
     return connections, gainmatrix, variables, testgraph
 
 
-def series_disjoint_unequalsource():
+def series_disjoint_unequalsource(draw=False):
     """Creates two sets of three tags connected in series with unit weights on
     the edges of one series and weights of 2 on that of the other.
 
@@ -276,14 +284,16 @@ def series_disjoint_unequalsource():
 
     testgraph = buildgraph(variables, gainmatrix, connections)
 
-#    nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
-#                                         "series_disjoint_equal.gml"))
-#    nx.draw(testgraph)
+    if draw:
+        nx.write_gml(testgraph,
+                     os.path.join(saveloc, 'testgraphs',
+                                  "series_disjoint_unequalsource.gml"))
+        nx.draw(testgraph)
 
     return connections, gainmatrix, variables, testgraph
 
 
-def circle_equal():
+def circle_equal(draw=False):
     """Creates five tags connected in a circle with unit weights on
     all edges.
 
@@ -305,14 +315,15 @@ def circle_equal():
 
     testgraph = buildgraph(variables, gainmatrix, connections)
 
-#    savedir = ensure_existance(os.path.join(saveloc, 'testgraphs'), make=True)
-#    nx.write_gml(testgraph, os.path.join(savedir, "circle_equal.gml"))
-#    nx.draw(testgraph)
+    if draw:
+        savedir = ensure_existance(os.path.join(saveloc, 'testgraphs'), make=True)
+        nx.write_gml(testgraph, os.path.join(savedir, "circle_equal.gml"))
+        nx.draw(testgraph)
 
     return connections, gainmatrix, variables, testgraph
 
 
-def circle_unequalon2to3():
+def circle_unequalon2to3(draw=False):
     """Creates five tags connected in a circle with unit weights on
     all edges except for one.
 
@@ -334,8 +345,9 @@ def circle_unequalon2to3():
 
     testgraph = buildgraph(variables, gainmatrix, connections)
 
-#    nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
-#                                         "circle_unequalon2to3.gml"))
-#    nx.draw(testgraph)
+    if draw:
+        nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
+                                             "circle_unequalon2to3.gml"))
+        nx.draw(testgraph)
 
     return connections, gainmatrix, variables, testgraph
