@@ -6,7 +6,7 @@ Created on Mon Feb 24 15:18:33 2014
 """
 import numpy as np
 import jpype
-from sklearn import preprocessing
+import sklearn
 
 
 def vectorselection(data, timelag, sub_samples, k=1, l=1):
@@ -103,9 +103,10 @@ def calc_infodynamics_te(teCalc, affected_data, causal_data):
     """
 
     # Normalise data to be safe
-    affected_data_norm = preprocessing.scale(affected_data[np.newaxis, :],
-                                             axis=1)
-    causal_data_norm = preprocessing.scale(causal_data[np.newaxis, :], axis=1)
+    affected_data_norm = \
+        sklearn.preprocessing.scale(affected_data[np.newaxis, :], axis=1)
+    causal_data_norm = \
+        sklearn.preprocessing.scale(causal_data[np.newaxis, :], axis=1)
 
     # Use history length 1 (Schreiber k=1),
     # kernel width of 0.5 normalised units

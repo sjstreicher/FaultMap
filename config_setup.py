@@ -17,6 +17,7 @@ def ensure_existance(location, make=False):
             raise IOError("File does not exists: {}".format(location))
     return location
 
+
 def runsetup(mode='test_cases', case='weightcalc_tests'):
     """Gets all required parameters from the case configuration file.
 
@@ -41,6 +42,7 @@ def runsetup(mode='test_cases', case='weightcalc_tests'):
         dataloc, saveloc, infodynamicsloc = locations
 
         # Define case data directory
-        casedir = ensure_existance(os.path.join(dataloc, mode, case), make=True)
+        casedir = ensure_existance(os.path.join(dataloc, mode, case),
+                                   make=True)
 
     return saveloc, casedir, infodynamicsloc
