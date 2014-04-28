@@ -39,7 +39,6 @@ class WeightcalcData:
     weight calculation methods.
 
     """
-
     def __init__(self, mode, case):
         # Get locations from configuration file
         self.saveloc, self.casedir, infodynamicsloc = \
@@ -157,10 +156,9 @@ class CorrWeightcalc:
         """Read the files or functions and returns required data fields.
 
         """
-
-        self.threshcorr = (1.85*(weightcalcdata.size**(-0.41))) + \
-            (2.37*(weightcalcdata.size**(-0.53)))
-        self.threshdir = 0.46*(weightcalcdata.size**(-0.16))
+        self.threshcorr = (1.85*(weightcalcdata.testsize**(-0.41))) + \
+            (2.37*(weightcalcdata.testsize**(-0.53)))
+        self.threshdir = 0.46*(weightcalcdata.testsize**(-0.16))
 #        logging.info("Directionality threshold: " + str(self.threshdir))
 #        logging.info("Correlation threshold: " + str(self.threshcorr))
 
@@ -174,10 +172,11 @@ class CorrWeightcalc:
         timer series data.
 
         """
-        self.weight = np.corrcoef(causevardata.T, affectedvardata.T)[1, 0]
+        corrval = np.corrcoef(causevardata.T, affectedvardata.T)[1, 0]
+        return corrval
 
-    def reporting(self, weightcalcdata, causevarindex, affectedvarindex,
-                  weightlist, weight_array, delay_array, datastore):
+    def report(self, weightcalcdata, causevarindex, affectedvarindex,
+               weightlist, weight_array, delay_array, datastore):
         """Calculates and reports the relevant output for each combination
         of variables tested.
 
@@ -207,7 +206,7 @@ class CorrWeightcalc:
         corrthreshpass = (maxcorr_abs >= self.threshcorr)
         dirthreshpass = (directionindex >= self.threshdir)
 
-        if corrthreshpass or dirthreshpass is False:
+        if (corrthreshpass or dirthreshpass) is False:
             maxcorr = 0
 
         dataline = [causevar, affectedvar, str(weightlist[0]),
@@ -259,12 +258,12 @@ class TransentWeightcalc:
             transentropy.calc_infodynamics_te(self.teCalc, causevardata.T,
                                               affectedvardata.T)
         transent = transent_fwd - transent_bwd
-        self.weight = transent
+        return transent
         # TODO: Offer option for raw transfer entopy values as well
 
-    def reporting(self, weightcalcdata, causevarindex, affectedvarindex,
-                  weightlist, weight_array, delay_array, datastore,
-                  te_thresh_method='rankorder'):
+    def report(self, weightcalcdata, causevarindex, affectedvarindex,
+               weightlist, weight_array, delay_array, datastore,
+               te_thresh_method='rankorder'):
         """Calculates and reports the relevant output for each combination
         of variables tested.
 
@@ -291,20 +290,18 @@ class TransentWeightcalc:
                                            startindex+size+bestdelay]
 
         if te_thresh_method == 'rankorder':
-            threshent = \
-                self.thresh_rankorder(thresh_affectedvardata.T,
-                                      thresh_causevardata.T)
+            self.thresh_rankorder(thresh_affectedvardata.T,
+                                  thresh_causevardata.T)
 
         elif te_thresh_method == 'sixsigma':
-            threshent = \
-                self.thresh_sixsigma(thresh_affectedvardata.T,
-                                     thresh_causevardata.T)
+            self.thresh_sixsigma(thresh_affectedvardata.T,
+                                 thresh_causevardata.T)
 
-        logging.info("The TE threshold is: " + str(threshent))
+        logging.info("The TE threshold is: " + str(self.threshent))
         logging.info("The maximum TE between " + causevar +
                      " and " + affectedvar + " is: " + str(maxval))
 
-        if maxval >= threshent:
+        if maxval >= self.threshent:
             threshpass = True
         else:
             threshpass = False
@@ -352,7 +349,9 @@ class TransentWeightcalc:
                                                          surr_tsdata[n][0])
                        for n in range(num)]
 
-        self.surr_te = [surr_te_fwd[n] - surr_te_bwd[n] for n in range(num)]
+        surr_te = [surr_te_fwd[n] - surr_te_bwd[n] for n in range(num)]
+
+        return surr_te
 
     def thresh_rankorder(self, affected_data, causal_data):
         """Calculates the minimum threshold required for a transfer entropy
@@ -364,7 +363,7 @@ class TransentWeightcalc:
         see Schreiber2000a.
 
         """
-        surrte = self.calc_surr_te(self.teCalc, affected_data, causal_data, 19)
+        surrte = self.calc_surr_te(affected_data, causal_data, 19)
 
         self.threshent = max(surrte)
 
@@ -376,7 +375,7 @@ class TransentWeightcalc:
         samples of surrogate data.
 
         """
-        surrte = self.calc_surr_te(self.teCalc, affected_data, causal_data, 30)
+        surrte = self.calc_surr_te(affected_data, causal_data, 30)
 
         surrte_mean = np.mean(surrte)
         surrte_stdev = np.std(surrte)
@@ -388,7 +387,7 @@ def estimate_delay(weightcalcdata, method):
     """Determines the maximum weight between two variables by searching through
     a specified set of delays.
 
-    method can be either 'pearspm_correlation' or 'transfer_entropy'
+    method can be either 'pearson_correlation' or 'transfer_entropy'
 
     """
     if method == 'pearson_correlation':
@@ -417,6 +416,7 @@ def estimate_delay(weightcalcdata, method):
                 weightlist = []
                 for delay in weightcalcdata.sample_delays:
                     logging.info("Now testing delay: " + str(delay))
+
                     causevardata = \
                         (weightcalcdata.inputdata[:, causevarindex]
                             [startindex:startindex+size])
