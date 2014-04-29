@@ -1,26 +1,23 @@
-"""Imported by controlranking
+"""Ranks nodes in a network when provided with a connection and gainmatrix.
 
 @author St. Elmo Wilken, Simon Streicher
 
 """
+# Standard libraries
 import os
 import json
 import logging
 import csv
-
-from numpy import ones, argmax, asarray
-from numpy import linalg
-import numpy as np
-from operator import itemgetter
-from itertools import izip
 import networkx as nx
-from matplotlib import pyplot as plt
+import numpy as np
+import operator
+import itertools
+import matplotlib.pyploy as plt
 
+# Own libraries
 import formatmatrices
 import config_setup
-
-# Import all test network generator functions that may be called
-from networkgen import *
+import ranking
 
 
 def writecsv_looprank(filename, items):
@@ -37,14 +34,14 @@ def calc_simple_rank(gainmatrix, variables, m=0.15):
 
     """
     # Length of gain matrix = number of nodes
-    gainmatrix = asarray(gainmatrix)
+    gainmatrix = np.asarray(gainmatrix)
     n = len(gainmatrix)
-    s_matrix = (1.0 / n) * ones((n, n))
+    s_matrix = (1.0 / n) * np.ones((n, n))
     # Basic PageRank algorithm
     m_matrix = (1 - m) * gainmatrix + m * s_matrix
     # Calculate eigenvalues and eigenvectors as usual
-    [eigval, eigvec] = linalg.eig(m_matrix)
-    maxeigindex = argmax(eigval)
+    [eigval, eigvec] = np.linalg.eig(m_matrix)
+    maxeigindex = np.argmax(eigval)
     # Store value for downstream checking
     # TODO: Downstream checking not implemented yet
 #    maxeig = eigval[maxeigindex].real
@@ -59,7 +56,7 @@ def calc_simple_rank(gainmatrix, variables, m=0.15):
     # i.e. {NODE:RANKING}
     rankingdict = dict(zip(variables, rankarray))
 
-    rankinglist = sorted(rankingdict.iteritems(), key=itemgetter(1),
+    rankinglist = sorted(rankingdict.iteritems(), key=operator.itemgetter(1),
                          reverse=True)
 
     return rankingdict, rankinglist
@@ -78,7 +75,7 @@ def calc_blended_rank(forwardrank, backwardrank, variablelist,
     for variable in variablelist:
         rankingdict[variable] = rankingdict[variable] / total
 
-    rankinglist = sorted(rankingdict.iteritems(), key=itemgetter(1),
+    rankinglist = sorted(rankingdict.iteritems(), key=operator.itemgetter(1),
                          reverse=True)
 
     return rankingdict, rankinglist
@@ -96,7 +93,7 @@ def normalise_rankinglist(rankingdict, originalvariables):
             normalised_rankingdict[variable] / total
 
     normalised_rankinglist = sorted(normalised_rankingdict.iteritems(),
-                                    key=itemgetter(1),
+                                    key=operator.itemgetter(1),
                                     reverse=True)
 
     return normalised_rankinglist
@@ -162,16 +159,16 @@ def create_importance_graph(variablelist, closedconnections,
 
     opengraph = nx.DiGraph()
 
-    for col, row in izip(openconnections.nonzero()[1],
-                         openconnections.nonzero()[0]):
+    for col, row in itertools.izip(openconnections.nonzero()[1],
+                                   openconnections.nonzero()[0]):
 
         opengraph.add_edge(variablelist[col], variablelist[row],
                            weight=gainmatrix[row, col])
     openedgelist = opengraph.edges()
 
     closedgraph = nx.DiGraph()
-    for col, row in izip(closedconnections.nonzero()[1],
-                         closedconnections.nonzero()[0]):
+    for col, row in itertools.izip(closedconnections.nonzero()[1],
+                                   closedconnections.nonzero()[0]):
         newedge = (variablelist[col], variablelist[row])
         closedgraph.add_edge(*newedge, weight=gainmatrix[row, col],
                              controlloop=int(newedge not in openedgelist))
@@ -439,9 +436,10 @@ def looprank_transient(mode, case, dummycreation, writeoutput=False,
                                             boxsize, boxnum)
 
         # Calculate gain matrix for each box
-        gainmatrices = [calc_partialcor_gainmatrix(connectionmatrix, box,
-                                                   dataset)[1]
-                        for box in boxes]
+        gainmatrices = \
+            [ranking.gaincalc.calc_partialcorr_gainmatrix(connectionmatrix,
+                                                          box, dataset)[1]
+             for box in boxes]
 
         rankinglists = []
         rankingdicts = []
