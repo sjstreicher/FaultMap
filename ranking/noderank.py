@@ -12,7 +12,7 @@ import networkx as nx
 import numpy as np
 import operator
 import itertools
-import matplotlib.pyploy as plt
+import matplotlib.pyplot as plt
 
 # Own libraries
 import formatmatrices
@@ -63,7 +63,7 @@ def calc_simple_rank(gainmatrix, variables, m=0.15):
 
 
 def calc_blended_rank(forwardrank, backwardrank, variablelist,
-                      alpha=0.50):
+                      alpha=0.35):
     """This method creates a blended ranking profile."""
     rankingdict = dict()
     for variable in variablelist:
@@ -203,7 +203,7 @@ def calc_gainmatrix(connectionmatrix, tags_tsdata, dataset,
 
 
 def calc_gainrank(gainmatrix, variables, connectionmatrix, dummycreation=True,
-                  alpha=0.5, dummyweight=1.0, m=0.15):
+                  alpha=0.35, dummyweight=0.1, m=0.15):
 
     forwardconnection, forwardgain, forwardvariablelist = \
         formatmatrices.rankforward(variables, gainmatrix, connectionmatrix,
