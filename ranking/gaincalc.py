@@ -183,7 +183,7 @@ class CorrWeightcalc:
         """
         variables = weightcalcdata.variables
         causevar = variables[causevarindex]
-        affectedvar = variables[causevarindex]
+        affectedvar = variables[affectedvarindex]
 
         maxval = max(weightlist)
         minval = min(weightlist)
@@ -271,7 +271,7 @@ class TransentWeightcalc:
 
         variables = weightcalcdata.variables
         causevar = variables[causevarindex]
-        affectedvar = variables[causevarindex]
+        affectedvar = variables[affectedvarindex]
         inputdata = weightcalcdata.inputdata
 
         maxval = max(weightlist)
