@@ -529,6 +529,9 @@ class PartialCorrWeightcalc:
         return partialcorrelationmatrix
 
 
+# TODO: This function is a clone of the object method above
+# and therefore redundant but used in the transient ranking algorithm.
+# It will be incorporated as soon as it is high enough priority
 def calc_partialcorr_gainmatrix(connectionmatrix, tags_tsdata, *dataset):
     """Calculates the local gains in terms of the partial (Pearson's)
     correlation between the variables.
@@ -566,8 +569,6 @@ def partialcorrcalc(mode, case, writeoutput):
     weightcalcdata = WeightcalcData(mode, case)
     partialmatcalculator = PartialCorrWeightcalc(weightcalcdata)
 
-    method = 'partial_correlation'
-
     for scenario in weightcalcdata.scenarios:
         logging.info("Running scenario {}".format(scenario))
         # Update scenario-specific fields of weightcalcdata object
@@ -580,11 +581,10 @@ def partialcorrcalc(mode, case, writeoutput):
              # Define export directories and filenames
             partialmatdir = config_setup.ensure_existance(os.path.join(
                 weightcalcdata.saveloc, 'partialcorr'), make=True)
-            filename_template = os.path.join(partialmatdir, '{}_{}_{}_{}.csv')
+            filename_template = os.path.join(partialmatdir, '{}_{}_{}.csv')
 
             def filename(name):
-                return filename_template.format(case, scenario,
-                                                method, name)
+                return filename_template.format(case, scenario, name)
             # Write arrays to file
             np.savetxt(filename('partialcorr_array'), partialcorrmat,
                        delimiter=',')
