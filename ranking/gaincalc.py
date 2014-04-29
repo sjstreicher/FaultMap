@@ -394,6 +394,8 @@ def estimate_delay(weightcalcdata, method):
         weightcalculator = CorrWeightcalc(weightcalcdata)
     elif method == 'transfer_entropy':
         weightcalculator = TransentWeightcalc(weightcalcdata)
+    elif method == 'partial_correlation':
+        weightcalculator = PartialCorrWeightcalc(weightcalcdata)
 
     startindex = weightcalcdata.startindex
     size = weightcalcdata.testsize
@@ -446,7 +448,7 @@ def writecsv_weightcalc(filename, items, header):
         csv.writer(f).writerows(items)
 
 
-def weightcalc(mode, case, writeoutput=False):
+def weightcalc(mode, case, writeoutput):
     """Reports the maximum weight as well as associated delay
     obtained by shifting the affected variable behind the causal variable a
     specified set of delays.
@@ -485,3 +487,104 @@ def weightcalc(mode, case, writeoutput=False):
                 # Write datastore to file
                 writecsv_weightcalc(filename('weightcalc_data'), datastore,
                                     data_header)
+
+
+class PartialCorrWeightcalc:
+    """This class provides methods for calculating the weights according to
+    the transfer entropy method.
+
+    """
+
+    def __init__(self, weightcalcdata):
+        self.threshcorr = (1.85*(weightcalcdata.testsize**(-0.41))) + \
+            (2.37*(weightcalcdata.testsize**(-0.53)))
+        self.threshdir = 0.46*(weightcalcdata.testsize**(-0.16))
+#        logging.info("Directionality threshold: " + str(self.threshdir))
+#        logging.info("Correlation threshold: " + str(self.threshcorr))
+
+        self.data_header = ['causevar', 'affectedvar', 'base_corr',
+                            'max_corr', 'max_delay', 'max_index',
+                            'signchange', 'corrthreshpass',
+                            'dirrthreshpass', 'dirval']
+
+    def partialcorr_gainmatrix(self, weightcalcdata):
+        """Calculates the local gains in terms of the partial (Pearson's)
+        correlation between the variables.
+
+        connectionmatrix is the adjacency matrix
+
+        tags_tsdata contains the time series data for the tags with variables
+        in colums and sampling instances in rows
+
+        """
+        # Calculate correlation matrix
+        correlationmatrix = np.corrcoef(weightcalcdata.inputdata.T)
+        # Calculate partial correlation matrix
+        p_matrix = np.linalg.inv(correlationmatrix)
+        d = p_matrix.diagonal()
+        partialcorrelationmatrix = \
+            np.where(weightcalcdata.connectionmatrix,
+                     -p_matrix/np.abs(np.sqrt(np.outer(d, d))), 0)
+
+        return partialcorrelationmatrix
+
+
+def calc_partialcorr_gainmatrix(connectionmatrix, tags_tsdata, *dataset):
+    """Calculates the local gains in terms of the partial (Pearson's)
+    correlation between the variables.
+
+    connectionmatrix is the adjacency matrix
+
+    tags_tsdata contains the time series data for the tags with variables
+    in colums and sampling instances in rows
+
+    """
+    if isinstance(tags_tsdata, np.ndarray):
+        inputdata = tags_tsdata
+    else:
+        inputdata = np.array(h5py.File(tags_tsdata, 'r')[dataset])
+#    print "Total number of data points: ", inputdata.size
+    # Calculate correlation matrix
+    correlationmatrix = np.corrcoef(inputdata.T)
+    # Calculate partial correlation matrix
+    p_matrix = np.linalg.inv(correlationmatrix)
+    d = p_matrix.diagonal()
+    partialcorrelationmatrix = \
+        np.where(connectionmatrix, -p_matrix/np.abs(np.sqrt(np.outer(d, d))),
+                 0)
+
+    return correlationmatrix, partialcorrelationmatrix
+
+
+def partialcorrcalc(mode, case, writeoutput):
+    """Returns the partial correlation matrix.
+
+    Does not support optimizing with respect to time delays.
+
+    """
+
+    weightcalcdata = WeightcalcData(mode, case)
+    partialmatcalculator = PartialCorrWeightcalc(weightcalcdata)
+
+    method = 'partial_correlation'
+
+    for scenario in weightcalcdata.scenarios:
+        logging.info("Running scenario {}".format(scenario))
+        # Update scenario-specific fields of weightcalcdata object
+        weightcalcdata.scenariodata(scenario)
+
+        partialcorrmat = partialmatcalculator.\
+            partialcorr_gainmatrix(weightcalcdata)
+
+        if writeoutput:
+             # Define export directories and filenames
+            partialmatdir = config_setup.ensure_existance(os.path.join(
+                weightcalcdata.saveloc, 'partialcorr'), make=True)
+            filename_template = os.path.join(partialmatdir, '{}_{}_{}_{}.csv')
+
+            def filename(name):
+                return filename_template.format(case, scenario,
+                                                method, name)
+            # Write arrays to file
+            np.savetxt(filename('partialcorr_array'), partialcorrmat,
+                       delimiter=',')
