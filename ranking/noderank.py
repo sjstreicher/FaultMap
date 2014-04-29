@@ -16,12 +16,8 @@ from itertools import izip
 import networkx as nx
 from matplotlib import pyplot as plt
 
-from ranking.formatmatrices import rankforward, rankbackward
-from config_setup import runsetup, ensure_existance
-from gaincalc import calc_partialcor_gainmatrix
-from formatmatrices import read_connectionmatrix
-from formatmatrices import read_gainmatrix
-from formatmatrices import split_tsdata
+import formatmatrices
+import config_setup
 
 # Import all test network generator functions that may be called
 from networkgen import *
@@ -199,8 +195,8 @@ def calc_gainmatrix(connectionmatrix, tags_tsdata, dataset,
 
     if method == 'partial_correlation':
         # Get the partialcorr gainmatrix
-        _, gainmatrix = \
-            calc_partialcor_gainmatrix(connectionmatrix, tags_tsdata, dataset)
+        # TODO: Implement partial correlation weight calculation
+        gainmatrix = None
 
     elif method == 'transfer_entropy':
         # TODO: Implement transfer entropy weight calculation
@@ -213,12 +209,12 @@ def calc_gainrank(gainmatrix, variables, connectionmatrix, dummycreation=True,
                   alpha=0.5, dummyweight=1.0, m=0.15):
 
     forwardconnection, forwardgain, forwardvariablelist = \
-        rankforward(variables, gainmatrix, connectionmatrix, dummyweight,
-                    dummycreation)
+        formatmatrices.rankforward(variables, gainmatrix, connectionmatrix,
+                                   dummyweight, dummycreation)
 
     backwardconnection, backwardgain, backwardvariablelist = \
-        rankbackward(variables, gainmatrix, connectionmatrix, dummyweight,
-                     dummycreation)
+        formatmatrices.rankbackward(variables, gainmatrix, connectionmatrix,
+                                    dummyweight, dummycreation)
 
     forwardrankingdict, forwardrankinglist = \
         calc_simple_rank(forwardgain, forwardvariablelist, m)
@@ -248,7 +244,7 @@ def looprank_static(mode, case, dummycreation, writeoutput=False):
 
     """
 
-    saveloc, casedir, infodynamicsloc = runsetup(mode, case)
+    saveloc, casedir, infodynamicsloc = config_setup.runsetup(mode, case)
 
     # Load case config file
     caseconfig = json.load(open(os.path.join(casedir, case + '_noderank' +
@@ -272,14 +268,14 @@ def looprank_static(mode, case, dummycreation, writeoutput=False):
 #            dataset = caseconfig[scenario]['dataset']
             # Get the variables and connection matrix
             [variablelist, connectionmatrix] = \
-                read_connectionmatrix(connectionloc)
+                formatmatrices.read_connectionmatrix(connectionloc)
 
             # Calculate the gainmatrix
             # TODO: Use result from weightcalc as gainmatrix
             gainloc = os.path.join(casedir, 'gainmatrix',
                                    caseconfig[scenario]['gainmatrix'])
 
-            gainmatrix = read_gainmatrix(gainloc)
+            gainmatrix = formatmatrices.read_gainmatrix(gainloc)
 #            gainmatrix = calc_gainmatrix(connectionmatrix,
 #                                         tags_tsdata, dataset)
             if writeoutput:
@@ -308,8 +304,10 @@ def looprank_static(mode, case, dummycreation, writeoutput=False):
             else:
                 dummystatus = 'nodummies'
 
-            savedir = ensure_existance(os.path.join(saveloc, 'noderank'),
-                                       make=True)
+            savedir = \
+                config_setup.ensure_existance(os.path.join(saveloc,
+                                                           'noderank'),
+                                              make=True)
             csvfile_template = os.path.join(savedir,
                                             '{}_{}_importances_{}.csv')
             graphfile_template = os.path.join(savedir, '{}_{}_graph_{}.gml')
@@ -390,7 +388,7 @@ def looprank_transient(mode, case, dummycreation, writeoutput=False,
     # Note: This is still a work in progress
     # TODO: Rewrite to make use of multiple calls of looprank_static
 
-    saveloc, casedir, infodynamicsloc = runsetup(mode, case)
+    saveloc, casedir, infodynamicsloc = config_setup.runsetup(mode, case)
 
     # Load case config file
     caseconfig = json.load(open(os.path.join(casedir, case + '.json')))
@@ -415,7 +413,7 @@ def looprank_transient(mode, case, dummycreation, writeoutput=False,
             dataset = caseconfig[scenario]['dataset']
             # Get the variables and connection matrix
             [variablelist, connectionmatrix] = \
-                read_connectionmatrix(connectionloc)
+                formatmatrices.read_connectionmatrix(connectionloc)
 
             # Calculate the gainmatrix
             gainmatrix = calc_gainmatrix(connectionmatrix,
@@ -437,8 +435,8 @@ def looprank_transient(mode, case, dummycreation, writeoutput=False,
 
         # Split the tags_tsdata into sets (boxes) useful for calculating
         # transient correlations
-        boxes = split_tsdata(tags_tsdata, dataset, samplerate,
-                             boxsize, boxnum)
+        boxes = formatmatrices.split_tsdata(tags_tsdata, dataset, samplerate,
+                                            boxsize, boxnum)
 
         # Calculate gain matrix for each box
         gainmatrices = [calc_partialcor_gainmatrix(connectionmatrix, box,
@@ -448,8 +446,9 @@ def looprank_transient(mode, case, dummycreation, writeoutput=False,
         rankinglists = []
         rankingdicts = []
 
-        weightdir = ensure_existance(os.path.join(saveloc, 'weightcalc'),
-                                     make=True)
+        weightdir = \
+            config_setup.ensure_existance(os.path.join(saveloc, 'weightcalc'),
+                                          make=True)
         gain_template = os.path.join(weightdir, '{}_gainmatrix_{:03d}.csv')
         rank_template = os.path.join(saveloc, 'importances_{:03d}.csv')
 
