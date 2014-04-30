@@ -277,6 +277,7 @@ class TransentWeightcalc:
         maxval = max(weightlist)
         delay_index = weightlist.index(maxval)
         bestdelay = weightcalcdata.actual_delays[delay_index]
+        bestdelay_sample = weightcalcdata.sample_delays[delay_index]
         delay_array[affectedvarindex, causevarindex] = bestdelay
 
         size = weightcalcdata.testsize
@@ -286,8 +287,8 @@ class TransentWeightcalc:
         thresh_causevardata = \
             inputdata[:, causevarindex][startindex:startindex+size]
         thresh_affectedvardata = \
-            inputdata[:, affectedvarindex][startindex+bestdelay:
-                                           startindex+size+bestdelay]
+            inputdata[:, affectedvarindex][startindex+bestdelay_sample:
+                                           startindex+size+bestdelay_sample]
 
         if te_thresh_method == 'rankorder':
             self.thresh_rankorder(thresh_affectedvardata.T,
@@ -565,7 +566,6 @@ def partialcorrcalc(mode, case, writeoutput):
     Does not support optimizing with respect to time delays.
 
     """
-
     weightcalcdata = WeightcalcData(mode, case)
     partialmatcalculator = PartialCorrWeightcalc(weightcalcdata)
 
