@@ -199,21 +199,10 @@ class CorrWeightcalc:
         bestdelay = weightcalcdata.actual_delays[delay_index]
         directionindex = 2 * (abs(maxval + minval) /
                               (maxval + abs(minval)))
-        weight_array[affectedvarindex, causevarindex] = maxcorr
-        delay_array[affectedvarindex, causevarindex] = bestdelay
 
         signchange = not ((weightlist[0] / weightlist[delay_index]) >= 0)
         corrthreshpass = (maxcorr_abs >= self.threshcorr)
         dirthreshpass = (directionindex >= self.threshdir)
-
-        if (corrthreshpass or dirthreshpass) is False:
-            maxcorr = 0
-
-        dataline = [causevar, affectedvar, str(weightlist[0]),
-                    maxcorr, str(bestdelay), str(delay_index),
-                    signchange, corrthreshpass, dirthreshpass, directionindex]
-
-        datastore.append(dataline)
 
         logging.info("Maximum correlation value: " + str(maxval))
         logging.info("Minimum correlation value: " + str(minval))
@@ -228,6 +217,18 @@ class CorrWeightcalc:
         logging.info("Directionality value: " + str(directionindex))
         logging.info("Directionality threshold passed: " +
                      str(dirthreshpass))
+
+        if not (corrthreshpass and dirthreshpass):
+            maxcorr = 0
+
+        weight_array[affectedvarindex, causevarindex] = maxcorr
+        delay_array[affectedvarindex, causevarindex] = bestdelay
+
+        dataline = [causevar, affectedvar, str(weightlist[0]),
+                    maxcorr, str(bestdelay), str(delay_index),
+                    signchange, corrthreshpass, dirthreshpass, directionindex]
+
+        datastore.append(dataline)
 
         return weight_array, delay_array, datastore
 
