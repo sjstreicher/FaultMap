@@ -25,7 +25,7 @@ def writecsv_looprank(filename, items):
         csv.writer(f).writerows(items)
 
 
-def calc_simple_rank(gainmatrix, variables, m=0.15):
+def calc_simple_rank(gainmatrix, variables, m):
     """Constructs the ranking dictionary using the eigenvector approach
     i.e. Ax = x where A is the local gain matrix.
 
@@ -63,7 +63,7 @@ def calc_simple_rank(gainmatrix, variables, m=0.15):
 
 
 def calc_blended_rank(forwardrank, backwardrank, variablelist,
-                      alpha=0.35):
+                      alpha):
     """This method creates a blended ranking profile."""
     rankingdict = dict()
     for variable in variablelist:
@@ -159,6 +159,7 @@ def create_importance_graph(variablelist, closedconnections,
 
     opengraph = nx.DiGraph()
 
+    # Verify why these indexes are switched and correct
     for col, row in itertools.izip(openconnections.nonzero()[1],
                                    openconnections.nonzero()[0]):
 
@@ -202,8 +203,40 @@ def calc_gainmatrix(connectionmatrix, tags_tsdata, dataset,
     return gainmatrix
 
 
-def calc_gainrank(gainmatrix, variables, connectionmatrix, dummycreation=True,
-                  alpha=0.35, dummyweight=0.1, m=0.15):
+def gainmatrix_preprocessing(gainmatrix, connectionmatrix):
+    """Moves the mean and scales the variance of the elements in the
+    gainmatrix to a specified value.
+
+    Only operates on nonzero weights.
+
+    """
+    # Get the mean of the samples in the gainmatrix that correspond
+    # to the desired connectionmatrix.
+    counter = 0
+    gainsum = 0
+    for col, row in itertools.izip(connectionmatrix.nonzero()[0],
+                                   connectionmatrix.nonzero()[1]):
+        gainsum += gainmatrix[col, row]
+        counter += 1
+
+    currentmean = gainsum / counter
+    meanscale = 1. / currentmean
+
+    # Write meandiff to all gainmatrix elements indicated by connectionmatrix
+    modgainmatrix = np.zeros_like(gainmatrix)
+
+    for col, row in itertools.izip(connectionmatrix.nonzero()[0],
+                                   connectionmatrix.nonzero()[1]):
+        modgainmatrix[col, row] = gainmatrix[col, row] * meanscale
+
+    return modgainmatrix, currentmean
+
+
+def calc_gainrank(gainmatrix, variables, connectionmatrix, dummycreation,
+                  alpha, dummyweight, m):
+    """Calculates the forward and backward rankings.
+
+    """
 
     forwardconnection, forwardgain, forwardvariablelist = \
         formatmatrices.rankforward(variables, gainmatrix, connectionmatrix,
@@ -234,12 +267,16 @@ def calc_gainrank(gainmatrix, variables, connectionmatrix, dummycreation=True,
     return rankingdicts, rankinglists, connections, variables, gains
 
 
-def looprank_static(mode, case, dummycreation, writeoutput=False):
+def looprank_static(mode, case, dummycreation, writeoutput,
+                    alpha, m):
     """Ranks the nodes in a network based on a single gain matrix calculation.
 
     For calculation of rank over time, see looprank_transient.
 
     """
+
+    # Only to be used in rare development test cases
+    preprocessing = False
 
     saveloc, casedir, infodynamicsloc = config_setup.runsetup(mode, case)
 
@@ -275,10 +312,6 @@ def looprank_static(mode, case, dummycreation, writeoutput=False):
             gainmatrix = formatmatrices.read_gainmatrix(gainloc)
 #            gainmatrix = calc_gainmatrix(connectionmatrix,
 #                                         tags_tsdata, dataset)
-            if writeoutput:
-            # TODO: Refine name
-                savename = os.path.join(saveloc, "gainmatrix.csv")
-                np.savetxt(savename, gainmatrix, delimiter=',')
 
         elif datatype == 'function':
             # Get variables, connection matrix and gainmatrix
@@ -287,11 +320,41 @@ def looprank_static(mode, case, dummycreation, writeoutput=False):
 
         logging.info("Number of tags: {}".format(len(variablelist)))
 
+        # Modify the gainmatrix to have a specific mean
+        # Should only be used for development analysis - generally destroys
+        # information.
+        # Not sure what effect will be if data is variance scaled as well
+        if preprocessing:
+            modgainmatrix, _ = \
+                gainmatrix_preprocessing(gainmatrix, connectionmatrix)
+        else:
+            modgainmatrix = gainmatrix
+
+        _, dummyweight = gainmatrix_preprocessing(gainmatrix, connectionmatrix)
+
         rankingdicts, rankinglists, connections, variables, gains = \
-            calc_gainrank(gainmatrix, variablelist, connectionmatrix,
-                          dummycreation)
+            calc_gainrank(modgainmatrix, variablelist, connectionmatrix,
+                          dummycreation,
+                          alpha, dummyweight, m)
 
         if writeoutput:
+            # Get the directory to save in
+            savedir = \
+                config_setup.ensure_existance(os.path.join(saveloc,
+                                                           'noderank'),
+                                              make=True)
+            # Save the modified gainmatrix
+            modgainmatrix_template = \
+                os.path.join(savedir, '{}_modgainmatrix.csv')
+            savename = modgainmatrix_template.format(scenario)
+            writecsv_looprank(savename, modgainmatrix)
+
+            # Save the original gainmatrix
+            originalgainmatrix_template = \
+                os.path.join(savedir, '{}_originalgainmatrix.csv')
+            savename = originalgainmatrix_template.format(scenario)
+            writecsv_looprank(savename, gainmatrix)
+
             # Export graph files with dummy variables included in
             # forward and backward rankings if available
             directions = ['blended', 'forward', 'backward']
@@ -301,10 +364,8 @@ def looprank_static(mode, case, dummycreation, writeoutput=False):
             else:
                 dummystatus = 'nodummies'
 
-            savedir = \
-                config_setup.ensure_existance(os.path.join(saveloc,
-                                                           'noderank'),
-                                              make=True)
+            # TODO: Do the same for meanchange
+
             csvfile_template = os.path.join(savedir,
                                             '{}_{}_importances_{}.csv')
             graphfile_template = os.path.join(savedir, '{}_{}_graph_{}.gml')
@@ -376,7 +437,7 @@ def looprank_static(mode, case, dummycreation, writeoutput=False):
     return None
 
 
-def looprank_transient(mode, case, dummycreation, writeoutput=False,
+def looprank_transient(mode, case, dummycreation, writeoutput,
                        plotting=False):
     """Ranks the nodes in a network based over time.
 
