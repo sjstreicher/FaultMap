@@ -9,28 +9,16 @@ logging.basicConfig(level=logging.INFO)
 
 writeoutput = True
 
-runs = ['u238_alcoholrecovery']
+# Ranking parameters
+# This is now the only place were these parameters are defined to avoid
+# hardcoded overwriting
+alpha = 0.5
+m = 0.15
 
-if 'noderank_tests' in runs:
-    mode = 'test_cases'
-    case = 'noderank_tests'
-    for dummycreation in [False, True]:
-        looprank_static(mode, case, dummycreation, writeoutput)
+mode = 'plants'
+cases = ['tennessee_eastman']
 
-if 'tennessee_eastman' in runs:
-    mode = 'plants'
-    case = 'tennessee_eastman'
+for case in cases:
     for dummycreation in [False, True]:
-        looprank_static(mode, case, dummycreation, writeoutput)
-
-if 'epu5_compressor' in runs:
-    mode = 'plants'
-    case = 'epu5_compressor'
-    for dummycreation in [False, True]:
-        looprank_static(mode, case, dummycreation, writeoutput)
-
-if 'u238_alcoholrecovery' in runs:
-    mode = 'plants'
-    case = 'u238_alcoholrecovery'
-    for dummycreation in [False, True]:
-        looprank_static(mode, case, dummycreation, writeoutput)
+        looprank_static(mode, case, dummycreation, writeoutput,
+                        alpha, m)
