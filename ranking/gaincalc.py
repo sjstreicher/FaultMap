@@ -176,7 +176,8 @@ class CorrWeightcalc:
         return corrval
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
-               weightlist, weight_array, delay_array, datastore):
+               weightlist, weight_array, delay_array, datastore,
+               sigtesting=False):
         """Calculates and reports the relevant output for each combination
         of variables tested.
 
@@ -218,8 +219,13 @@ class CorrWeightcalc:
         logging.info("Directionality threshold passed: " +
                      str(dirthreshpass))
 
-        if not (corrthreshpass and dirthreshpass):
-            maxcorr = 0
+        corrthreshpass = None
+        dirthreshpass = None
+        if sigtesting:
+            corrthreshpass = (maxcorr_abs >= self.threshcorr)
+            dirthreshpass = (directionindex >= self.threshdir)
+            if not (corrthreshpass and dirthreshpass):
+                maxcorr = 0
 
         weight_array[affectedvarindex, causevarindex] = maxcorr
         delay_array[affectedvarindex, causevarindex] = bestdelay
@@ -264,7 +270,7 @@ class TransentWeightcalc:
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
                weightlist, weight_array, delay_array, datastore,
-               te_thresh_method='rankorder'):
+               sigtesting=False, te_thresh_method='rankorder'):
         """Calculates and reports the relevant output for each combination
         of variables tested.
 
@@ -284,30 +290,35 @@ class TransentWeightcalc:
         size = weightcalcdata.testsize
         startindex = weightcalcdata.startindex
 
-        # Calculate threshold for transfer entropy
-        thresh_causevardata = \
-            inputdata[:, causevarindex][startindex:startindex+size]
-        thresh_affectedvardata = \
-            inputdata[:, affectedvarindex][startindex+bestdelay_sample:
-                                           startindex+size+bestdelay_sample]
-
-        if te_thresh_method == 'rankorder':
-            self.thresh_rankorder(thresh_affectedvardata.T,
-                                  thresh_causevardata.T)
-
-        elif te_thresh_method == 'sixsigma':
-            self.thresh_sixsigma(thresh_affectedvardata.T,
-                                 thresh_causevardata.T)
-
-        logging.info("The TE threshold is: " + str(self.threshent))
         logging.info("The maximum TE between " + causevar +
                      " and " + affectedvar + " is: " + str(maxval))
 
-        if maxval >= self.threshent:
-            threshpass = True
-        else:
-            threshpass = False
-            maxval = 0
+        threshpass = None
+        if sigtesting:
+            # Calculate threshold for transfer entropy
+            thresh_causevardata = \
+                inputdata[:, causevarindex][startindex:startindex+size]
+            thresh_affectedvardata = \
+                inputdata[:, affectedvarindex][startindex+bestdelay_sample:
+                                               startindex+size+bestdelay_sample]
+            if te_thresh_method == 'rankorder':
+                self.thresh_rankorder(thresh_affectedvardata.T,
+                                      thresh_causevardata.T)
+
+            elif te_thresh_method == 'sixsigma':
+                self.thresh_sixsigma(thresh_affectedvardata.T,
+                                     thresh_causevardata.T)
+
+            logging.info("The TE threshold is: " + str(self.threshent))
+
+            if maxval >= self.threshent:
+                threshpass = True
+            else:
+                threshpass = False
+                maxval = 0
+
+            logging.info("TE threshold passed: " + str(threshpass))
+
 
         weight_array[affectedvarindex, causevarindex] = maxval
 
@@ -316,12 +327,8 @@ class TransentWeightcalc:
                     threshpass]
         datastore.append(dataline)
 
-        logging.info("The corresponding delay is: " +
-                     str(bestdelay))
-        logging.info("The TE with no delay is: "
-                     + str(weightlist[0]))
-        logging.info("TE threshold passed: " +
-                     str(threshpass))
+        logging.info("The corresponding delay is: " + str(bestdelay))
+        logging.info("The TE with no delay is: " + str(weightlist[0]))
 
         return weight_array, delay_array, datastore
 
