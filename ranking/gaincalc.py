@@ -33,6 +33,8 @@ import config_setup
 import transentropy
 import formatmatrices
 
+import datagen
+
 
 class WeightcalcData:
     """Creates a data object from file and or function definitions for use in
@@ -110,9 +112,9 @@ class WeightcalcData:
             samples = self.caseconfig['gensamples']
             func_delay = self.caseconfig['delay']
             # Get inputdata
-            self.inputdata_raw = eval(tags_tsdata_gen)(samples, func_delay)
+            self.inputdata_raw = eval('datagen.' + tags_tsdata_gen)(samples, func_delay)
             # Get the variables and connection matrix
-            [self.variables, self.connectionmatrix] = eval(connectionloc)()
+            [self.variables, self.connectionmatrix] = eval('datagen.' + connectionloc)()
             self.startindex = 0
 
         self.causevarindexes = self.caseconfig[scenario]['causevarindexes']

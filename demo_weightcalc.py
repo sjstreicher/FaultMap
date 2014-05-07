@@ -9,8 +9,8 @@ logging.basicConfig(level=logging.INFO)
 
 writeoutput = True
 
-mode = 'plants'
-cases = ['tennessee_eastman']
+mode = 'tests'
+cases = ['weightcalc_tests']
 
 for case in cases:
     weightcalc(mode, case, writeoutput)
