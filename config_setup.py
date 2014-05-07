@@ -18,7 +18,7 @@ def ensure_existance(location, make=False):
     return location
 
 
-def runsetup(mode='test_cases', case='weightcalc_tests'):
+def runsetup(mode, case):
     """Gets all required parameters from the case configuration file.
 
     Mode can be either 'test_cases' or 'plants' as required to get to the
@@ -26,7 +26,7 @@ def runsetup(mode='test_cases', case='weightcalc_tests'):
 
     """
 
-    if mode == 'test_cases':
+    if mode == 'tests':
         saveloc = 'test_exports'
         casedir = 'test_configs'
         infodynamicsloc = 'infodynamics.jar'
