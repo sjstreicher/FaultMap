@@ -7,7 +7,7 @@ Created on Mon Feb 24 15:27:21 2014
 from numpy import vstack
 import numpy as np
 
-from control.matlab import *
+import control
 
 from transentropy import vectorselection
 
@@ -215,13 +215,13 @@ def firstorder_gen(samples, delay, period=0.01, noiseamp=1.0):
 
     """
 
-    P1 = tf([10], [100, 1])
+    P1 = control.matlab.tf([10], [100, 1])
 
     timepoints = np.array(range(samples + delay))
 
     sine_input = np.array([np.sin(period * t*2*np.pi) for t in timepoints])
 
-    P1_response = lsim(P1, sine_input, timepoints)
+    P1_response = control.matlab.lsim(P1, sine_input, timepoints)
 
     np.random.seed(51)
     affected_random_add = (np.random.rand(samples + delay) - 0.5) * noiseamp
@@ -259,8 +259,8 @@ def oscillating_feedback_5x5(samples, delays=[3, 2, 5, 4], period=0.01,
     sine_source = np.array([np.sin(period * t*2*np.pi) for t in timepoints])
 
     # Calculate response of first transfer function on pure sine signal
-    TF_1 = tf([2], [3, 1])
-    P1_response = lsim(TF_1, sine_source, timepoints)
+    TF_1 = control.matlab.tf([2], [3, 1])
+    P1_response = control.matlab.lsim(TF_1, sine_source, timepoints)
     np.random.seed(45)
     P1_response_random_add = (np.random.rand(len(timepoints)) - 0.5) * noiseamp
     TF_1_output_firstpass = P1_response[0] + P1_response_random_add
