@@ -23,6 +23,7 @@ import h5py
 import logging
 import json
 import sklearn
+import sklearn.preprocessing
 
 # Less standard libraries
 import pygeonetwork
