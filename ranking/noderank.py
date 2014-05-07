@@ -19,6 +19,8 @@ import formatmatrices
 import config_setup
 import ranking
 
+import networkgen
+
 
 def writecsv_looprank(filename, items):
     with open(filename, 'wb') as f:
@@ -316,7 +318,7 @@ def looprank_static(mode, case, dummycreation, writeoutput,
         elif datatype == 'function':
             # Get variables, connection matrix and gainmatrix
             network_gen = caseconfig[scenario]['networkgen']
-            connectionmatrix, gainmatrix, variablelist, _ = eval(network_gen)()
+            connectionmatrix, gainmatrix, variablelist, _ = eval('networkgen.' + network_gen)()
 
         logging.info("Number of tags: {}".format(len(variablelist)))
 

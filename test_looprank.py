@@ -6,7 +6,7 @@
 from ranking.noderank import looprank_static
 
 if __name__ == '__main__':
-    mode = 'test_cases'
+    mode = 'tests'
     case = 'noderank_tests'
     writeoutput = False
 
