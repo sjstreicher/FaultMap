@@ -1,20 +1,17 @@
 {
   "datatype": "function",
   "delaytype": "datapoints",
-  "test_delays": 10,
+  "test_delays": 200,
   "sampling_rate": 1,
   "testsize": 2000,
   "gensamples": 3000,
-  "delay": 5,
+  "delay": 0,
   "methods": [
       "pearson_correlation",
 	  "transfer_entropy"
   ],
   "scenarios": [
-      "random_2x2",
-	  "delay_2x2",
-      "autoreg_2x2",
-	  "random_5x5"
+	  "sinusoid_5x5"
   ],
   "random_2x2": {
     "connections": "connectionmatrix_2x2",
@@ -40,6 +37,13 @@
   "autoreg_2x2": {
     "connections": "connectionmatrix_2x2",
 	"datagen": "autoreg_gen",
+	"causevarindexes": "all",
+	"affectedvarindexes": "all",
+	"sub_sampling_interval": 1
+  },
+    "sinusoid_5x5": {
+    "connections": "connectionmatrix_5x5",
+	"datagen": "sinusoid_shift_gen",
 	"causevarindexes": "all",
 	"affectedvarindexes": "all",
 	"sub_sampling_interval": 1
