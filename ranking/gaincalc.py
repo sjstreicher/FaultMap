@@ -180,7 +180,7 @@ class CorrWeightcalc:
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
                weightlist, weight_array, delay_array, datastore,
-               sigtesting=False):
+               sigtesting=True):
         """Calculates and reports the relevant output for each combination
         of variables tested.
 
@@ -531,6 +531,7 @@ class PartialCorrWeightcalc:
         calcdata = (weightcalcdata.inputdata[:, :]
                     [startindex:startindex+size])
         newconnectionmatrix = weightcalcdata.connectionmatrix
+        newvariables = weightcalcdata.variables
 
         # Delete all variables from data matrix whose standard deviation
         # is zero.
@@ -552,6 +553,9 @@ class PartialCorrWeightcalc:
         # Delete all columns listed in dellist from calcdata
         newcalcdata = np.delete(calcdata, dellist, 1)
 
+        # Delete all indexes listed in dellist from variables
+        newvariables = np.delete(newvariables, dellist)
+
         # Delete all rows and columns listed in coldellist
         # from connectionmatrix
         newconnectionmatrix = np.delete(newconnectionmatrix, dellist, 1)
@@ -566,7 +570,7 @@ class PartialCorrWeightcalc:
             np.where(newconnectionmatrix,
                      -p_matrix/np.abs(np.sqrt(np.outer(d, d))), 0)
 
-        return partialcorrelationmatrix, newconnectionmatrix
+        return partialcorrelationmatrix, newconnectionmatrix, newvariables
 
 
 # TODO: This function is a clone of the object method above
@@ -613,7 +617,7 @@ def partialcorrcalc(mode, case, writeoutput):
         # Update scenario-specific fields of weightcalcdata object
         weightcalcdata.scenariodata(scenario)
 
-        partialcorrmat, connectionmatrix = partialmatcalculator.\
+        partialcorrmat, connectionmatrix, variables = partialmatcalculator.\
             partialcorr_gainmatrix(weightcalcdata)
 
         if writeoutput:
@@ -630,3 +634,6 @@ def partialcorrcalc(mode, case, writeoutput):
 
             np.savetxt(filename('connectionmatrix'), connectionmatrix,
                        delimiter=',')
+
+            writecsv_weightcalc(filename('variables'), variables,
+                                    variables)
