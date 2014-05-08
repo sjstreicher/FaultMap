@@ -191,12 +191,16 @@ class CorrWeightcalc:
 
         maxval = max(weightlist)
         minval = min(weightlist)
-        if (maxval + minval) >= 0:
-            delay_index = weightlist.index(maxval)
+        # Value used to break tie between maxval and minval if 1 and -1
+        tol = 0.
+        # Always select maxval if both are equal
+        # This is to ensure that 1 is selected above -1
+        if (maxval + (minval + tol)) >= 0:
             maxcorr = maxval
         else:
-            delay_index = weightlist.index(minval)
             maxcorr = minval
+
+        delay_index = weightlist.index(maxcorr)
 
         # Correlation thresholds from Bauer2008 eq. 4
         maxcorr_abs = max(maxval, abs(minval))
@@ -273,7 +277,7 @@ class TransentWeightcalc:
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
                weightlist, weight_array, delay_array, datastore,
-               sigtesting=False, te_thresh_method='rankorder'):
+               sigtesting=True, te_thresh_method='sixsigma'):
         """Calculates and reports the relevant output for each combination
         of variables tested.
 
@@ -321,7 +325,6 @@ class TransentWeightcalc:
                 maxval = 0
 
             logging.info("TE threshold passed: " + str(threshpass))
-
 
         weight_array[affectedvarindex, causevarindex] = maxval
 
@@ -508,16 +511,7 @@ class PartialCorrWeightcalc:
     """
 
     def __init__(self, weightcalcdata):
-        self.threshcorr = (1.85*(weightcalcdata.testsize**(-0.41))) + \
-            (2.37*(weightcalcdata.testsize**(-0.53)))
-        self.threshdir = 0.46*(weightcalcdata.testsize**(-0.16))
-#        logging.info("Directionality threshold: " + str(self.threshdir))
-#        logging.info("Correlation threshold: " + str(self.threshcorr))
-
-        self.data_header = ['causevar', 'affectedvar', 'base_corr',
-                            'max_corr', 'max_delay', 'max_index',
-                            'signchange', 'corrthreshpass',
-                            'dirrthreshpass', 'dirval']
+        return None
 
     def partialcorr_gainmatrix(self, weightcalcdata):
         """Calculates the local gains in terms of the partial (Pearson's)
@@ -529,16 +523,50 @@ class PartialCorrWeightcalc:
         in colums and sampling instances in rows
 
         """
+        startindex = weightcalcdata.startindex
+        size = weightcalcdata.testsize
+        vardims = len(weightcalcdata.variables)
+
+        # Get inputdata and initial connectionmatrix
+        calcdata = (weightcalcdata.inputdata[:, :]
+                    [startindex:startindex+size])
+        newconnectionmatrix = weightcalcdata.connectionmatrix
+
+        # Delete all variables from data matrix whose standard deviation
+        # is zero.
+        # This is not perfectly robust.
+#        dellist = []
+#        for col in range(calcdata.shape[1]):
+#            stdev = np.std(calcdata[:, col])
+#            if stdev == 0:
+#                dellist.append(col)
+#                logging.info("Will delete column " + str(col))
+
+        # Delete all columns not listed in causevarindexes
+        dellist = []
+        for index in range(vardims):
+            if index not in weightcalcdata.causevarindexes:
+                dellist.append(index)
+                logging.info("Deleted column " + str(index))
+
+        # Delete all columns listed in dellist from calcdata
+        newcalcdata = np.delete(calcdata, dellist, 1)
+
+        # Delete all rows and columns listed in coldellist
+        # from connectionmatrix
+        newconnectionmatrix = np.delete(newconnectionmatrix, dellist, 1)
+        newconnectionmatrix = np.delete(newconnectionmatrix, dellist, 0)
+
         # Calculate correlation matrix
-        correlationmatrix = np.corrcoef(weightcalcdata.inputdata.T)
+        correlationmatrix = np.corrcoef(newcalcdata.T)
         # Calculate partial correlation matrix
         p_matrix = np.linalg.inv(correlationmatrix)
         d = p_matrix.diagonal()
         partialcorrelationmatrix = \
-            np.where(weightcalcdata.connectionmatrix,
+            np.where(newconnectionmatrix,
                      -p_matrix/np.abs(np.sqrt(np.outer(d, d))), 0)
 
-        return partialcorrelationmatrix
+        return partialcorrelationmatrix, newconnectionmatrix
 
 
 # TODO: This function is a clone of the object method above
@@ -585,7 +613,7 @@ def partialcorrcalc(mode, case, writeoutput):
         # Update scenario-specific fields of weightcalcdata object
         weightcalcdata.scenariodata(scenario)
 
-        partialcorrmat = partialmatcalculator.\
+        partialcorrmat, connectionmatrix = partialmatcalculator.\
             partialcorr_gainmatrix(weightcalcdata)
 
         if writeoutput:
@@ -598,4 +626,7 @@ def partialcorrcalc(mode, case, writeoutput):
                 return filename_template.format(case, scenario, name)
             # Write arrays to file
             np.savetxt(filename('partialcorr_array'), partialcorrmat,
+                       delimiter=',')
+
+            np.savetxt(filename('connectionmatrix'), connectionmatrix,
                        delimiter=',')
