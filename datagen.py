@@ -22,6 +22,19 @@ def connectionmatrix_2x2():
     return variables, connectionmatrix
 
 
+def connectionmatrix_4x4():
+    """Generates a 5x5 connection matrix for use in tests."""
+
+    variables = ['X 1', 'X 2', 'X 3', 'X 4', 'X 5']
+    connectionmatrix = np.array([[1, 1, 1, 1, 1],
+                                 [1, 1, 1, 1, 1],
+                                 [1, 1, 1, 1, 1],
+                                 [1, 1, 1, 1, 1],
+                                 [1, 1, 1, 1, 1]])
+
+    return variables, connectionmatrix
+
+
 def connectionmatrix_5x5():
     """Generates a 5x5 connection matrix for use in tests."""
 
@@ -131,15 +144,15 @@ def random_gen_5x5(samples, delay):
     np.random.seed(88)
     x2 = np.random.randn(samples)
 
-    # Generate second vector
+    # Generate third vector
     np.random.seed(107)
     x3 = np.random.randn(samples)
 
-    # Generate second vector
+    # Generate fourth vector
     np.random.seed(52)
     x4 = np.random.randn(samples)
 
-    # Generate second vector
+    # Generate fifth vector
     np.random.seed(98)
     x5 = np.random.randn(samples)
 
@@ -173,9 +186,58 @@ def autoreg_datagen(delay, timelag, samples, sub_samples, k=1, l=1):
     return x_pred, x_hist, y_hist
 
 
-def sinusoid_gen(samples, delay, period=0.01, noiseamp=1.0):
+def sinusoid_shift_gen(samples, delay, period=100, noiseamp=0.1,
+                       addnoise=False):
     """Generates a sinusoid, with delayed noise companion
     and a closed loop sinusoid with delay and noise.
+
+    period is the number of samples for each cycle
+
+    noiseamp is the maximum amplitude of the noise added to the signal
+
+    """
+
+    frequency = 1./period
+
+    tspan = range(samples + 2*period)
+
+    # Generate source sine curve
+    sine = [np.sin(frequency * t*2*np.pi) for t in tspan]
+
+    if addnoise:
+        np.random.seed(117)
+        sine_noise = (np.random.randn(len(tspan)) - 0.5) * noiseamp
+
+        sine = sine + sine_noise
+
+    # First vector is simply the first samples of the sine vector
+    x1 = sine[0:samples]
+
+    # Define the second vector
+    sampleshift = (period/4)*1
+    x2 = sine[sampleshift:samples+sampleshift]
+
+    # Third vector
+    sampleshift = (period/4)*2
+    x3 = sine[sampleshift:samples+sampleshift]
+
+    # Fourth vector
+    sampleshift = (period/4)*3
+    x4 = sine[sampleshift:samples+sampleshift]
+
+    # Fifth vector
+    # The fifth vector is the same except for any noise added to the sine
+    sampleshift = (period/4)*4
+    x5 = sine[sampleshift:samples+sampleshift]
+
+    data = vstack([x1, x2, x3, x4, x5])
+
+    return data.T
+
+
+def sinusoid_gen(samples, delay, period=0.01, noiseamp=1.0):
+    """Generates four sinusoids, each based on the same frequency but differing
+    in phase by 90 degrees.
 
     period is the number of cycles for each sample
 
