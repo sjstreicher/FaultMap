@@ -28,22 +28,68 @@ class NoderankData:
 
     """
 
+    def __init__(self, mode, case):
+
+        # Get locations from configuration file
+        self.saveloc, self.casedir, _ = \
+            config_setup.runsetup(mode, case)
+        # Load case config file
+        self.caseconfig = json.load(open(os.path.join(self.casedir, case +
+                                    '_noderank' + '.json')))
+
+        # Get scenarios
+        self.scenarios = self.caseconfig['scenarios']
+        # Get data type
+        self.datatype = self.caseconfig['datatype']
+
+        self.metric = 'transfer_entropy'
+
+        # m is the weight of the full connectivity matrix used to ensure
+        # graph is not sub-stochastic
+
+        self.m = 0.15
+
+    def scenariodata(self, scenario):
+        """Retrieves data particular to each scenario for the case being
+        investigated.
+
+        """
+        if self.datatype == 'file':
+
+            # Get connection (adjacency) matrix
+            connectionloc = os.path.join(self.casedir, 'connections',
+                                         self.caseconfig[scenario]
+                                         ['connections'])
+            # Get the variables and connection matrix
+            [self.variablelist, self.connectionmatrix] = \
+                formatmatrices.read_connectionmatrix(connectionloc)
+
+            # Get the gain matrix
+            gainloc = os.path.join(self.casedir, 'gainmatrix',
+                                   self.caseconfig[scenario]['gainmatrix'])
+
+            self.gainmatrix = formatmatrices.read_gainmatrix(gainloc)
+
+        elif self.datatype == 'function':
+            # Get variables, connection matrix and gainmatrix
+            network_gen = self.caseconfig[scenario]['networkgen']
+            self.connectionmatrix, self.gainmatrix, \
+                self.variablelist, _ = \
+                eval('networkgen.' + network_gen)()
+
+        logging.info("Number of tags: {}".format(len(self.variablelist)))
+
 
 def writecsv_looprank(filename, items):
     with open(filename, 'wb') as f:
         csv.writer(f).writerows(items)
 
 
-def calc_simple_rank(gainmatrix, variables, m):
+def calc_simple_rank(gainmatrix, variables, m, noderankdata):
     """Constructs the ranking dictionary using the eigenvector approach
     i.e. Ax = x where A is the local gain matrix.
 
-    m is the weight of the full connectivity matrix used to ensure
-    graph is not sub-stochastic
-
     """
-
-    metric = 'transfer_entropy'
 
     # Length of gain matrix = number of nodes
     gainmatrix = np.asarray(gainmatrix)
@@ -60,7 +106,7 @@ def calc_simple_rank(gainmatrix, variables, m):
     # Cuts array into the eigenvector corrosponding to the eigenvalue above
     rankarray = eigvec[:, maxeigindex]
     # Take absolute values of ranking values
-    if not metric == 'transfer_entropy':
+    if not noderankdata.metric == 'transfer_entropy':
         rankarray = abs(rankarray)
     # This is the 1-dimensional array composed of rankings (normalised)
     rankarray = (1 / sum(rankarray)) * rankarray
@@ -247,36 +293,40 @@ def gainmatrix_preprocessing(gainmatrix, connectionmatrix):
     return modgainmatrix, currentmean
 
 
-def calc_gainrank(gainmatrix, variables, connectionmatrix, dummycreation,
+def calc_gainrank(gainmatrix, noderankdata, dummycreation,
                   alpha, dummyweight, m):
     """Calculates the forward and backward rankings.
 
     """
 
     forwardconnection, forwardgain, forwardvariablelist = \
-        formatmatrices.rankforward(variables, gainmatrix, connectionmatrix,
+        formatmatrices.rankforward(noderankdata.variablelist,
+                                   gainmatrix, noderankdata.connectionmatrix,
                                    dummyweight, dummycreation)
 
     backwardconnection, backwardgain, backwardvariablelist = \
-        formatmatrices.rankbackward(variables, gainmatrix, connectionmatrix,
+        formatmatrices.rankbackward(noderankdata.variablelist, gainmatrix,
+                                    noderankdata.connectionmatrix,
                                     dummyweight, dummycreation)
 
     forwardrankingdict, forwardrankinglist = \
-        calc_simple_rank(forwardgain, forwardvariablelist, m)
+        calc_simple_rank(forwardgain, forwardvariablelist, m, noderankdata)
 
     backwardrankingdict, backwardrankinglist = \
-        calc_simple_rank(backwardgain, backwardvariablelist, m)
+        calc_simple_rank(backwardgain, backwardvariablelist, m, noderankdata)
 
     blendedrankingdict, blendedrankinglist = \
         calc_blended_rank(forwardrankingdict, backwardrankingdict,
-                          variables, alpha)
+                          noderankdata.variablelist, alpha)
 
     rankingdicts = [blendedrankingdict, forwardrankingdict,
                     backwardrankingdict]
     rankinglists = [blendedrankinglist, forwardrankinglist,
                     backwardrankinglist]
-    connections = [connectionmatrix, forwardconnection, backwardconnection]
-    variables = [variables, forwardvariablelist, backwardvariablelist]
+    connections = [noderankdata.connectionmatrix, forwardconnection,
+                   backwardconnection]
+    variables = [noderankdata.variablelist, forwardvariablelist,
+                 backwardvariablelist]
     gains = [gainmatrix, np.array(forwardgain), np.array(backwardgain)]
 
     return rankingdicts, rankinglists, connections, variables, gains
@@ -290,50 +340,15 @@ def looprank_static(mode, case, dummycreation, writeoutput,
 
     """
 
+    noderankdata = NoderankData(mode, case)
+
     # Only to be used in rare development test cases
     preprocessing = False
 
-    saveloc, casedir, infodynamicsloc = config_setup.runsetup(mode, case)
-
-    # Load case config file
-    caseconfig = json.load(open(os.path.join(casedir, case + '_noderank' +
-                                             '.json')))
-    # Get scenarios
-    scenarios = caseconfig['scenarios']
-    # Get data type
-    datatype = caseconfig['datatype']
-
-    for scenario in scenarios:
+    for scenario in noderankdata.scenarios:
         logging.info("Running scenario {}".format(scenario))
-        if datatype == 'file':
-
-            # Get time series data
-#            tags_tsdata = os.path.join(casedir, 'data',
-#                                       caseconfig[scenario]['data'])
-            # Get connection (adjacency) matrix
-            connectionloc = os.path.join(casedir, 'connections',
-                                         caseconfig[scenario]['connections'])
-            # Get dataset name
-#            dataset = caseconfig[scenario]['dataset']
-            # Get the variables and connection matrix
-            [variablelist, connectionmatrix] = \
-                formatmatrices.read_connectionmatrix(connectionloc)
-
-            # Calculate the gainmatrix
-            # TODO: Use result from weightcalc as gainmatrix
-            gainloc = os.path.join(casedir, 'gainmatrix',
-                                   caseconfig[scenario]['gainmatrix'])
-
-            gainmatrix = formatmatrices.read_gainmatrix(gainloc)
-#            gainmatrix = calc_gainmatrix(connectionmatrix,
-#                                         tags_tsdata, dataset)
-
-        elif datatype == 'function':
-            # Get variables, connection matrix and gainmatrix
-            network_gen = caseconfig[scenario]['networkgen']
-            connectionmatrix, gainmatrix, variablelist, _ = eval('networkgen.' + network_gen)()
-
-        logging.info("Number of tags: {}".format(len(variablelist)))
+        # Update scenario-specific fields of weightcalcdata object
+        noderankdata.scenariodata(scenario)
 
         # Modify the gainmatrix to have a specific mean
         # Should only be used for development analysis - generally destroys
@@ -341,23 +356,26 @@ def looprank_static(mode, case, dummycreation, writeoutput,
         # Not sure what effect will be if data is variance scaled as well
         if preprocessing:
             modgainmatrix, _ = \
-                gainmatrix_preprocessing(gainmatrix, connectionmatrix)
+                gainmatrix_preprocessing(noderankdata.gainmatrix,
+                                         noderankdata.connectionmatrix)
         else:
-            modgainmatrix = gainmatrix
+            modgainmatrix = noderankdata.gainmatrix
 
-        _, dummyweight = gainmatrix_preprocessing(gainmatrix, connectionmatrix)
+        _, dummyweight = \
+            gainmatrix_preprocessing(noderankdata.gainmatrix,
+                                     noderankdata.connectionmatrix)
 
         rankingdicts, rankinglists, connections, variables, gains = \
-            calc_gainrank(modgainmatrix, variablelist, connectionmatrix,
+            calc_gainrank(modgainmatrix, noderankdata,
                           dummycreation,
                           alpha, dummyweight, m)
 
         if writeoutput:
             # Get the directory to save in
             savedir = \
-                config_setup.ensure_existance(os.path.join(saveloc,
-                                                           'noderank'),
-                                              make=True)
+                config_setup.ensure_existance(
+                    os.path.join(noderankdata.saveloc,
+                                 'noderank'), make=True)
             # Save the modified gainmatrix
             modgainmatrix_template = \
                 os.path.join(savedir, '{}_modgainmatrix.csv')
@@ -368,7 +386,7 @@ def looprank_static(mode, case, dummycreation, writeoutput,
             originalgainmatrix_template = \
                 os.path.join(savedir, '{}_originalgainmatrix.csv')
             savename = originalgainmatrix_template.format(scenario)
-            writecsv_looprank(savename, gainmatrix)
+            writecsv_looprank(savename, noderankdata.gainmatrix)
 
             # Export graph files with dummy variables included in
             # forward and backward rankings if available
@@ -408,12 +426,13 @@ def looprank_static(mode, case, dummycreation, writeoutput,
                 # Forward ranking graph
                 direction = directions[1]
                 rankingdict = rankingdicts[1]
-                graph, _ = create_importance_graph(variablelist,
-                                                   connectionmatrix,
-                                                   connectionmatrix,
-                                                   gainmatrix,
-                                                   rankingdict)
-                graph_filename = os.path.join(saveloc, 'noderank',
+                graph, _ = \
+                    create_importance_graph(noderankdata.variablelist,
+                                            noderankdata.connectionmatrix,
+                                            noderankdata.connectionmatrix,
+                                            noderankdata.gainmatrix,
+                                            rankingdict)
+                graph_filename = os.path.join(noderankdata.saveloc, 'noderank',
                                               "{}_{}_graph_dumsup.gml"
                                               .format(scenario, direction))
 
@@ -422,14 +441,14 @@ def looprank_static(mode, case, dummycreation, writeoutput,
                 # Backward ranking graph
                 direction = directions[2]
                 rankingdict = rankingdicts[2]
-                connectionmatrix = connectionmatrix.T
-                gainmatrix = gainmatrix.T
-                graph, _ = create_importance_graph(variablelist,
+                connectionmatrix = noderankdata.connectionmatrix.T
+                gainmatrix = noderankdata.gainmatrix.T
+                graph, _ = create_importance_graph(noderankdata.variablelist,
                                                    connectionmatrix,
                                                    connectionmatrix,
                                                    gainmatrix,
                                                    rankingdict)
-                graph_filename = os.path.join(saveloc, 'noderank',
+                graph_filename = os.path.join(noderankdata.saveloc, 'noderank',
                                               "{}_{}_graph_dumsup.gml"
                                               .format(scenario, direction))
 
@@ -440,9 +459,10 @@ def looprank_static(mode, case, dummycreation, writeoutput,
                 for direction, rankingdict in zip(directions[1:],
                                                   rankingdicts[1:]):
                     normalised_rankinglist = \
-                        normalise_rankinglist(rankingdict, variablelist)
+                        normalise_rankinglist(rankingdict,
+                                              noderankdata.variablelist)
 
-                    savename = os.path.join(saveloc, 'noderank',
+                    savename = os.path.join(noderankdata.saveloc, 'noderank',
                                             '{}_{}_importances_dumsup.csv'
                                             .format(scenario, direction))
                     writecsv_looprank(savename, normalised_rankinglist)
