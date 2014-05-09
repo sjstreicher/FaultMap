@@ -179,8 +179,7 @@ class CorrWeightcalc:
         return corrval
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
-               weightlist, weight_array, delay_array, datastore,
-               sigtesting=True):
+               weightlist, weight_array, delay_array, datastore, sigtest):
         """Calculates and reports the relevant output for each combination
         of variables tested.
 
@@ -228,13 +227,18 @@ class CorrWeightcalc:
 
         corrthreshpass = None
         dirthreshpass = None
-        if sigtesting:
+        if sigtest:
             corrthreshpass = (maxcorr_abs >= self.threshcorr)
             dirthreshpass = (directionindex >= self.threshdir)
             if not (corrthreshpass and dirthreshpass):
                 maxcorr = 0
 
         weight_array[affectedvarindex, causevarindex] = maxcorr
+
+#        # Replace all nan by zero
+#        nanlocs = np.isnan(weight_array)
+#        weight_array[nanlocs] = 0
+
         delay_array[affectedvarindex, causevarindex] = bestdelay
 
         dataline = [causevar, affectedvar, str(weightlist[0]),
@@ -272,12 +276,17 @@ class TransentWeightcalc:
             transentropy.calc_infodynamics_te(self.teCalc, causevardata.T,
                                               affectedvardata.T)
         transent = transent_fwd - transent_bwd
+
+        # Do not pass negatives on to weight array
+        if transent < 0:
+            transent = 0
+
         return transent
         # TODO: Offer option for raw transfer entopy values as well
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
-               weightlist, weight_array, delay_array, datastore,
-               sigtesting=True, te_thresh_method='sixsigma'):
+               weightlist, weight_array, delay_array, datastore, sigtest,
+               te_thresh_method='rankorder'):
         """Calculates and reports the relevant output for each combination
         of variables tested.
 
@@ -301,7 +310,7 @@ class TransentWeightcalc:
                      " and " + affectedvar + " is: " + str(maxval))
 
         threshpass = None
-        if sigtesting:
+        if sigtest:
             # Calculate threshold for transfer entropy
             thresh_causevardata = \
                 inputdata[:, causevarindex][startindex:startindex+size]
@@ -398,7 +407,7 @@ class TransentWeightcalc:
         self.threshent = (6 * surrte_stdev) + surrte_mean
 
 
-def estimate_delay(weightcalcdata, method):
+def estimate_delay(weightcalcdata, method, sigtest):
     """Determines the maximum weight between two variables by searching through
     a specified set of delays.
 
@@ -450,7 +459,19 @@ def estimate_delay(weightcalcdata, method):
                     weightcalculator.report(weightcalcdata, causevarindex,
                                             affectedvarindex, weightlist,
                                             weight_array, delay_array,
-                                            datastore)
+                                            datastore, sigtest)
+
+    # Delete entries from weightcalc matrix not used
+    dellist = []
+    for index in range(vardims):
+        if index not in weightcalcdata.causevarindexes:
+            dellist.append(index)
+            logging.info("Deleted column " + str(index))
+
+    # Delete all rows and columns listed in dellist
+    # from weight_array
+    weight_array = np.delete(weight_array, dellist, 1)
+    weight_array = np.delete(weight_array, dellist, 0)
 
     return weight_array, delay_array, datastore, data_header
 
@@ -463,7 +484,7 @@ def writecsv_weightcalc(filename, items, header):
         csv.writer(f).writerows(items)
 
 
-def weightcalc(mode, case, writeoutput):
+def weightcalc(mode, case, sigtest, writeoutput):
     """Reports the maximum weight as well as associated delay
     obtained by shifting the affected variable behind the causal variable a
     specified set of delays.
@@ -484,7 +505,7 @@ def weightcalc(mode, case, writeoutput):
 
             # TODO: Get data_header directly
             [weight_array, delay_array, datastore, data_header] = \
-                estimate_delay(weightcalcdata, method)
+                estimate_delay(weightcalcdata, method, sigtest)
 
             if writeoutput:
                 # Define export directories and filenames
@@ -556,7 +577,7 @@ class PartialCorrWeightcalc:
         # Delete all indexes listed in dellist from variables
         newvariables = np.delete(newvariables, dellist)
 
-        # Delete all rows and columns listed in coldellist
+        # Delete all rows and columns listed in dellist
         # from connectionmatrix
         newconnectionmatrix = np.delete(newconnectionmatrix, dellist, 1)
         newconnectionmatrix = np.delete(newconnectionmatrix, dellist, 0)
@@ -636,4 +657,4 @@ def partialcorrcalc(mode, case, writeoutput):
                        delimiter=',')
 
             writecsv_weightcalc(filename('variables'), variables,
-                                    variables)
+                                variables)
