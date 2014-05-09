@@ -22,6 +22,13 @@ import ranking
 import networkgen
 
 
+class NoderankData:
+    """Creates a data object from file and or function definitions for use in
+    weight calculation methods.
+
+    """
+
+
 def writecsv_looprank(filename, items):
     with open(filename, 'wb') as f:
         csv.writer(f).writerows(items)
@@ -35,6 +42,9 @@ def calc_simple_rank(gainmatrix, variables, m):
     graph is not sub-stochastic
 
     """
+
+    metric = 'transfer_entropy'
+
     # Length of gain matrix = number of nodes
     gainmatrix = np.asarray(gainmatrix)
     n = len(gainmatrix)
@@ -49,6 +59,9 @@ def calc_simple_rank(gainmatrix, variables, m):
 #    maxeig = eigval[maxeigindex].real
     # Cuts array into the eigenvector corrosponding to the eigenvalue above
     rankarray = eigvec[:, maxeigindex]
+    # Take absolute values of ranking values
+    if not metric == 'transfer_entropy':
+        rankarray = abs(rankarray)
     # This is the 1-dimensional array composed of rankings (normalised)
     rankarray = (1 / sum(rankarray)) * rankarray
     # Remove the useless imaginary +0j
