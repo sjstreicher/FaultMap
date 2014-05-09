@@ -16,7 +16,7 @@ alpha = 0.5
 m = 0.15
 
 mode = 'plants'
-cases = ['tennessee_eastman']
+cases = ['propylene_compressor']
 
 for case in cases:
     for dummycreation in [False, True]:

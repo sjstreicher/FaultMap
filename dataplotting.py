@@ -20,7 +20,7 @@ from config_setup import ensure_existance
 
 # Define the mode and case for plot generation
 mode = 'plants'
-case = 'epu5_compressor'
+case = 'propylene_compressor'
 
 # Amount of samples to lag cause variable behind affected variable
 delay = 0
@@ -70,7 +70,7 @@ for scenario in scenarios:
         [variables, connectionmatrix] = eval(connectionloc)()
 
     # Normalise (mean centre and variance scale) the input data
-    inputdata = inputdata[5200:5400]
+    inputdata = inputdata[5000:7000]
     if normalise is True:
         inputdata_norm = preprocessing.scale(inputdata, axis=0)
     else:
@@ -125,11 +125,11 @@ for scenario in scenarios:
                 freqlist = np.fft.rfftfreq(len(causevardata), sampling_rate)
 
                 plt.figure()
-                plt.plot(freqlist, causevar_fft, 'b', label=causevar)
+                plt.plot(freqlist[0:400], causevar_fft[0:400], 'b', label=causevar)
                 plt.hold(True)
-                plt.plot(freqlist, affectedvar_fft, 'r', label=affectedvar)
+                plt.plot(freqlist[0:400], affectedvar_fft[0:400], 'r', label=affectedvar)
                 plt.xlabel('Frequency (1/minutes)')
-                plt.ylabel('Normalised value')
+                plt.ylabel('Normalised amplitude')
                 plt.legend()
 
                 filename_template = os.path.join(plotdir,
