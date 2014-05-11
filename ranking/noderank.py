@@ -42,8 +42,6 @@ class NoderankData:
         # Get data type
         self.datatype = self.caseconfig['datatype']
 
-        self.metric = 'transfer_entropy'
-
         # m is the weight of the full connectivity matrix used to ensure
         # graph is not sub-stochastic
 
@@ -106,8 +104,7 @@ def calc_simple_rank(gainmatrix, variables, m, noderankdata):
     # Cuts array into the eigenvector corrosponding to the eigenvalue above
     rankarray = eigvec[:, maxeigindex]
     # Take absolute values of ranking values
-    if not noderankdata.metric == 'transfer_entropy':
-        rankarray = abs(rankarray)
+    rankarray = abs(rankarray)
     # This is the 1-dimensional array composed of rankings (normalised)
     rankarray = (1 / sum(rankarray)) * rankarray
     # Remove the useless imaginary +0j
