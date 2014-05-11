@@ -140,8 +140,9 @@ class WeightcalcData:
         self.inputdata = self.inputdata_originalrate[0::sub_sampling_interval]
 
         if self.delaytype == 'datapoints':
-                self.actual_delays = [(delay * self.sampling_rate) for delay in
-                                      self.delays]
+                self.actual_delays = [(delay * self.sampling_rate *
+                                       sub_sampling_interval)
+                                      for delay in self.delays]
                 self.sample_delays = self.delays
         elif self.delaytype == 'timevalues':
             self.actual_delays = [int(round(delay/self.sampling_rate)) *
@@ -431,14 +432,26 @@ def estimate_delay(weightcalcdata, method, sigtest):
     delay_array[:] = np.NAN
     datastore = []
 
+    dellist = []
+    for index in range(vardims):
+        if index not in weightcalcdata.causevarindexes:
+            dellist.append(index)
+            logging.info("Deleted column " + str(index))
+
+    newconnectionmatrix = weightcalcdata.connectionmatrix
+    # Substitute all rows and columns not used with zeros in connectionmatrix
+    for delindex in dellist:
+        newconnectionmatrix[:, delindex] = np.zeros(vardims)
+        newconnectionmatrix[delindex, :] = np.zeros(vardims)
+
     for causevarindex in weightcalcdata.causevarindexes:
         causevar = weightcalcdata.variables[causevarindex]
         for affectedvarindex in weightcalcdata.affectedvarindexes:
             affectedvar = weightcalcdata.variables[affectedvarindex]
             logging.info("Analysing effect of: " + causevar + " on " +
                          affectedvar)
-            if not(weightcalcdata.connectionmatrix[affectedvarindex,
-                                                   causevarindex] == 0):
+            if not(newconnectionmatrix[affectedvarindex,
+                                       causevarindex] == 0):
                 weightlist = []
                 for delay in weightcalcdata.sample_delays:
                     logging.info("Now testing delay: " + str(delay))
@@ -462,12 +475,6 @@ def estimate_delay(weightcalcdata, method, sigtest):
                                             datastore, sigtest)
 
     # Delete entries from weightcalc matrix not used
-    dellist = []
-    for index in range(vardims):
-        if index not in weightcalcdata.causevarindexes:
-            dellist.append(index)
-            logging.info("Deleted column " + str(index))
-
     # Delete all rows and columns listed in dellist
     # from weight_array
     weight_array = np.delete(weight_array, dellist, 1)
