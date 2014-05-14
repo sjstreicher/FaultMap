@@ -20,7 +20,7 @@ from config_setup import ensure_existance
 
 # Define the mode and case for plot generation
 mode = 'plants'
-case = 'propylene_compressor'
+case = 'alcoholrecovery'
 
 # Amount of samples to lag cause variable behind affected variable
 delay = 0
@@ -30,7 +30,7 @@ normalise = True
 
 saveloc, casedir, infodynamicsloc = runsetup(mode, case)
 # Load case config file
-caseconfig = json.load(open(os.path.join(casedir, case + '.json')))
+caseconfig = json.load(open(os.path.join(casedir, case + '_weightcalc.json')))
 
 # Get scenarios
 scenarios = caseconfig['scenarios']
@@ -70,16 +70,16 @@ for scenario in scenarios:
         [variables, connectionmatrix] = eval(connectionloc)()
 
     # Normalise (mean centre and variance scale) the input data
-    inputdata = inputdata[5000:7000]
+    inputdata = inputdata
     if normalise is True:
         inputdata_norm = preprocessing.scale(inputdata, axis=0)
     else:
         inputdata_norm = inputdata
 
-    for causevarindex in [29]:
+    for causevarindex in [1]:
         causevar = variables[causevarindex]
         logging.info("Analysing effect of: " + causevar)
-        for affectedvarindex in [31]:
+        for affectedvarindex in range(len(variables)):
             affectedvar = variables[affectedvarindex]
             if not(connectionmatrix[affectedvarindex, causevarindex] == 0):
 
@@ -97,46 +97,63 @@ for scenario in scenarios:
                 timespace = range(len(causevardata))
                 time = [sampling_rate * timepoint for timepoint in timespace]
 
-                plt.figure()
-                plt.plot(time, causevardata, 'b', label=causevar)
-                plt.hold(True)
-                plt.plot(time, affectedvardata, 'r', label=affectedvar)
-                plt.xlabel('Time (minutes)')
-                plt.ylabel('Normalised value')
-                plt.legend()
+                ts_startsample = 0
+                ts_endsample = 8000
 
+#                plt.figure()
+#                plt.plot(time[ts_startsample:ts_endsample],
+#                         causevardata[ts_startsample:ts_endsample],
+#                         'b', label=causevar)
+#                plt.hold(True)
+#                plt.plot(time[ts_startsample:ts_endsample],
+#                         affectedvardata[ts_startsample:ts_endsample],
+#                         'r', label=affectedvar)
+#                plt.xlabel('Time (minutes)')
+#                plt.ylabel('Normalised value')
+#                plt.legend()
+#
                 plotdir = ensure_existance(os.path.join(saveloc, 'plots'),
                                            make=True)
+#
+#                filename_template = os.path.join(plotdir, 'TS_{}_{}_{}_{}.pdf')
+#
+#                def filename(causename, affectedname):
+#                    return filename_template.format(case, scenario,
+#                                                    causename, affectedname)
 
-                filename_template = os.path.join(plotdir, 'TS_{}_{}_{}_{}.pdf')
-
-                def filename(causename, affectedname):
-                    return filename_template.format(case, scenario,
-                                                    causename, affectedname)
-
-                plt.savefig(filename(causevar, affectedvar))
+#                plt.savefig(filename(causevar, affectedvar))
 
                 # Create and safe FFT plot
                 # Compute FFT
-                causevar_fft = abs(np.fft.rfft(causevardata)) * \
-                    (2. / len(causevardata))
+#                causevar_fft = abs(np.fft.rfft(causevardata)) * \
+#                    (2. / len(causevardata))
                 affectedvar_fft = abs(np.fft.rfft(affectedvardata)) * \
                     (2. / len(affectedvardata))
                 freqlist = np.fft.rfftfreq(len(causevardata), sampling_rate)
 
+                fft_endsample = 400
+
                 plt.figure()
-                plt.plot(freqlist[0:400], causevar_fft[0:400], 'b', label=causevar)
+#                plt.plot(freqlist[0:fft_endsample], causevar_fft[0:fft_endsample], 'b', label=causevar)
                 plt.hold(True)
-                plt.plot(freqlist[0:400], affectedvar_fft[0:400], 'r', label=affectedvar)
-                plt.xlabel('Frequency (1/minutes)')
+                plt.plot(freqlist[0:fft_endsample], affectedvar_fft[0:fft_endsample], 'r', label=affectedvar)
+                plt.xlabel('Frequency (1/minute)')
                 plt.ylabel('Normalised amplitude')
                 plt.legend()
 
-                filename_template = os.path.join(plotdir,
-                                                 'FFT_{}_{}_{}_{}.pdf')
+#                causevarmaxindex = causevar_fft.tolist().index(max(causevar_fft))
+                affectedvarmaxindex = affectedvar_fft.tolist().index(max(affectedvar_fft))
 
+#                print causevar + " maximum signal strenght frequency: " + str(freqlist[causevarmaxindex])
+                print affectedvar + " maximum signal strenght frequency: " + str(freqlist[affectedvarmaxindex])
+
+                filename_template = os.path.join(plotdir,
+                                                 'FFT_{}_{}_{}.pdf')
+#
                 def filename(causename, affectedname):
                     return filename_template.format(case, scenario,
-                                                    causename, affectedname)
+                                                    affectedname)
 
                 plt.savefig(filename(causevar, affectedvar))
+
+                plt.close()
