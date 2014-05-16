@@ -480,6 +480,10 @@ def estimate_delay(weightcalcdata, method, sigtest):
     weight_array = np.delete(weight_array, dellist, 1)
     weight_array = np.delete(weight_array, dellist, 0)
 
+    # Do the same for delay_array
+    delay_array = np.delete(delay_array, dellist, 1)
+    delay_array = np.delete(delay_array, dellist, 0)
+
     return weight_array, delay_array, datastore, data_header
 
 
