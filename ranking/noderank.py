@@ -87,14 +87,20 @@ def calc_simple_rank(gainmatrix, variables, m, noderankdata):
     """Constructs the ranking dictionary using the eigenvector approach
     i.e. Ax = x where A is the local gain matrix.
 
+    Taking the absolute of the gainmatrix and normalizing to conform to
+    original LoopRank idea.
+
     """
 
     # Length of gain matrix = number of nodes
-    gainmatrix = np.asarray(gainmatrix)
+    gainmatrix = np.abs(np.asarray(gainmatrix))
     n = len(gainmatrix)
     s_matrix = (1.0 / n) * np.ones((n, n))
     # Basic PageRank algorithm
     m_matrix = (1 - m) * gainmatrix + m * s_matrix
+    # Normalize the m-matrix columns
+    for col in range(n):
+        m_matrix[:, col] = m_matrix[:, col] / np.sum(abs(m_matrix[:, col]))
     # Calculate eigenvalues and eigenvectors as usual
     [eigval, eigvec] = np.linalg.eig(m_matrix)
     maxeigindex = np.argmax(eigval)
