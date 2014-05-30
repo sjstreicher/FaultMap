@@ -415,7 +415,7 @@ def estimate_delay(weightcalcdata, method, sigtest):
     method can be either 'pearson_correlation' or 'transfer_entropy'
 
     """
-    if method == 'pearson_correlation':
+    if method == 'cross_correlation':
         weightcalculator = CorrWeightcalc(weightcalcdata)
     elif method == 'transfer_entropy':
         weightcalculator = TransentWeightcalc(weightcalcdata)
