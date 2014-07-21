@@ -12,7 +12,7 @@ from config_setup import runsetup
 import os
 
 mode = 'plants'
-case = 'epu5_compressor'
+case = 'sim_level_composition'
 
 saveloc, casedir, _ = runsetup(mode, case)
 caseconfig = json.load(open(os.path.join(casedir, case + '.json')))
@@ -48,9 +48,9 @@ data = np.genfromtxt(tags_tsdata, delimiter=',')
 #table = hdf5writer.create_table(hdf5writer.root, description=data_description,
 #                                name=datafile,
 #                                title=datafile)
-                                
+
 array = hdf5writer.create_array(hdf5writer.root, dataset, data)
-            
+
 #table.append(data)
 #table.flush()
 array.flush()
