@@ -1,6 +1,10 @@
-"""Ranks nodes in a network when provided with a connection and gainmatrix.
+"""This module is used to rank nodes in a digraph.
+It requires a connection as well as a gain matrix as inputs.
 
-@author St. Elmo Wilken, Simon Streicher
+Future versions will make use of an intrinsic node importance score vector (for
+example, individual loop key performance indicators) as well.
+
+@author Simon Streicher, St. Elmo Wilken
 
 """
 # Standard libraries
@@ -19,7 +23,7 @@ import formatmatrices
 import config_setup
 import ranking
 
-import networkgen
+#import networkgen
 
 
 class NoderankData:
