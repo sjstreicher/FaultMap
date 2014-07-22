@@ -74,7 +74,7 @@ def autoreg_gen(samples, delay):
     affected = affected[delay:]
     cause = cause[delay:]
 
-    affected = affected + affected_random_add[delay:]
+#    affected = affected + affected_random_add[delay:]
 
     data = vstack([cause, affected])
 
