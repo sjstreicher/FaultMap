@@ -5,9 +5,13 @@ Created on Tue Mar 11 01:27:15 2014
 @author: Simon
 """
 
+import numpy as np
+import matplotlib.pyplot as plt
+
 from datagen import autoreg_datagen
 from transentropy import setup_infodynamics_te
 from transentropy import calc_infodynamics_te
+from dev_te_python import calc_python_te
 
 import jpype
 from sklearn import preprocessing
@@ -26,6 +30,10 @@ delay = 5
 samples = 2500
 # Low value selected for demonstration purposes only
 sub_samples = 1000
+
+infodynamics_results = np.zeros(len(range(0, 11)))
+custom_results = np.zeros_like(infodynamics_results)
+
 for timelag in range(0, 11):
     print "Results for timelag of: ", str(timelag)
     [x_pred, x_hist, y_hist] = autoreg_datagen(delay, timelag,
@@ -45,3 +53,20 @@ for timelag in range(0, 11):
 
     result = calc_infodynamics_te(teCalc, x_hist_norm[0], y_hist_norm[0])
     print("Infodynamics TE result: %.4f bits" % (result))
+
+    infodynamics_results[timelag] = result
+
+    # Calculate transfer entropy according to custom method:
+
+    custom_result = calc_python_te(x_pred_norm[0], x_hist_norm[0],
+                                   y_hist_norm[0])
+
+    custom_results[timelag] = custom_result
+
+    print("Custom TE result: %.4f bits" % (custom_result))
+
+# Plot results over time delay
+fig, ax = plt.subplots()
+ax.plot(range(0, 11), infodynamics_results)
+ax.plot(range(0, 11), custom_results)
+plt.show()
