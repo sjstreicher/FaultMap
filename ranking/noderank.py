@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """This module is used to rank nodes in a digraph.
 It requires a connection as well as a gain matrix as inputs.
 

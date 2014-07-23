@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Verifies the working of the transfer entropy calculation code by means of
 an example on autoregressive data with known time delay.
 
