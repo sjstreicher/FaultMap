@@ -80,15 +80,14 @@ def kde_sklearn(x, x_grid, bandwidth=0.3, **kwargs):
 
 def kde_sklearn_create(x, bandwidth=0.2, **kwargs):
     """Kernel Density Estimation with Scikit-learn creation"""
-    # TOOD: Implement automatic optimal bandwidth selection
     grid = GridSearchCV(KernelDensity(),
-                        {'bandwidth': np.linspace(0.05, 2.0, 100)},
+                        {'bandwidth': np.linspace(0.01, 1.0, 100)},
                         cv=20)  # 20-fold cross-validation
     grid.fit(x)
     kde_skl = grid.best_estimator_
     print grid.best_params_
 #    kde_skl = KernelDensity(bandwidth=bandwidth, **kwargs)
-#    kde_skl.fit(x[:, np.newaxis])
+#    kde_skl.fit(x)
     return kde_skl
 
 
@@ -163,13 +162,13 @@ xx, yy = np.meshgrid(x_grid, y_grid)
 data_2 = np.vstack([x_hist, y_hist])
 pdf_2 = kde_sklearn_create(data_2.T)
 reading_grid = np.vstack([x_grid, y_grid]).T
-pdf_2_read = kde_sklearn_sample(pdf_2, reading_grid)
+pdf_2_read = kde_sklearn_sample(pdf_2, data_2.T)
 # Plot
 fig, ax = plt.subplots()
-ax.plot(x_grid, pdf_2_read, '.', linewidth=3, alpha=0.5,
+ax.plot(x_hist, pdf_2_read, '.', linewidth=3, alpha=0.5,
         label='pdf_x_hist')
-#ax.plot(y_grid, pdf_2_read, '.', linewidth=3, alpha=0.5,
-#        label='pdf_y_hist')
+ax.plot(y_hist, pdf_2_read, '.', linewidth=3, alpha=0.5,
+        label='pdf_y_hist')
 plt.show()
 
 
@@ -188,21 +187,29 @@ plt.clabel(CS, inline=1, fontsize=10)
 plt.title('Simplest default with labels')
 plt.show()
 
-
-## Estimate p(x_{i+h}, x_i, y_i)
-#data_1 = np.vstack([x_pred, x_hist, y_hist])
-#pdf_1 = kde_sklearn_create(data_1.T)
-## Plot
-#fig, ax = plt.subplots()
-#ax.plot(y_hist_grid, pdf_y_hist_read, linewidth=3, alpha=0.5,
-#        label='pdf_y_hist')
-#ax.hist(data[0, :], 30, fc='gray', histtype='bar', alpha=0.3, normed=True)
-#plt.show()
+# Plot pdf2 over N
+fig, ax = plt.subplots()
+ax.plot(range(len(x_hist)), pdf_2_read, '.', linewidth=3, alpha=0.5,
+        label='pdf_2')
+plt.show()
 
 
+# Estimate p(x_{i+h}, x_i, y_i)
+data_1 = np.vstack([x_pred, x_hist, y_hist])
+pdf_1 = kde_sklearn_create(data_1.T)
+pdf_1_read = kde_sklearn_sample(pdf_1, data_1.T)
+# Plot
+fig, ax = plt.subplots()
+ax.plot(range(len(x_hist)), pdf_1_read, '.', linewidth=3, alpha=0.5,
+        label='pdf_1')
+plt.show()
 
-
-
+# Plot pdf_1 / pdf_2
+fig, ax = plt.subplots()
+ax.plot(range(len(x_hist)), pdf_1_read / pdf_2_read, '.', linewidth=3,
+        alpha=0.5,
+        label='log term numerator')
+plt.show()
 
 #from scipy.stats.distributions import norm
 #
@@ -257,23 +264,29 @@ def pdfcalcs(x_pred, x_hist, y_hist):
 #    k = np.size(x_hist[:, 1])
 #    l = np.size(y_hist[:, 1])
 
-    # Calculate p(x_{i+h}, x_i, y_i)
+    # Estimate p(x_{i+h}, x_i, y_i)
     data_1 = np.vstack([x_pred, x_hist, y_hist])
-    pdf_1 = kde_sklearn_create(data_1)
+    pdf_1 = kde_sklearn_create(data_1.T)
+    pdf_1_read = kde_sklearn_sample(pdf_1, data_1.T)
 
-    # Calculate p(x_i, y_i)
-    data_2 = np.vstack([x_hist[0, :], y_hist[0, :]])
-    pdf_2 = stats.gaussian_kde(data_2, 'silverman')
+    # Estimate p(x_i, y_i)
+    data_2 = np.vstack([x_hist, y_hist])
+    pdf_2 = kde_sklearn_create(data_2.T)
+    pdf_2_read = kde_sklearn_sample(pdf_2, data_2.T)
 
     # Calculate p(x_{i+h}, x_i)
-    data_3 = np.vstack([x_pred, x_hist[0, :]])
-    pdf_3 = stats.gaussian_kde(data_3, 'silverman')
+    data_3 = np.vstack([x_pred, x_hist])
+    pdf_3 = kde_sklearn_create(data_3.T)
+    pdf_3_read = kde_sklearn_sample(pdf_3, data_3.T)
 
     # Calculate p(x_i)
-    data_4 = x_hist[0, :]
-    pdf_4 = stats.gaussian_kde(data_4, 'silverman')
+    data_4 = np.vstack([x_hist])
+    pdf_4 = kde_sklearn_create(data_4.T)
+    pdf_4_read = kde_sklearn_sample(pdf_4, data_4.T)
 
-    return pdf_1, pdf_2, pdf_3, pdf_4
+    return pdf_1_read, pdf_2_read, pdf_3_read, pdf_4_read
+
+[pdf_1, pdf_2, pdf_3, pdf_4] = pdfcalcs(x_pred, x_hist, y_hist)
 
 
 def te_elementcalc(pdf_1, pdf_2, pdf_3, pdf_4, x_pred_val,
