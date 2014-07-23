@@ -3,7 +3,7 @@
 
 """
 
-from ranking.gaincalc import weightcalc, partialcorrcalc
+from ranking.gaincalc import weightcalc
 import logging
 logging.basicConfig(level=logging.INFO)
 
@@ -11,8 +11,7 @@ writeoutput = True
 sigtest = True
 
 mode = 'plants'
-cases = ['propylene_compressor']
+cases = ['tennessee_eastman']
 
 for case in cases:
     weightcalc(mode, case, sigtest, writeoutput)
-#    partialcorrcalc(mode, case, writeoutput)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This module calculates the gains (weights) of edges connecting
 variables in the digraph.
 
