@@ -24,7 +24,7 @@ import formatmatrices
 import config_setup
 import ranking
 
-#import networkgen
+import networkgen
 
 
 class NoderankData:

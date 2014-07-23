@@ -38,4 +38,3 @@ for col, colvar in enumerate(variables):
 
 nx.write_gml(testgraph, os.path.join(saveloc, "testgraph.gml"))
 nx.draw(testgraph)
-plt.show()
