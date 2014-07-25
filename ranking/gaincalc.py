@@ -1,18 +1,23 @@
-"""This method is used to calculate the gains (weights) of edges connecting
-variables in the network.
+"""This module calculates the gains (weights) of edges connecting
+variables in the digraph.
 
-It allows for both the correlation and transfer entropy.
-All weights are optimized with respect to time (i.e. cross-correlated)
+Calculation of both Pearson's correlation and transfer entropy is supported.
+Transfer entropy is calculated according to the global average of local
+entropies method.
+All weights are optimized with respect to time shifts between the time series
+data vectors (i.e. cross-correlated).
 
 The delay giving the maximum weight is returned, together with the maximum
 weights.
 
 All weights are tested for significance.
-The following output options exits:
+The Pearson's correlation weights are tested for signigicance according to
+the parameters presented by Bauer2005.
+The transfer entropy weights are tested for significance using a non-parametric
+rank-order method using surrogate data generated according to the iterative
+amplitude adjusted Fourier transform method (iAAFT).
 
-<<<To be completed>>>
-
-@author: St. Elmo Wilken, Simon Streicher
+@author: Simon Streicher, St. Elmo Wilken
 
 """
 # Standard libraries
@@ -25,7 +30,7 @@ import json
 import sklearn
 import sklearn.preprocessing
 
-# Less standard libraries
+# Non-standard external libraries
 import pygeonetwork
 import jpype
 
@@ -113,9 +118,11 @@ class WeightcalcData:
             samples = self.caseconfig['gensamples']
             func_delay = self.caseconfig['delay']
             # Get inputdata
-            self.inputdata_raw = eval('datagen.' + tags_tsdata_gen)(samples, func_delay)
+            self.inputdata_raw = eval('datagen.' + tags_tsdata_gen)(samples,
+                                                                    func_delay)
             # Get the variables and connection matrix
-            [self.variables, self.connectionmatrix] = eval('datagen.' + connectionloc)()
+            [self.variables, self.connectionmatrix] = eval('datagen.'
+                                                           + connectionloc)()
             self.startindex = 0
 
         self.causevarindexes = self.caseconfig[scenario]['causevarindexes']
@@ -316,8 +323,9 @@ class TransentWeightcalc:
             thresh_causevardata = \
                 inputdata[:, causevarindex][startindex:startindex+size]
             thresh_affectedvardata = \
-                inputdata[:, affectedvarindex][startindex+bestdelay_sample:
-                                               startindex+size+bestdelay_sample]
+                inputdata[:, affectedvarindex][startindex + bestdelay_sample:
+                                               startindex + size +
+                                               bestdelay_sample]
             if te_thresh_method == 'rankorder':
                 self.thresh_rankorder(thresh_affectedvardata.T,
                                       thresh_causevardata.T)
