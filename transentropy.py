@@ -1,4 +1,5 @@
-"""Module containing functions used in calculation of transfer entropy
+"""This module contains the methods used in the calculation of transfer
+entropy.
 
 Created on Mon Feb 24 15:18:33 2014
 
