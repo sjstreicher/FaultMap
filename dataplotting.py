@@ -20,7 +20,7 @@ from config_setup import ensure_existance
 
 # Define the mode and case for plot generation
 mode = 'plants'
-case = 'alcoholrecovery'
+case = 'propylene_compressor'
 
 # Amount of samples to lag cause variable behind affected variable
 delay = 0
@@ -60,7 +60,7 @@ for scenario in scenarios:
     elif datatype == 'function':
         tags_tsdata_gen = caseconfig[scenario]['datagen']
         connectionloc = caseconfig[scenario]['connections']
-        # TODO: Store function arguments ifrom config_setup import
+        # TODO: Store function arguments from config_setup import
         # ensure_existence scenario config file
         samples = caseconfig['gensamples']
         delay = caseconfig['delay']
@@ -70,7 +70,7 @@ for scenario in scenarios:
         [variables, connectionmatrix] = eval(connectionloc)()
 
     # Normalise (mean centre and variance scale) the input data
-    inputdata = inputdata
+    inputdata = inputdata  # What is this supposed to do?
     if normalise is True:
         inputdata_norm = preprocessing.scale(inputdata, axis=0)
     else:
@@ -115,7 +115,8 @@ for scenario in scenarios:
                 plotdir = ensure_existance(os.path.join(saveloc, 'plots'),
                                            make=True)
 #
-#                filename_template = os.path.join(plotdir, 'TS_{}_{}_{}_{}.pdf')
+#                filename_template = os.path.join(plotdir,
+#                                                 'TS_{}_{}_{}_{}.pdf')
 #
 #                def filename(causename, affectedname):
 #                    return filename_template.format(case, scenario,
@@ -137,7 +138,7 @@ for scenario in scenarios:
 #                plt.plot(freqlist[0:fft_endsample], causevar_fft[0:fft_endsample], 'b', label=causevar)
                 plt.hold(True)
                 plt.plot(freqlist[0:fft_endsample], affectedvar_fft[0:fft_endsample], 'r', label=affectedvar)
-                plt.xlabel('Frequency (1/minute)')
+                plt.xlabel('Frequency (1/second)')
                 plt.ylabel('Normalised amplitude')
                 plt.legend()
 
