@@ -34,12 +34,28 @@ gainmatrix = np.matrix([[0.00, 0.00, 0.00, 0.35],
                         [0.42, 0.00, 0.00, 0.00],
                         [0.00, 0.00, 0.21, 0.00]])
 
+# Should the transpose happen before or after the column normalization?
+# I have a feeling that it should definitely be before...
+
 gainmatrix = gainmatrix.T
+
+n = gainmatrix.shape[0]
+
+# Normalize the gainmatrix columns
+#for col in range(n):
+#    colsum = np.sum(abs(gainmatrix[:, col]))
+#    if colsum == 0:
+#        # Option 1 do nothing
+#        None
+#        # Option two: equally connect to all other nodes
+##        gainmatrix[:, col] = (np.ones([n, 1]) / n)
+#    else:
+#        gainmatrix[:, col] = (gainmatrix[:, col]
+#                              / colsum)
 
 onesmatrix = np.ones_like(gainmatrix)
 
 m = 0.15
-n = gainmatrix.shape[0]
 
 resetmatrix = (1./n) * np.ones_like(gainmatrix)
 
@@ -49,6 +65,8 @@ weightmatrix = ((1-m) * gainmatrix) + (m * resetmatrix)
 for col in range(n):
     weightmatrix[:, col] = (weightmatrix[:, col]
                             / np.sum(abs(weightmatrix[:, col])))
+
+#weightmatrix = weightmatrix.T
 
 [eigval, eigvec] = np.linalg.eig(weightmatrix)
 maxeigindex = np.argmax(eigval)
@@ -66,24 +84,24 @@ for col, colvar in enumerate(variables):
     for row, rowvar in enumerate(variables):
         # Create fully connected weighted graph for use with eigenvector
         # centrality analysis
-        weightgraph.add_edge(colvar, rowvar,
+        weightgraph.add_edge(rowvar, colvar,
                              weight=weightmatrix[row, col])
-        onesgraph.add_edge(colvar, rowvar,
+        onesgraph.add_edge(rowvar, colvar,
                            weight=onesmatrix[row, col])
         # Create sparsely connected graph based on significant edge weights
         # only for use with Katz centrality analysis
         if (gainmatrix[row, col] != 0.):
             # The node order is source, sink according to
             # the convention that columns are sources and rows are sinks
-            gaingraph.add_edge(colvar, rowvar, weight=gainmatrix[row, col])
+            gaingraph.add_edge(rowvar, colvar, weight=gainmatrix[row, col])
 
 
 eig_rankingdict = nx.eigenvector_centrality(weightgraph)
 
 
-katz_rankingdict = nx.katz_centrality(gaingraph, 3.18, 1.0, 20000)
+katz_rankingdict = nx.katz_centrality(gaingraph, 0.1, 1.0, 20000)
 
-katz_rankingdict_weight = nx.katz_centrality(weightgraph, 1.1, 1.0, 20000)
+katz_rankingdict_weight = nx.katz_centrality(weightgraph, 0.9, 1.0, 20000)
 
 #nx.write_gml(gaingraph, os.path.join(saveloc, "gaingraph.gml"))
 #nx.draw(gaingraph)
