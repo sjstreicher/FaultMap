@@ -14,6 +14,8 @@ logging.basicConfig(level=logging.INFO)
 
 import os
 
+import networkgen
+
 filesloc = json.load(open('config.json'))
 saveloc = os.path.expanduser(filesloc['saveloc'])
 
@@ -23,43 +25,53 @@ onesgraph = nx.DiGraph()
 
 variables = ['PV 1', 'PV 2', 'PV 3', 'PV 4']
 
-connections = np.matrix([[0, 0, 0, 1],
-                         [1, 0, 0, 1],
-                         [1, 0, 0, 0],
-                         [0, 1, 1, 0]])
+#connections = np.matrix([[0, 0, 0, 1],
+#                         [1, 0, 0, 1],
+#                         [1, 0, 0, 0],
+#                         [0, 1, 1, 0]])
 
 
-gainmatrix = np.matrix([[0.00, 0.00, 0.00, 0.35],
-                        [0.82, 0.00, 0.00, 0.63],
-                        [0.42, 0.00, 0.00, 0.00],
-                        [0.00, 0.00, 0.21, 0.00]])
+#gainmatrix = np.matrix([[0.00, 0.00, 0.00, 0.35],
+#                        [0.82, 0.00, 0.00, 0.63],
+#                        [0.42, 0.00, 0.00, 0.00],
+#                        [0.00, 0.00, 0.21, 0.00]])
+
+[_, gainmatrix, variables, _] = networkgen.series_equal_five()
 
 # Should the transpose happen before or after the column normalization?
 # I have a feeling that it should definitely be before...
 
-gainmatrix = gainmatrix.T
-
 n = gainmatrix.shape[0]
 
+gainmatrix = np.asmatrix(gainmatrix, dtype=float)
+
 # Normalize the gainmatrix columns
-#for col in range(n):
-#    colsum = np.sum(abs(gainmatrix[:, col]))
-#    if colsum == 0:
-#        # Option 1 do nothing
-#        None
-#        # Option two: equally connect to all other nodes
-##        gainmatrix[:, col] = (np.ones([n, 1]) / n)
-#    else:
-#        gainmatrix[:, col] = (gainmatrix[:, col]
-#                              / colsum)
+for col in range(n):
+    colsum = np.sum(abs(gainmatrix[:, col]))
+    if colsum == 0:
+        # Option :1 do nothing
+        None
+        # Option 2: equally connect to all other nodes
+#        for row in range(n):
+#            gainmatrix[row, col] = (1. / n)
+    else:
+        gainmatrix[:, col] = (gainmatrix[:, col]
+                              / colsum)
 
 onesmatrix = np.ones_like(gainmatrix)
 
-m = 0.15
+m = 0.9999
 
-resetmatrix = (1./n) * np.ones_like(gainmatrix)
+relative_reset_vector = [1, 1, 1, 1, 1]
 
-weightmatrix = ((1-m) * gainmatrix) + (m * resetmatrix)
+relative_reset_vector_norm = np.asarray(relative_reset_vector, dtype=float) \
+    / sum(relative_reset_vector)
+
+resetmatrix = np.array([relative_reset_vector_norm, ]*n).T
+
+#resetmatrix = (1./n) * np.ones_like(gainmatrix)
+
+weightmatrix = (m * gainmatrix) + ((1-m) * resetmatrix)
 
 # Normalize the m-matrix columns
 for col in range(n):
@@ -69,6 +81,7 @@ for col in range(n):
 #weightmatrix = weightmatrix.T
 
 [eigval, eigvec] = np.linalg.eig(weightmatrix)
+[eigval_gain, eigvec_gain] = np.linalg.eig(gainmatrix)
 maxeigindex = np.argmax(eigval)
 
 rankarray = eigvec[:, maxeigindex]
@@ -96,14 +109,31 @@ for col, colvar in enumerate(variables):
             gaingraph.add_edge(rowvar, colvar, weight=gainmatrix[row, col])
 
 
-eig_rankingdict = nx.eigenvector_centrality(weightgraph)
+eig_rankingdict = nx.eigenvector_centrality(weightgraph.reverse())
 
 
-katz_rankingdict = nx.katz_centrality(gaingraph, 0.1, 1.0, 20000)
+def norm_dict(dictionary):
+    dictionary_norm = dict()
+    entrysums = 0
+    for entry in dictionary:
+        entrysums += dictionary[entry]
+    for entry in dictionary:
+        dictionary_norm[entry] = dictionary[entry] / entrysums
+    return dictionary_norm
 
-katz_rankingdict_weight = nx.katz_centrality(weightgraph, 0.9, 1.0, 20000)
 
-#nx.write_gml(gaingraph, os.path.join(saveloc, "gaingraph.gml"))
+eig_rankingdict_norm = norm_dict(eig_rankingdict)
+
+katz_rankingdict = nx.katz_centrality(gaingraph.reverse(),
+                                      1.0, 1.0, 20000)
+
+katz_rankingdict_norm = norm_dict(katz_rankingdict)
+
+katz_rankingdict_weight = nx.katz_centrality(weightgraph.reverse(),
+                                             0.99, 1.0, 20000)
+
+nx.write_gml(gaingraph, os.path.join(saveloc, "gaingraph.gml"))
+nx.write_gml(weightgraph, os.path.join(saveloc, "weightgraph.gml"))
 #nx.draw(gaingraph)
 #plt.show()
 
