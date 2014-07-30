@@ -270,6 +270,7 @@ class TransentWeightcalc:
         # Setup Java class for infodynamics toolkit
         self.teCalc = transentropy.setup_infodynamics_te()
 
+
     def calcweight(self, causevardata, affectedvardata):
         """"Calculates the transfer entropy between two vectors containing
         timer series data.
@@ -415,6 +416,19 @@ class TransentWeightcalc:
 
         self.threshent = (6 * surrte_stdev) + surrte_mean
 
+def bandgap(min_freq, max_freq, vardata):
+    """Bandgap filter based on FFT"""
+    freqlist = np.fft.rfftfreq(vardata.size, 1)
+    # Investigate effect of using abs()
+    var_fft = np.fft.rfft(vardata)
+    cut_var_fft = var_fft.copy()
+    cut_var_fft[(freqlist < min_freq)] = 0
+    cut_var_fft[(freqlist > max_freq)] = 0
+
+    cut_vardata = np.fft.irfft(cut_var_fft)
+
+    return cut_vardata
+
 
 def estimate_delay(weightcalcdata, method, sigtest):
     """Determines the maximum weight between two variables by searching through
@@ -471,6 +485,10 @@ def estimate_delay(weightcalcdata, method, sigtest):
                     affectedvardata = \
                         (weightcalcdata.inputdata[:, affectedvarindex]
                             [startindex+delay:startindex+size+delay])
+
+                    # Pass data through bandgap filter
+                    causevardata = bandgap(0.005, 0.008, causevardata)
+                    affectedvardata = bandgap(0.005, 0.008, affectedvardata)
 
                     weight = weightcalculator.calcweight(causevardata,
                                                          affectedvardata)

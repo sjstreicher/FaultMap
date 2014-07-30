@@ -20,23 +20,19 @@ from config_setup import ensure_existance
 
 # Define the mode and case for plot generation
 mode = 'plants'
-case = 'alcoholrecovery'
-
-# Amount of samples to lag cause variable behind affected variable
-delay = 0
+case = 'propylene_compressor'
 
 #Specify whether the data should be normalised before plotting
 normalise = True
 
 saveloc, casedir, infodynamicsloc = runsetup(mode, case)
 # Load case config file
-caseconfig = json.load(open(os.path.join(casedir, case + '_weightcalc.json')))
+caseconfig = json.load(open(os.path.join(casedir, case + '_fftplotting.json')))
 
 # Get scenarios
 scenarios = caseconfig['scenarios']
 # Get data type
 datatype = caseconfig['datatype']
-testsize = caseconfig['testsize']
 sampling_rate = caseconfig['sampling_rate']
 
 for scenario in scenarios:
@@ -60,7 +56,7 @@ for scenario in scenarios:
     elif datatype == 'function':
         tags_tsdata_gen = caseconfig[scenario]['datagen']
         connectionloc = caseconfig[scenario]['connections']
-        # TODO: Store function arguments ifrom config_setup import
+        # TODO: Store function arguments from config_setup import
         # ensure_existence scenario config file
         samples = caseconfig['gensamples']
         delay = caseconfig['delay']
@@ -70,90 +66,62 @@ for scenario in scenarios:
         [variables, connectionmatrix] = eval(connectionloc)()
 
     # Normalise (mean centre and variance scale) the input data
-    inputdata = inputdata
+
     if normalise is True:
         inputdata_norm = preprocessing.scale(inputdata, axis=0)
     else:
         inputdata_norm = inputdata
 
-    for causevarindex in [1]:
-        causevar = variables[causevarindex]
-        logging.info("Analysing effect of: " + causevar)
-        for affectedvarindex in range(len(variables)):
-            affectedvar = variables[affectedvarindex]
-            if not(connectionmatrix[affectedvarindex, causevarindex] == 0):
+    def bandgap(min_freq, max_freq, vardata):
+        """Bandgap filter based on FFT"""
+        freqlist = np.fft.rfftfreq(vardata.size, sampling_rate)
+        # Investigate effect of using abs()
+        var_fft = np.fft.rfft(vardata)
+        cut_var_fft = var_fft.copy()
+        cut_var_fft[(freqlist < min_freq)] = 0
+        cut_var_fft[(freqlist > max_freq)] = 0
 
-                if delay == 0:
-                    offset = None
-                else:
-                    offset = -delay
+        cut_vardata = np.fft.irfft(cut_var_fft)
 
-                causevardata = \
-                    inputdata_norm[:, causevarindex]
-                affectedvardata = \
-                    inputdata_norm[:, affectedvarindex]
+        return cut_vardata
 
-                # Create and save time series data plot
-                timespace = range(len(causevardata))
-                time = [sampling_rate * timepoint for timepoint in timespace]
+    for variable in variables:
+        logging.info("Analysing effect of: " + variable)
+#        vardata = inputdata_norm[:, variables.index(variable)]
+        vardata = inputdata_norm[:, variables.index(variable)]
 
-                ts_startsample = 0
-                ts_endsample = 8000
+        # Make the directory to store the FFT plot if not already created
+        plotdir = ensure_existance(os.path.join(saveloc, 'plots'), make=True)
 
-#                plt.figure()
-#                plt.plot(time[ts_startsample:ts_endsample],
-#                         causevardata[ts_startsample:ts_endsample],
-#                         'b', label=causevar)
-#                plt.hold(True)
-#                plt.plot(time[ts_startsample:ts_endsample],
-#                         affectedvardata[ts_startsample:ts_endsample],
-#                         'r', label=affectedvar)
-#                plt.xlabel('Time (minutes)')
-#                plt.ylabel('Normalised value')
-#                plt.legend()
-#
-                plotdir = ensure_existance(os.path.join(saveloc, 'plots'),
-                                           make=True)
-#
-#                filename_template = os.path.join(plotdir, 'TS_{}_{}_{}_{}.pdf')
-#
-#                def filename(causename, affectedname):
-#                    return filename_template.format(case, scenario,
-#                                                    causename, affectedname)
+        # Filter time series data
+        vardata = bandgap(0.005, 0.008, vardata)
 
-#                plt.savefig(filename(causevar, affectedvar))
+        # Create and save FFT plot
+        # Compute FFT (normalised amplitude)
+        var_fft = abs(np.fft.rfft(vardata)) * \
+            (2. / len(vardata))
+        freqlist = np.fft.rfftfreq(len(vardata), sampling_rate)
 
-                # Create and safe FFT plot
-                # Compute FFT
-#                causevar_fft = abs(np.fft.rfft(causevardata)) * \
-#                    (2. / len(causevardata))
-                affectedvar_fft = abs(np.fft.rfft(affectedvardata)) * \
-                    (2. / len(affectedvardata))
-                freqlist = np.fft.rfftfreq(len(causevardata), sampling_rate)
+        # Select up to which frequency to plot
+        fft_endsample = 500
 
-                fft_endsample = 400
+        plt.figure()
+        plt.plot(freqlist[0:fft_endsample], var_fft[0:fft_endsample],
+                 'r', label=variable)
+        plt.xlabel('Frequency (1/second)')
+        plt.ylabel('Normalised amplitude')
+        plt.legend()
 
-                plt.figure()
-#                plt.plot(freqlist[0:fft_endsample], causevar_fft[0:fft_endsample], 'b', label=causevar)
-                plt.hold(True)
-                plt.plot(freqlist[0:fft_endsample], affectedvar_fft[0:fft_endsample], 'r', label=affectedvar)
-                plt.xlabel('Frequency (1/minute)')
-                plt.ylabel('Normalised amplitude')
-                plt.legend()
+        varmaxindex = var_fft.tolist().index(max(var_fft))
+        print variable + " maximum signal strenght frequency: " + \
+            str(freqlist[varmaxindex])
 
-#                causevarmaxindex = causevar_fft.tolist().index(max(causevar_fft))
-                affectedvarmaxindex = affectedvar_fft.tolist().index(max(affectedvar_fft))
+        filename_template = os.path.join(plotdir,
+                                         'FFT_{}_{}_{}.pdf')
 
-#                print causevar + " maximum signal strenght frequency: " + str(freqlist[causevarmaxindex])
-                print affectedvar + " maximum signal strenght frequency: " + str(freqlist[affectedvarmaxindex])
+        def filename(variablename):
+            return filename_template.format(case, scenario, variablename)
 
-                filename_template = os.path.join(plotdir,
-                                                 'FFT_{}_{}_{}.pdf')
-#
-                def filename(causename, affectedname):
-                    return filename_template.format(case, scenario,
-                                                    affectedname)
-
-                plt.savefig(filename(causevar, affectedvar))
-
-                plt.close()
+        plt.savefig(filename(variable))
+#        plt.show()
+        plt.close()
