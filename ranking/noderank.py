@@ -1,6 +1,11 @@
-"""Ranks nodes in a network when provided with a connection and gainmatrix.
+# -*- coding: utf-8 -*-
+"""This module is used to rank nodes in a digraph.
+It requires a connection as well as a gain matrix as inputs.
 
-@author St. Elmo Wilken, Simon Streicher
+Future versions will make use of an intrinsic node importance score vector (for
+example, individual loop key performance indicators) as well.
+
+@author Simon Streicher, St. Elmo Wilken
 
 """
 # Standard libraries
@@ -41,8 +46,6 @@ class NoderankData:
         self.scenarios = self.caseconfig['scenarios']
         # Get data type
         self.datatype = self.caseconfig['datatype']
-
-        self.metric = 'transfer_entropy'
 
         # m is the weight of the full connectivity matrix used to ensure
         # graph is not sub-stochastic
@@ -89,14 +92,20 @@ def calc_simple_rank(gainmatrix, variables, m, noderankdata):
     """Constructs the ranking dictionary using the eigenvector approach
     i.e. Ax = x where A is the local gain matrix.
 
+    Taking the absolute of the gainmatrix and normalizing to conform to
+    original LoopRank idea.
+
     """
 
     # Length of gain matrix = number of nodes
-    gainmatrix = np.asarray(gainmatrix)
+    gainmatrix = np.abs(np.asarray(gainmatrix))
     n = len(gainmatrix)
     s_matrix = (1.0 / n) * np.ones((n, n))
     # Basic PageRank algorithm
     m_matrix = (1 - m) * gainmatrix + m * s_matrix
+    # Normalize the m-matrix columns
+    for col in range(n):
+        m_matrix[:, col] = m_matrix[:, col] / np.sum(abs(m_matrix[:, col]))
     # Calculate eigenvalues and eigenvectors as usual
     [eigval, eigvec] = np.linalg.eig(m_matrix)
     maxeigindex = np.argmax(eigval)
@@ -106,8 +115,7 @@ def calc_simple_rank(gainmatrix, variables, m, noderankdata):
     # Cuts array into the eigenvector corrosponding to the eigenvalue above
     rankarray = eigvec[:, maxeigindex]
     # Take absolute values of ranking values
-    if not noderankdata.metric == 'transfer_entropy':
-        rankarray = abs(rankarray)
+    rankarray = abs(rankarray)
     # This is the 1-dimensional array composed of rankings (normalised)
     rankarray = (1 / sum(rankarray)) * rankarray
     # Remove the useless imaginary +0j

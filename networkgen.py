@@ -36,7 +36,7 @@ def fullconn_equal(draw=False):
     return connections, gainmatrix, variables, testgraph
 
 
-def series_equal(draw=False):
+def series_equal_five(draw=False):
     """Creates five tags connected in series with unit weights on
     all edges.
 
@@ -52,9 +52,64 @@ def series_equal(draw=False):
 
     gainmatrix = np.array([[0, 0, 0, 0, 0],
                            [1, 0, 0, 0, 0],
-                           [0, 1, 0, 0, 0],
+                           [0, 2, 0, 0, 0],
                            [0, 0, 1, 0, 0],
                            [0, 0, 0, 1, 0]])
+
+    testgraph = buildgraph(variables, gainmatrix, connections)
+
+    if draw:
+        nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
+                                             "series_equal.gml"))
+        nx.draw(testgraph)
+
+    return connections, gainmatrix, variables, testgraph
+
+
+def series_equal_four(draw=False):
+    """Creates four tags connected in series with unit weights on
+    all edges.
+
+    """
+
+    variables = ['X 1', 'X 2', 'X 3', 'X 4']
+
+    connections = np.array([[0, 0, 0, 0],
+                            [1, 0, 0, 0],
+                            [0, 1, 0, 0],
+                            [0, 0, 1, 0],
+                            [0, 0, 0, 0]])
+
+    gainmatrix = np.array([[0, 0, 0, 0],
+                           [1, 0, 0, 0],
+                           [0, 1, 0, 0],
+                           [0, 0, 1, 0]])
+
+    testgraph = buildgraph(variables, gainmatrix, connections)
+
+    if draw:
+        nx.write_gml(testgraph, os.path.join(saveloc, 'testgraphs',
+                                             "series_equal.gml"))
+        nx.draw(testgraph)
+
+    return connections, gainmatrix, variables, testgraph
+
+
+def series_equal_three(draw=False):
+    """Creates four tags connected in series with unit weights on
+    all edges.
+
+    """
+
+    variables = ['X 1', 'X 2', 'X 3']
+
+    connections = np.array([[0, 0, 0],
+                            [1, 0, 0],
+                            [0, 1, 0]])
+
+    gainmatrix = np.array([[0, 0, 0],
+                           [1, 0, 0],
+                           [0, 1, 0]])
 
     testgraph = buildgraph(variables, gainmatrix, connections)
 
