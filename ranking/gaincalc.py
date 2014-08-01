@@ -1,18 +1,23 @@
-"""This method is used to calculate the gains (weights) of edges connecting
-variables in the network.
+"""This module calculates the gains (weights) of edges connecting
+variables in the digraph.
 
-It allows for both the correlation and transfer entropy.
-All weights are optimized with respect to time (i.e. cross-correlated)
+Calculation of both Pearson's correlation and transfer entropy is supported.
+Transfer entropy is calculated according to the global average of local
+entropies method.
+All weights are optimized with respect to time shifts between the time series
+data vectors (i.e. cross-correlated).
 
 The delay giving the maximum weight is returned, together with the maximum
 weights.
 
 All weights are tested for significance.
-The following output options exits:
+The Pearson's correlation weights are tested for signigicance according to
+the parameters presented by Bauer2005.
+The transfer entropy weights are tested for significance using a non-parametric
+rank-order method using surrogate data generated according to the iterative
+amplitude adjusted Fourier transform method (iAAFT).
 
-<<<To be completed>>>
-
-@author: St. Elmo Wilken, Simon Streicher
+@author: Simon Streicher, St. Elmo Wilken
 
 """
 # Standard libraries
@@ -25,7 +30,7 @@ import json
 import sklearn
 import sklearn.preprocessing
 
-# Less standard libraries
+# Non-standard external libraries
 import pygeonetwork
 import jpype
 
@@ -113,9 +118,11 @@ class WeightcalcData:
             samples = self.caseconfig['gensamples']
             func_delay = self.caseconfig['delay']
             # Get inputdata
-            self.inputdata_raw = eval('datagen.' + tags_tsdata_gen)(samples, func_delay)
+            self.inputdata_raw = eval('datagen.' + tags_tsdata_gen)(samples,
+                                                                    func_delay)
             # Get the variables and connection matrix
-            [self.variables, self.connectionmatrix] = eval('datagen.' + connectionloc)()
+            [self.variables, self.connectionmatrix] = eval('datagen.'
+                                                           + connectionloc)()
             self.startindex = 0
 
         self.causevarindexes = self.caseconfig[scenario]['causevarindexes']
@@ -140,8 +147,9 @@ class WeightcalcData:
         self.inputdata = self.inputdata_originalrate[0::sub_sampling_interval]
 
         if self.delaytype == 'datapoints':
-                self.actual_delays = [(delay * self.sampling_rate) for delay in
-                                      self.delays]
+                self.actual_delays = [(delay * self.sampling_rate *
+                                       sub_sampling_interval)
+                                      for delay in self.delays]
                 self.sample_delays = self.delays
         elif self.delaytype == 'timevalues':
             self.actual_delays = [int(round(delay/self.sampling_rate)) *
@@ -262,6 +270,7 @@ class TransentWeightcalc:
         # Setup Java class for infodynamics toolkit
         self.teCalc = transentropy.setup_infodynamics_te()
 
+
     def calcweight(self, causevardata, affectedvardata):
         """"Calculates the transfer entropy between two vectors containing
         timer series data.
@@ -315,8 +324,9 @@ class TransentWeightcalc:
             thresh_causevardata = \
                 inputdata[:, causevarindex][startindex:startindex+size]
             thresh_affectedvardata = \
-                inputdata[:, affectedvarindex][startindex+bestdelay_sample:
-                                               startindex+size+bestdelay_sample]
+                inputdata[:, affectedvarindex][startindex + bestdelay_sample:
+                                               startindex + size +
+                                               bestdelay_sample]
             if te_thresh_method == 'rankorder':
                 self.thresh_rankorder(thresh_affectedvardata.T,
                                       thresh_causevardata.T)
@@ -406,6 +416,19 @@ class TransentWeightcalc:
 
         self.threshent = (6 * surrte_stdev) + surrte_mean
 
+def bandgap(min_freq, max_freq, vardata):
+    """Bandgap filter based on FFT"""
+    freqlist = np.fft.rfftfreq(vardata.size, 1)
+    # Investigate effect of using abs()
+    var_fft = np.fft.rfft(vardata)
+    cut_var_fft = var_fft.copy()
+    cut_var_fft[(freqlist < min_freq)] = 0
+    cut_var_fft[(freqlist > max_freq)] = 0
+
+    cut_vardata = np.fft.irfft(cut_var_fft)
+
+    return cut_vardata
+
 
 def estimate_delay(weightcalcdata, method, sigtest):
     """Determines the maximum weight between two variables by searching through
@@ -414,7 +437,7 @@ def estimate_delay(weightcalcdata, method, sigtest):
     method can be either 'pearson_correlation' or 'transfer_entropy'
 
     """
-    if method == 'pearson_correlation':
+    if method == 'cross_correlation':
         weightcalculator = CorrWeightcalc(weightcalcdata)
     elif method == 'transfer_entropy':
         weightcalculator = TransentWeightcalc(weightcalcdata)
@@ -431,14 +454,26 @@ def estimate_delay(weightcalcdata, method, sigtest):
     delay_array[:] = np.NAN
     datastore = []
 
+    dellist = []
+    for index in range(vardims):
+        if index not in weightcalcdata.causevarindexes:
+            dellist.append(index)
+            logging.info("Deleted column " + str(index))
+
+    newconnectionmatrix = weightcalcdata.connectionmatrix
+    # Substitute all rows and columns not used with zeros in connectionmatrix
+    for delindex in dellist:
+        newconnectionmatrix[:, delindex] = np.zeros(vardims)
+        newconnectionmatrix[delindex, :] = np.zeros(vardims)
+
     for causevarindex in weightcalcdata.causevarindexes:
         causevar = weightcalcdata.variables[causevarindex]
         for affectedvarindex in weightcalcdata.affectedvarindexes:
             affectedvar = weightcalcdata.variables[affectedvarindex]
             logging.info("Analysing effect of: " + causevar + " on " +
                          affectedvar)
-            if not(weightcalcdata.connectionmatrix[affectedvarindex,
-                                                   causevarindex] == 0):
+            if not(newconnectionmatrix[affectedvarindex,
+                                       causevarindex] == 0):
                 weightlist = []
                 for delay in weightcalcdata.sample_delays:
                     logging.info("Now testing delay: " + str(delay))
@@ -451,6 +486,10 @@ def estimate_delay(weightcalcdata, method, sigtest):
                         (weightcalcdata.inputdata[:, affectedvarindex]
                             [startindex+delay:startindex+size+delay])
 
+                    # Pass data through bandgap filter
+                    causevardata = bandgap(0.005, 0.008, causevardata)
+                    affectedvardata = bandgap(0.005, 0.008, affectedvardata)
+
                     weight = weightcalculator.calcweight(causevardata,
                                                          affectedvardata)
                     weightlist.append(weight)
@@ -462,16 +501,14 @@ def estimate_delay(weightcalcdata, method, sigtest):
                                             datastore, sigtest)
 
     # Delete entries from weightcalc matrix not used
-    dellist = []
-    for index in range(vardims):
-        if index not in weightcalcdata.causevarindexes:
-            dellist.append(index)
-            logging.info("Deleted column " + str(index))
-
     # Delete all rows and columns listed in dellist
     # from weight_array
     weight_array = np.delete(weight_array, dellist, 1)
     weight_array = np.delete(weight_array, dellist, 0)
+
+    # Do the same for delay_array
+    delay_array = np.delete(delay_array, dellist, 1)
+    delay_array = np.delete(delay_array, dellist, 0)
 
     return weight_array, delay_array, datastore, data_header
 

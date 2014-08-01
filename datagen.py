@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Created on Mon Feb 24 15:27:21 2014
 
@@ -51,7 +52,7 @@ def autoreg_gen(samples, delay):
     affected = affected[delay:]
     cause = cause[delay:]
 
-    affected = affected + affected_random_add[delay:]
+#    affected = affected + affected_random_add[delay:]
 
     data = vstack([cause, affected])
 

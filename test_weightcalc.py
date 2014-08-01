@@ -7,7 +7,8 @@
 from ranking.gaincalc import weightcalc
 
 if __name__ == '__main__':
-    mode = 'test_cases'
+    mode = 'tests'
     case = 'weightcalc_tests'
     writeoutput = False
-    weightcalc(mode, case, writeoutput)
+    sigtest = True
+    weightcalc(mode, case, sigtest, writeoutput)

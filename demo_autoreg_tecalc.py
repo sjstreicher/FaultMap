@@ -5,6 +5,9 @@ Created on Tue Mar 11 01:27:15 2014
 @author: Simon
 """
 
+import numpy as np
+import matplotlib.pyplot as plt
+
 from datagen import autoreg_datagen
 from transentropy import setup_infodynamics_te
 from transentropy import calc_infodynamics_te
@@ -26,6 +29,9 @@ delay = 5
 samples = 2500
 # Low value selected for demonstration purposes only
 sub_samples = 1000
+
+infodynamics_results = np.zeros(len(range(0, 11)))
+
 for timelag in range(0, 11):
     print "Results for timelag of: ", str(timelag)
     [x_pred, x_hist, y_hist] = autoreg_datagen(delay, timelag,
@@ -45,3 +51,9 @@ for timelag in range(0, 11):
 
     result = calc_infodynamics_te(teCalc, x_hist_norm[0], y_hist_norm[0])
     print("Infodynamics TE result: %.4f bits" % (result))
+
+    infodynamics_results[timelag] = result
+
+# Plot results over time delay
+fig, ax = plt.subplots()
+ax.plot(range(0, 11), infodynamics_results)
