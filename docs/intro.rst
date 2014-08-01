@@ -13,5 +13,5 @@ Basic approach
 The basic approach followed follows a two-step process:
 
 * Defining the connectivity between all elements in the process.
-* Using the connectivity to build a digraph which is then analysed
-  according to various graph ranking algorithms.
+* Determining appropriate edge weights between process elements to indicate strength of interaction.
+* Using the connectivity to build a digraph which is then analysed according to various graph ranking algorithms.

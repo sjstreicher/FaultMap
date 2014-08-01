@@ -12,6 +12,9 @@ Contents:
    :maxdepth: 2
    
    intro
+   inputdataformat
+   outputs
+   supportingsoftware
    transentropy
    weightcalc
    noderank
