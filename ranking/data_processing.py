@@ -60,6 +60,62 @@ def bandgap(min_freq, max_freq, vardata):
     return cut_vardata
 
 
+def bandgapfilter_data(raw_tsdata, normalised_tsdata, variables,
+                       low_freq, high_freq,
+                       saveloc, case, scenario):
+    """Bandgap filter data between the specified high and low frequenices.
+     Also writes filtered data to standard format for easy analysis in
+     other software, for example TOPCAT.
+
+     """
+     # Header and time from main source file
+    headerline = np.genfromtxt(raw_tsdata, delimiter=',', dtype='string')[0, :]
+    time = np.genfromtxt(raw_tsdata, delimiter=',')[1:, 0]
+    time = time[:, np.newaxis]
+
+    # Compensate for the fact that there is one less entry returned if the
+    # number of samples is odd
+    if bool(normalised_tsdata.shape[0] % 2):
+        inputdata_bandgapfiltered = np.zeros((normalised_tsdata.shape[0]-1,
+                                             normalised_tsdata.shape[1]))
+    else:
+        inputdata_bandgapfiltered = np.zeros_like(normalised_tsdata)
+
+    for varindex in range(len(variables)):
+        vardata = normalised_tsdata[:, varindex]
+        bandgapped_vardata = bandgap(low_freq, high_freq, vardata)
+        inputdata_bandgapfiltered[:, varindex] = bandgapped_vardata
+
+    if bool(normalised_tsdata.shape[0] % 2):
+        # Only write from the second time entry as there is one less datapoint
+        datalines = np.concatenate((time[:-1],
+                                    inputdata_bandgapfiltered), axis=1)
+    else:
+        datalines = np.concatenate((time, inputdata_bandgapfiltered), axis=1)
+
+    # Store the normalised data in similar format as original data
+    def writecsv_bandgapped_data(filename, items, header):
+        """CSV writer customized for use in weightcalc function."""
+
+        with open(filename, 'wb') as f:
+            csv.writer(f).writerow(header)
+            csv.writer(f).writerows(items)
+
+    # Define export directories and filenames
+    datadir = config_setup.ensure_existance(
+        os.path.join(saveloc, 'bandgappeddata'), make=True)
+
+    filename_template = os.path.join(datadir, '{}_{}_{}.csv')
+
+    def filename(name):
+        return filename_template.format(case, scenario, name)
+
+    writecsv_bandgapped_data(filename('bandgapped_data'), datalines,
+                             headerline)
+
+    return inputdata_bandgapfiltered
+
+
 def descriptive_dictionary(descriptive_file):
     """Converts the description CSV file to a dictionary."""
     descriptive_array = np.genfromtxt(descriptive_file, delimiter=',',
@@ -71,7 +127,7 @@ def descriptive_dictionary(descriptive_file):
 
 
 def normalise_data(raw_tsdata, inputdata_raw, saveloc, case, scenario):
-    # Need to handle strings....
+    # Header and time from main source file
     headerline = np.genfromtxt(raw_tsdata, delimiter=',', dtype='string')[0, :]
     time = np.genfromtxt(raw_tsdata, delimiter=',')[1:, 0]
     time = time[:, np.newaxis]

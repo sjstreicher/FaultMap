@@ -80,6 +80,7 @@ class WeightcalcData:
         settings_name = self.caseconfig[scenario]['settings']
         connections_used = (self.caseconfig[settings_name]
                             ['use_connections'])
+        bandgap_filtering = self.caseconfig[scenario]['bandgap_filtering']
 
         if self.datatype == 'file':
             # Get path to time series data input file in standard format
@@ -154,10 +155,23 @@ class WeightcalcData:
             self.affectedvarindexes = range(len(self.variables))
 
         # Normalise (mean centre and variance scale) the input data
-        self.inputdata_originalrate = \
+        self.inputdata_normalised = \
             data_processing.normalise_data(raw_tsdata, self.inputdata_raw,
                                            self.saveloc, self.casename,
                                            scenario)
+        if bandgap_filtering:
+            low_freq = self.caseconfig[scenario]['low_freq']
+            high_freq = self.caseconfig[scenario]['high_freq']
+            self.inputdata_bandgapfiltered = \
+                data_processing.bandgapfilter_data(raw_tsdata,
+                                                   self.inputdata_normalised,
+                                                   self.variables,
+                                                   low_freq, high_freq,
+                                                   self.saveloc, self.casename,
+                                                   scenario)
+            self.inputdata_originalrate = self.inputdata_bandgapfiltered
+        else:
+            self.inputdata_originalrate = self.inputdata_normalised
 
         # Subsample data if required
         # Get sub_sampling interval
@@ -180,6 +194,9 @@ class WeightcalcData:
         # Create descriptive dictionary for later use
         self.descriptions = data_processing.descriptive_dictionary(
             os.path.join(self.casedir, 'data', 'tag_descriptions.csv'))
+
+        # FFT the data and write back in format that can be analysed in
+        # TOPCAT in a plane plot
 
 
 class CorrWeightcalc:
@@ -444,7 +461,7 @@ def estimate_delay(weightcalcdata, method, sigtest):
     """Determines the maximum weight between two variables by searching through
     a specified set of delays.
 
-    method can be either 'pearson_correlation' or 'transfer_entropy'
+    method can be either 'cross_correlation' or 'transfer_entropy'
 
     """
     if method == 'cross_correlation':
@@ -495,12 +512,6 @@ def estimate_delay(weightcalcdata, method, sigtest):
                 affectedvardata = \
                     (weightcalcdata.inputdata[:, affectedvarindex]
                         [startindex+delay:startindex+size+delay])
-
-                # Pass data through bandgap filter
-                causevardata = data_processing.bandgap(0.005, 0.008,
-                                                       causevardata)
-                affectedvardata = data_processing.bandgap(0.005, 0.008,
-                                                          affectedvardata)
 
                 weight = weightcalculator.calcweight(causevardata,
                                                      affectedvardata)

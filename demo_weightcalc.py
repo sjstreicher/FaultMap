@@ -11,7 +11,7 @@ writeoutput = True
 sigtest = True
 
 mode = 'plants'
-cases = ['tennessee_eastman']
+cases = ['propylene_compressor']
 
 for case in cases:
     weightcalc(mode, case, sigtest, writeoutput)
