@@ -4,7 +4,7 @@ Created on Mon Feb 24 15:27:21 2014
 @author: Simon Streicher
 """
 
-from ranking.formatmatrices import buildgraph
+from ranking.data_processing import buildgraph
 import networkx as nx
 import numpy as np
 import json
