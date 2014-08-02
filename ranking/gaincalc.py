@@ -233,7 +233,7 @@ class CorrWeightcalc:
 
         """
         corrval = np.corrcoef(causevardata.T, affectedvardata.T)[1, 0]
-        return corrval
+        return [corrval]
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
                weightlist, weight_array, delay_array, datastore, sigtest):
@@ -332,14 +332,18 @@ class TransentWeightcalc:
         transent_bwd = \
             transentropy.calc_infodynamics_te(self.teCalc, causevardata.T,
                                               affectedvardata.T)
-        transent = transent_fwd - transent_bwd
+
+        transent_directional = transent_fwd - transent_bwd
+        transent_absolute = transent_fwd
 
         # Do not pass negatives on to weight array
-        if transent < 0:
-            transent = 0
+        if transent_directional < 0:
+            transent_directional = 0
 
-        return transent
-        # TODO: Offer option for raw transfer entopy values as well
+        if transent_absolute < 0:
+            transent_absolute = 0
+
+        return [transent_directional, transent_absolute]
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
                weightlist, weight_array, delay_array, datastore, sigtest,
@@ -354,19 +358,30 @@ class TransentWeightcalc:
         affectedvar = variables[affectedvarindex]
         inputdata = weightcalcdata.inputdata
 
-        maxval = max(weightlist)
-        delay_index = weightlist.index(maxval)
-        bestdelay = weightcalcdata.actual_delays[delay_index]
-        bestdelay_sample = weightcalcdata.sample_delays[delay_index]
-        delay_array[affectedvarindex, causevarindex] = bestdelay
+        # We already know that when dealing with transfer entropy
+        # the weightlist will consist of a list of lists
+        weightlist_directional = weightlist[0]
+        weightlist_absolute = weightlist[1]
 
         size = weightcalcdata.testsize
         startindex = weightcalcdata.startindex
 
-        logging.info("The maximum TE between " + causevar +
-                     " and " + affectedvar + " is: " + str(maxval))
+        # Do everything for the directional case
 
-        threshpass = None
+        maxval_directional = max(weightlist_directional)
+        delay_index_directional = \
+            weightlist_directional.index(maxval_directional)
+        bestdelay_directional = \
+            weightcalcdata.actual_delays[delay_index_directional]
+        bestdelay_sample = \
+            weightcalcdata.sample_delays[delay_index_directional]
+        delay_array[affectedvarindex, causevarindex] = \
+            bestdelay_directional
+
+        logging.info("The maximum directional TE between " + causevar +
+                     " and " + affectedvar + " is: " + str(maxval_directional))
+
+        threshpass_directional = None
         if sigtest:
             # Calculate threshold for transfer entropy
             thresh_causevardata = \
@@ -383,25 +398,29 @@ class TransentWeightcalc:
                 self.thresh_sixsigma(thresh_affectedvardata.T,
                                      thresh_causevardata.T)
 
-            logging.info("The TE threshold is: " + str(self.threshent))
+            logging.info("The directional TE threshold is: "
+                         + str(self.threshent_directional))
 
-            if maxval >= self.threshent:
-                threshpass = True
+            if maxval_directional >= self.threshent_directional:
+                threshpass_directional = True
             else:
-                threshpass = False
-                maxval = 0
+                threshpass_directional = False
+                maxval_directional = 0
 
-            logging.info("TE threshold passed: " + str(threshpass))
+            logging.info("TE threshold passed: " + str(threshpass_directional))
 
-        weight_array[affectedvarindex, causevarindex] = maxval
+        weight_array[affectedvarindex, causevarindex] = maxval_directional
 
         dataline = [causevar, affectedvar, str(weightlist[0]),
-                    maxval, str(bestdelay), str(delay_index),
-                    threshpass]
+                    maxval_directional, str(bestdelay_directional),
+                    str(delay_index_directional),
+                    threshpass_directional]
+
         datastore.append(dataline)
 
-        logging.info("The corresponding delay is: " + str(bestdelay))
-        logging.info("The TE with no delay is: " + str(weightlist[0]))
+        logging.info("The corresponding delay is: "
+                     + str(bestdelay_directional))
+        logging.info("The TE with no delay is: " + str(weightlist[0][0]))
 
         return weight_array, delay_array, datastore
 
@@ -431,9 +450,12 @@ class TransentWeightcalc:
                                                          surr_tsdata[n][0])
                        for n in range(num)]
 
-        surr_te = [surr_te_fwd[n] - surr_te_bwd[n] for n in range(num)]
+        surr_te_directional = \
+            [surr_te_fwd[n] - surr_te_bwd[n] for n in range(num)]
 
-        return surr_te
+        surr_te_absolute = [surr_te_fwd[n] for n in range(num)]
+
+        return surr_te_directional, surr_te_absolute
 
     def thresh_rankorder(self, affected_data, causal_data):
         """Calculates the minimum threshold required for a transfer entropy
@@ -445,9 +467,11 @@ class TransentWeightcalc:
         see Schreiber2000a.
 
         """
-        surrte = self.calc_surr_te(affected_data, causal_data, 19)
+        surr_te_directional, surr_te_absolute = \
+            self.calc_surr_te(affected_data, causal_data, 19)
 
-        self.threshent = max(surrte)
+        self.threshent_directional = max(surr_te_directional)
+        self.threshent_absolute = max(surr_te_absolute)
 
     def thresh_sixsigma(self, affected_data, causal_data):
         """Calculates the minimum threshold required for a transfer entropy
@@ -457,15 +481,23 @@ class TransentWeightcalc:
         samples of surrogate data.
 
         """
-        surrte = self.calc_surr_te(affected_data, causal_data, 30)
+        surr_te_directional, surr_te_absolute = \
+            self.calc_surr_te(affected_data, causal_data, 30)
 
-        surrte_mean = np.mean(surrte)
-        surrte_stdev = np.std(surrte)
+        surr_te_directional_mean = np.mean(surr_te_directional)
+        surr_te_directional_stdev = np.std(surr_te_directional)
 
-        self.threshent = (6 * surrte_stdev) + surrte_mean
+        surr_te_absolute_mean = np.mean(surr_te_absolute)
+        surr_te_absolute_stdev = np.std(surr_te_absolute)
+
+        self.threshent_directional = (6 * surr_te_directional_stdev) + \
+            surr_te_directional_mean
+
+        self.threshent_absolute = (6 * surr_te_absolute_stdev) + \
+            surr_te_absolute_mean
 
 
-def estimate_delay(weightcalcdata, method, sigtest):
+def estimate_delay(weightcalcdata, method, sigtest, scenario):
     """Determines the maximum weight between two variables by searching through
     a specified set of delays.
 
@@ -501,15 +533,47 @@ def estimate_delay(weightcalcdata, method, sigtest):
 #        newconnectionmatrix[:, delindex] = np.zeros(vardims)
 #        newconnectionmatrix[delindex, :] = np.zeros(vardims)
 
+    # Initiate headerline for weightstore file
+    headerline = []
+    # Create "Delay" as header for first row
+    headerline.append('Delay')
+
+    # Store the weight calculation results in similar format as original data
+    def writecsv_weightcalc_data(filename, items, header):
+        """CSV writer customized for use in weightcalc function."""
+        with open(filename, 'wb') as f:
+            csv.writer(f).writerow(header)
+            csv.writer(f).writerows(items)
+
+    weightstoredir = config_setup.ensure_existance(
+        os.path.join(weightcalcdata.saveloc, 'weightdata'), make=True)
+
+    filename_template = os.path.join(weightstoredir, '{}_{}_{}_{}.csv')
+
     for causevarindex in weightcalcdata.causevarindexes:
         causevar = weightcalcdata.variables[causevarindex]
+
+        # Create filename for new CSV file containing weights between
+        # this causevar and all the subsequent affectedvars
+        def filename(name, causevar):
+            return filename_template.format(weightcalcdata.casename,
+                                            scenario, name, causevar)
+        # Initiate datalines with delays
+        datalines_directional = np.asarray(weightcalcdata.sample_delays)
+        datalines_directional = datalines_directional[:, np.newaxis]
+        datalines_absolute = datalines_directional.copy()
+
         for affectedvarindex in weightcalcdata.affectedvarindexes:
             affectedvar = weightcalcdata.variables[affectedvarindex]
+            headerline.append(affectedvar)
             logging.info("Analysing effect of: " + causevar + " on " +
                          affectedvar)
 #            if not(newconnectionmatrix[affectedvarindex,
 #                                       causevarindex] == 0):
             weightlist = []
+            directional_weightlist = []
+            absolute_weightlist = []
+
             for delay in weightcalcdata.sample_delays:
                 logging.info("Now testing delay: " + str(delay))
 
@@ -523,13 +587,53 @@ def estimate_delay(weightcalcdata, method, sigtest):
 
                 weight = weightcalculator.calcweight(causevardata,
                                                      affectedvardata)
-                weightlist.append(weight)
+
+                if len(weight) > 1:
+                    # Iff weight contains directional as well as absolute
+                    # weights, write to separate lists
+                    directional_weightlist.append(weight[0])
+                    absolute_weightlist.append(weight[1])
+                else:
+                    weightlist.append(weight[0])
+
+            if len(weight) > 1:
+                weightlist = [directional_weightlist, absolute_weightlist]
+
+            # Combine weight data
+
+            weights_thisvar_directional = np.asarray(weightlist[0])
+            weights_thisvar_directional = \
+                weights_thisvar_directional[:, np.newaxis]
+
+            weights_thisvar_absolute = np.asarray(weightlist[1])
+            weights_thisvar_absolute = \
+                weights_thisvar_absolute[:, np.newaxis]
+
+#            print datalines.shape
+#            print weights_thisvar_directional.shape
+            datalines_directional = \
+                np.concatenate((datalines_directional,
+                                weights_thisvar_directional), axis=1)
+
+            datalines_absolute = \
+                np.concatenate((datalines_absolute,
+                                weights_thisvar_absolute), axis=1)
 
             [weight_array, delay_array, datastore] = \
                 weightcalculator.report(weightcalcdata, causevarindex,
                                         affectedvarindex, weightlist,
                                         weight_array, delay_array,
                                         datastore, sigtest)
+
+#        delays = np.asarray(weightcalcdata.sample_delays)
+#        delays = delays[:, np.newaxis]
+#        datalines = np.concatenate((delays, weights_allvars), axis=1)
+
+        writecsv_weightcalc_data(filename('weights_directional', causevar),
+                                 datalines_directional, headerline)
+
+        writecsv_weightcalc_data(filename('weights_absolute', causevar),
+                                 datalines_absolute, headerline)
 
     # Delete entries from weightcalc matrix not used
     # Delete all rows and columns listed in dellist
@@ -544,12 +648,12 @@ def estimate_delay(weightcalcdata, method, sigtest):
     return weight_array, delay_array, datastore, data_header
 
 
-def writecsv_weightcalc(filename, items, header):
-    """CSV writer customized for use in weightcalc function."""
-
-    with open(filename, 'wb') as f:
-        csv.writer(f).writerow(header)
-        csv.writer(f).writerows(items)
+#def writecsv_weightcalc(filename, items, header):
+#    """CSV writer customized for use in weightcalc function."""
+#
+#    with open(filename, 'wb') as f:
+#        csv.writer(f).writerow(header)
+#        csv.writer(f).writerows(items)
 
 
 def weightcalc(mode, case, sigtest, writeoutput):
@@ -573,7 +677,7 @@ def weightcalc(mode, case, sigtest, writeoutput):
 
             # TODO: Get data_header directly
             [weight_array, delay_array, datastore, data_header] = \
-                estimate_delay(weightcalcdata, method, sigtest)
+                estimate_delay(weightcalcdata, method, sigtest, scenario)
 
             if writeoutput:
                 # Define export directories and filenames

@@ -99,13 +99,11 @@ def fft_calculation(raw_tsdata, normalised_tsdata, variables, sampling_rate,
 #        str(freqlist[varmaxindex])
 
     # Combine frequency list and FFT data
-    print freqlist.shape
-    print fft_data.shape
     datalines = np.concatenate((freqlist, fft_data), axis=1)
 
     # Store the FFT results in similar format as original data
     def writecsv_fft_data(filename, items, header):
-        """CSV writer customized for use in weightcalc function."""
+        """CSV writer customized for use in FFT function."""
         with open(filename, 'wb') as f:
             csv.writer(f).writerow(header)
             csv.writer(f).writerows(items)
