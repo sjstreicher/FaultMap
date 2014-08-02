@@ -17,6 +17,7 @@ Descriptive labels data format
 Descriptive labels might be associated with each process data tag.
 This should be provided in the form of a CSV file with the data tag name in the first column and the description in the second column.
 The first row should have the labels "Tag name" and "Description" in them.
+The filename should be``tag_descriptions.csv``.
 
 Connectivity information
 --------------
