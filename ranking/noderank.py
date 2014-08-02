@@ -20,7 +20,7 @@ import itertools
 import matplotlib.pyplot as plt
 
 # Own libraries
-import formatmatrices
+import data_processing
 import config_setup
 import ranking
 
@@ -50,7 +50,7 @@ class NoderankData:
         # m is the weight of the full connectivity matrix used to ensure
         # graph is not sub-stochastic
 
-        self.m = 0.15
+        self.m = (1-0.15)
 
     def scenariodata(self, scenario):
         """Retrieves data particular to each scenario for the case being
@@ -65,13 +65,13 @@ class NoderankData:
                                          ['connections'])
             # Get the variables and connection matrix
             [self.variablelist, self.connectionmatrix] = \
-                formatmatrices.read_connectionmatrix(connectionloc)
+                data_processing.read_connectionmatrix(connectionloc)
 
             # Get the gain matrix
             gainloc = os.path.join(self.casedir, 'gainmatrix',
                                    self.caseconfig[scenario]['gainmatrix'])
 
-            self.gainmatrix = formatmatrices.read_gainmatrix(gainloc)
+            self.gainmatrix = data_processing.read_gainmatrix(gainloc)
 
         elif self.datatype == 'function':
             # Get variables, connection matrix and gainmatrix
@@ -88,6 +88,16 @@ def writecsv_looprank(filename, items):
         csv.writer(f).writerows(items)
 
 
+def norm_dict(dictionary):
+    dictionary_norm = dict()
+    entrysums = 0
+    for entry in dictionary:
+        entrysums += dictionary[entry]
+    for entry in dictionary:
+        dictionary_norm[entry] = dictionary[entry] / entrysums
+    return dictionary_norm
+
+
 def calc_simple_rank(gainmatrix, variables, m, noderankdata):
     """Constructs the ranking dictionary using the eigenvector approach
     i.e. Ax = x where A is the local gain matrix.
@@ -96,37 +106,88 @@ def calc_simple_rank(gainmatrix, variables, m, noderankdata):
     original LoopRank idea.
 
     """
-
+    # Transpose gainmatrix so that we are looking at the backwards
+    # ranking problem
+    gainmatrix = gainmatrix.T
     # Length of gain matrix = number of nodes
-    gainmatrix = np.abs(np.asarray(gainmatrix))
-    n = len(gainmatrix)
-    s_matrix = (1.0 / n) * np.ones((n, n))
-    # Basic PageRank algorithm
-    m_matrix = (1 - m) * gainmatrix + m * s_matrix
-    # Normalize the m-matrix columns
+    n = gainmatrix.shape[0]
+    gainmatrix = np.asmatrix(gainmatrix, dtype=float)
+
+    # Normalize the gainmatrix columns
     for col in range(n):
-        m_matrix[:, col] = m_matrix[:, col] / np.sum(abs(m_matrix[:, col]))
-    # Calculate eigenvalues and eigenvectors as usual
-    [eigval, eigvec] = np.linalg.eig(m_matrix)
+        colsum = np.sum(abs(gainmatrix[:, col]))
+        if colsum == 0:
+            # Option :1 do nothing
+            None
+            # Option 2: equally connect to all other nodes
+    #        for row in range(n):
+    #            gainmatrix[row, col] = (1. / n)
+        else:
+            gainmatrix[:, col] = (gainmatrix[:, col] / colsum)
+
+    relative_reset_vector = [1] * n
+
+    relative_reset_vector_norm = np.asarray(relative_reset_vector,
+                                            dtype=float) \
+        / sum(relative_reset_vector)
+
+    resetmatrix = np.array([relative_reset_vector_norm, ]*n).T
+
+    weightmatrix = (m * gainmatrix) + ((1-m) * resetmatrix)
+
+    # Normalize the weightmatrix columns
+    for col in range(n):
+        weightmatrix[:, col] = (weightmatrix[:, col]
+                                / np.sum(abs(weightmatrix[:, col])))
+
+    [eigval, eigvec] = np.linalg.eig(weightmatrix)
+    [eigval_gain, eigvec_gain] = np.linalg.eig(gainmatrix)
     maxeigindex = np.argmax(eigval)
-    # Store value for downstream checking
-    # TODO: Downstream checking not implemented yet
-#    maxeig = eigval[maxeigindex].real
-    # Cuts array into the eigenvector corrosponding to the eigenvalue above
+
     rankarray = eigvec[:, maxeigindex]
+
     # Take absolute values of ranking values
-    rankarray = abs(rankarray)
+    rankarray = abs(np.asarray(rankarray))
     # This is the 1-dimensional array composed of rankings (normalised)
-    rankarray = (1 / sum(rankarray)) * rankarray
+    rankarray_norm = (1 / sum(rankarray)) * rankarray
     # Remove the useless imaginary +0j
-    rankarray = rankarray.real
+    rankarray_norm = rankarray_norm.real
 
     # Create a dictionary of the rankings with their respective nodes
     # i.e. {NODE:RANKING}
-    rankingdict = dict(zip(variables, rankarray))
+    rankingdict = dict(zip(variables, rankarray_norm))
 
     rankinglist = sorted(rankingdict.iteritems(), key=operator.itemgetter(1),
                          reverse=True)
+
+    # Here is the code for doing it using networkx
+    weightgraph = nx.DiGraph()
+    gaingraph = nx.DiGraph()
+
+    for col, colvar in enumerate(variables):
+        for row, rowvar in enumerate(variables):
+            # Create fully connected weighted graph for use with eigenvector
+            # centrality analysis
+            weightgraph.add_edge(rowvar, colvar,
+                                 weight=weightmatrix[row, col])
+            # Create sparsely connected graph based on significant edge weights
+            # only for use with Katz centrality analysis
+            if (gainmatrix[row, col] != 0.):
+                # The node order is source, sink according to
+                # the convention that columns are sources and rows are sinks
+                gaingraph.add_edge(rowvar, colvar,
+                                   weight=gainmatrix[row, col])
+
+    eig_rankingdict = nx.eigenvector_centrality(weightgraph.reverse())
+    eig_rankingdict_norm = norm_dict(eig_rankingdict)
+
+    katz_rankingdict = nx.katz_centrality(gaingraph.reverse(),
+                                          1.0, 1.0, 20000)
+
+    katz_rankingdict_norm = norm_dict(katz_rankingdict)
+
+#    nx.write_gml(gaingraph, os.path.join(saveloc, "gaingraph.gml"))
+#    nx.write_gml(weightgraph, os.path.join(saveloc, "weightgraph.gml"))
 
     return rankingdict, rankinglist
 
@@ -308,14 +369,14 @@ def calc_gainrank(gainmatrix, noderankdata, dummycreation,
     """
 
     forwardconnection, forwardgain, forwardvariablelist = \
-        formatmatrices.rankforward(noderankdata.variablelist,
-                                   gainmatrix, noderankdata.connectionmatrix,
-                                   dummyweight, dummycreation)
+        data_processing.rankforward(noderankdata.variablelist,
+                                    gainmatrix, noderankdata.connectionmatrix,
+                                    dummyweight, dummycreation)
 
     backwardconnection, backwardgain, backwardvariablelist = \
-        formatmatrices.rankbackward(noderankdata.variablelist, gainmatrix,
-                                    noderankdata.connectionmatrix,
-                                    dummyweight, dummycreation)
+        data_processing.rankbackward(noderankdata.variablelist, gainmatrix,
+                                     noderankdata.connectionmatrix,
+                                     dummyweight, dummycreation)
 
     forwardrankingdict, forwardrankinglist = \
         calc_simple_rank(forwardgain, forwardvariablelist, m, noderankdata)
@@ -340,8 +401,7 @@ def calc_gainrank(gainmatrix, noderankdata, dummycreation,
     return rankingdicts, rankinglists, connections, variables, gains
 
 
-def looprank_static(mode, case, dummycreation, writeoutput,
-                    alpha, m):
+def looprank_static(mode, case, dummycreation, writeoutput, alpha, m):
     """Ranks the nodes in a network based on a single gain matrix calculation.
 
     For calculation of rank over time, see looprank_transient.
@@ -514,7 +574,7 @@ def looprank_transient(mode, case, dummycreation, writeoutput,
             dataset = caseconfig[scenario]['dataset']
             # Get the variables and connection matrix
             [variablelist, connectionmatrix] = \
-                formatmatrices.read_connectionmatrix(connectionloc)
+                data_processing.read_connectionmatrix(connectionloc)
 
             # Calculate the gainmatrix
             gainmatrix = calc_gainmatrix(connectionmatrix,
@@ -536,8 +596,8 @@ def looprank_transient(mode, case, dummycreation, writeoutput,
 
         # Split the tags_tsdata into sets (boxes) useful for calculating
         # transient correlations
-        boxes = formatmatrices.split_tsdata(tags_tsdata, dataset, samplerate,
-                                            boxsize, boxnum)
+        boxes = data_processing.split_tsdata(tags_tsdata, dataset, samplerate,
+                                             boxsize, boxnum)
 
         # Calculate gain matrix for each box
         gainmatrices = \
