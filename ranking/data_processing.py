@@ -12,6 +12,7 @@ import h5py
 import csv
 import sklearn.preprocessing
 import os
+import matplotlib.pyplot as plt
 
 import config_setup
 
@@ -44,6 +45,83 @@ def read_variables(raw_tsdata):
     with open(raw_tsdata) as f:
         variables = csv.reader(f).next()[1:]
     return variables
+
+
+def fft_calculation(raw_tsdata, normalised_tsdata, variables, sampling_rate,
+                    sampling_unit, saveloc, case, scenario,
+                    plotting=False, plotting_endsample=500):
+
+    headerline = np.genfromtxt(raw_tsdata, delimiter=',', dtype='string')[0, :]
+
+    # Change first entry of headerline from "Time" to "Frequency"
+    headerline[0] = 'Frequency'
+
+    # Get frequency list (this is the same for all variables)
+    freqlist = np.fft.rfftfreq(len(normalised_tsdata[:, 0]), sampling_rate)
+
+    freqlist = freqlist[:, np.newaxis]
+
+    fft_data = np.zeros((len(freqlist), len(variables)))
+
+    for varindex in range(len(variables)):
+        variable = variables[varindex]
+        vardata = normalised_tsdata[:, varindex]
+
+        # Compute FFT (normalised amplitude)
+        var_fft = abs(np.fft.rfft(vardata)) * \
+            (2. / len(vardata))
+
+        fft_data[:, varindex] = var_fft
+
+        if plotting:
+            plt.figure()
+            plt.plot(freqlist[0:plotting_endsample],
+                     var_fft[0:plotting_endsample],
+                     'r', label=variable)
+            plt.xlabel('Frequency (1/' + sampling_unit + ')')
+            plt.ylabel('Normalised amplitude')
+            plt.legend()
+
+            plotdir = config_setup.ensure_existance(
+                os.path.join(saveloc, 'fftplots'), make=True)
+
+            filename_template = os.path.join(plotdir,
+                                             'FFT_{}_{}_{}.pdf')
+
+            def filename(variablename):
+                return filename_template.format(case, scenario, variablename)
+
+            plt.savefig(filename(variable))
+            plt.close()
+
+#    varmaxindex = var_fft.tolist().index(max(var_fft))
+#    print variable + " maximum signal strenght frequency: " + \
+#        str(freqlist[varmaxindex])
+
+    # Combine frequency list and FFT data
+    print freqlist.shape
+    print fft_data.shape
+    datalines = np.concatenate((freqlist, fft_data), axis=1)
+
+    # Store the FFT results in similar format as original data
+    def writecsv_fft_data(filename, items, header):
+        """CSV writer customized for use in weightcalc function."""
+        with open(filename, 'wb') as f:
+            csv.writer(f).writerow(header)
+            csv.writer(f).writerows(items)
+
+    # Define export directories and filenames
+    datadir = config_setup.ensure_existance(
+        os.path.join(saveloc, 'fftdata'), make=True)
+
+    filename_template = os.path.join(datadir, '{}_{}_{}.csv')
+
+    def filename(name):
+        return filename_template.format(case, scenario, name)
+
+    writecsv_fft_data(filename('fft'), datalines, headerline)
+
+    return None
 
 
 def bandgap(min_freq, max_freq, vardata):
@@ -105,12 +183,14 @@ def bandgapfilter_data(raw_tsdata, normalised_tsdata, variables,
     datadir = config_setup.ensure_existance(
         os.path.join(saveloc, 'bandgappeddata'), make=True)
 
-    filename_template = os.path.join(datadir, '{}_{}_{}.csv')
+    filename_template = os.path.join(datadir, '{}_{}_{}_{}_{}.csv')
 
-    def filename(name):
-        return filename_template.format(case, scenario, name)
+    def filename(name, lowfreq, highfreq):
+        return filename_template.format(case, scenario, name,
+                                        lowfreq, highfreq)
 
-    writecsv_bandgapped_data(filename('bandgapped_data'), datalines,
+    writecsv_bandgapped_data(filename('bandgapped_data', str(low_freq),
+                                      str(high_freq)), datalines,
                              headerline)
 
     return inputdata_bandgapfiltered
