@@ -277,8 +277,8 @@ def buildcase(dummyweight, digraph, name, dummycreation):
                 digraph.add_edge(node, nameofscale, weight=dummyweight)
                 counter += 1
 
-    connection = nx.to_numpy_matrix(digraph, weight=None).T
-    gain = nx.to_numpy_matrix(digraph, weight='weight').T
+    connection = nx.to_numpy_matrix(digraph, weight=None)
+    gain = nx.to_numpy_matrix(digraph, weight='weight')
     variablelist = digraph.nodes()
     return np.array(connection), gain, variablelist
 
@@ -291,7 +291,7 @@ def buildgraph(variables, gainmatrix, connections):
             # The node order is source, sink according to
             # the convention that columns are sources and rows are sinks
             if (connections[row, col] != 0):
-                digraph.add_edge(colvar, rowvar, weight=gainmatrix[row, col])
+                digraph.add_edge(rowvar, colvar, weight=gainmatrix[row, col])
     return digraph
 
 
@@ -306,7 +306,7 @@ def rankforward(variables, gainmatrix, connections,
     connection and variable name matrices.
     """
 
-    digraph = buildgraph(variables, gainmatrix.T, connections.T)
+    digraph = buildgraph(variables, gainmatrix, connections)
     return buildcase(dummyweight, digraph, 'DV FWD ', dummycreation)
 
 
