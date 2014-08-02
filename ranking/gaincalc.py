@@ -36,7 +36,7 @@ import jpype
 import config_setup
 import transentropy
 #import formatmatrices
-import data_preprocessing
+import data_processing
 
 #import datagen
 
@@ -94,7 +94,7 @@ class WeightcalcData:
                                              self.caseconfig[scenario]
                                              ['connections'])
                 [self.connectionmatrix] = \
-                    data_preprocessing.read_connectionmatrix(connectionloc)
+                    data_processing.read_connectionmatrix(connectionloc)
 
             # Get sampling rate and unit name
             self.sampling_rate = (self.caseconfig[settings_name]
@@ -104,10 +104,10 @@ class WeightcalcData:
             # Get starting index
             self.startindex = self.caseconfig[settings_name]['startindex']
             # Convert timeseries data in CSV file to H5 data format
-            datapath = data_preprocessing.csv_to_h5(self.saveloc, raw_tsdata,
-                                                    scenario, self.casename)
+            datapath = data_processing.csv_to_h5(self.saveloc, raw_tsdata,
+                                                 scenario, self.casename)
             # Read variables from orignal CSV file
-            self.variables = data_preprocessing.read_variables(raw_tsdata)
+            self.variables = data_processing.read_variables(raw_tsdata)
             # Get inputdata from H5 table created
             self.inputdata_raw = np.array(h5py.File(os.path.join(
                 datapath, scenario + '.h5'), 'r')[scenario])
@@ -155,9 +155,9 @@ class WeightcalcData:
 
         # Normalise (mean centre and variance scale) the input data
         self.inputdata_originalrate = \
-            data_preprocessing.normalise_data(raw_tsdata, self.inputdata_raw,
-                                              self.saveloc, self.casename,
-                                              scenario)
+            data_processing.normalise_data(raw_tsdata, self.inputdata_raw,
+                                           self.saveloc, self.casename,
+                                           scenario)
 
         # Subsample data if required
         # Get sub_sampling interval
@@ -177,6 +177,9 @@ class WeightcalcData:
                                   self.sampling_rate for delay in self.delays]
             self.sample_delays = [int(round(delay/self.sampling_rate))
                                   for delay in self.delays]
+        # Create descriptive dictionary for later use
+        self.descriptions = data_processing.descriptive_dictionary(
+            os.path.join(self.casedir, 'data', 'tag_descriptions.csv'))
 
 
 class CorrWeightcalc:
@@ -437,20 +440,6 @@ class TransentWeightcalc:
         self.threshent = (6 * surrte_stdev) + surrte_mean
 
 
-def bandgap(min_freq, max_freq, vardata):
-    """Bandgap filter based on FFT"""
-    freqlist = np.fft.rfftfreq(vardata.size, 1)
-    # Investigate effect of using abs()
-    var_fft = np.fft.rfft(vardata)
-    cut_var_fft = var_fft.copy()
-    cut_var_fft[(freqlist < min_freq)] = 0
-    cut_var_fft[(freqlist > max_freq)] = 0
-
-    cut_vardata = np.fft.irfft(cut_var_fft)
-
-    return cut_vardata
-
-
 def estimate_delay(weightcalcdata, method, sigtest):
     """Determines the maximum weight between two variables by searching through
     a specified set of delays.
@@ -508,8 +497,10 @@ def estimate_delay(weightcalcdata, method, sigtest):
                         [startindex+delay:startindex+size+delay])
 
                 # Pass data through bandgap filter
-                causevardata = bandgap(0.005, 0.008, causevardata)
-                affectedvardata = bandgap(0.005, 0.008, affectedvardata)
+                causevardata = data_processing.bandgap(0.005, 0.008,
+                                                       causevardata)
+                affectedvardata = data_processing.bandgap(0.005, 0.008,
+                                                          affectedvardata)
 
                 weight = weightcalculator.calcweight(causevardata,
                                                      affectedvardata)

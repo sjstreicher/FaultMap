@@ -1,4 +1,5 @@
-"""This method is imported by looptest
+"""Performs various data processings support tasks called by the gaincalc
+module.
 
 @author: St. Elmo Wilken, Simon Streicher
 
@@ -43,6 +44,30 @@ def read_variables(raw_tsdata):
     with open(raw_tsdata) as f:
         variables = csv.reader(f).next()[1:]
     return variables
+
+
+def bandgap(min_freq, max_freq, vardata):
+    """Bandgap filter based on FFT"""
+    freqlist = np.fft.rfftfreq(vardata.size, 1)
+    # Investigate effect of using abs()
+    var_fft = np.fft.rfft(vardata)
+    cut_var_fft = var_fft.copy()
+    cut_var_fft[(freqlist < min_freq)] = 0
+    cut_var_fft[(freqlist > max_freq)] = 0
+
+    cut_vardata = np.fft.irfft(cut_var_fft)
+
+    return cut_vardata
+
+
+def descriptive_dictionary(descriptive_file):
+    """Converts the description CSV file to a dictionary."""
+    descriptive_array = np.genfromtxt(descriptive_file, delimiter=',',
+                                      dtype='string')
+    tag_names = descriptive_array[1:, 0]
+    tag_descriptions = descriptive_array[1:, 1]
+    description_dict = dict(zip(tag_names, tag_descriptions))
+    return description_dict
 
 
 def normalise_data(raw_tsdata, inputdata_raw, saveloc, case, scenario):
