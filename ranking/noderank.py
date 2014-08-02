@@ -64,7 +64,7 @@ class NoderankData:
                                          self.caseconfig[scenario]
                                          ['connections'])
             # Get the variables and connection matrix
-            [self.variablelist, self.connectionmatrix] = \
+            self.connectionmatrix, self.variablelist = \
                 data_processing.read_connectionmatrix(connectionloc)
 
             # Get the gain matrix
@@ -98,7 +98,7 @@ def norm_dict(dictionary):
     return dictionary_norm
 
 
-def calc_simple_rank(gainmatrix, variables, m, noderankdata):
+def calc_simple_rank(gainmatrix, variables, m):
     """Constructs the ranking dictionary using the eigenvector approach
     i.e. Ax = x where A is the local gain matrix.
 
@@ -182,7 +182,7 @@ def calc_simple_rank(gainmatrix, variables, m, noderankdata):
     eig_rankingdict_norm = norm_dict(eig_rankingdict)
 
     katz_rankingdict = nx.katz_centrality(gaingraph.reverse(),
-                                          1.0, 1.0, 20000)
+                                          0.99, 1.0, 20000)
 
     katz_rankingdict_norm = norm_dict(katz_rankingdict)
 
@@ -190,6 +190,12 @@ def calc_simple_rank(gainmatrix, variables, m, noderankdata):
 #    nx.write_gml(weightgraph, os.path.join(saveloc, "weightgraph.gml"))
 
     return rankingdict, rankinglist
+
+
+def calc_topedge_rank(gainmatrix, variables, m, topedgenum):
+    """Calculates the ranking based on the top edges only."""
+
+    return None
 
 
 def calc_blended_rank(forwardrank, backwardrank, variablelist,
@@ -379,10 +385,10 @@ def calc_gainrank(gainmatrix, noderankdata, dummycreation,
                                      dummyweight, dummycreation)
 
     forwardrankingdict, forwardrankinglist = \
-        calc_simple_rank(forwardgain, forwardvariablelist, m, noderankdata)
+        calc_simple_rank(forwardgain, forwardvariablelist, m)
 
     backwardrankingdict, backwardrankinglist = \
-        calc_simple_rank(backwardgain, backwardvariablelist, m, noderankdata)
+        calc_simple_rank(backwardgain, backwardvariablelist, m)
 
     blendedrankingdict, blendedrankinglist = \
         calc_blended_rank(forwardrankingdict, backwardrankingdict,
@@ -401,7 +407,7 @@ def calc_gainrank(gainmatrix, noderankdata, dummycreation,
     return rankingdicts, rankinglists, connections, variables, gains
 
 
-def looprank_static(mode, case, dummycreation, writeoutput, alpha, m):
+def looprank_static(mode, case, dummycreation, writeoutput, m, alpha=0.5):
     """Ranks the nodes in a network based on a single gain matrix calculation.
 
     For calculation of rank over time, see looprank_transient.

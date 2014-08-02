@@ -21,4 +21,4 @@ cases = ['propylene_compressor']
 for case in cases:
     for dummycreation in [False, True]:
         looprank_static(mode, case, dummycreation, writeoutput,
-                        alpha, m)
+                        m, alpha)

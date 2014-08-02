@@ -252,10 +252,10 @@ def read_connectionmatrix(connection_loc):
 
     """
     with open(connection_loc) as f:
-#        variables = csv.reader(f).next()[1:]
+        variables = csv.reader(f).next()[1:]
         connectionmatrix = np.genfromtxt(f, delimiter=',')[:, 1:]
 
-    return connectionmatrix
+    return connectionmatrix, variables
 
 
 def read_gainmatrix(gainmatrix_loc):
@@ -306,7 +306,7 @@ def rankforward(variables, gainmatrix, connections,
     connection and variable name matrices.
     """
 
-    digraph = buildgraph(variables, gainmatrix, connections)
+    digraph = buildgraph(variables, gainmatrix.T, connections.T)
     return buildcase(dummyweight, digraph, 'DV FWD ', dummycreation)
 
 
@@ -325,7 +325,7 @@ def rankbackward(variables, gainmatrix, connections,
 
     """
 
-    digraph = buildgraph(variables, gainmatrix.T, connections.T)
+    digraph = buildgraph(variables, gainmatrix, connections)
     return buildcase(dummyweight, digraph, 'DV BWD ', dummycreation)
 
 

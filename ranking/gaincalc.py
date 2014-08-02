@@ -94,7 +94,7 @@ class WeightcalcData:
                 connectionloc = os.path.join(self.casedir, 'connections',
                                              self.caseconfig[scenario]
                                              ['connections'])
-                [self.connectionmatrix] = \
+                self.connectionmatrix, _ = \
                     data_processing.read_connectionmatrix(connectionloc)
 
             # Get sampling rate and unit name
@@ -539,7 +539,7 @@ def estimate_delay(weightcalcdata, method, sigtest, scenario):
     headerline.append('Delay')
 
     # Store the weight calculation results in similar format as original data
-    def writecsv_weightcalc_data(filename, items, header):
+    def writecsv_weightcalc(filename, items, header):
         """CSV writer customized for use in weightcalc function."""
         with open(filename, 'wb') as f:
             csv.writer(f).writerow(header)
@@ -629,11 +629,11 @@ def estimate_delay(weightcalcdata, method, sigtest, scenario):
 #        delays = delays[:, np.newaxis]
 #        datalines = np.concatenate((delays, weights_allvars), axis=1)
 
-        writecsv_weightcalc_data(filename('weights_directional', causevar),
-                                 datalines_directional, headerline)
+        writecsv_weightcalc(filename('weights_directional', causevar),
+                            datalines_directional, headerline)
 
-        writecsv_weightcalc_data(filename('weights_absolute', causevar),
-                                 datalines_absolute, headerline)
+        writecsv_weightcalc(filename('weights_absolute', causevar),
+                            datalines_absolute, headerline)
 
     # Delete entries from weightcalc matrix not used
     # Delete all rows and columns listed in dellist
@@ -648,12 +648,12 @@ def estimate_delay(weightcalcdata, method, sigtest, scenario):
     return weight_array, delay_array, datastore, data_header
 
 
-#def writecsv_weightcalc(filename, items, header):
-#    """CSV writer customized for use in weightcalc function."""
-#
-#    with open(filename, 'wb') as f:
-#        csv.writer(f).writerow(header)
-#        csv.writer(f).writerows(items)
+def writecsv_weightcalc(filename, items, header):
+    """CSV writer customized for use in weightcalc function."""
+
+    with open(filename, 'wb') as f:
+        csv.writer(f).writerow(header)
+        csv.writer(f).writerows(items)
 
 
 def weightcalc(mode, case, sigtest, writeoutput):
@@ -678,6 +678,9 @@ def weightcalc(mode, case, sigtest, writeoutput):
             # TODO: Get data_header directly
             [weight_array, delay_array, datastore, data_header] = \
                 estimate_delay(weightcalcdata, method, sigtest, scenario)
+
+            # Do noderanking immediately
+            looprank_static
 
             if writeoutput:
                 # Define export directories and filenames
