@@ -27,8 +27,6 @@ import numpy as np
 import h5py
 import logging
 import json
-import sklearn
-import sklearn.preprocessing
 
 # Non-standard external libraries
 import pygeonetwork
@@ -37,9 +35,10 @@ import jpype
 # Own libraries
 import config_setup
 import transentropy
-import formatmatrices
+#import formatmatrices
+import data_preprocessing
 
-import datagen
+#import datagen
 
 
 class WeightcalcData:
@@ -48,35 +47,18 @@ class WeightcalcData:
 
     """
     def __init__(self, mode, case):
-        # Get locations from configuration file
+        # Get file locations from configuration file
         self.saveloc, self.casedir, infodynamicsloc = \
             config_setup.runsetup(mode, case)
         # Load case config file
         self.caseconfig = json.load(open(os.path.join(self.casedir, case +
                                     '_weightcalc' + '.json')))
-        # Get scenarios
-        self.scenarios = self.caseconfig['scenarios']
-        # Get sampling rate
-        self.sampling_rate = self.caseconfig['sampling_rate']
         # Get data type
         self.datatype = self.caseconfig['datatype']
-        # Get delay type
-        self.delaytype = self.caseconfig['delaytype']
+        # Get scenarios
+        self.scenarios = self.caseconfig['scenarios']
         # Get methods
         self.methods = self.caseconfig['methods']
-        # Get size of sample vectors for tests
-        # Must be smaller than number of samples generated
-        self.testsize = self.caseconfig['testsize']
-        # Get number of delays to test
-        test_delays = self.caseconfig['test_delays']
-
-        if self.delaytype == 'datapoints':
-        # Include first n sampling intervals
-            self.delays = range(test_delays + 1)
-        elif self.delaytype == 'timevalues':
-        # Include first n 10-second shifts
-            self.delays = [val * (10.0/3600.0) for val in
-                           range(test_delays + 1)]
 
         # Start JVM if required
         if 'transfer_entropy' in self.methods:
@@ -87,43 +69,81 @@ class WeightcalcData:
                                "-ea",
                                "-Djava.class.path=" + infodynamicsloc)
 
+        self.casename = case
+
     def scenariodata(self, scenario):
         """Retrieves data particular to each scenario for the case being
         investigated.
 
         """
-        # Get time series data
-        if self.datatype == 'file':
-            # Get time series data
-            tags_tsdata = os.path.join(self.casedir, 'data',
-                                       self.caseconfig[scenario]['data'])
-            # Get connection (adjacency) matrix
-            connectionloc = os.path.join(self.casedir, 'connections',
-                                         self.caseconfig[scenario]
-                                         ['connections'])
-            # Get dataset name
-            dataset = self.caseconfig[scenario]['dataset']
-            # Get starting index
-            self.startindex = self.caseconfig['startindex']
-            # Get inputdata
-            self.inputdata_raw = np.array(h5py.File(tags_tsdata, 'r')[dataset])
-            # Get the variables and connection matrix
-            [self.variables, self.connectionmatrix] = \
-                formatmatrices.read_connectionmatrix(connectionloc)
+        print "The scenario name is: " + scenario
+        settings_name = self.caseconfig[scenario]['settings']
+        connections_used = (self.caseconfig[settings_name]
+                            ['use_connections'])
 
-        elif self.datatype == 'function':
-            tags_tsdata_gen = self.caseconfig[scenario]['datagen']
-            connectionloc = self.caseconfig[scenario]['connections']
-            # TODO: Store function arguments in scenario config file
-            samples = self.caseconfig['gensamples']
-            func_delay = self.caseconfig['delay']
-            # Get inputdata
-            self.inputdata_raw = eval('datagen.' + tags_tsdata_gen)(samples,
-                                                                    func_delay)
-            # Get the variables and connection matrix
-            [self.variables, self.connectionmatrix] = eval('datagen.'
-                                                           + connectionloc)()
-            self.startindex = 0
+        if self.datatype == 'file':
+            # Get path to time series data input file in standard format
+            # described in documentation under "Input data formats"
+            raw_tsdata = os.path.join(self.casedir, 'data',
+                                      self.caseconfig[scenario]['data'])
+
+            # Retrieve connection matrix criteria from settings
+            if connections_used:
+                # Get connection (adjacency) matrix
+                connectionloc = os.path.join(self.casedir, 'connections',
+                                             self.caseconfig[scenario]
+                                             ['connections'])
+                [self.connectionmatrix] = \
+                    data_preprocessing.read_connectionmatrix(connectionloc)
+
+            # Get sampling rate and unit name
+            self.sampling_rate = (self.caseconfig[settings_name]
+                                  ['sampling_rate'])
+            self.sampling_unit = (self.caseconfig[settings_name]
+                                  ['sampling_unit'])
+            # Get starting index
+            self.startindex = self.caseconfig[settings_name]['startindex']
+            # Convert timeseries data in CSV file to H5 data format
+            datapath = data_preprocessing.csv_to_h5(self.saveloc, raw_tsdata,
+                                                    scenario, self.casename)
+            # Read variables from orignal CSV file
+            self.variables = data_preprocessing.read_variables(raw_tsdata)
+            # Get inputdata from H5 table created
+            self.inputdata_raw = np.array(h5py.File(os.path.join(
+                datapath, scenario + '.h5'), 'r')[scenario])
+
+#        elif self.datatype == 'function':
+#            raw_tsdata_gen = self.caseconfig[scenario]['datagen']
+#            connectionloc = self.caseconfig[scenario]['connections']
+#            # TODO: Store function arguments in scenario config file
+#            samples = self.caseconfig['gensamples']
+#            func_delay = self.caseconfig['delay']
+#            # Get inputdata
+#            self.inputdata_raw = eval('datagen.' + raw_tsdata_gen)(samples,
+#                                                                   func_delay)
+#            # Get the variables and connection matrix
+#            self.connectionmatrix = eval('datagen.' + connectionloc)()
+#            self.startindex = 0
+
+        # Get delay type
+        self.delaytype = self.caseconfig[settings_name]['delaytype']
+
+        # Get size of sample vectors for tests
+        # Must be smaller than number of samples generated
+        self.testsize = self.caseconfig[settings_name]['testsize']
+        # Get number of delays to test
+        test_delays = self.caseconfig[scenario]['test_delays']
+        # Define intervals of delays
+        if self.delaytype == 'datapoints':
+            # Include first n sampling intervals
+            self.delays = range(test_delays + 1)
+        elif self.delaytype == 'intervals':
+            # Test delays at specified intervals
+            self.delayinterval = \
+                self.caseconfig[settings_name]['delay_interval']
+
+            self.delays = [(val * self.delayinterval)
+                           for val in range(test_delays + 1)]
 
         self.causevarindexes = self.caseconfig[scenario]['causevarindexes']
         if self.causevarindexes == 'all':
@@ -135,15 +155,16 @@ class WeightcalcData:
 
         # Normalise (mean centre and variance scale) the input data
         self.inputdata_originalrate = \
-            sklearn.preprocessing.scale(self.inputdata_raw,
-                                        axis=0)
+            data_preprocessing.normalise_data(raw_tsdata, self.inputdata_raw,
+                                              self.saveloc, self.casename,
+                                              scenario)
 
         # Subsample data if required
         # Get sub_sampling interval
         sub_sampling_interval = \
             self.caseconfig[scenario]['sub_sampling_interval']
         # TOOD: Use proper pandas.tseries.resample techniques
-            # if it will really add any functionality
+        # if it will really add any functionality
         self.inputdata = self.inputdata_originalrate[0::sub_sampling_interval]
 
         if self.delaytype == 'datapoints':
@@ -151,7 +172,7 @@ class WeightcalcData:
                                        sub_sampling_interval)
                                       for delay in self.delays]
                 self.sample_delays = self.delays
-        elif self.delaytype == 'timevalues':
+        elif self.delaytype == 'intervals':
             self.actual_delays = [int(round(delay/self.sampling_rate)) *
                                   self.sampling_rate for delay in self.delays]
             self.sample_delays = [int(round(delay/self.sampling_rate))
@@ -269,7 +290,6 @@ class TransentWeightcalc:
                             'max_ent', 'max_delay', 'max_index', 'threshpass']
         # Setup Java class for infodynamics toolkit
         self.teCalc = transentropy.setup_infodynamics_te()
-
 
     def calcweight(self, causevardata, affectedvardata):
         """"Calculates the transfer entropy between two vectors containing
@@ -416,6 +436,7 @@ class TransentWeightcalc:
 
         self.threshent = (6 * surrte_stdev) + surrte_mean
 
+
 def bandgap(min_freq, max_freq, vardata):
     """Bandgap filter based on FFT"""
     freqlist = np.fft.rfftfreq(vardata.size, 1)
@@ -460,11 +481,11 @@ def estimate_delay(weightcalcdata, method, sigtest):
             dellist.append(index)
             logging.info("Deleted column " + str(index))
 
-    newconnectionmatrix = weightcalcdata.connectionmatrix
+#    newconnectionmatrix = weightcalcdata.connectionmatrix
     # Substitute all rows and columns not used with zeros in connectionmatrix
-    for delindex in dellist:
-        newconnectionmatrix[:, delindex] = np.zeros(vardims)
-        newconnectionmatrix[delindex, :] = np.zeros(vardims)
+#    for delindex in dellist:
+#        newconnectionmatrix[:, delindex] = np.zeros(vardims)
+#        newconnectionmatrix[delindex, :] = np.zeros(vardims)
 
     for causevarindex in weightcalcdata.causevarindexes:
         causevar = weightcalcdata.variables[causevarindex]
@@ -472,33 +493,33 @@ def estimate_delay(weightcalcdata, method, sigtest):
             affectedvar = weightcalcdata.variables[affectedvarindex]
             logging.info("Analysing effect of: " + causevar + " on " +
                          affectedvar)
-            if not(newconnectionmatrix[affectedvarindex,
-                                       causevarindex] == 0):
-                weightlist = []
-                for delay in weightcalcdata.sample_delays:
-                    logging.info("Now testing delay: " + str(delay))
+#            if not(newconnectionmatrix[affectedvarindex,
+#                                       causevarindex] == 0):
+            weightlist = []
+            for delay in weightcalcdata.sample_delays:
+                logging.info("Now testing delay: " + str(delay))
 
-                    causevardata = \
-                        (weightcalcdata.inputdata[:, causevarindex]
-                            [startindex:startindex+size])
+                causevardata = \
+                    (weightcalcdata.inputdata[:, causevarindex]
+                        [startindex:startindex+size])
 
-                    affectedvardata = \
-                        (weightcalcdata.inputdata[:, affectedvarindex]
-                            [startindex+delay:startindex+size+delay])
+                affectedvardata = \
+                    (weightcalcdata.inputdata[:, affectedvarindex]
+                        [startindex+delay:startindex+size+delay])
 
-                    # Pass data through bandgap filter
-                    causevardata = bandgap(0.005, 0.008, causevardata)
-                    affectedvardata = bandgap(0.005, 0.008, affectedvardata)
+                # Pass data through bandgap filter
+                causevardata = bandgap(0.005, 0.008, causevardata)
+                affectedvardata = bandgap(0.005, 0.008, affectedvardata)
 
-                    weight = weightcalculator.calcweight(causevardata,
-                                                         affectedvardata)
-                    weightlist.append(weight)
+                weight = weightcalculator.calcweight(causevardata,
+                                                     affectedvardata)
+                weightlist.append(weight)
 
-                [weight_array, delay_array, datastore] = \
-                    weightcalculator.report(weightcalcdata, causevarindex,
-                                            affectedvarindex, weightlist,
-                                            weight_array, delay_array,
-                                            datastore, sigtest)
+            [weight_array, delay_array, datastore] = \
+                weightcalculator.report(weightcalcdata, causevarindex,
+                                        affectedvarindex, weightlist,
+                                        weight_array, delay_array,
+                                        datastore, sigtest)
 
     # Delete entries from weightcalc matrix not used
     # Delete all rows and columns listed in dellist
