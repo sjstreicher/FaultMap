@@ -108,7 +108,9 @@ def calc_simple_rank(gainmatrix, variables, m):
     """
     # Transpose gainmatrix so that we are looking at the backwards
     # ranking problem
+
     gainmatrix = gainmatrix.T
+
     # Length of gain matrix = number of nodes
     n = gainmatrix.shape[0]
     gainmatrix = np.asmatrix(gainmatrix, dtype=float)
@@ -146,12 +148,13 @@ def calc_simple_rank(gainmatrix, variables, m):
 
     rankarray = eigvec[:, maxeigindex]
 
+    rankarray_list = [rankelement[0, 0] for rankelement in rankarray]
+
     # Take absolute values of ranking values
-    rankarray = abs(np.asarray(rankarray))
+    rankarray = abs(np.asarray(rankarray_list))
+
     # This is the 1-dimensional array composed of rankings (normalised)
     rankarray_norm = (1 / sum(rankarray)) * rankarray
-    # Remove the useless imaginary +0j
-    rankarray_norm = rankarray_norm.real
 
     # Create a dictionary of the rankings with their respective nodes
     # i.e. {NODE:RANKING}
@@ -378,7 +381,6 @@ def calc_gainrank(gainmatrix, noderankdata, dummycreation,
         data_processing.rankforward(noderankdata.variablelist,
                                     gainmatrix, noderankdata.connectionmatrix,
                                     dummyweight, dummycreation)
-
     backwardconnection, backwardgain, backwardvariablelist = \
         data_processing.rankbackward(noderankdata.variablelist, gainmatrix,
                                      noderankdata.connectionmatrix,

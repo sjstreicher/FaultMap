@@ -23,8 +23,6 @@ weightgraph = nx.DiGraph()
 gaingraph = nx.DiGraph()
 onesgraph = nx.DiGraph()
 
-variables = ['PV 1', 'PV 2', 'PV 3', 'PV 4']
-
 #connections = np.matrix([[0, 0, 0, 1],
 #                         [1, 0, 0, 1],
 #                         [1, 0, 0, 0],
@@ -38,12 +36,14 @@ variables = ['PV 1', 'PV 2', 'PV 3', 'PV 4']
 
 [_, gainmatrix, variables, _] = networkgen.series_equal_five()
 
-# Should the transpose happen before or after the column normalization?
-# I have a feeling that it should definitely be before...
-
 n = gainmatrix.shape[0]
 
 gainmatrix = np.asmatrix(gainmatrix, dtype=float)
+
+# Should the transpose happen before or after the column normalization?
+# I have a feeling that it should definitely be before...
+
+gainmatrix = gainmatrix.T
 
 # Normalize the gainmatrix columns
 for col in range(n):
@@ -73,12 +73,10 @@ resetmatrix = np.array([relative_reset_vector_norm, ]*n).T
 
 weightmatrix = (m * gainmatrix) + ((1-m) * resetmatrix)
 
-# Normalize the m-matrix columns
+# Normalize the weightmatrix columns
 for col in range(n):
     weightmatrix[:, col] = (weightmatrix[:, col]
                             / np.sum(abs(weightmatrix[:, col])))
-
-#weightmatrix = weightmatrix.T
 
 [eigval, eigvec] = np.linalg.eig(weightmatrix)
 [eigval_gain, eigvec_gain] = np.linalg.eig(gainmatrix)
@@ -109,7 +107,7 @@ for col, colvar in enumerate(variables):
             gaingraph.add_edge(rowvar, colvar, weight=gainmatrix[row, col])
 
 
-eig_rankingdict = nx.eigenvector_centrality(weightgraph.reverse())
+eig_rankingdict = nx.eigenvector_centrality(weightgraph)
 
 
 def norm_dict(dictionary):
@@ -124,12 +122,12 @@ def norm_dict(dictionary):
 
 eig_rankingdict_norm = norm_dict(eig_rankingdict)
 
-katz_rankingdict = nx.katz_centrality(gaingraph.reverse(),
+katz_rankingdict = nx.katz_centrality(gaingraph,
                                       1.0, 1.0, 20000)
 
 katz_rankingdict_norm = norm_dict(katz_rankingdict)
 
-katz_rankingdict_weight = nx.katz_centrality(weightgraph.reverse(),
+katz_rankingdict_weight = nx.katz_centrality(weightgraph,
                                              0.99, 1.0, 20000)
 
 nx.write_gml(gaingraph, os.path.join(saveloc, "gaingraph.gml"))
