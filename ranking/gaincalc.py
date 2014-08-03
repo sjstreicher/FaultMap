@@ -337,11 +337,11 @@ class TransentWeightcalc:
         transent_absolute = transent_fwd
 
         # Do not pass negatives on to weight array
-        if transent_directional < 0:
-            transent_directional = 0
-
-        if transent_absolute < 0:
-            transent_absolute = 0
+#        if transent_directional < 0:
+#            transent_directional = 0
+#
+#        if transent_absolute < 0:
+#            transent_absolute = 0
 
         return [transent_directional, transent_absolute]
 
@@ -706,7 +706,13 @@ def weightcalc(mode, case, sigtest, writeoutput):
                 def filename(name):
                     return filename_template.format(case, scenario,
                                                     method, name)
+
+                # TODO
+                # Convert arrays to lists in order to write mixed with strings
+                # to CSV file
+
                 # Write arrays to file
+
                 np.savetxt(filename('maxweight_array'), weight_array,
                            delimiter=',')
                 np.savetxt(filename('delay_array'), delay_array, delimiter=',')

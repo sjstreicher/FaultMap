@@ -414,9 +414,23 @@ def calc_gainrank(gainmatrix, noderankdata, dummycreation,
     return rankingdicts, rankinglists, connections, variables, gains
 
 
-def calc_maingainrank():
+def calc_maingainrank(modgainmatrix, noderankdata, dummycreation, dummyweight,
+                      m):
+    """Calculates the backward ranking for a truncated gainmatrix with only the
+    most significant edges retained.
 
-    return None
+    """
+
+    mainconnection, maingain, mainvariablelist = \
+        data_processing.rankmain(noderankdata.variablelist, gainmatrix,
+                                     noderankdata.connectionmatrix,
+                                     dummyweight, dummycreation)
+
+    mainrankingdict, mainrankinglist = \
+        calc_topedge_rank(maingain, mainvariablelist, m)
+
+    return mainrankingdict, mainrankinglist, mainconnection, \
+            mainvariablelist, maingain
 
 
 def looprank_static(mode, case, dummycreation, writeoutput, m, alpha=0.5):
