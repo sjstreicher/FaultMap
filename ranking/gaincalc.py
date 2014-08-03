@@ -411,7 +411,7 @@ class TransentWeightcalc:
 
         weight_array[affectedvarindex, causevarindex] = maxval_directional
 
-        dataline = [causevar, affectedvar, str(weightlist[0]),
+        dataline = [causevar, affectedvar, str(weightlist_directional[0]),
                     maxval_directional, str(bestdelay_directional),
                     str(delay_index_directional),
                     threshpass_directional]
@@ -538,6 +538,10 @@ def estimate_delay(weightcalcdata, method, sigtest, scenario):
     # Create "Delay" as header for first row
     headerline.append('Delay')
 
+    for affectedvarindex in weightcalcdata.affectedvarindexes:
+            affectedvarname = weightcalcdata.variables[affectedvarindex]
+            headerline.append(affectedvarname)
+
     # Store the weight calculation results in similar format as original data
     def writecsv_weightcalc(filename, items, header):
         """CSV writer customized for use in weightcalc function."""
@@ -548,16 +552,16 @@ def estimate_delay(weightcalcdata, method, sigtest, scenario):
     weightstoredir = config_setup.ensure_existance(
         os.path.join(weightcalcdata.saveloc, 'weightdata'), make=True)
 
-    filename_template = os.path.join(weightstoredir, '{}_{}_{}_{}.csv')
+    filename_template = os.path.join(weightstoredir, '{}_{}_{}_{}_{}.csv')
 
     for causevarindex in weightcalcdata.causevarindexes:
         causevar = weightcalcdata.variables[causevarindex]
 
         # Create filename for new CSV file containing weights between
         # this causevar and all the subsequent affectedvars
-        def filename(name, causevar):
+        def filename(name, method, causevar):
             return filename_template.format(weightcalcdata.casename,
-                                            scenario, name, causevar)
+                                            scenario, name, method, causevar)
         # Initiate datalines with delays
         datalines_directional = np.asarray(weightcalcdata.sample_delays)
         datalines_directional = datalines_directional[:, np.newaxis]
@@ -565,7 +569,6 @@ def estimate_delay(weightcalcdata, method, sigtest, scenario):
 
         for affectedvarindex in weightcalcdata.affectedvarindexes:
             affectedvar = weightcalcdata.variables[affectedvarindex]
-            headerline.append(affectedvar)
             logging.info("Analysing effect of: " + causevar + " on " +
                          affectedvar)
 #            if not(newconnectionmatrix[affectedvarindex,
@@ -601,23 +604,41 @@ def estimate_delay(weightcalcdata, method, sigtest, scenario):
 
             # Combine weight data
 
-            weights_thisvar_directional = np.asarray(weightlist[0])
-            weights_thisvar_directional = \
-                weights_thisvar_directional[:, np.newaxis]
+                weights_thisvar_directional = np.asarray(weightlist[0])
+                weights_thisvar_directional = \
+                    weights_thisvar_directional[:, np.newaxis]
 
-            weights_thisvar_absolute = np.asarray(weightlist[1])
-            weights_thisvar_absolute = \
-                weights_thisvar_absolute[:, np.newaxis]
+                weights_thisvar_absolute = np.asarray(weightlist[1])
+                weights_thisvar_absolute = \
+                    weights_thisvar_absolute[:, np.newaxis]
 
-#            print datalines.shape
-#            print weights_thisvar_directional.shape
-            datalines_directional = \
-                np.concatenate((datalines_directional,
-                                weights_thisvar_directional), axis=1)
+                datalines_directional = \
+                    np.concatenate((datalines_directional,
+                                    weights_thisvar_directional), axis=1)
 
-            datalines_absolute = \
-                np.concatenate((datalines_absolute,
-                                weights_thisvar_absolute), axis=1)
+                datalines_absolute = \
+                    np.concatenate((datalines_absolute,
+                                    weights_thisvar_absolute), axis=1)
+
+                writecsv_weightcalc(filename('weights_directional', method,
+                                             causevar),
+                                    datalines_directional, headerline)
+
+                writecsv_weightcalc(filename('weights_absolute', method,
+                                             causevar),
+                                    datalines_absolute, headerline)
+            else:
+                weights_thisvar_absolute = np.asarray(weightlist)
+                weights_thisvar_absolute = \
+                    weights_thisvar_absolute[:, np.newaxis]
+
+                datalines_absolute = \
+                    np.concatenate((datalines_absolute,
+                                    weights_thisvar_absolute), axis=1)
+
+                writecsv_weightcalc(filename('weights_absolute', method,
+                                             causevar),
+                                    datalines_absolute, headerline)
 
             [weight_array, delay_array, datastore] = \
                 weightcalculator.report(weightcalcdata, causevarindex,
@@ -628,12 +649,6 @@ def estimate_delay(weightcalcdata, method, sigtest, scenario):
 #        delays = np.asarray(weightcalcdata.sample_delays)
 #        delays = delays[:, np.newaxis]
 #        datalines = np.concatenate((delays, weights_allvars), axis=1)
-
-        writecsv_weightcalc(filename('weights_directional', causevar),
-                            datalines_directional, headerline)
-
-        writecsv_weightcalc(filename('weights_absolute', causevar),
-                            datalines_absolute, headerline)
 
     # Delete entries from weightcalc matrix not used
     # Delete all rows and columns listed in dellist
@@ -680,7 +695,7 @@ def weightcalc(mode, case, sigtest, writeoutput):
                 estimate_delay(weightcalcdata, method, sigtest, scenario)
 
             # Do noderanking immediately
-            looprank_static
+#            looprank_static
 
             if writeoutput:
                 # Define export directories and filenames

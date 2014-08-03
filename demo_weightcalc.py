@@ -8,7 +8,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 writeoutput = True
-sigtest = False
+sigtest = True
 
 mode = 'plants'
 cases = ['propylene_compressor']

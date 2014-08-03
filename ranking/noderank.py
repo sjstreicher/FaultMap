@@ -198,6 +198,11 @@ def calc_simple_rank(gainmatrix, variables, m):
 def calc_topedge_rank(gainmatrix, variables, m, topedgenum):
     """Calculates the ranking based on the top edges only."""
 
+
+    print type(gainmatrix)
+    # Identify the largest topedgenum elements in the gainmatrix
+    largest_indexes = []
+
     return None
 
 
@@ -409,6 +414,11 @@ def calc_gainrank(gainmatrix, noderankdata, dummycreation,
     return rankingdicts, rankinglists, connections, variables, gains
 
 
+def calc_maingainrank():
+
+    return None
+
+
 def looprank_static(mode, case, dummycreation, writeoutput, m, alpha=0.5):
     """Ranks the nodes in a network based on a single gain matrix calculation.
 
@@ -445,6 +455,10 @@ def looprank_static(mode, case, dummycreation, writeoutput, m, alpha=0.5):
             calc_gainrank(modgainmatrix, noderankdata,
                           dummycreation,
                           alpha, dummyweight, m)
+
+        mainrankingdict, mainrankinglist, mainconnection, \
+            mainvariables, maingains = \
+            calc_maingainrank(modgainmatrix, noderankdata, m)
 
         if writeoutput:
             # Get the directory to save in
