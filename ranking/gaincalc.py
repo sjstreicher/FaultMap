@@ -198,7 +198,7 @@ class WeightcalcData:
         # FFT the data and write back in format that can be analysed in
         # TOPCAT in a plane plot
         data_processing.fft_calculation(raw_tsdata,
-                                        self.inputdata_normalised,
+                                        self.inputdata_originalrate,
                                         self.variables,
                                         self.sampling_rate,
                                         self.sampling_unit,
