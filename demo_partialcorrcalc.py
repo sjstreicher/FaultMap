@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO)
 writeoutput = True
 
 mode = 'plants'
-cases = ['tennessee_eastman']
+cases = ['filters']
 
 for case in cases:
     partialcorrcalc(mode, case, writeoutput)

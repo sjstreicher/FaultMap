@@ -144,7 +144,7 @@ def bandgapfilter_data(raw_tsdata, normalised_tsdata, variables,
      other software, for example TOPCAT.
 
      """
-     # Header and time from main source file
+    # Header and time from main source file
     headerline = np.genfromtxt(raw_tsdata, delimiter=',', dtype='string')[0, :]
     time = np.genfromtxt(raw_tsdata, delimiter=',')[1:, 0]
     time = time[:, np.newaxis]
@@ -359,6 +359,7 @@ def split_tsdata(tags_tsdata, datasetname, samplerate, boxsize, boxnum):
     samplesbetween = int(round(boxstartindex[-1]/(boxnum-1)))
     boxstartindex[1:-1] = [(samplesbetween * index)
                            for index in range(1, boxnum-1)]
-    boxes = [inputdata[int(boxstartindex[i]):int(boxstartindex[i]) + int(boxsizesamples)]
+    boxes = [inputdata[int(boxstartindex[i]):int(boxstartindex[i]) +
+                       int(boxsizesamples)]
              for i in range(int(boxnum))]
     return boxes
