@@ -47,6 +47,14 @@ def read_variables(raw_tsdata):
     return variables
 
 
+def writecsv(filename, items, header=None):
+        """Write CSV directly"""
+        with open(filename, 'wb') as f:
+            if header:
+                csv.writer(f).writerow(header)
+            csv.writer(f).writerows(items)
+
+
 def fft_calculation(raw_tsdata, normalised_tsdata, variables, sampling_rate,
                     sampling_unit, saveloc, case, scenario,
                     plotting=False, plotting_endsample=500):
@@ -101,13 +109,6 @@ def fft_calculation(raw_tsdata, normalised_tsdata, variables, sampling_rate,
     # Combine frequency list and FFT data
     datalines = np.concatenate((freqlist, fft_data), axis=1)
 
-    # Store the FFT results in similar format as original data
-    def writecsv_fft_data(filename, items, header):
-        """CSV writer customized for use in FFT function."""
-        with open(filename, 'wb') as f:
-            csv.writer(f).writerow(header)
-            csv.writer(f).writerows(items)
-
     # Define export directories and filenames
     datadir = config_setup.ensure_existance(
         os.path.join(saveloc, 'fftdata'), make=True)
@@ -117,7 +118,7 @@ def fft_calculation(raw_tsdata, normalised_tsdata, variables, sampling_rate,
     def filename(name):
         return filename_template.format(case, scenario, name)
 
-    writecsv_fft_data(filename('fft'), datalines, headerline)
+    writecsv(filename('fft'), datalines, headerline)
 
     return None
 
@@ -169,14 +170,6 @@ def bandgapfilter_data(raw_tsdata, normalised_tsdata, variables,
     else:
         datalines = np.concatenate((time, inputdata_bandgapfiltered), axis=1)
 
-    # Store the normalised data in similar format as original data
-    def writecsv_bandgapped_data(filename, items, header):
-        """CSV writer customized for use in weightcalc function."""
-
-        with open(filename, 'wb') as f:
-            csv.writer(f).writerow(header)
-            csv.writer(f).writerows(items)
-
     # Define export directories and filenames
     datadir = config_setup.ensure_existance(
         os.path.join(saveloc, 'bandgappeddata'), make=True)
@@ -187,9 +180,9 @@ def bandgapfilter_data(raw_tsdata, normalised_tsdata, variables,
         return filename_template.format(case, scenario, name,
                                         lowfreq, highfreq)
 
-    writecsv_bandgapped_data(filename('bandgapped_data', str(low_freq),
-                                      str(high_freq)), datalines,
-                             headerline)
+    # Store the normalised data in similar format as original data
+    writecsv(filename('bandgapped_data', str(low_freq), str(high_freq)),
+             datalines, headerline)
 
     return inputdata_bandgapfiltered
 
@@ -215,14 +208,6 @@ def normalise_data(raw_tsdata, inputdata_raw, saveloc, case, scenario):
 
     datalines = np.concatenate((time, inputdata_normalised), axis=1)
 
-    # Store the normalised data in similar format as original data
-    def writecsv_normed_data(filename, items, header):
-        """CSV writer customized for use in weightcalc function."""
-
-        with open(filename, 'wb') as f:
-            csv.writer(f).writerow(header)
-            csv.writer(f).writerows(items)
-
     # Define export directories and filenames
     datadir = config_setup.ensure_existance(
         os.path.join(saveloc, 'normdata'), make=True)
@@ -232,8 +217,8 @@ def normalise_data(raw_tsdata, inputdata_raw, saveloc, case, scenario):
     def filename(name):
         return filename_template.format(case, scenario, name)
 
-    writecsv_normed_data(filename('normalised_data'), datalines,
-                         headerline)
+    # Store the normalised data in similar format as original data
+    writecsv(filename('normalised_data'), datalines, headerline)
 
     return inputdata_normalised
 
