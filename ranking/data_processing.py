@@ -50,7 +50,7 @@ def read_variables(raw_tsdata):
 def writecsv(filename, items, header=None):
         """Write CSV directly"""
         with open(filename, 'wb') as f:
-            if header:
+            if header is not None:
                 csv.writer(f).writerow(header)
             csv.writer(f).writerows(items)
 
