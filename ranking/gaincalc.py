@@ -35,7 +35,6 @@ import jpype
 # Own libraries
 import config_setup
 import transentropy
-#import formatmatrices
 import data_processing
 
 #import datagen
@@ -747,7 +746,7 @@ class PartialCorrWeightcalc:
         # Get inputdata and initial connectionmatrix
         calcdata = (weightcalcdata.inputdata[:, :]
                     [startindex:startindex+size])
-        newconnectionmatrix = weightcalcdata.connectionmatrix
+#        newconnectionmatrix = weightcalcdata.connectionmatrix
         newvariables = weightcalcdata.variables
 
         # Delete all variables from data matrix whose standard deviation

@@ -195,15 +195,18 @@ def calc_simple_rank(gainmatrix, variables, m):
     return rankingdict, rankinglist
 
 
-def calc_topedge_rank(gainmatrix, variables, m, topedgenum):
-    """Calculates the ranking based on the top edges only."""
+def calc_topedge_rank(gainmatrix, variables, m, topedgenum=10):
+    """Calculates the ranking based on the top edges only.
 
+    topedgenum is the number of largest edges to include in the ranking problem
+    """
 
-    print type(gainmatrix)
     # Identify the largest topedgenum elements in the gainmatrix
     largest_indexes = []
 
-    return None
+    # TODO: Implement changes
+
+    return calc_simple_rank(gainmatrix, variables, m)
 
 
 def calc_blended_rank(forwardrank, backwardrank, variablelist,
@@ -414,7 +417,7 @@ def calc_gainrank(gainmatrix, noderankdata, dummycreation,
     return rankingdicts, rankinglists, connections, variables, gains
 
 
-def calc_maingainrank(modgainmatrix, noderankdata, dummycreation, dummyweight,
+def calc_maingainrank(gainmatrix, noderankdata, dummycreation, dummyweight,
                       m):
     """Calculates the backward ranking for a truncated gainmatrix with only the
     most significant edges retained.
@@ -422,7 +425,7 @@ def calc_maingainrank(modgainmatrix, noderankdata, dummycreation, dummyweight,
     """
 
     mainconnection, maingain, mainvariablelist = \
-        data_processing.rankmain(noderankdata.variablelist, gainmatrix,
+        data_processing.rankbackward(noderankdata.variablelist, gainmatrix,
                                      noderankdata.connectionmatrix,
                                      dummyweight, dummycreation)
 
@@ -430,7 +433,7 @@ def calc_maingainrank(modgainmatrix, noderankdata, dummycreation, dummyweight,
         calc_topedge_rank(maingain, mainvariablelist, m)
 
     return mainrankingdict, mainrankinglist, mainconnection, \
-            mainvariablelist, maingain
+        mainvariablelist, maingain
 
 
 def looprank_static(mode, case, dummycreation, writeoutput, m, alpha=0.5):
@@ -472,7 +475,8 @@ def looprank_static(mode, case, dummycreation, writeoutput, m, alpha=0.5):
 
         mainrankingdict, mainrankinglist, mainconnection, \
             mainvariables, maingains = \
-            calc_maingainrank(modgainmatrix, noderankdata, m)
+            calc_maingainrank(modgainmatrix, noderankdata, dummycreation,
+                              dummyweight, m)
 
         if writeoutput:
             # Get the directory to save in
