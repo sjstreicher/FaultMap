@@ -37,8 +37,6 @@ import config_setup
 import transentropy
 import data_processing
 
-#import datagen
-
 
 class WeightcalcData:
     """Creates a data object from file and or function definitions for use in
@@ -175,8 +173,8 @@ class WeightcalcData:
         # Subsample data if required
         # Get sub_sampling interval
         sub_sampling_interval = \
-            self.caseconfig[scenario]['sub_sampling_interval']
-        # TOOD: Use proper pandas.tseries.resample techniques
+            self.caseconfig[settings_name]['sub_sampling_interval']
+        # TODO: Use proper pandas.tseries.resample techniques
         # if it will really add any functionality
         self.inputdata = self.inputdata_originalrate[0::sub_sampling_interval]
 
@@ -496,7 +494,7 @@ class TransentWeightcalc:
             surr_te_absolute_mean
 
 
-def estimate_delay(weightcalcdata, method, sigtest, scenario):
+def calc_weights(weightcalcdata, method, sigtest, scenario):
     """Determines the maximum weight between two variables by searching through
     a specified set of delays.
 
@@ -688,41 +686,40 @@ def weightcalc(mode, case, sigtest, writeoutput):
         weightcalcdata.scenariodata(scenario)
         for method in weightcalcdata.methods:
             logging.info("Method: " + method)
+            # Define export directories and filenames
+            weightdir = config_setup.ensure_existance(os.path.join(
+                weightcalcdata.saveloc, 'weightcalc'), make=True)
+            filename_template = os.path.join(weightdir, '{}_{}_{}_{}.csv')
 
-            # TODO: Get data_header directly
-            [weight_array, delay_array, datastore, data_header] = \
-                estimate_delay(weightcalcdata, method, sigtest, scenario)
+            def filename(name):
+                return filename_template.format(case, scenario,
+                                                method, name)
 
-            # Do noderanking immediately
-#            looprank_static
+            # Test whether the 'weightcalc_data' file already exists
+            testlocation = filename('weightcalc_data')
+            if not os.path.exists(testlocation):
+                # Continue with execution
 
-            if writeoutput:
-                # Define export directories and filenames
-                weightdir = config_setup.ensure_existance(os.path.join(
-                    weightcalcdata.saveloc, 'weightcalc'), make=True)
-                filename_template = os.path.join(weightdir, '{}_{}_{}_{}.csv')
+                # TODO: Get data_header directly
+                [weight_array, delay_array, datastore, data_header] = \
+                    calc_weights(weightcalcdata, method, sigtest, scenario)
 
-                def filename(name):
-                    return filename_template.format(case, scenario,
-                                                    method, name)
-
-                # TODO
-                # Convert arrays to lists in order to write mixed with strings
-                # to CSV file
-
-                # Write arrays to file
-
-                np.savetxt(filename('maxweight_array'), weight_array,
-                           delimiter=',')
-                np.savetxt(filename('delay_array'), delay_array, delimiter=',')
-                # Write datastore to file
-                writecsv_weightcalc(filename('weightcalc_data'), datastore,
-                                    data_header)
+                if writeoutput:
+                    # Write arrays to file
+                    np.savetxt(filename('maxweight_array'), weight_array,
+                               delimiter=',')
+                    np.savetxt(filename('delay_array'), delay_array,
+                               delimiter=',')
+                    # Write datastore to file
+                    writecsv_weightcalc(filename('weightcalc_data'), datastore,
+                                        data_header)
+            else:
+                logging.info("The requested results are in existence")
 
 
 class PartialCorrWeightcalc:
     """This class provides methods for calculating the weights according to
-    the transfer entropy method.
+    the partial correlation method.
 
     """
 
