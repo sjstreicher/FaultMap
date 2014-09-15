@@ -123,13 +123,7 @@ def calc_simple_rank(gainmatrix, variables, m):
         else:
             gainmatrix[:, col] = (gainmatrix[:, col] / colsum)
 
-    relative_reset_vector = [1] * n
-
-    relative_reset_vector_norm = np.asarray(relative_reset_vector,
-                                            dtype=float) \
-        / sum(relative_reset_vector)
-
-    resetmatrix = np.array([relative_reset_vector_norm, ]*n).T
+    resetmatrix = np.ones((n, n), dtype=float)/n
 
     weightmatrix = (m * gainmatrix) + ((1-m) * resetmatrix)
 
