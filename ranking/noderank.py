@@ -89,13 +89,9 @@ def writecsv_looprank(filename, items):
 
 
 def norm_dict(dictionary):
-    dictionary_norm = dict()
-    entrysums = 0
-    for entry in dictionary:
-        entrysums += dictionary[entry]
-    for entry in dictionary:
-        dictionary_norm[entry] = dictionary[entry] / entrysums
-    return dictionary_norm
+    total = sum(dictionary.values())
+    # NOTE: if this is slow in Python 2, replace .items with .iteritems
+    return {key: value/total for key, value in dictionary.items()}
 
 
 def calc_simple_rank(gainmatrix, variables, m):
