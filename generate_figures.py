@@ -31,30 +31,63 @@ def filename():
 def graph_filename(graphname):
     return graph_filename_template.format(graphname)
 
-case = 'filters'
-scenario = 'noiseonly_nosubs_set1'
-method = 'absolute_transfer_entropy'
-name = 'X 1'
-
 sourcedir = os.path.join(saveloc, 'weightdata')
 filename_template = os.path.join(sourcedir, '{}_{}_weights_{}_{}.csv')
 
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
 
-# Figure to show dependence of absolute value of transfer entropy on time
-# constant of the process
+
+case = 'filters'
+scenario = 'noiseonly_nosubs_set1'
+
+name = 'X 1'
+
+# Figure to show dependence of cross-correlation on time constant and delay
+
+method = 'absolute_cross_correlation'
 
 sourcefile = filename()
-
-
-# Load CSV file in order to create graphs
 valuematrix, headers = data_processing.read_header_values_datafile(sourcefile)
 
-# TODO: Create dictionary from tag_descriptions file and use this in the legend
+graphname = 'firstorder_noiseonly_abs_crosscorr_scen01'
+
+# Test whether the figure already exists
+testlocation = graph_filename(graphname)
+#if not os.path.exists(testlocation):
+if not False:
+    plt.figure(1, (12, 6))
+    plt.plot(valuematrix[:, 0], valuematrix[:, 1], marker="o", markersize=4,
+             label=r'$\tau = 0.2$ seconds')
+    plt.plot(valuematrix[:, 0], valuematrix[:, 2], marker="o", markersize=4,
+             label=r'$\tau = 0.5$ seconds')
+    plt.plot(valuematrix[:, 0], valuematrix[:, 3], marker="o", markersize=4,
+             label=r'$\tau = 1.0$ seconds')
+    plt.plot(valuematrix[:, 0], valuematrix[:, 4], marker="o", markersize=4,
+             label=r'$\tau = 2.0$ seconds')
+    plt.plot(valuematrix[:, 0], valuematrix[:, 5], marker="o", markersize=4,
+             label=r'$\tau = 5.0$ seconds')
+
+    plt.ylabel(r'Cross correlation', fontsize=14)
+    plt.xlabel(r'Delay (samples)', fontsize=14)
+    plt.legend(bbox_to_anchor=[0.25, 1])
+
+    plt.axis([70, 130, -0.2, 0.8])
+
+    plt.savefig(graph_filename(graphname))
+    plt.close()
+
+else:
+    logging.info("The requested graph has already been drawn")
+
+# Figure to show dependence of absolute value of transfer entropy on time
+# constant of the process
+method = 'absolute_transfer_entropy'
+
+sourcefile = filename()
+valuematrix, headers = data_processing.read_header_values_datafile(sourcefile)
 
 graphname = 'firstorder_noiseonly_abs_scen01'
-
 
 # Test whether the figure already exists
 testlocation = graph_filename(graphname)
@@ -119,6 +152,41 @@ if not os.path.exists(testlocation):
 else:
     logging.info("The requested graph has already been drawn")
 
+
+# Plot maximum correllation coefficients vs. first order time constants
+method = 'absolute_cross_correlation'
+
+graphname = 'firstorder_noiseonly_cc_vs_tau_scen01'
+
+sourcefile = filename()
+valuematrix_cc, headers = \
+    data_processing.read_header_values_datafile(sourcefile)
+
+set1 = [valuematrix_cc[index+1][1]
+        for index in range(valuematrix_cc.shape[0]-1)]
+
+max_correlations = [max(valuematrix_cc[:, index+1]) for index in range(5)]
+
+taus = [0.2, 0.5, 1.0, 2.0, 5.0]
+
+# Test whether the figure already exists
+testlocation = graph_filename(graphname)
+#if not os.path.exists(testlocation):
+if not False:
+    plt.figure(1, (12, 6))
+    plt.loglog(taus, max_correlations, ".", marker="o", markersize=4,
+               label=r'absolute')
+
+    plt.ylabel(r'Correlation', fontsize=14)
+    plt.xlabel(r'Time constant ($\tau$)', fontsize=14)
+    plt.legend()
+
+    plt.savefig(graph_filename(graphname))
+    plt.close()
+
+else:
+    logging.info("The requested graph has already been drawn")
+
 # Plot maximum transfer entropies values vs. first order time constants
 
 method = 'directional_transfer_entropy'
@@ -141,8 +209,8 @@ taus = [0.2, 0.5, 1.0, 2.0, 5.0]
 #dir_vals = [te / tau for te, tau in zip(max_directional_te, taus)]
 #abs_vals = [te / tau for te, tau in zip(max_absolute_te, taus)]
 
-dir_vals = [te for te in max_directional_te]
-abs_vals = [te for te in max_absolute_te]
+dir_vals = max_directional_te
+abs_vals = max_absolute_te
 
 graphname = 'firstorder_noiseonly_te_vs_tau_logplot_scen01'
 
