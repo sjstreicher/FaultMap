@@ -48,8 +48,9 @@ def runsetup(mode, case):
     return saveloc, casedir, infodynamicsloc
 
 
-def get_dataloc():
+def get_locations():
     # Load directories config file
     dirs = json.load(open('config.json'))
-    dataloc = os.path.expanduser(dirs['dataloc'])
-    return dataloc
+    dataloc, saveloc = [os.path.expanduser(dirs[location])
+                        for location in ['dataloc', 'saveloc']]
+    return dataloc, saveloc

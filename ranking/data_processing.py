@@ -243,6 +243,21 @@ def read_connectionmatrix(connection_loc):
     return connectionmatrix, variables
 
 
+def read_header_values_datafile(location):
+    """This method reads a CSV data file of the form:
+    header, header, header, etc... (first row)
+    value, value, value, etc... (second row)
+    etc...
+
+    """
+
+    with open(location) as f:
+        header = csv.reader(f).next()[:]
+        values = np.genfromtxt(f, delimiter=',')[:, :]
+
+    return values, header
+
+
 def read_gainmatrix(gainmatrix_loc):
     """This method a gainmatrix scheme for a specific scenario.
     """
