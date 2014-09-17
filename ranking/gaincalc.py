@@ -589,7 +589,7 @@ def calc_weights(weightcalcdata, method, sigtest, scenario):
                                                      affectedvardata)
 
                 if len(weight) > 1:
-                    # Iff weight contains directional as well as absolute
+                    # If weight contains directional as well as absolute
                     # weights, write to separate lists
                     directional_weightlist.append(weight[0])
                     absolute_weightlist.append(weight[1])
