@@ -33,8 +33,6 @@ def csv_to_h5(saveloc, raw_tsdata, scenario, case):
     data = data[1:, 1:]
     array = hdf5writer.create_array(hdf5writer.root, dataset, data)
 
-    #table.append(data)
-    #table.flush()
     array.flush()
     hdf5writer.close()
 
