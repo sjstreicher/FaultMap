@@ -84,10 +84,6 @@ class WeightcalcData:
         bandgap_filtering = self.caseconfig[scenario]['bandgap_filtering']
         self.transient = self.caseconfig[settings_name]['transient']
 
-        if self.transient:
-            self.boxnum = self.caseconfig[settings_name]['boxnum']
-            self.boxsize = self.caseconfig[settings_name]['boxsize']
-
         if self.datatype == 'file':
             # Get path to time series data input file in standard format
             # described in documentation under "Input data formats"
@@ -187,6 +183,16 @@ class WeightcalcData:
         # if it will really add any functionality
         self.inputdata = self.inputdata_originalrate[0::sub_sampling_interval]
 
+        if self.transient:
+            self.boxnum = self.caseconfig[settings_name]['boxnum']
+            self.boxsize = self.caseconfig[settings_name]['boxsize']
+        else:
+            self.boxnum = 1  # Only a single box will be used
+            self.boxsize = self.inputdata.shape[0] * \
+                self.sampling_rate
+            # This box should now return the same size
+            # as the original data file - but it does not play a role at all.
+
         if self.delaytype == 'datapoints':
                 self.actual_delays = [(delay * self.sampling_rate *
                                        sub_sampling_interval)
@@ -213,15 +219,6 @@ class WeightcalcData:
                                         scenario)
 
 
-
-
-
-
-
-
-
-
-
 def calc_weights(weightcalcdata, method, sigtest, scenario):
     """Determines the maximum weight between two variables by searching through
     a specified set of delays.
@@ -229,6 +226,7 @@ def calc_weights(weightcalcdata, method, sigtest, scenario):
     method can be either 'cross_correlation' or 'transfer_entropy'
 
     """
+
     if method == 'cross_correlation':
         weightcalculator = CorrWeightcalc(weightcalcdata)
     elif method == 'transfer_entropy':
@@ -236,15 +234,10 @@ def calc_weights(weightcalcdata, method, sigtest, scenario):
     elif method == 'partial_correlation':
         weightcalculator = PartialCorrWeightcalc(weightcalcdata)
 
+    vardims = len(weightcalcdata.variables)
     startindex = weightcalcdata.startindex
     size = weightcalcdata.testsize
     data_header = weightcalculator.data_header
-    vardims = len(weightcalcdata.variables)
-    weight_array = np.empty((vardims, vardims))
-    delay_array = np.empty((vardims, vardims))
-    weight_array[:] = np.NAN
-    delay_array[:] = np.NAN
-    datastore = []
 
     dellist = []
     for index in range(vardims):
@@ -277,117 +270,147 @@ def calc_weights(weightcalcdata, method, sigtest, scenario):
             csv.writer(f).writerow(header)
             csv.writer(f).writerows(items)
 
+    # Define filename structure for CSV file containing weights between
+    # a specific causevar and all the subsequent affectedvars
+    def filename(name, method, causevar):
+        return filename_template.format(weightcalcdata.casename,
+                                        scenario, name, method, causevar)
+
     weightstoredir = config_setup.ensure_existance(
         os.path.join(weightcalcdata.saveloc, 'weightdata'), make=True)
 
     filename_template = os.path.join(weightstoredir, '{}_{}_{}_{}_{}.csv')
 
-    for causevarindex in weightcalcdata.causevarindexes:
-        causevar = weightcalcdata.variables[causevarindex]
+    # Generate boxes to use
+    boxes = data_processing.split_tsdata(weightcalcdata.inputdata,
+                                         weightcalcdata.sampling_rate,
+                                         weightcalcdata.boxsize,
+                                         weightcalcdata.boxnum)
 
-        # Create filename for new CSV file containing weights between
-        # this causevar and all the subsequent affectedvars
-        def filename(name, method, causevar):
-            return filename_template.format(weightcalcdata.casename,
-                                            scenario, name, method, causevar)
-        # Initiate datalines with delays
-        datalines_directional = np.asarray(weightcalcdata.sample_delays)
-        datalines_directional = datalines_directional[:, np.newaxis]
-        datalines_absolute = datalines_directional.copy()
+    # Create storage lists weight_arrays, delay_arrays and datastores
+    # that will be generated for each box
 
-        for affectedvarindex in weightcalcdata.affectedvarindexes:
-            affectedvar = weightcalcdata.variables[affectedvarindex]
-            logging.info("Analysing effect of: " + causevar + " on " +
-                         affectedvar)
-            if not(newconnectionmatrix[affectedvarindex,
-                                       causevarindex] == 0):
-                weightlist = []
-                directional_weightlist = []
-                absolute_weightlist = []
+    weight_arrays = []
+    delay_arrays = []
+    datastores = []
 
-                for delay in weightcalcdata.sample_delays:
-                    logging.info("Now testing delay: " + str(delay))
+    for boxindex, box in enumerate(boxes):
 
-                    causevardata = \
-                        (weightcalcdata.inputdata[:, causevarindex]
-                            [startindex:startindex+size])
+        weight_array = np.empty((vardims, vardims))
+        delay_array = np.empty((vardims, vardims))
+        weight_array[:] = np.NAN
+        delay_array[:] = np.NAN
+        datastore = []
 
-                    affectedvardata = \
-                        (weightcalcdata.inputdata[:, affectedvarindex]
-                            [startindex+delay:startindex+size+delay])
+        for causevarindex in weightcalcdata.causevarindexes:
+            causevar = weightcalcdata.variables[causevarindex]
 
-                    weight = weightcalculator.calcweight(causevardata,
-                                                         affectedvardata,
-                                                         weightcalcdata,
-                                                         causevarindex,
-                                                         affectedvarindex)
+            # Initiate datalines with delays
+            datalines_directional = np.asarray(weightcalcdata.sample_delays)
+            datalines_directional = datalines_directional[:, np.newaxis]
+            datalines_absolute = datalines_directional.copy()
+
+            for affectedvarindex in weightcalcdata.affectedvarindexes:
+                affectedvar = weightcalcdata.variables[affectedvarindex]
+                logging.info("Analysing effect of: " + causevar + " on " +
+                             affectedvar + " for box number: " + str(boxindex))
+
+                if not(newconnectionmatrix[affectedvarindex,
+                                           causevarindex] == 0):
+                    weightlist = []
+                    directional_weightlist = []
+                    absolute_weightlist = []
+
+                    for delay in weightcalcdata.sample_delays:
+                        logging.info("Now testing delay: " + str(delay))
+
+                        causevardata = \
+                            (box[:, causevarindex]
+                                [startindex:startindex+size])
+
+                        affectedvardata = \
+                            (box[:, affectedvarindex]
+                                [startindex+delay:startindex+size+delay])
+
+                        weight = weightcalculator.calcweight(causevardata,
+                                                             affectedvardata,
+                                                             weightcalcdata,
+                                                             causevarindex,
+                                                             affectedvarindex)
+
+                        if len(weight) > 1:
+                            # If weight contains directional as well as
+                            # absolute weights, write to separate lists
+                            directional_weightlist.append(weight[0])
+                            absolute_weightlist.append(weight[1])
+                        else:
+                            weightlist.append(weight[0])
+
+                    directional_name = 'weights_directional_box{:03d}'
+                    absolute_name = 'weights_absolute_box{:03d}'
 
                     if len(weight) > 1:
-                        # If weight contains directional as well as absolute
-                        # weights, write to separate lists
-                        directional_weightlist.append(weight[0])
-                        absolute_weightlist.append(weight[1])
+                        weightlist = [directional_weightlist,
+                                      absolute_weightlist]
+                        # Combine weight data
+                        weights_thisvar_directional = np.asarray(weightlist[0])
+                        weights_thisvar_directional = \
+                            weights_thisvar_directional[:, np.newaxis]
+
+                        weights_thisvar_absolute = np.asarray(weightlist[1])
+                        weights_thisvar_absolute = \
+                            weights_thisvar_absolute[:, np.newaxis]
+
+                        datalines_directional = \
+                            np.concatenate((datalines_directional,
+                                            weights_thisvar_directional),
+                                           axis=1)
+
+                        datalines_absolute = \
+                            np.concatenate((datalines_absolute,
+                                            weights_thisvar_absolute), axis=1)
+
+                        writecsv_weightcalc(filename(
+                            directional_name.format(boxindex),
+                            method, causevar),
+                            datalines_directional, headerline)
+
                     else:
-                        weightlist.append(weight[0])
+                        weights_thisvar_absolute = np.asarray(weightlist)
+                        weights_thisvar_absolute = \
+                            weights_thisvar_absolute[:, np.newaxis]
 
-            if len(weight) > 1:
-                weightlist = [directional_weightlist, absolute_weightlist]
+                        datalines_absolute = \
+                            np.concatenate((datalines_absolute,
+                                            weights_thisvar_absolute), axis=1)
 
-            # Combine weight data
-                weights_thisvar_directional = np.asarray(weightlist[0])
-                weights_thisvar_directional = \
-                    weights_thisvar_directional[:, np.newaxis]
+                        writecsv_weightcalc(filename(
+                            absolute_name.format(boxindex),
+                            method, causevar),
+                            datalines_absolute, headerline)
 
-                weights_thisvar_absolute = np.asarray(weightlist[1])
-                weights_thisvar_absolute = \
-                    weights_thisvar_absolute[:, np.newaxis]
+                    # Generate and store report files according to each method
+                    [weight_array, delay_array, datastore] = \
+                        weightcalculator.report(weightcalcdata, causevarindex,
+                                                affectedvarindex, weightlist,
+                                                weight_array, delay_array,
+                                                datastore, sigtest)
 
-                datalines_directional = \
-                    np.concatenate((datalines_directional,
-                                    weights_thisvar_directional), axis=1)
+        # Delete entries from weightcalc matrix not used
+        # Delete all rows and columns listed in dellist
+        # from weight_array
+        weight_array = np.delete(weight_array, dellist, 1)
+        weight_array = np.delete(weight_array, dellist, 0)
 
-                datalines_absolute = \
-                    np.concatenate((datalines_absolute,
-                                    weights_thisvar_absolute), axis=1)
+        # Do the same for delay_array
+        delay_array = np.delete(delay_array, dellist, 1)
+        delay_array = np.delete(delay_array, dellist, 0)
 
-                writecsv_weightcalc(filename('weights_directional', method,
-                                             causevar),
-                                    datalines_directional, headerline)
+        weight_arrays.append(weight_array)
+        delay_arrays.append(delay_array)
+        datastores.append(datastore)
 
-                writecsv_weightcalc(filename('weights_absolute', method,
-                                             causevar),
-                                    datalines_absolute, headerline)
-            else:
-                weights_thisvar_absolute = np.asarray(weightlist)
-                weights_thisvar_absolute = \
-                    weights_thisvar_absolute[:, np.newaxis]
-
-                datalines_absolute = \
-                    np.concatenate((datalines_absolute,
-                                    weights_thisvar_absolute), axis=1)
-
-                writecsv_weightcalc(filename('weights_absolute', method,
-                                             causevar),
-                                    datalines_absolute, headerline)
-
-            # Generate and store report files according to each method
-            [weight_array, delay_array, datastore] = \
-                weightcalculator.report(weightcalcdata, causevarindex,
-                                        affectedvarindex, weightlist,
-                                        weight_array, delay_array,
-                                        datastore, sigtest)
-
-    # Delete entries from weightcalc matrix not used
-    # Delete all rows and columns listed in dellist
-    # from weight_array
-    weight_array = np.delete(weight_array, dellist, 1)
-    weight_array = np.delete(weight_array, dellist, 0)
-
-    # Do the same for delay_array
-    delay_array = np.delete(delay_array, dellist, 1)
-    delay_array = np.delete(delay_array, dellist, 0)
-
-    return weight_array, delay_array, datastore, data_header
+    return weight_arrays, delay_arrays, datastores, data_header
 
 
 def writecsv_weightcalc(filename, items, header):
@@ -410,6 +433,20 @@ def weightcalc(mode, case, sigtest, writeoutput):
 
     weightcalcdata = WeightcalcData(mode, case)
 
+    # Define export directories and filenames
+    weightdir = config_setup.ensure_existance(os.path.join(
+        weightcalcdata.saveloc, 'weightcalc'), make=True)
+
+    filename_template = os.path.join(weightdir, '{}_{}_{}_{}.csv')
+
+    def filename(method, name):
+        return filename_template.format(case, scenario,
+                                        method, name)
+
+    maxweight_array_name = 'maxweight_array_box{:03d}'
+    delay_array_name = 'delay_array_box{:03d}'
+    weightcalc_data_name = 'weightcalc_data_box{:03d}'
+
     for scenario in weightcalcdata.scenarios:
         logging.info("Running scenario {}".format(scenario))
         # Update scenario-specific fields of weightcalcdata object
@@ -417,67 +454,32 @@ def weightcalc(mode, case, sigtest, writeoutput):
 
         for method in weightcalcdata.methods:
             logging.info("Method: " + method)
-            # Define export directories and filenames
-            weightdir = config_setup.ensure_existance(os.path.join(
-                weightcalcdata.saveloc, 'weightcalc'), make=True)
-            filename_template = os.path.join(weightdir, '{}_{}_{}_{}.csv')
 
-            def filename(name):
-                return filename_template.format(case, scenario,
-                                                method, name)
-
-        if weightcalcdata.transient:
-            # Calculate set of weights for each databox
             # Test whether the 'weightcalc_data_box01' file already exists
-            testlocation = filename('weightcalc_data_box_001')
-            if not os.path.exists(testlocation):
-#                # Continue with execution
-#
-#                # What I am trying to achieve is similar to running different
-#                # scenarios with slightly modified starting indexes for each
-#                # and then store the results in a particluar format
-#
-#               for box in boxes:
-#
-#
-#
-#
-#
-#                # TODO: Get data_header directly
-                [weight_array, delay_array, datastore, data_header] = \
-                    calc_weights(weightcalcdata, method, sigtest, scenario)
-#
-#                if writeoutput:
-#                    # Write arrays to file
-#                    np.savetxt(filename('maxweight_array'), weight_array,
-#                               delimiter=',')
-#                    np.savetxt(filename('delay_array'), delay_array,
-#                               delimiter=',')
-#                    # Write datastore to file
-#                    writecsv_weightcalc(filename('weightcalc_data_box_{:03d}'),
-#                                        datastore,
-#                                        data_header)
-            else:
-                logging.info("The requested results are in existence")
-
-        else:
-            # Calculate single set of weights
-            # Test whether the 'weightcalc_data' file already exists
-            testlocation = filename('weightcalc_data')
+            testlocation = filename(method, 'weightcalc_data_box001')
             if not os.path.exists(testlocation):
                 # Continue with execution
-                # TODO: Get data_header directly
-                [weight_array, delay_array, datastore, data_header] = \
+                [weight_arrays, delay_arrays, datastores, data_header] = \
                     calc_weights(weightcalcdata, method, sigtest, scenario)
 
-                if writeoutput:
-                    # Write arrays to file
-                    np.savetxt(filename('maxweight_array'), weight_array,
-                               delimiter=',')
-                    np.savetxt(filename('delay_array'), delay_array,
-                               delimiter=',')
-                    # Write datastore to file
-                    writecsv_weightcalc(filename('weightcalc_data'), datastore,
-                                        data_header)
+                for boxindex in range(weightcalcdata.boxnum):
+                    if writeoutput:
+                        # Write arrays to file
+                        np.savetxt(
+                            filename(method,
+                                     maxweight_array_name.format(boxindex)),
+                            weight_arrays[boxindex],
+                            delimiter=',')
+                        np.savetxt(
+                            filename(method,
+                                     delay_array_name.format(boxindex)),
+                            delay_arrays[boxindex],
+                            delimiter=',')
+                        # Write datastore to file
+                        writecsv_weightcalc(
+                            filename(method,
+                                     weightcalc_data_name.format(boxindex)),
+                            datastores[boxindex],
+                            data_header)
             else:
                 logging.info("The requested results are in existence")
