@@ -1,11 +1,5 @@
 {
   "datatype": "function",
-  "delaytype": "datapoints",
-  "test_delays": 10,
-  "sampling_rate": 1,
-  "testsize": 200,
-  "gensamples": 1000,
-  "delay": 0,
   "methods": [
       "cross_correlation",
 	  "transfer_entropy"
@@ -13,39 +7,60 @@
   "scenarios": [
 	  "sinusoid_5x5"
   ],
+  "settings_standard": {
+    "use_connections": true,
+    "delaytype": "datapoints",
+	"sampling_rate": 1,
+	"sub_sampling_interval": 1,
+	"sampling_unit": "seconds",
+	"testsize": 200,
+	"gensamples": 1000,
+	"delay": 0,
+	"startindex": 1000
+  },
   "random_2x2": {
     "connections": "connectionmatrix_2x2",
+	"settings": "settings_standard",
 	"datagen": "random_gen",
 	"causevarindexes": "all",
 	"affectedvarindexes": "all",
-	"sub_sampling_interval": 1
+	"bandgap_filtering": false,
+	"test_delays": 0
   },
    "random_5x5": {
     "connections": "connectionmatrix_5x5",
+	"settings": "settings_standard",
 	"datagen": "random_gen_5x5",
 	"causevarindexes": "all",
 	"affectedvarindexes": "all",
-	"sub_sampling_interval": 1
+	"bandgap_filtering": false,
+	"test_delays": 0
   },
   "delay_2x2": {
     "connections": "connectionmatrix_2x2",
+	"settings": "settings_standard",
 	"datagen": "delay_gen",
 	"causevarindexes": "all",
 	"affectedvarindexes": "all",
-	"sub_sampling_interval": 1
+	"bandgap_filtering": false,
+	"test_delays": 0
   },
   "autoreg_2x2": {
     "connections": "connectionmatrix_2x2",
+	"settings": "settings_standard",
 	"datagen": "autoreg_gen",
 	"causevarindexes": "all",
 	"affectedvarindexes": "all",
-	"sub_sampling_interval": 1
+	"sub_sampling_interval": 1,
+	"test_delays": 0
   },
     "sinusoid_5x5": {
     "connections": "connectionmatrix_5x5",
+	"settings": "settings_standard",
 	"datagen": "sinusoid_shift_gen",
 	"causevarindexes": "all",
 	"affectedvarindexes": "all",
-	"sub_sampling_interval": 1
+	"bandgap_filtering": false,
+	"test_delays": 0
   }
 }
