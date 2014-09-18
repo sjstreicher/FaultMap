@@ -327,22 +327,23 @@ def rankbackward(variables, gainmatrix, connections,
     return buildcase(dummyweight, digraph, 'DV BWD ', dummycreation)
 
 
-def split_tsdata(tags_tsdata, datasetname, samplerate, boxsize, boxnum):
-    """Splits the tags_tsdata into arrays useful for analysing the change of
+def split_tsdata(inputdata, samplerate, boxsize, boxnum):
+    """Splits the inputdata into arrays useful for analysing the change of
     weights over time.
+
+    inputdata is a numpy array with the format of variables along the
+    What is the exact format - single variable data?
 
     samplerate is the rate of sampling in time units
     boxsize is the size of each returned dataset in time units
     boxnum is the number of boxes that need to be analyzed
 
-    Boxes is evenly distributed over the provided dataset.
+    Boxes are evenly distributed over the provided dataset.
     The boxes will overlap if boxsize*boxnum is more than the simulated time,
     and will have spaced between them if it is less.
 
 
     """
-    # Import the data as a numpy array
-    inputdata = np.array(h5py.File(tags_tsdata, 'r')[datasetname])
     # Get total number of samples
     samples = len(inputdata)
 #    print "Number of samples: ", samples
@@ -350,14 +351,19 @@ def split_tsdata(tags_tsdata, datasetname, samplerate, boxsize, boxnum):
     boxsizesamples = int(round(boxsize / samplerate))
 #    print "Box size in samples: ", boxsizesamples
     # Calculate starting index for each box
-    boxstartindex = np.empty((1, boxnum))[0]
-    boxstartindex[:] = np.NAN
-    boxstartindex[0] = 0
-    boxstartindex[-1] = samples - boxsizesamples
-    samplesbetween = int(round(boxstartindex[-1]/(boxnum-1)))
-    boxstartindex[1:-1] = [(samplesbetween * index)
-                           for index in range(1, boxnum-1)]
-    boxes = [inputdata[int(boxstartindex[i]):int(boxstartindex[i]) +
-                       int(boxsizesamples)]
-             for i in range(int(boxnum))]
+
+    if boxnum == 1:
+        boxes = [inputdata]
+
+    else:
+        boxstartindex = np.empty((1, boxnum))[0]
+        boxstartindex[:] = np.NAN
+        boxstartindex[0] = 0
+        boxstartindex[-1] = samples - boxsizesamples
+        samplesbetween = int(round(boxstartindex[-1]/(boxnum-1)))
+        boxstartindex[1:-1] = [(samplesbetween * index)
+                               for index in range(1, boxnum-1)]
+        boxes = [inputdata[int(boxstartindex[i]):int(boxstartindex[i]) +
+                           int(boxsizesamples)]
+                 for i in range(int(boxnum))]
     return boxes
