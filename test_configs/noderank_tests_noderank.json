@@ -3,7 +3,7 @@
   "sampling_rate": 1,
   "scenarios": [
       "fullconn_equal",
-      "series_equal",
+      "series_equal_five",
 	  "series_incomingon2nd",
 	  "series_incomingon3rd",
 	  "series_incomingon2ndand3rd",
@@ -17,8 +17,8 @@
   "fullconn_equal": {
     "networkgen": "fullconn_equal"
   },
-  "series_equal": {
-    "networkgen": "series_equal"
+  "series_equal_five": {
+    "networkgen": "series_equal_five"
   },
   "series_incomingon2nd": {
     "networkgen": "series_incomingon2nd"

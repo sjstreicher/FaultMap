@@ -1,13 +1,13 @@
 {
   "datatype": "function",
   "delaytype": "datapoints",
-  "test_delays": 200,
+  "test_delays": 10,
   "sampling_rate": 1,
-  "testsize": 2000,
-  "gensamples": 3000,
+  "testsize": 200,
+  "gensamples": 1000,
   "delay": 0,
   "methods": [
-      "pearson_correlation",
+      "cross_correlation",
 	  "transfer_entropy"
   ],
   "scenarios": [

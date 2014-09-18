@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Created on Mon Feb 24 15:27:21 2014
 
@@ -12,40 +13,17 @@ import control
 from transentropy import vectorselection
 
 
-def connectionmatrix_2x2():
-    """Generates a 2x2 connection matrix for use in tests."""
+def connectionmatrix_maker(N):
+    def maker():
+        variables = ['X {}'.format(i) for i in range(1, N+1)]
+        connectionmatrix = np.ones((N, N), dtype=int)
+        return variables, connectionmatrix
+    maker.__doc__  = """ Generates a {0}x{0} connection matrix for use in tests.""".format(N)
+    return maker
 
-    variables = ['X 1', 'X 2']
-    connectionmatrix = np.array([[1, 1],
-                                 [1, 1]])
-
-    return variables, connectionmatrix
-
-
-def connectionmatrix_4x4():
-    """Generates a 5x5 connection matrix for use in tests."""
-
-    variables = ['X 1', 'X 2', 'X 3', 'X 4', 'X 5']
-    connectionmatrix = np.array([[1, 1, 1, 1, 1],
-                                 [1, 1, 1, 1, 1],
-                                 [1, 1, 1, 1, 1],
-                                 [1, 1, 1, 1, 1],
-                                 [1, 1, 1, 1, 1]])
-
-    return variables, connectionmatrix
-
-
-def connectionmatrix_5x5():
-    """Generates a 5x5 connection matrix for use in tests."""
-
-    variables = ['X 1', 'X 2', 'X 3', 'X 4', 'X 5']
-    connectionmatrix = np.array([[1, 1, 1, 1, 1],
-                                 [1, 1, 1, 1, 1],
-                                 [1, 1, 1, 1, 1],
-                                 [1, 1, 1, 1, 1],
-                                 [1, 1, 1, 1, 1]])
-
-    return variables, connectionmatrix
+connectionmatrix_2x2, connectionmatrix_4x4, connectionmatrix_5x5 = [
+    connectionmatrix_maker(N) for N in [2, 4, 5]
+    ]
 
 
 def autoreg_gen(samples, delay):

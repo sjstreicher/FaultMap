@@ -21,7 +21,7 @@ def ensure_existance(location, make=False):
 def runsetup(mode, case):
     """Gets all required parameters from the case configuration file.
 
-    Mode can be either 'test_cases' or 'plants' as required to get to the
+    Mode can be either 'tests' or 'plants' as required to get to the
     correct directory.
 
     """
@@ -46,3 +46,11 @@ def runsetup(mode, case):
                                    make=True)
 
     return saveloc, casedir, infodynamicsloc
+
+
+def get_locations():
+    # Load directories config file
+    dirs = json.load(open('config.json'))
+    dataloc, saveloc = [os.path.expanduser(dirs[location])
+                        for location in ['dataloc', 'saveloc']]
+    return dataloc, saveloc
