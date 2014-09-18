@@ -3,22 +3,26 @@
 
 """
 
-from ranking.noderank import looprank_static
 import logging
+import json
+import os
+
+import config_setup
+from ranking.noderank import looprank_static
+
 logging.basicConfig(level=logging.INFO)
 
-writeoutput = True
+dataloc, _ = config_setup.get_locations()
+noderank_config = json.load(open(os.path.join(dataloc, 'config'
+                                              '_noderank' + '.json')))
 
-# Ranking parameters
-# This is now the only place were these parameters are defined to avoid
-# hardcoded overwriting
-alpha = 0.5
-m = 0.15
-
-mode = 'plants'
-cases = ['propylene_compressor']
+writeoutput = noderank_config['writeoutput']
+alpha = noderank_config['alpha']
+m = noderank_config['m']
+mode = noderank_config['mode']
+cases = noderank_config['cases']
 
 for case in cases:
-    for dummycreation in [False, True]:
+    for dummycreation in [False]:
         looprank_static(mode, case, dummycreation, writeoutput,
-                        alpha, m)
+                        m, alpha)
