@@ -12,7 +12,7 @@ from ranking.gaincalc import weightcalc
 
 logging.basicConfig(level=logging.INFO)
 
-dataloc = config_setup.get_dataloc()
+dataloc, _ = config_setup.get_locations()
 weightcalc_config = json.load(open(os.path.join(dataloc, 'config'
                                                 '_weightcalc' + '.json')))
 

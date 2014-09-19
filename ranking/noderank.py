@@ -185,20 +185,6 @@ def calc_simple_rank(gainmatrix, variables, m):
     return rankingdict, rankinglist
 
 
-def calc_topedge_rank(gainmatrix, variables, m, topedgenum=10):
-    """Calculates the ranking based on the top edges only.
-
-    topedgenum is the number of largest edges to include in the ranking problem
-    """
-
-    # Identify the largest topedgenum elements in the gainmatrix
-    largest_indexes = []
-
-    # TODO: Implement changes
-
-    return calc_simple_rank(gainmatrix, variables, m)
-
-
 def calc_blended_rank(forwardrank, backwardrank, variablelist,
                       alpha):
     """This method creates a blended ranking profile."""
@@ -317,42 +303,21 @@ def create_importance_graph(variablelist, closedconnections,
     return closedgraph, opengraph
 
 
-def calc_gainmatrix(connectionmatrix, tags_tsdata, dataset,
-                    method='partial_correlation'):
-    """Calculates the required gainmatrix from tags time series data.
-
-    Can make use of either the partial correlation or transfer entropy method
-    for determining weights.
-
-    """
-
-    # TODO: Rewrite to use weightcalc
-
-    if method == 'partial_correlation':
-        # Get the partialcorr gainmatrix
-        # TODO: Implement partial correlation weight calculation
-        gainmatrix = None
-
-    elif method == 'transfer_entropy':
-        # TODO: Implement transfer entropy weight calculation
-        gainmatrix = None
-
-    return gainmatrix
-
-
-def gainmatrix_preprocessing(gainmatrix, connectionmatrix):
+def gainmatrix_preprocessing(gainmatrix):
     """Moves the mean and scales the variance of the elements in the
     gainmatrix to a specified value.
 
     Only operates on nonzero weights.
+
+    INCOMPLETE
 
     """
     # Get the mean of the samples in the gainmatrix that correspond
     # to the desired connectionmatrix.
     counter = 0
     gainsum = 0
-    for col, row in itertools.izip(connectionmatrix.nonzero()[0],
-                                   connectionmatrix.nonzero()[1]):
+    for col, row in itertools.izip(gainmatrix.nonzero()[0],
+                                   gainmatrix.nonzero()[1]):
         gainsum += gainmatrix[col, row]
         counter += 1
 
@@ -362,8 +327,8 @@ def gainmatrix_preprocessing(gainmatrix, connectionmatrix):
     # Write meandiff to all gainmatrix elements indicated by connectionmatrix
     modgainmatrix = np.zeros_like(gainmatrix)
 
-    for col, row in itertools.izip(connectionmatrix.nonzero()[0],
-                                   connectionmatrix.nonzero()[1]):
+    for col, row in itertools.izip(gainmatrix.nonzero()[0],
+                                   gainmatrix.nonzero()[1]):
         modgainmatrix[col, row] = gainmatrix[col, row] * meanscale
 
     return modgainmatrix, currentmean
@@ -407,25 +372,6 @@ def calc_gainrank(gainmatrix, noderankdata, dummycreation,
     return rankingdicts, rankinglists, connections, variables, gains
 
 
-def calc_maingainrank(gainmatrix, noderankdata, dummycreation, dummyweight,
-                      m):
-    """Calculates the backward ranking for a truncated gainmatrix with only the
-    most significant edges retained.
-
-    """
-
-    mainconnection, maingain, mainvariablelist = \
-        data_processing.rankbackward(noderankdata.variablelist, gainmatrix,
-                                     noderankdata.connectionmatrix,
-                                     dummyweight, dummycreation)
-
-    mainrankingdict, mainrankinglist = \
-        calc_topedge_rank(maingain, mainvariablelist, m)
-
-    return mainrankingdict, mainrankinglist, mainconnection, \
-        mainvariablelist, maingain
-
-
 def looprank_static(mode, case, dummycreation, writeoutput, m, alpha=0.5):
     """Ranks the nodes in a network based on a single gain matrix calculation.
 
@@ -435,7 +381,7 @@ def looprank_static(mode, case, dummycreation, writeoutput, m, alpha=0.5):
 
     noderankdata = NoderankData(mode, case)
 
-    # Only to be used in rare development test cases
+    # Only to be used in rare development test cases (at this stage)
     preprocessing = False
 
     for scenario in noderankdata.scenarios:
@@ -443,127 +389,135 @@ def looprank_static(mode, case, dummycreation, writeoutput, m, alpha=0.5):
         # Update scenario-specific fields of weightcalcdata object
         noderankdata.scenariodata(scenario)
 
-        # Modify the gainmatrix to have a specific mean
-        # Should only be used for development analysis - generally destroys
-        # information.
-        # Not sure what effect will be if data is variance scaled as well
-        if preprocessing:
-            modgainmatrix, _ = \
-                gainmatrix_preprocessing(noderankdata.gainmatrix,
-                                         noderankdata.connectionmatrix)
-        else:
-            modgainmatrix = noderankdata.gainmatrix
+        # Define export directories and filenames
+        # Get the directory to save in
+        savedir = \
+            config_setup.ensure_existance(
+                os.path.join(noderankdata.saveloc,
+                             'noderank'), make=True)
 
-        _, dummyweight = \
-            gainmatrix_preprocessing(noderankdata.gainmatrix,
-                                     noderankdata.connectionmatrix)
+        # Test whether the 'originalgainmatrix' CSV file already exists
+        originalgainmatrix_template = \
+            os.path.join(savedir, '{}_originalgainmatrix.csv')
+        testlocation = originalgainmatrix_template.format(scenario)
 
-        rankingdicts, rankinglists, connections, variables, gains = \
-            calc_gainrank(modgainmatrix, noderankdata,
-                          dummycreation,
-                          alpha, dummyweight, m)
+        if not os.path.exists(testlocation):
+            # Continue with execution
 
-        mainrankingdict, mainrankinglist, mainconnection, \
-            mainvariables, maingains = \
-            calc_maingainrank(modgainmatrix, noderankdata, dummycreation,
-                              dummyweight, m)
-
-        if writeoutput:
-            # Get the directory to save in
-            savedir = \
-                config_setup.ensure_existance(
-                    os.path.join(noderankdata.saveloc,
-                                 'noderank'), make=True)
-            # Save the modified gainmatrix
-            modgainmatrix_template = \
-                os.path.join(savedir, '{}_modgainmatrix.csv')
-            savename = modgainmatrix_template.format(scenario)
-            writecsv_looprank(savename, modgainmatrix)
-
-            # Save the original gainmatrix
-            originalgainmatrix_template = \
-                os.path.join(savedir, '{}_originalgainmatrix.csv')
-            savename = originalgainmatrix_template.format(scenario)
-            writecsv_looprank(savename, noderankdata.gainmatrix)
-
-            # Export graph files with dummy variables included in
-            # forward and backward rankings if available
-            directions = ['blended', 'forward', 'backward']
-
-            if dummycreation:
-                dummystatus = 'withdummies'
+            # Modify the gainmatrix to have a specific mean
+            # Should only be used for development analysis - generally destroys
+            # information.
+            # Not sure what effect will be if data is variance scaled as well
+            if preprocessing:
+                modgainmatrix, _ = \
+                    gainmatrix_preprocessing(noderankdata.gainmatrix)
             else:
-                dummystatus = 'nodummies'
+                modgainmatrix = noderankdata.gainmatrix
 
-            # TODO: Do the same for meanchange
+            _, dummyweight = \
+                gainmatrix_preprocessing(noderankdata.gainmatrix)
 
-            csvfile_template = os.path.join(savedir,
-                                            '{}_{}_importances_{}.csv')
-            graphfile_template = os.path.join(savedir, '{}_{}_graph_{}.gml')
+            rankingdicts, rankinglists, connections, variables, gains = \
+                calc_gainrank(modgainmatrix, noderankdata,
+                              dummycreation,
+                              alpha, dummyweight, m)
 
-            for direction, rankinglist, rankingdict, connection, \
-                variable, gain in zip(directions, rankinglists, rankingdicts,
-                                      connections, variables, gains):
-                idtuple = (scenario, direction, dummystatus)
-                # Save the ranking list to file
-                savename = csvfile_template.format(*idtuple)
-                writecsv_looprank(savename, rankinglist)
-                # Save the graphs to file
-                graph, _ = create_importance_graph(variable, connection,
-                                                   connection, gain,
-                                                   rankingdict)
-                graph_filename = graphfile_template.format(*idtuple)
+            if writeoutput:
+                # Save the modified gainmatrix
+                modgainmatrix_template = \
+                    os.path.join(savedir, '{}_modgainmatrix.csv')
+                savename = modgainmatrix_template.format(scenario)
+                writecsv_looprank(savename, modgainmatrix)
+                csvfile_template = os.path.join(savedir,
+                                                '{}_{}_importances_{}.csv')
 
-                nx.readwrite.write_gml(graph, graph_filename)
+                # Save the original gainmatrix
+                savename = originalgainmatrix_template.format(scenario)
+                writecsv_looprank(savename, noderankdata.gainmatrix)
 
-            if dummycreation:
+                # Export graph files with dummy variables included in
+                # forward and backward rankings if available
+                directions = ['blended', 'forward', 'backward']
 
-                # Export forward and backward ranking graphs
-                # without dummy variables visible
+                if dummycreation:
+                    dummystatus = 'withdummies'
+                else:
+                    dummystatus = 'nodummies'
 
-                # Forward ranking graph
-                direction = directions[1]
-                rankingdict = rankingdicts[1]
-                graph, _ = \
-                    create_importance_graph(noderankdata.variablelist,
-                                            noderankdata.connectionmatrix,
-                                            noderankdata.connectionmatrix,
-                                            noderankdata.gainmatrix,
-                                            rankingdict)
-                graph_filename = os.path.join(noderankdata.saveloc, 'noderank',
-                                              "{}_{}_graph_dumsup.gml"
-                                              .format(scenario, direction))
+                # TODO: Do the same for meanchange
 
-                nx.readwrite.write_gml(graph, graph_filename)
+                graphfile_template = os.path.join(savedir,
+                                                  '{}_{}_graph_{}.gml')
 
-                # Backward ranking graph
-                direction = directions[2]
-                rankingdict = rankingdicts[2]
-                connectionmatrix = noderankdata.connectionmatrix.T
-                gainmatrix = noderankdata.gainmatrix.T
-                graph, _ = create_importance_graph(noderankdata.variablelist,
-                                                   connectionmatrix,
-                                                   connectionmatrix,
-                                                   gainmatrix,
-                                                   rankingdict)
-                graph_filename = os.path.join(noderankdata.saveloc, 'noderank',
-                                              "{}_{}_graph_dumsup.gml"
-                                              .format(scenario, direction))
+                for direction, rankinglist, rankingdict, connection, \
+                    variable, gain in zip(directions, rankinglists,
+                                          rankingdicts,
+                                          connections, variables, gains):
+                    idtuple = (scenario, direction, dummystatus)
+                    # Save the ranking list to file
+                    savename = csvfile_template.format(*idtuple)
+                    writecsv_looprank(savename, rankinglist)
+                    # Save the graphs to file
+                    graph, _ = create_importance_graph(variable, connection,
+                                                       connection, gain,
+                                                       rankingdict)
+                    graph_filename = graphfile_template.format(*idtuple)
 
-                nx.readwrite.write_gml(graph, graph_filename)
+                    nx.readwrite.write_gml(graph, graph_filename)
 
-                # Calculate and export normalised ranking lists
-                # with dummy variables exluded from results
-                for direction, rankingdict in zip(directions[1:],
-                                                  rankingdicts[1:]):
-                    normalised_rankinglist = \
-                        normalise_rankinglist(rankingdict,
-                                              noderankdata.variablelist)
+                if dummycreation:
+                    # Export forward and backward ranking graphs
+                    # without dummy variables visible
 
-                    savename = os.path.join(noderankdata.saveloc, 'noderank',
-                                            '{}_{}_importances_dumsup.csv'
-                                            .format(scenario, direction))
-                    writecsv_looprank(savename, normalised_rankinglist)
+                    # Forward ranking graph
+                    direction = directions[1]
+                    rankingdict = rankingdicts[1]
+                    graph, _ = \
+                        create_importance_graph(noderankdata.variablelist,
+                                                noderankdata.connectionmatrix,
+                                                noderankdata.connectionmatrix,
+                                                noderankdata.gainmatrix,
+                                                rankingdict)
+                    graph_filename = os.path.join(noderankdata.saveloc,
+                                                  'noderank',
+                                                  "{}_{}_graph_dumsup.gml"
+                                                  .format(scenario, direction))
+
+                    nx.readwrite.write_gml(graph, graph_filename)
+
+                    # Backward ranking graph
+                    direction = directions[2]
+                    rankingdict = rankingdicts[2]
+                    connectionmatrix = noderankdata.connectionmatrix.T
+                    gainmatrix = noderankdata.gainmatrix.T
+                    graph, _ = \
+                        create_importance_graph(noderankdata.variablelist,
+                                                connectionmatrix,
+                                                connectionmatrix,
+                                                gainmatrix,
+                                                rankingdict)
+                    graph_filename = os.path.join(noderankdata.saveloc,
+                                                  'noderank',
+                                                  "{}_{}_graph_dumsup.gml"
+                                                  .format(scenario, direction))
+
+                    nx.readwrite.write_gml(graph, graph_filename)
+
+                    # Calculate and export normalised ranking lists
+                    # with dummy variables exluded from results
+                    for direction, rankingdict in zip(directions[1:],
+                                                      rankingdicts[1:]):
+                        normalised_rankinglist = \
+                            normalise_rankinglist(rankingdict,
+                                                  noderankdata.variablelist)
+
+                        savename = os.path.join(noderankdata.saveloc,
+                                                'noderank',
+                                                '{}_{}_importances_dumsup.csv'
+                                                .format(scenario, direction))
+                        writecsv_looprank(savename, normalised_rankinglist)
+        else:
+            logging.info("The requested results are in existence")
 
     logging.info("Done with static ranking")
 
@@ -572,110 +526,15 @@ def looprank_static(mode, case, dummycreation, writeoutput, m, alpha=0.5):
 
 def looprank_transient(mode, case, dummycreation, writeoutput,
                        plotting=False):
-    """Ranks the nodes in a network based over time.
 
-    """
+    noderankdata = NoderankData(mode, case)
 
-    # Note: This is still a work in progress
-    # TODO: Rewrite to make use of multiple calls of looprank_static
 
-    saveloc, casedir, infodynamicsloc = config_setup.runsetup(mode, case)
 
-    # Load case config file
-    caseconfig = json.load(open(os.path.join(casedir, case + '.json')))
-    # Get scenarios
-    scenarios = caseconfig['scenarios']
-    # Get data type
-    datatype = caseconfig['datatype']
-    # Get sample rate
-    samplerate = caseconfig['sampling_rate']
 
-    for scenario in scenarios:
-        logging.info("Running scenario {}".format(scenario))
-        if datatype == 'file':
 
-             # Get time series data
-            tags_tsdata = os.path.join(casedir, 'data',
-                                       caseconfig[scenario]['data'])
-            # Get connection (adjacency) matrix
-            connectionloc = os.path.join(casedir, 'connections',
-                                         caseconfig[scenario]['connections'])
-            # Get dataset name
-            dataset = caseconfig[scenario]['dataset']
-            # Get the variables and connection matrix
-            [variablelist, connectionmatrix] = \
-                data_processing.read_connectionmatrix(connectionloc)
-
-            # Calculate the gainmatrix
-            gainmatrix = calc_gainmatrix(connectionmatrix,
-                                         tags_tsdata, dataset)
-            if writeoutput:
-            # TODO: Refine name
-                savename = os.path.join(saveloc, "gainmatrix.csv")
-                np.savetxt(savename, gainmatrix, delimiter=',')
 
             boxnum = caseconfig['boxnum']
             boxsize = caseconfig['boxsize']
 
-        elif datatype == 'function':
-            # Get variables, connection matrix and gainmatrix
-            network_gen = caseconfig[scenario]['networkgen']
-            connectionmatrix, gainmatrix, variablelist, _ = eval(network_gen)()
 
-        logging.info("Number of tags: {}".format(len(variablelist)))
-
-        # Split the tags_tsdata into sets (boxes) useful for calculating
-        # transient correlations
-        boxes = data_processing.split_tsdata(tags_tsdata, dataset, samplerate,
-                                             boxsize, boxnum)
-
-        # Calculate gain matrix for each box
-        gainmatrices = \
-            [ranking.gaincalc.calc_partialcorr_gainmatrix(connectionmatrix,
-                                                          box, dataset)[1]
-             for box in boxes]
-
-        rankinglists = []
-        rankingdicts = []
-
-        weightdir = \
-            config_setup.ensure_existance(os.path.join(saveloc, 'weightcalc'),
-                                          make=True)
-        gain_template = os.path.join(weightdir, '{}_gainmatrix_{:03d}.csv')
-        rank_template = os.path.join(saveloc, 'importances_{:03d}.csv')
-
-        for index, gainmatrix in enumerate(gainmatrices):
-            # Store the gainmatrix
-            gain_filename = gain_template.format(scenario, index)
-            np.savetxt(gain_filename, gainmatrix, delimiter=',')
-
-            rankingdict, rankinglist, _, _, _ = \
-                calc_gainrank(gainmatrix, variablelist, connectionmatrix)
-
-            rankinglists.append(rankinglist[0])
-
-            savename = rank_template.format(index)
-            writecsv_looprank(savename, rankinglist[0])
-
-            rankingdicts.append(rankingdict[0])
-
-        transientdict, basevaldict = \
-            calc_transient_importancediffs(rankingdicts, variablelist)
-
-        # Plotting functions
-        if plotting:
-            diffplot, absplot = plot_transient_importances(variablelist,
-                                                           transientdict,
-                                                           basevaldict)
-            diffplot_filename = os.path.join(saveloc,
-                                             "{}_diffplot.pdf"
-                                             .format(scenario))
-            absplot_filename = os.path.join(saveloc,
-                                            "{}_absplot.pdf"
-                                            .format(scenario))
-            diffplot.savefig(diffplot_filename)
-            absplot.savefig(absplot_filename)
-
-        logging.info("Done with transient rankings")
-
-        return None

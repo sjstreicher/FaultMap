@@ -9,8 +9,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from datagen import autoreg_datagen
-from transentropy import setup_infodynamics_te
-from transentropy import calc_infodynamics_te
+from ranking.transentropy import setup_infodynamics_te
+from ranking.transentropy import calc_infodynamics_te
 
 import jpype
 from sklearn import preprocessing
