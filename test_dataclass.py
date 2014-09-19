@@ -9,7 +9,7 @@ import ranking.gaincalc
 
 mode = 'plants'
 case = 'propylene_compressor'
-scenario = 'raw_full'
+scenario = 'raw_set3'
 
 testdataclass = ranking.gaincalc.WeightcalcData(mode, case)
 testscenario = testdataclass.scenariodata(scenario)
