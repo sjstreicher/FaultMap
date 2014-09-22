@@ -28,5 +28,6 @@ def wrapper(func, *args, **kwargs):
     return wrapped
 
 for case in cases:
+    # TODO: For accurrate timing do it for the actual calculation only
     wrapped = wrapper(weightcalc, mode, case, sigtest, writeoutput)
     print timeit.timeit(wrapped, number=1)
