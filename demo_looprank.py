@@ -8,7 +8,7 @@ import json
 import os
 
 import config_setup
-from ranking.noderank import looprank_static
+from ranking.noderank import looprank
 
 logging.basicConfig(level=logging.INFO)
 
@@ -24,5 +24,5 @@ cases = noderank_config['cases']
 
 for case in cases:
     for dummycreation in [False]:
-        looprank_static(mode, case, dummycreation, writeoutput,
-                        m, alpha)
+        looprank(mode, case, dummycreation, writeoutput,
+                 m, alpha)
