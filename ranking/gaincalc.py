@@ -191,7 +191,8 @@ class WeightcalcData:
             self.boxsize = self.inputdata.shape[0] * \
                 self.sampling_rate
             # This box should now return the same size
-            # as the original data file - but it does not play a role at all.
+            # as the original data file - but it does not play a role at all
+            # in the actual for the case of boxnum = 1
 
         if self.delaytype == 'datapoints':
                 self.actual_delays = [(delay * self.sampling_rate *
@@ -239,20 +240,26 @@ def calc_weights(weightcalcdata, method, sigtest, scenario):
     size = weightcalcdata.testsize
     data_header = weightcalculator.data_header
 
-    dellist = []
+    cause_dellist = []
+    affected_dellist = []
     for index in range(vardims):
         if index not in weightcalcdata.causevarindexes:
-            dellist.append(index)
+            cause_dellist.append(index)
             logging.info("Deleted column " + str(index))
+        if index not in weightcalcdata.affectedvarindexes:
+            affected_dellist.append(index)
+            logging.info("Deleted row " + str(index))
 
     if weightcalcdata.connections_used:
         newconnectionmatrix = weightcalcdata.connectionmatrix
     else:
         newconnectionmatrix = np.ones((vardims, vardims))
-    # Substitute all rows and columns not used with zeros in connectionmatrix
-    for delindex in dellist:
-        newconnectionmatrix[:, delindex] = np.zeros(vardims)
-        newconnectionmatrix[delindex, :] = np.zeros(vardims)
+    # Substitute columns not used with zeros in connectionmatrix
+    for cause_delindex in cause_dellist:
+        newconnectionmatrix[:, cause_delindex] = np.zeros(vardims)
+    # Substitute rows not used with zeros in connectionmatrix
+    for affected_delindex in affected_dellist:
+        newconnectionmatrix[affected_dellist, :] = np.zeros(vardims)
 
     # Initiate headerline for weightstore file
     headerline = []
@@ -313,7 +320,8 @@ def calc_weights(weightcalcdata, method, sigtest, scenario):
             for affectedvarindex in weightcalcdata.affectedvarindexes:
                 affectedvar = weightcalcdata.variables[affectedvarindex]
                 logging.info("Analysing effect of: " + causevar + " on " +
-                             affectedvar + " for box number: " + str(boxindex))
+                             affectedvar + " for box number: " +
+                             str(boxindex + 1))
 
                 if not(newconnectionmatrix[affectedvarindex,
                                            causevarindex] == 0):
@@ -371,7 +379,7 @@ def calc_weights(weightcalcdata, method, sigtest, scenario):
                                             weights_thisvar_absolute), axis=1)
 
                         writecsv_weightcalc(filename(
-                            directional_name.format(boxindex),
+                            directional_name.format(boxindex + 1),
                             method, causevar),
                             datalines_directional, headerline)
 
@@ -385,7 +393,7 @@ def calc_weights(weightcalcdata, method, sigtest, scenario):
                                             weights_thisvar_absolute), axis=1)
 
                         writecsv_weightcalc(filename(
-                            absolute_name.format(boxindex),
+                            absolute_name.format(boxindex + 1),
                             method, causevar),
                             datalines_absolute, headerline)
 
@@ -397,14 +405,15 @@ def calc_weights(weightcalcdata, method, sigtest, scenario):
                                                 datastore, sigtest)
 
         # Delete entries from weightcalc matrix not used
-        # Delete all rows and columns listed in dellist
+        # Delete all rows and columns listed in affected_dellist, cause_dellist
         # from weight_array
-        weight_array = np.delete(weight_array, dellist, 1)
-        weight_array = np.delete(weight_array, dellist, 0)
+        # Axis 0 is rows, axis 1 is columns
+        weight_array = np.delete(weight_array, cause_dellist, 1)
+        weight_array = np.delete(weight_array, affected_dellist, 0)
 
         # Do the same for delay_array
-        delay_array = np.delete(delay_array, dellist, 1)
-        delay_array = np.delete(delay_array, dellist, 0)
+        delay_array = np.delete(delay_array, cause_dellist, 1)
+        delay_array = np.delete(delay_array, affected_dellist, 0)
 
         weight_arrays.append(weight_array)
         delay_arrays.append(delay_array)
@@ -467,18 +476,18 @@ def weightcalc(mode, case, sigtest, writeoutput):
                         # Write arrays to file
                         np.savetxt(
                             filename(method,
-                                     maxweight_array_name.format(boxindex)),
+                                     maxweight_array_name.format(boxindex + 1)),
                             weight_arrays[boxindex],
                             delimiter=',')
                         np.savetxt(
                             filename(method,
-                                     delay_array_name.format(boxindex)),
+                                     delay_array_name.format(boxindex + 1)),
                             delay_arrays[boxindex],
                             delimiter=',')
                         # Write datastore to file
                         writecsv_weightcalc(
                             filename(method,
-                                     weightcalc_data_name.format(boxindex)),
+                                     weightcalc_data_name.format(boxindex + 1)),
                             datastores[boxindex],
                             data_header)
             else:
