@@ -258,6 +258,8 @@ def read_header_values_datafile(location):
 
 def read_gainmatrix(gainmatrix_loc):
     """This method a gainmatrix scheme for a specific scenario.
+
+    Might need to pad gainmatrix with zeros if it is non-square
     """
     with open(gainmatrix_loc) as f:
         gainmatrix = np.genfromtxt(f, delimiter=',')
