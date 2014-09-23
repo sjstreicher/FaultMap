@@ -341,3 +341,17 @@ if not False:
 
 else:
     logging.info("The requested graph has already been drawn")
+
+
+# Template for storing difference and absolute plots from node ranking lists
+#            diffplot, absplot = plot_transient_importances(variablelist,
+#                                                           transientdict,
+#                                                           basevaldict)
+#            diffplot_filename = os.path.join(saveloc,
+#                                             "{}_diffplot.pdf"
+#                                             .format(scenario))
+#            absplot_filename = os.path.join(saveloc,
+#                                            "{}_absplot.pdf"
+#                                            .format(scenario))
+#            diffplot.savefig(diffplot_filename)
+#            absplot.savefig(absplot_filename)

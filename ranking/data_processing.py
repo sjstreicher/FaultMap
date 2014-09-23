@@ -8,7 +8,6 @@ module.
 import numpy as np
 import tables as tb
 import networkx as nx
-import h5py
 import csv
 import sklearn.preprocessing
 import os
