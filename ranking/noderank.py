@@ -348,34 +348,39 @@ def calc_gainrank(gainmatrix, noderankdata, dummycreation,
 
     """
 
-    forwardconnection, forwardgain, forwardvariablelist = \
-        data_processing.rankforward(noderankdata.variablelist,
-                                    gainmatrix, noderankdata.connectionmatrix,
-                                    dummyweight, dummycreation)
+#    forwardconnection, forwardgain, forwardvariablelist = \
+#        data_processing.rankforward(noderankdata.variablelist,
+#                                    gainmatrix, noderankdata.connectionmatrix,
+#                                    dummyweight, dummycreation)
     backwardconnection, backwardgain, backwardvariablelist = \
         data_processing.rankbackward(noderankdata.variablelist, gainmatrix,
                                      noderankdata.connectionmatrix,
                                      dummyweight, dummycreation)
 
-    forwardrankingdict, forwardrankinglist = \
-        calc_simple_rank(forwardgain, forwardvariablelist, m)
+#    forwardrankingdict, forwardrankinglist = \
+#        calc_simple_rank(forwardgain, forwardvariablelist, m)
 
     backwardrankingdict, backwardrankinglist = \
         calc_simple_rank(backwardgain, backwardvariablelist, m)
 
-    blendedrankingdict, blendedrankinglist = \
-        calc_blended_rank(forwardrankingdict, backwardrankingdict,
-                          noderankdata.variablelist, alpha)
+#    blendedrankingdict, blendedrankinglist = \
+#        calc_blended_rank(forwardrankingdict, backwardrankingdict,
+#                          noderankdata.variablelist, alpha)
 
-    rankingdicts = [blendedrankingdict, forwardrankingdict,
-                    backwardrankingdict]
-    rankinglists = [blendedrankinglist, forwardrankinglist,
-                    backwardrankinglist]
-    connections = [noderankdata.connectionmatrix, forwardconnection,
-                   backwardconnection]
-    variables = [noderankdata.variablelist, forwardvariablelist,
-                 backwardvariablelist]
-    gains = [gainmatrix, np.array(forwardgain), np.array(backwardgain)]
+#    rankingdicts = [blendedrankingdict, forwardrankingdict,
+#                    backwardrankingdict]
+    rankingdicts = [backwardrankingdict]
+#    rankinglists = [blendedrankinglist, forwardrankinglist,
+#                    backwardrankinglist]
+    rankinglists = [backwardrankinglist]
+#    connections = [noderankdata.connectionmatrix, forwardconnection,
+#                   backwardconnection]
+    connections = [backwardconnection]
+#    variables = [noderankdata.variablelist, forwardvariablelist,
+#                 backwardvariablelist]
+    variables = [backwardvariablelist]
+#    gains = [gainmatrix, np.array(forwardgain), np.array(backwardgain)]
+    gains = [np.array(backwardgain)]
 
     return rankingdicts, rankinglists, connections, variables, gains
 
@@ -475,8 +480,8 @@ def looprank(mode, case, dummycreation, writeoutput, m, alpha=0.5):
                                       dummycreation,
                                       alpha, dummyweight, m)
 
-                    backward_rankinglists.append(rankinglists[2])
-                    backward_rankingdicts.append(rankingdicts[2])
+                    backward_rankinglists.append(rankinglists[0])
+                    backward_rankingdicts.append(rankingdicts[0])
 
             else:
                 logging.info("The requested results are in existence")
