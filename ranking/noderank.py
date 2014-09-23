@@ -380,13 +380,13 @@ def looprank(mode, case, dummycreation, writeoutput, m, alpha=0.5):
         os.path.join(savedir, '{}_{}_{}_originalgainmatrix_box{:03d}.csv')
 
     graphfile_template = os.path.join(savedir,
-                                      '{}_{}_{}_graph_{}_box{:03d}.gml')
+                                      '{}_{}_{}_{}_graph_{}_box{:03d}.gml')
 
     importances_template = os.path.join(
-        savedir, '{}_{}_{}_importances_{}_box{:03d}.csv')
+        savedir, '{}_{}_{}_{}_importances_{}_box{:03d}.csv')
 
     importances_dumsup_template = os.path.join(
-        savedir, '{}_{}_{}_importances_{}_box{:03d}.csv')
+        savedir, '{}_{}_{}_{}_importances_{}_box{:03d}.csv')
 
     graph_filename = os.path.join(savedir,
                                   "{}_{}_{}_{}_graph_dumsup_box{:03d}.gml")
@@ -470,7 +470,7 @@ def looprank(mode, case, dummycreation, writeoutput, m, alpha=0.5):
                                                   rankingdicts,
                                                   connections,
                                                   variables, gains):
-                            idtuple = (case, scenario, direction,
+                            idtuple = (case, scenario, method, direction,
                                        dummystatus, index+1)
                             # Save the ranking list to file
                             savename = importances_template.format(*idtuple)
@@ -518,16 +518,14 @@ def looprank(mode, case, dummycreation, writeoutput, m, alpha=0.5):
                                         noderankdata.variablelist)
                                 writecsv_looprank(
                                     importances_dumsup_template.format(
-                                        case, scenario, direction, index+1),
+                                        case, scenario, method,
+                                        direction, index+1),
                                     normalised_rankinglist)
 
                 # Get the transient and base value dictionaries
                 transientdict, basevaldict = \
                     calc_transient_importancediffs(backward_rankingdicts,
                                                    noderankdata.variablelist)
-
-                print transientdict
-                print basevaldict
 
             else:
                 logging.info("The requested results are in existence")
