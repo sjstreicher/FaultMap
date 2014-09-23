@@ -55,5 +55,5 @@ for timelag in range(0, 11):
     infodynamics_results[timelag] = result
 
 # Plot results over time delay
-fig, ax = plt.subplots()
-ax.plot(range(0, 11), infodynamics_results)
+#fig, ax = plt.subplots()
+#ax.plot(range(0, 11), infodynamics_results)
