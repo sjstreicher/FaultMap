@@ -186,25 +186,6 @@ def calc_simple_rank(gainmatrix, variables, m):
     return rankingdict, rankinglist
 
 
-def calc_blended_rank(forwardrank, backwardrank, variablelist,
-                      alpha):
-    """This method creates a blended ranking profile."""
-    rankingdict = dict()
-    for variable in variablelist:
-        rankingdict[variable] = abs(((1 - alpha) * forwardrank[variable] +
-                                     (alpha) * backwardrank[variable]))
-
-    total = sum(rankingdict.values())
-    # Normalise rankings
-    for variable in variablelist:
-        rankingdict[variable] = rankingdict[variable] / total
-
-    rankinglist = sorted(rankingdict.iteritems(), key=operator.itemgetter(1),
-                         reverse=True)
-
-    return rankingdict, rankinglist
-
-
 def normalise_rankinglist(rankingdict, originalvariables):
     normalised_rankingdict = dict()
     for variable in originalvariables:
@@ -319,40 +300,18 @@ def calc_gainrank(gainmatrix, noderankdata, dummycreation,
 
     """
 
-#    forwardconnection, forwardgain, forwardvariablelist = \
-#        data_processing.rankforward(noderankdata.variablelist,
-#                                    gainmatrix, noderankdata.connectionmatrix,
-#                                    dummyweight, dummycreation)
     backwardconnection, backwardgain, backwardvariablelist = \
         data_processing.rankbackward(noderankdata.variablelist, gainmatrix,
                                      noderankdata.connectionmatrix,
                                      dummyweight, dummycreation)
-    print "The backward gain is:"
-    print backwardgain
-
-#    forwardrankingdict, forwardrankinglist = \
-#        calc_simple_rank(forwardgain, forwardvariablelist, m)
 
     backwardrankingdict, backwardrankinglist = \
         calc_simple_rank(backwardgain, backwardvariablelist, m)
 
-#    blendedrankingdict, blendedrankinglist = \
-#        calc_blended_rank(forwardrankingdict, backwardrankingdict,
-#                          noderankdata.variablelist, alpha)
-
-#    rankingdicts = [blendedrankingdict, forwardrankingdict,
-#                    backwardrankingdict]
     rankingdicts = [backwardrankingdict]
-#    rankinglists = [blendedrankinglist, forwardrankinglist,
-#                    backwardrankinglist]
     rankinglists = [backwardrankinglist]
-#    connections = [noderankdata.connectionmatrix, forwardconnection,
-#                   backwardconnection]
     connections = [backwardconnection]
-#    variables = [noderankdata.variablelist, forwardvariablelist,
-#                 backwardvariablelist]
     variables = [backwardvariablelist]
-#    gains = [gainmatrix, np.array(forwardgain), np.array(backwardgain)]
     gains = [np.array(backwardgain)]
 
     return rankingdicts, rankinglists, connections, variables, gains
