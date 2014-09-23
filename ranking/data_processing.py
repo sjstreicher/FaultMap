@@ -12,6 +12,7 @@ import csv
 import sklearn.preprocessing
 import os
 import matplotlib.pyplot as plt
+import json
 
 import config_setup
 
@@ -292,6 +293,16 @@ def buildgraph(variables, gainmatrix, connections):
             if (connections[row, col] != 0):
                 digraph.add_edge(rowvar, colvar, weight=gainmatrix[row, col])
     return digraph
+
+
+def write_dictionary(filename, dictionary):
+    with open(filename, 'wb') as f:
+        json.dump(dictionary, f)
+
+
+def read_dictionary(filename):
+    with open(filename, 'rb') as f:
+        return json.load(f)
 
 
 def rankbackward(variables, gainmatrix, connections,

@@ -205,14 +205,29 @@ def normalise_rankinglist(rankingdict, originalvariables):
 
 
 def calc_transient_importancediffs(rankingdicts, variablelist):
-    """Creates dictionary with a vector of successive differences in importance
-    scores between boxes for each variable entry.
+    """Returns three dictionaries with importance scores that can be used in
+    further analysis.
+
+    transientdict is a dictionary with a vector of successive differences in
+    importance scores between boxes for each variable entry - it's first entry
+    is the difference in importance between box002 - box001 and will be empty
+    if there is only a single dictionary in the rankingdicts input
+
+    basevaldict contains the absolute value of the first box - when added
+    to the transientdict it can be used to reconstruct the importance
+    scores for each box
+
+    boxrankdict simply lists the importance scores for each box in a vector
+    associated with each variable
 
     """
     transientdict = dict()
     basevaldict = dict()
+    boxrankdict = dict()
     for variable in variablelist:
         diffvect = np.empty((1, len(rankingdicts)-1))[0]
+        rankvect = np.empty((1, len(rankingdicts)))[0]
+        rankvect[:] = np.NAN
         diffvect[:] = np.NAN
         basevaldict[variable] = rankingdicts[0][variable]
         # Get initial previous importance
@@ -220,9 +235,12 @@ def calc_transient_importancediffs(rankingdicts, variablelist):
         for index, rankingdict in enumerate(rankingdicts[1:]):
             diffvect[index] = rankingdict[variable] - prev_importance
             prev_importance = rankingdict[variable]
-        transientdict[variable] = diffvect
+        transientdict[variable] = diffvect.tolist()
+        for index, rankingdict in enumerate(rankingdicts[:]):
+            rankvect[index] = rankingdict[variable]
+        boxrankdict[variable] = rankvect.tolist()
 
-    return transientdict, basevaldict
+    return transientdict, basevaldict, boxrankdict
 
 
 def create_importance_graph(variablelist, closedconnections,
@@ -391,6 +409,15 @@ def looprank(mode, case, dummycreation, writeoutput, m, alpha=0.5):
     graph_filename = os.path.join(savedir,
                                   "{}_{}_{}_{}_graph_dumsup_box{:03d}.gml")
 
+    transientdict_name = os.path.join(savedir,
+                                      '{}_{}_{}_{}_transientdict.json')
+
+    basevaldict_name = os.path.join(savedir,
+                                    '{}_{}_{}_{}_basevaldict.json')
+
+    boxrankdict_name = os.path.join(savedir,
+                                    '{}_{}_{}_{}_boxrankdict.json')
+
     for scenario in noderankdata.scenarios:
         logging.info("Running scenario {}".format(scenario))
         # Update scenario-specific fields of weightcalcdata object
@@ -523,9 +550,26 @@ def looprank(mode, case, dummycreation, writeoutput, m, alpha=0.5):
                                     normalised_rankinglist)
 
                 # Get the transient and base value dictionaries
-                transientdict, basevaldict = \
+                transientdict, basevaldict, boxrankdict = \
                     calc_transient_importancediffs(backward_rankingdicts,
                                                    noderankdata.variablelist)
+
+                # Store dictonaries using JSON
+
+                data_processing.write_dictionary(
+                    transientdict_name.format(case, scenario,
+                                              method, direction),
+                    transientdict)
+
+                data_processing.write_dictionary(
+                    basevaldict_name.format(case, scenario,
+                                            method, direction),
+                    basevaldict)
+
+                data_processing.write_dictionary(
+                    boxrankdict_name.format(case, scenario,
+                                            method, direction),
+                    boxrankdict)
 
             else:
                 logging.info("The requested results are in existence")
