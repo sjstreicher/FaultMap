@@ -294,21 +294,6 @@ def buildgraph(variables, gainmatrix, connections):
     return digraph
 
 
-def rankforward(variables, gainmatrix, connections,
-                dummyweight, dummycreation):
-    """This method adds a unit gain node to all nodes with an out-degree
-    of 1; now all of these nodes should have an out-degree of 2.
-    Therefore all nodes with pointers should have 2 or more edges pointing
-    away from them.
-
-    It uses the number of dummy variables to construct these gain,
-    connection and variable name matrices.
-    """
-
-    digraph = buildgraph(variables, gainmatrix, connections)
-    return buildcase(dummyweight, digraph, 'DV FWD ', dummycreation)
-
-
 def rankbackward(variables, gainmatrix, connections,
                  dummyweight, dummycreation):
     """This method adds a unit gain node to all nodes with an out-degree
