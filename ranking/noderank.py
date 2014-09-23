@@ -527,28 +527,9 @@ def looprank(mode, case, dummycreation, writeoutput, m, alpha=0.5):
                             nx.readwrite.write_gml(graph, graph_filename)
 
                         if dummycreation:
-                            # Export forward and backward ranking graphs
+                            # Export backward ranking graphs
                             # without dummy variables visible
 
-                            # Currently only the backwards calculation
-                            # is done as that is the only real useful one
-
-                            # Forward ranking graph
-#                            direction = directions[1]
-#                            rankingdict = rankingdicts[1]
-#                            graph, _ = \
-#                                create_importance_graph(
-#                                    noderankdata.variablelist,
-#                                    noderankdata.connectionmatrix,
-#                                    noderankdata.connectionmatrix,
-#                                    gainmatrix,
-#                                    rankingdict)
-#
-#                            nx.readwrite.write_gml(
-#                                graph,
-#                                graph_filename.format(case, scenario, method,
-#                                                      direction, index+1))
-#
                             # Backward ranking graph
                             direction = directions[0]
                             rankingdict = rankingdicts[0]
