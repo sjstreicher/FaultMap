@@ -313,7 +313,7 @@ def gainmatrix_preprocessing(gainmatrix):
 
 
 def calc_gainrank(gainmatrix, noderankdata, dummycreation,
-                  alpha, dummyweight, m):
+                  dummyweight, m):
     """Calculates the forward and backward rankings.
 
     """
@@ -368,7 +368,7 @@ def get_gainmatrices(noderankdata, countlocation, gainmatrix_filename,
     return gainmatrices
 
 
-def looprank(mode, case, dummycreation, writeoutput, m, alpha=0.5):
+def looprank(mode, case, dummycreation, writeoutput, m):
     """Ranks the nodes in a network based on gain matrices already generated.
 
     """
@@ -457,8 +457,7 @@ def looprank(mode, case, dummycreation, writeoutput, m, alpha=0.5):
                     rankingdicts, rankinglists, connections, \
                         variables, gains = \
                         calc_gainrank(modgainmatrix, noderankdata,
-                                      dummycreation,
-                                      alpha, dummyweight, m)
+                                      dummycreation, dummyweight, m)
 
                     backward_rankinglists.append(rankinglists[0])
                     backward_rankingdicts.append(rankingdicts[0])
