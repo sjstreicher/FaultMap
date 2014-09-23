@@ -11,6 +11,7 @@
     "use_connections": true,
     "delaytype": "datapoints",
 	"sampling_rate": 1,
+	"transient": false,
 	"sub_sampling_interval": 1,
 	"sampling_unit": "seconds",
 	"testsize": 200,
