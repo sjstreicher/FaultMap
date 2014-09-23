@@ -1,6 +1,10 @@
 {
   "datatype": "function",
   "sampling_rate": 1,
+  "methods": [
+	  "transfer_entropy",
+	  "cross_correlation"
+  ],
   "scenarios": [
       "fullconn_equal",
       "series_equal_five",
@@ -14,37 +18,56 @@
 	  "circle_equal",
 	  "circle_unequalon2to3"
   ],
+  "settings_standard": {
+    "use_connections": true,
+	"transient": false
+  },
+  "settings_standard_transient": {
+    "use_connections": true,
+	"transient": true
+  },
   "fullconn_equal": {
-    "networkgen": "fullconn_equal"
+    "networkgen": "fullconn_equal",
+	"settings": "settings_standard"
   },
   "series_equal_five": {
-    "networkgen": "series_equal_five"
+    "networkgen": "series_equal_five",
+	"settings": "settings_standard"
   },
   "series_incomingon2nd": {
-    "networkgen": "series_incomingon2nd"
+    "networkgen": "series_incomingon2nd",
+	"settings": "settings_standard"
   },
   "series_incomingon3rd": {
-    "networkgen": "series_incomingon3rd"
+    "networkgen": "series_incomingon3rd",
+	"settings": "settings_standard"
   },
   "series_incomingon2ndand3rd": {
-    "networkgen": "series_incomingon2ndand3rd"
+    "networkgen": "series_incomingon2ndand3rd",
+	"settings": "settings_standard"
   },
   "series_incomingon2ndand4th": {
-    "networkgen": "series_incomingon2ndand4th"
+    "networkgen": "series_incomingon2ndand4th",
+	"settings": "settings_standard"
   },
   "circle_equal": {
-    "networkgen": "circle_equal"
+    "networkgen": "circle_equal",
+	"settings": "settings_standard"
   },
   "circle_unequalon2to3": {
-    "networkgen": "circle_unequalon2to3"
+    "networkgen": "circle_unequalon2to3",
+	"settings": "settings_standard"
   },
   "series_disjoint_equal": {
-    "networkgen": "series_disjoint_equal"
+    "networkgen": "series_disjoint_equal",
+	"settings": "settings_standard"
   },
   "series_disjoint_unequal": {
-    "networkgen": "series_disjoint_unequal"
+    "networkgen": "series_disjoint_unequal",
+	"settings": "settings_standard"
   },
   "series_disjoint_unequalsource": {
-    "networkgen": "series_disjoint_unequalsource"
+    "networkgen": "series_disjoint_unequalsource",
+	"settings": "settings_standard"
   }
 }

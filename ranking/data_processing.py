@@ -8,7 +8,6 @@ module.
 import numpy as np
 import tables as tb
 import networkx as nx
-import h5py
 import csv
 import sklearn.preprocessing
 import os
@@ -33,8 +32,6 @@ def csv_to_h5(saveloc, raw_tsdata, scenario, case):
     data = data[1:, 1:]
     array = hdf5writer.create_array(hdf5writer.root, dataset, data)
 
-    #table.append(data)
-    #table.flush()
     array.flush()
     hdf5writer.close()
 
@@ -260,6 +257,8 @@ def read_header_values_datafile(location):
 
 def read_gainmatrix(gainmatrix_loc):
     """This method a gainmatrix scheme for a specific scenario.
+
+    Might need to pad gainmatrix with zeros if it is non-square
     """
     with open(gainmatrix_loc) as f:
         gainmatrix = np.genfromtxt(f, delimiter=',')
@@ -295,21 +294,6 @@ def buildgraph(variables, gainmatrix, connections):
     return digraph
 
 
-def rankforward(variables, gainmatrix, connections,
-                dummyweight, dummycreation):
-    """This method adds a unit gain node to all nodes with an out-degree
-    of 1; now all of these nodes should have an out-degree of 2.
-    Therefore all nodes with pointers should have 2 or more edges pointing
-    away from them.
-
-    It uses the number of dummy variables to construct these gain,
-    connection and variable name matrices.
-    """
-
-    digraph = buildgraph(variables, gainmatrix, connections)
-    return buildcase(dummyweight, digraph, 'DV FWD ', dummycreation)
-
-
 def rankbackward(variables, gainmatrix, connections,
                  dummyweight, dummycreation):
     """This method adds a unit gain node to all nodes with an out-degree
@@ -329,22 +313,23 @@ def rankbackward(variables, gainmatrix, connections,
     return buildcase(dummyweight, digraph, 'DV BWD ', dummycreation)
 
 
-def split_tsdata(tags_tsdata, datasetname, samplerate, boxsize, boxnum):
-    """Splits the tags_tsdata into arrays useful for analysing the change of
+def split_tsdata(inputdata, samplerate, boxsize, boxnum):
+    """Splits the inputdata into arrays useful for analysing the change of
     weights over time.
+
+    inputdata is a numpy array with the format of variables along the
+    What is the exact format - single variable data?
 
     samplerate is the rate of sampling in time units
     boxsize is the size of each returned dataset in time units
     boxnum is the number of boxes that need to be analyzed
 
-    Boxes is evenly distributed over the provided dataset.
+    Boxes are evenly distributed over the provided dataset.
     The boxes will overlap if boxsize*boxnum is more than the simulated time,
     and will have spaced between them if it is less.
 
 
     """
-    # Import the data as a numpy array
-    inputdata = np.array(h5py.File(tags_tsdata, 'r')[datasetname])
     # Get total number of samples
     samples = len(inputdata)
 #    print "Number of samples: ", samples
@@ -352,14 +337,19 @@ def split_tsdata(tags_tsdata, datasetname, samplerate, boxsize, boxnum):
     boxsizesamples = int(round(boxsize / samplerate))
 #    print "Box size in samples: ", boxsizesamples
     # Calculate starting index for each box
-    boxstartindex = np.empty((1, boxnum))[0]
-    boxstartindex[:] = np.NAN
-    boxstartindex[0] = 0
-    boxstartindex[-1] = samples - boxsizesamples
-    samplesbetween = int(round(boxstartindex[-1]/(boxnum-1)))
-    boxstartindex[1:-1] = [(samplesbetween * index)
-                           for index in range(1, boxnum-1)]
-    boxes = [inputdata[int(boxstartindex[i]):int(boxstartindex[i]) +
-                       int(boxsizesamples)]
-             for i in range(int(boxnum))]
+
+    if boxnum == 1:
+        boxes = [inputdata]
+
+    else:
+        boxstartindex = np.empty((1, boxnum))[0]
+        boxstartindex[:] = np.NAN
+        boxstartindex[0] = 0
+        boxstartindex[-1] = samples - boxsizesamples
+        samplesbetween = int(round(boxstartindex[-1]/(boxnum-1)))
+        boxstartindex[1:-1] = [(samplesbetween * index)
+                               for index in range(1, boxnum-1)]
+        boxes = [inputdata[int(boxstartindex[i]):int(boxstartindex[i]) +
+                           int(boxsizesamples)]
+                 for i in range(int(boxnum))]
     return boxes

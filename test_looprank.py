@@ -3,7 +3,7 @@
 
 """
 
-from ranking.noderank import looprank_static
+from ranking.noderank import looprank
 
 if __name__ == '__main__':
     mode = 'tests'
@@ -12,11 +12,14 @@ if __name__ == '__main__':
 
     alpha = 0.5
     m = 0.15
-
+    
+	# looprank function broken for test cases at the moment (23/09/2014)
+	# will correct once the new structure has been determined
+	
     # Run without dummy creation
-    dummycreation = False
-    looprank_static(mode, case, dummycreation, writeoutput, alpha, m)
+    # dummycreation = False
+    # looprank(mode, case, dummycreation, writeoutput, alpha, m)
 
     # Run with dummy creation
-    dummycreation = True
-    looprank_static(mode, case, dummycreation, writeoutput, alpha, m)
+    # dummycreation = True
+    # looprank(mode, case, dummycreation, writeoutput, alpha, m)

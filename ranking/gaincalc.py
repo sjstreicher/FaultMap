@@ -29,13 +29,17 @@ import logging
 import json
 
 # Non-standard external libraries
-import pygeonetwork
 import jpype
 
 # Own libraries
 import config_setup
-import transentropy
 import data_processing
+
+# Gain calculators
+from gaincalculators import (PartialCorrWeightcalc, CorrWeightcalc,
+                             TransentWeightcalc)
+
+import datagen
 
 
 class WeightcalcData:
@@ -78,6 +82,7 @@ class WeightcalcData:
         self.connections_used = (self.caseconfig[settings_name]
                                  ['use_connections'])
         bandgap_filtering = self.caseconfig[scenario]['bandgap_filtering']
+        self.transient = self.caseconfig[settings_name]['transient']
 
         if self.datatype == 'file':
             # Get path to time series data input file in standard format
@@ -110,18 +115,18 @@ class WeightcalcData:
             self.inputdata_raw = np.array(h5py.File(os.path.join(
                 datapath, scenario + '.h5'), 'r')[scenario])
 
-#        elif self.datatype == 'function':
-#            raw_tsdata_gen = self.caseconfig[scenario]['datagen']
-#            connectionloc = self.caseconfig[scenario]['connections']
-#            # TODO: Store function arguments in scenario config file
-#            samples = self.caseconfig['gensamples']
-#            func_delay = self.caseconfig['delay']
-#            # Get inputdata
-#            self.inputdata_raw = eval('datagen.' + raw_tsdata_gen)(samples,
-#                                                                   func_delay)
-#            # Get the variables and connection matrix
-#            self.connectionmatrix = eval('datagen.' + connectionloc)()
-#            self.startindex = 0
+        elif self.datatype == 'function':
+            raw_tsdata_gen = self.caseconfig[scenario]['datagen']
+            connectionloc = self.caseconfig[scenario]['connections']
+            # TODO: Store function arguments in scenario config file
+            samples = self.caseconfig[settings_name]['gensamples']
+            func_delay = self.caseconfig[settings_name]['delay']
+            # Get inputdata
+            self.inputdata_raw = eval('datagen.' + raw_tsdata_gen)(samples,
+                                                                   func_delay)
+            # Get the variables and connection matrix
+            self.connectionmatrix = eval('datagen.' + connectionloc)()
+            self.startindex = 0
 
         # Get delay type
         self.delaytype = self.caseconfig[settings_name]['delaytype']
@@ -178,6 +183,17 @@ class WeightcalcData:
         # if it will really add any functionality
         self.inputdata = self.inputdata_originalrate[0::sub_sampling_interval]
 
+        if self.transient:
+            self.boxnum = self.caseconfig[settings_name]['boxnum']
+            self.boxsize = self.caseconfig[settings_name]['boxsize']
+        else:
+            self.boxnum = 1  # Only a single box will be used
+            self.boxsize = self.inputdata.shape[0] * \
+                self.sampling_rate
+            # This box should now return the same size
+            # as the original data file - but it does not play a role at all
+            # in the actual for the case of boxnum = 1
+
         if self.delaytype == 'datapoints':
                 self.actual_delays = [(delay * self.sampling_rate *
                                        sub_sampling_interval)
@@ -204,458 +220,6 @@ class WeightcalcData:
                                         scenario)
 
 
-class PartialCorrWeightcalc:
-    """This class provides methods for calculating the weights according to
-    the partial correlation method.
-
-    The option of handling delays in similar fashion to that of
-    cross-correlation is provided. However, the ambiguity of using any delays
-    in the partial correlation calculation should be noted.
-
-    """
-
-    def __init__(self, weightcalcdata):
-        """Read the files or functions and returns required data fields.
-
-        """
-
-        # Use the same threshold values as used by Bauer for correlation.
-        # TODO: Adjust this for the case of partial correlation
-        self.threshcorr = (1.85*(weightcalcdata.testsize**(-0.41))) + \
-            (2.37*(weightcalcdata.testsize**(-0.53)))
-        self.threshdir = 0.46*(weightcalcdata.testsize**(-0.16))
-#        logging.info("Directionality threshold: " + str(self.threshdir))
-#        logging.info("Correlation threshold: " + str(self.threshcorr))
-
-        self.connections_used = weightcalcdata.connections_used
-
-        self.data_header = ['causevar', 'affectedvar', 'base_corr',
-                            'max_corr', 'max_delay', 'max_index',
-                            'signchange', 'corrthreshpass',
-                            'dirrthreshpass', 'dirval']
-
-    def calcweight(self, causevardata, affectedvardata, weightcalcdata,
-                   causevarindex, affectedvarindex):
-        """Calculates the partial correlation between two elements in the
-        complete dataset.
-
-        It is important to note that this function differs from the others
-        in the sense that it requires the full dataset to be known.
-
-        """
-
-        startindex = weightcalcdata.startindex
-        size = weightcalcdata.testsize
-        vardims = len(weightcalcdata.variables)
-
-        # Get inputdata and initial connectionmatrix
-        calcdata = (weightcalcdata.inputdata[:, :]
-                    [startindex:startindex+size])
-
-        newvariables = weightcalcdata.variables
-
-        if self.connections_used:
-            newconnectionmatrix = weightcalcdata.connectionmatrix
-        else:
-            # If there is not connection matrix given, create a fully
-            # connected connection matrix
-            newconnectionmatrix = np.ones((vardims, vardims))
-
-        # Delete all columns not listed in causevarindexes
-        # Calculation is cheap, and in order to keep things simple the
-        # causevarindexes are the sole means of doing selective calculation
-        dellist = []
-        for index in range(vardims):
-            if index not in weightcalcdata.causevarindexes:
-                dellist.append(index)
-                logging.info("Deleted column " + str(index))
-
-        # Delete all columns listed in dellist from calcdata
-        newcalcdata = np.delete(calcdata, dellist, 1)
-
-        # Delete all indexes listed in dellist from variables
-        newvariables = np.delete(newvariables, dellist)
-
-        # Delete all rows and columns listed in dellist
-        # from connectionmatrix
-        newconnectionmatrix = np.delete(newconnectionmatrix, dellist, 1)
-        newconnectionmatrix = np.delete(newconnectionmatrix, dellist, 0)
-
-        # Calculate correlation matrix
-        correlationmatrix = np.corrcoef(newcalcdata.T)
-        # Calculate partial correlation matrix
-        p_matrix = np.linalg.inv(correlationmatrix)
-        d = p_matrix.diagonal()
-        partialcorrelationmatrix = \
-            np.where(newconnectionmatrix,
-                     -p_matrix/np.abs(np.sqrt(np.outer(d, d))), 0)
-
-        return partialcorrelationmatrix[affectedvarindex, causevarindex]
-
-    def report(self, weightcalcdata, causevarindex, affectedvarindex,
-               weightlist, weight_array, delay_array, datastore, sigtest):
-        """Calculates and reports the relevant output for each combination
-        of variables tested.
-
-        """
-        variables = weightcalcdata.variables
-        causevar = variables[causevarindex]
-        affectedvar = variables[affectedvarindex]
-
-        maxval = max(weightlist)
-        minval = min(weightlist)
-        # Value used to break tie between maxval and minval if 1 and -1
-        tol = 0.
-        # Always select maxval if both are equal
-        # This is to ensure that 1 is selected above -1
-        if (maxval + (minval + tol)) >= 0:
-            maxcorr = maxval
-        else:
-            maxcorr = minval
-
-        delay_index = weightlist.index(maxcorr)
-
-        # Correlation thresholds from Bauer2008 eq. 4
-        maxcorr_abs = max(maxval, abs(minval))
-        bestdelay = weightcalcdata.actual_delays[delay_index]
-        directionindex = 2 * (abs(maxval + minval) /
-                              (maxval + abs(minval)))
-
-        signchange = not ((weightlist[0] / weightlist[delay_index]) >= 0)
-        corrthreshpass = (maxcorr_abs >= self.threshcorr)
-        dirthreshpass = (directionindex >= self.threshdir)
-
-        logging.info("Maximum correlation value: " + str(maxval))
-        logging.info("Minimum correlation value: " + str(minval))
-        logging.info("The maximum correlation between " + causevar +
-                     " and " + affectedvar + " is: " + str(maxcorr))
-        logging.info("The corresponding delay is: " +
-                     str(bestdelay))
-        logging.info("The correlation with no delay is: "
-                     + str(weightlist[0]))
-        logging.info("Correlation threshold passed: " +
-                     str(corrthreshpass))
-        logging.info("Directionality value: " + str(directionindex))
-        logging.info("Directionality threshold passed: " +
-                     str(dirthreshpass))
-
-        corrthreshpass = None
-        dirthreshpass = None
-        if sigtest:
-            corrthreshpass = (maxcorr_abs >= self.threshcorr)
-            dirthreshpass = (directionindex >= self.threshdir)
-            if not (corrthreshpass and dirthreshpass):
-                maxcorr = 0
-
-        weight_array[affectedvarindex, causevarindex] = maxcorr
-
-#        # Replace all nan by zero
-#        nanlocs = np.isnan(weight_array)
-#        weight_array[nanlocs] = 0
-
-        delay_array[affectedvarindex, causevarindex] = bestdelay
-
-        dataline = [causevar, affectedvar, str(weightlist[0]),
-                    maxcorr, str(bestdelay), str(delay_index),
-                    signchange, corrthreshpass, dirthreshpass, directionindex]
-
-        datastore.append(dataline)
-
-        return weight_array, delay_array, datastore
-
-
-class CorrWeightcalc:
-    """This class provides methods for calculating the weights according to the
-    cross-correlation method.
-
-    """
-    def __init__(self, weightcalcdata):
-        """Read the files or functions and returns required data fields.
-
-        """
-        self.threshcorr = (1.85*(weightcalcdata.testsize**(-0.41))) + \
-            (2.37*(weightcalcdata.testsize**(-0.53)))
-        self.threshdir = 0.46*(weightcalcdata.testsize**(-0.16))
-#        logging.info("Directionality threshold: " + str(self.threshdir))
-#        logging.info("Correlation threshold: " + str(self.threshcorr))
-
-        self.data_header = ['causevar', 'affectedvar', 'base_corr',
-                            'max_corr', 'max_delay', 'max_index',
-                            'signchange', 'corrthreshpass',
-                            'dirrthreshpass', 'dirval']
-
-    def calcweight(self, causevardata, affectedvardata, weightcalcdata,
-                   causevarindex, affectedvarindex):
-        """Calculates the correlation between two vectors containing
-        timer series data.
-
-        """
-        corrval = np.corrcoef(causevardata.T, affectedvardata.T)[1, 0]
-        return [corrval]
-
-    def report(self, weightcalcdata, causevarindex, affectedvarindex,
-               weightlist, weight_array, delay_array, datastore, sigtest):
-        """Calculates and reports the relevant output for each combination
-        of variables tested.
-
-        """
-        variables = weightcalcdata.variables
-        causevar = variables[causevarindex]
-        affectedvar = variables[affectedvarindex]
-
-        maxval = max(weightlist)
-        minval = min(weightlist)
-        # Value used to break tie between maxval and minval if 1 and -1
-        tol = 0.
-        # Always select maxval if both are equal
-        # This is to ensure that 1 is selected above -1
-        if (maxval + (minval + tol)) >= 0:
-            maxcorr = maxval
-        else:
-            maxcorr = minval
-
-        delay_index = weightlist.index(maxcorr)
-
-        # Correlation thresholds from Bauer2008 eq. 4
-        maxcorr_abs = max(maxval, abs(minval))
-        bestdelay = weightcalcdata.actual_delays[delay_index]
-        directionindex = 2 * (abs(maxval + minval) /
-                              (maxval + abs(minval)))
-
-        signchange = not ((weightlist[0] / weightlist[delay_index]) >= 0)
-        corrthreshpass = (maxcorr_abs >= self.threshcorr)
-        dirthreshpass = (directionindex >= self.threshdir)
-
-        logging.info("Maximum correlation value: " + str(maxval))
-        logging.info("Minimum correlation value: " + str(minval))
-        logging.info("The maximum correlation between " + causevar +
-                     " and " + affectedvar + " is: " + str(maxcorr))
-        logging.info("The corresponding delay is: " +
-                     str(bestdelay))
-        logging.info("The correlation with no delay is: "
-                     + str(weightlist[0]))
-        logging.info("Correlation threshold passed: " +
-                     str(corrthreshpass))
-        logging.info("Directionality value: " + str(directionindex))
-        logging.info("Directionality threshold passed: " +
-                     str(dirthreshpass))
-
-        corrthreshpass = None
-        dirthreshpass = None
-        if sigtest:
-            corrthreshpass = (maxcorr_abs >= self.threshcorr)
-            dirthreshpass = (directionindex >= self.threshdir)
-            if not (corrthreshpass and dirthreshpass):
-                maxcorr = 0
-
-        weight_array[affectedvarindex, causevarindex] = maxcorr
-
-#        # Replace all nan by zero
-#        nanlocs = np.isnan(weight_array)
-#        weight_array[nanlocs] = 0
-
-        delay_array[affectedvarindex, causevarindex] = bestdelay
-
-        dataline = [causevar, affectedvar, str(weightlist[0]),
-                    maxcorr, str(bestdelay), str(delay_index),
-                    signchange, corrthreshpass, dirthreshpass, directionindex]
-
-        datastore.append(dataline)
-
-        return weight_array, delay_array, datastore
-
-
-class TransentWeightcalc:
-    """This class provides methods for calculating the weights according to
-    the transfer entropy method.
-
-    """
-
-    def __init__(self, weightcalcdata):
-        self.data_header = ['causevar', 'affectedvar', 'base_ent',
-                            'max_ent', 'max_delay', 'max_index', 'threshpass']
-        # Setup Java class for infodynamics toolkit
-        self.teCalc = transentropy.setup_infodynamics_te()
-
-    def calcweight(self, causevardata, affectedvardata, weightcalcdata,
-                   causevarindex, affectedvarindex):
-        """"Calculates the transfer entropy between two vectors containing
-        timer series data.
-
-        """
-        # Calculate transfer entropy as the difference
-        # between the forward and backwards entropy
-        transent_fwd = \
-            transentropy.calc_infodynamics_te(self.teCalc, affectedvardata.T,
-                                              causevardata.T)
-        transent_bwd = \
-            transentropy.calc_infodynamics_te(self.teCalc, causevardata.T,
-                                              affectedvardata.T)
-
-        transent_directional = transent_fwd - transent_bwd
-        transent_absolute = transent_fwd
-
-        # Do not pass negatives on to weight array
-#        if transent_directional < 0:
-#            transent_directional = 0
-#
-#        if transent_absolute < 0:
-#            transent_absolute = 0
-
-        return [transent_directional, transent_absolute]
-
-    def report(self, weightcalcdata, causevarindex, affectedvarindex,
-               weightlist, weight_array, delay_array, datastore, sigtest,
-               te_thresh_method='rankorder'):
-        """Calculates and reports the relevant output for each combination
-        of variables tested.
-
-        """
-
-        variables = weightcalcdata.variables
-        causevar = variables[causevarindex]
-        affectedvar = variables[affectedvarindex]
-        inputdata = weightcalcdata.inputdata
-
-        # We already know that when dealing with transfer entropy
-        # the weightlist will consist of a list of lists
-        weightlist_directional = weightlist[0]
-        weightlist_absolute = weightlist[1]
-
-        size = weightcalcdata.testsize
-        startindex = weightcalcdata.startindex
-
-        # Do everything for the directional case
-
-        maxval_directional = max(weightlist_directional)
-        delay_index_directional = \
-            weightlist_directional.index(maxval_directional)
-        bestdelay_directional = \
-            weightcalcdata.actual_delays[delay_index_directional]
-        bestdelay_sample = \
-            weightcalcdata.sample_delays[delay_index_directional]
-        delay_array[affectedvarindex, causevarindex] = \
-            bestdelay_directional
-
-        logging.info("The maximum directional TE between " + causevar +
-                     " and " + affectedvar + " is: " + str(maxval_directional))
-
-        threshpass_directional = None
-        if sigtest:
-            # Calculate threshold for transfer entropy
-            thresh_causevardata = \
-                inputdata[:, causevarindex][startindex:startindex+size]
-            thresh_affectedvardata = \
-                inputdata[:, affectedvarindex][startindex + bestdelay_sample:
-                                               startindex + size +
-                                               bestdelay_sample]
-            if te_thresh_method == 'rankorder':
-                self.thresh_rankorder(thresh_affectedvardata.T,
-                                      thresh_causevardata.T)
-
-            elif te_thresh_method == 'sixsigma':
-                self.thresh_sixsigma(thresh_affectedvardata.T,
-                                     thresh_causevardata.T)
-
-            logging.info("The directional TE threshold is: "
-                         + str(self.threshent_directional))
-
-            if maxval_directional >= self.threshent_directional:
-                threshpass_directional = True
-            else:
-                threshpass_directional = False
-                maxval_directional = 0
-
-            logging.info("TE threshold passed: " + str(threshpass_directional))
-
-        weight_array[affectedvarindex, causevarindex] = maxval_directional
-
-        dataline = [causevar, affectedvar, str(weightlist_directional[0]),
-                    maxval_directional, str(bestdelay_directional),
-                    str(delay_index_directional),
-                    threshpass_directional]
-
-        datastore.append(dataline)
-
-        logging.info("The corresponding delay is: "
-                     + str(bestdelay_directional))
-        logging.info("The TE with no delay is: " + str(weightlist[0][0]))
-
-        return weight_array, delay_array, datastore
-
-    def calc_surr_te(self, affected_data, causal_data, num):
-        """Calculates surrogate transfer entropy values for significance
-        threshold purposes.
-
-        Generates surrogate time series data by making use of the iAAFT method
-        (see Schreiber 2000a).
-
-        Returns list of surrogate transfer entropy values of length num.
-
-        """
-        tsdata = np.array([affected_data, causal_data])
-        # TODO: Research required number of iterations for good surrogate data
-        surr_tsdata = \
-            [pygeonetwork.surrogates.Surrogates.SmallTestData().
-                get_refined_AAFT_surrogates(tsdata, 10)
-             for n in range(num)]
-
-        surr_te_fwd = [transentropy.calc_infodynamics_te(self.teCalc,
-                                                         surr_tsdata[n][0],
-                                                         surr_tsdata[n][1])
-                       for n in range(num)]
-        surr_te_bwd = [transentropy.calc_infodynamics_te(self.teCalc,
-                                                         surr_tsdata[n][1],
-                                                         surr_tsdata[n][0])
-                       for n in range(num)]
-
-        surr_te_directional = \
-            [surr_te_fwd[n] - surr_te_bwd[n] for n in range(num)]
-
-        surr_te_absolute = [surr_te_fwd[n] for n in range(num)]
-
-        return surr_te_directional, surr_te_absolute
-
-    def thresh_rankorder(self, affected_data, causal_data):
-        """Calculates the minimum threshold required for a transfer entropy
-        value to be considered significant.
-
-        Makes use of a 95% single-sided certainty and a rank-order method.
-        This correlates to taking the maximum transfer entropy from 19
-        surrogate transfer entropy calculations as the threshold,
-        see Schreiber2000a.
-
-        """
-        surr_te_directional, surr_te_absolute = \
-            self.calc_surr_te(affected_data, causal_data, 19)
-
-        self.threshent_directional = max(surr_te_directional)
-        self.threshent_absolute = max(surr_te_absolute)
-
-    def thresh_sixsigma(self, affected_data, causal_data):
-        """Calculates the minimum threshold required for a transfer entropy
-        value to be considered significant.
-
-        Makes use of a six sigma Gaussian check as done in Bauer2005 with 30
-        samples of surrogate data.
-
-        """
-        surr_te_directional, surr_te_absolute = \
-            self.calc_surr_te(affected_data, causal_data, 30)
-
-        surr_te_directional_mean = np.mean(surr_te_directional)
-        surr_te_directional_stdev = np.std(surr_te_directional)
-
-        surr_te_absolute_mean = np.mean(surr_te_absolute)
-        surr_te_absolute_stdev = np.std(surr_te_absolute)
-
-        self.threshent_directional = (6 * surr_te_directional_stdev) + \
-            surr_te_directional_mean
-
-        self.threshent_absolute = (6 * surr_te_absolute_stdev) + \
-            surr_te_absolute_mean
-
-
 def calc_weights(weightcalcdata, method, sigtest, scenario):
     """Determines the maximum weight between two variables by searching through
     a specified set of delays.
@@ -663,6 +227,7 @@ def calc_weights(weightcalcdata, method, sigtest, scenario):
     method can be either 'cross_correlation' or 'transfer_entropy'
 
     """
+
     if method == 'cross_correlation':
         weightcalculator = CorrWeightcalc(weightcalcdata)
     elif method == 'transfer_entropy':
@@ -670,30 +235,31 @@ def calc_weights(weightcalcdata, method, sigtest, scenario):
     elif method == 'partial_correlation':
         weightcalculator = PartialCorrWeightcalc(weightcalcdata)
 
+    vardims = len(weightcalcdata.variables)
     startindex = weightcalcdata.startindex
     size = weightcalcdata.testsize
     data_header = weightcalculator.data_header
-    vardims = len(weightcalcdata.variables)
-    weight_array = np.empty((vardims, vardims))
-    delay_array = np.empty((vardims, vardims))
-    weight_array[:] = np.NAN
-    delay_array[:] = np.NAN
-    datastore = []
 
-    dellist = []
+    cause_dellist = []
+    affected_dellist = []
     for index in range(vardims):
         if index not in weightcalcdata.causevarindexes:
-            dellist.append(index)
+            cause_dellist.append(index)
             logging.info("Deleted column " + str(index))
+        if index not in weightcalcdata.affectedvarindexes:
+            affected_dellist.append(index)
+            logging.info("Deleted row " + str(index))
 
     if weightcalcdata.connections_used:
         newconnectionmatrix = weightcalcdata.connectionmatrix
     else:
         newconnectionmatrix = np.ones((vardims, vardims))
-    # Substitute all rows and columns not used with zeros in connectionmatrix
-    for delindex in dellist:
-        newconnectionmatrix[:, delindex] = np.zeros(vardims)
-        newconnectionmatrix[delindex, :] = np.zeros(vardims)
+    # Substitute columns not used with zeros in connectionmatrix
+    for cause_delindex in cause_dellist:
+        newconnectionmatrix[:, cause_delindex] = np.zeros(vardims)
+    # Substitute rows not used with zeros in connectionmatrix
+    for affected_delindex in affected_dellist:
+        newconnectionmatrix[affected_dellist, :] = np.zeros(vardims)
 
     # Initiate headerline for weightstore file
     headerline = []
@@ -711,117 +277,149 @@ def calc_weights(weightcalcdata, method, sigtest, scenario):
             csv.writer(f).writerow(header)
             csv.writer(f).writerows(items)
 
+    # Define filename structure for CSV file containing weights between
+    # a specific causevar and all the subsequent affectedvars
+    def filename(name, method, causevar):
+        return filename_template.format(weightcalcdata.casename,
+                                        scenario, name, method, causevar)
+
     weightstoredir = config_setup.ensure_existance(
         os.path.join(weightcalcdata.saveloc, 'weightdata'), make=True)
 
     filename_template = os.path.join(weightstoredir, '{}_{}_{}_{}_{}.csv')
 
-    for causevarindex in weightcalcdata.causevarindexes:
-        causevar = weightcalcdata.variables[causevarindex]
+    # Generate boxes to use
+    boxes = data_processing.split_tsdata(weightcalcdata.inputdata,
+                                         weightcalcdata.sampling_rate,
+                                         weightcalcdata.boxsize,
+                                         weightcalcdata.boxnum)
 
-        # Create filename for new CSV file containing weights between
-        # this causevar and all the subsequent affectedvars
-        def filename(name, method, causevar):
-            return filename_template.format(weightcalcdata.casename,
-                                            scenario, name, method, causevar)
-        # Initiate datalines with delays
-        datalines_directional = np.asarray(weightcalcdata.sample_delays)
-        datalines_directional = datalines_directional[:, np.newaxis]
-        datalines_absolute = datalines_directional.copy()
+    # Create storage lists weight_arrays, delay_arrays and datastores
+    # that will be generated for each box
 
-        for affectedvarindex in weightcalcdata.affectedvarindexes:
-            affectedvar = weightcalcdata.variables[affectedvarindex]
-            logging.info("Analysing effect of: " + causevar + " on " +
-                         affectedvar)
-            if not(newconnectionmatrix[affectedvarindex,
-                                       causevarindex] == 0):
-                weightlist = []
-                directional_weightlist = []
-                absolute_weightlist = []
+    weight_arrays = []
+    delay_arrays = []
+    datastores = []
 
-                for delay in weightcalcdata.sample_delays:
-                    logging.info("Now testing delay: " + str(delay))
+    for boxindex, box in enumerate(boxes):
 
-                    causevardata = \
-                        (weightcalcdata.inputdata[:, causevarindex]
-                            [startindex:startindex+size])
+        weight_array = np.empty((vardims, vardims))
+        delay_array = np.empty((vardims, vardims))
+        weight_array[:] = np.NAN
+        delay_array[:] = np.NAN
+        datastore = []
 
-                    affectedvardata = \
-                        (weightcalcdata.inputdata[:, affectedvarindex]
-                            [startindex+delay:startindex+size+delay])
+        for causevarindex in weightcalcdata.causevarindexes:
+            causevar = weightcalcdata.variables[causevarindex]
 
-                    weight = weightcalculator.calcweight(causevardata,
-                                                         affectedvardata,
-                                                         weightcalcdata,
-                                                         causevarindex,
-                                                         affectedvarindex)
+            # Initiate datalines with delays
+            datalines_directional = np.asarray(weightcalcdata.sample_delays)
+            datalines_directional = datalines_directional[:, np.newaxis]
+            datalines_absolute = datalines_directional.copy()
+
+            for affectedvarindex in weightcalcdata.affectedvarindexes:
+                affectedvar = weightcalcdata.variables[affectedvarindex]
+                logging.info("Analysing effect of: " + causevar + " on " +
+                             affectedvar + " for box number: " +
+                             str(boxindex + 1))
+
+                if not(newconnectionmatrix[affectedvarindex,
+                                           causevarindex] == 0):
+                    weightlist = []
+                    directional_weightlist = []
+                    absolute_weightlist = []
+
+                    for delay in weightcalcdata.sample_delays:
+                        logging.info("Now testing delay: " + str(delay))
+
+                        causevardata = \
+                            (box[:, causevarindex]
+                                [startindex:startindex+size])
+
+                        affectedvardata = \
+                            (box[:, affectedvarindex]
+                                [startindex+delay:startindex+size+delay])
+
+                        weight = weightcalculator.calcweight(causevardata,
+                                                             affectedvardata,
+                                                             weightcalcdata,
+                                                             causevarindex,
+                                                             affectedvarindex)
+
+                        if len(weight) > 1:
+                            # If weight contains directional as well as
+                            # absolute weights, write to separate lists
+                            directional_weightlist.append(weight[0])
+                            absolute_weightlist.append(weight[1])
+                        else:
+                            weightlist.append(weight[0])
+
+                    directional_name = 'weights_directional_box{:03d}'
+                    absolute_name = 'weights_absolute_box{:03d}'
 
                     if len(weight) > 1:
-                        # If weight contains directional as well as absolute
-                        # weights, write to separate lists
-                        directional_weightlist.append(weight[0])
-                        absolute_weightlist.append(weight[1])
+                        weightlist = [directional_weightlist,
+                                      absolute_weightlist]
+                        # Combine weight data
+                        weights_thisvar_directional = np.asarray(weightlist[0])
+                        weights_thisvar_directional = \
+                            weights_thisvar_directional[:, np.newaxis]
+
+                        weights_thisvar_absolute = np.asarray(weightlist[1])
+                        weights_thisvar_absolute = \
+                            weights_thisvar_absolute[:, np.newaxis]
+
+                        datalines_directional = \
+                            np.concatenate((datalines_directional,
+                                            weights_thisvar_directional),
+                                           axis=1)
+
+                        datalines_absolute = \
+                            np.concatenate((datalines_absolute,
+                                            weights_thisvar_absolute), axis=1)
+
+                        writecsv_weightcalc(filename(
+                            directional_name.format(boxindex + 1),
+                            method, causevar),
+                            datalines_directional, headerline)
+
                     else:
-                        weightlist.append(weight[0])
+                        weights_thisvar_absolute = np.asarray(weightlist)
+                        weights_thisvar_absolute = \
+                            weights_thisvar_absolute[:, np.newaxis]
 
-            if len(weight) > 1:
-                weightlist = [directional_weightlist, absolute_weightlist]
+                        datalines_absolute = \
+                            np.concatenate((datalines_absolute,
+                                            weights_thisvar_absolute), axis=1)
 
-            # Combine weight data
-                weights_thisvar_directional = np.asarray(weightlist[0])
-                weights_thisvar_directional = \
-                    weights_thisvar_directional[:, np.newaxis]
+                        writecsv_weightcalc(filename(
+                            absolute_name.format(boxindex + 1),
+                            method, causevar),
+                            datalines_absolute, headerline)
 
-                weights_thisvar_absolute = np.asarray(weightlist[1])
-                weights_thisvar_absolute = \
-                    weights_thisvar_absolute[:, np.newaxis]
+                    # Generate and store report files according to each method
+                    [weight_array, delay_array, datastore] = \
+                        weightcalculator.report(weightcalcdata, causevarindex,
+                                                affectedvarindex, weightlist,
+                                                weight_array, delay_array,
+                                                datastore, sigtest)
 
-                datalines_directional = \
-                    np.concatenate((datalines_directional,
-                                    weights_thisvar_directional), axis=1)
+        # Delete entries from weightcalc matrix not used
+        # Delete all rows and columns listed in affected_dellist, cause_dellist
+        # from weight_array
+        # Axis 0 is rows, axis 1 is columns
+        weight_array = np.delete(weight_array, cause_dellist, 1)
+        weight_array = np.delete(weight_array, affected_dellist, 0)
 
-                datalines_absolute = \
-                    np.concatenate((datalines_absolute,
-                                    weights_thisvar_absolute), axis=1)
+        # Do the same for delay_array
+        delay_array = np.delete(delay_array, cause_dellist, 1)
+        delay_array = np.delete(delay_array, affected_dellist, 0)
 
-                writecsv_weightcalc(filename('weights_directional', method,
-                                             causevar),
-                                    datalines_directional, headerline)
+        weight_arrays.append(weight_array)
+        delay_arrays.append(delay_array)
+        datastores.append(datastore)
 
-                writecsv_weightcalc(filename('weights_absolute', method,
-                                             causevar),
-                                    datalines_absolute, headerline)
-            else:
-                weights_thisvar_absolute = np.asarray(weightlist)
-                weights_thisvar_absolute = \
-                    weights_thisvar_absolute[:, np.newaxis]
-
-                datalines_absolute = \
-                    np.concatenate((datalines_absolute,
-                                    weights_thisvar_absolute), axis=1)
-
-                writecsv_weightcalc(filename('weights_absolute', method,
-                                             causevar),
-                                    datalines_absolute, headerline)
-
-            # Generate and store report files according to each method
-            [weight_array, delay_array, datastore] = \
-                weightcalculator.report(weightcalcdata, causevarindex,
-                                        affectedvarindex, weightlist,
-                                        weight_array, delay_array,
-                                        datastore, sigtest)
-
-    # Delete entries from weightcalc matrix not used
-    # Delete all rows and columns listed in dellist
-    # from weight_array
-    weight_array = np.delete(weight_array, dellist, 1)
-    weight_array = np.delete(weight_array, dellist, 0)
-
-    # Do the same for delay_array
-    delay_array = np.delete(delay_array, dellist, 1)
-    delay_array = np.delete(delay_array, dellist, 0)
-
-    return weight_array, delay_array, datastore, data_header
+    return weight_arrays, delay_arrays, datastores, data_header
 
 
 def writecsv_weightcalc(filename, items, header):
@@ -844,38 +442,53 @@ def weightcalc(mode, case, sigtest, writeoutput):
 
     weightcalcdata = WeightcalcData(mode, case)
 
+    # Define export directories and filenames
+    weightdir = config_setup.ensure_existance(os.path.join(
+        weightcalcdata.saveloc, 'weightcalc'), make=True)
+
+    filename_template = os.path.join(weightdir, '{}_{}_{}_{}.csv')
+
+    def filename(method, name):
+        return filename_template.format(case, scenario,
+                                        method, name)
+
+    maxweight_array_name = 'maxweight_array_box{:03d}'
+    delay_array_name = 'delay_array_box{:03d}'
+    weightcalc_data_name = 'weightcalc_data_box{:03d}'
+
     for scenario in weightcalcdata.scenarios:
         logging.info("Running scenario {}".format(scenario))
         # Update scenario-specific fields of weightcalcdata object
         weightcalcdata.scenariodata(scenario)
+
         for method in weightcalcdata.methods:
             logging.info("Method: " + method)
-            # Define export directories and filenames
-            weightdir = config_setup.ensure_existance(os.path.join(
-                weightcalcdata.saveloc, 'weightcalc'), make=True)
-            filename_template = os.path.join(weightdir, '{}_{}_{}_{}.csv')
 
-            def filename(name):
-                return filename_template.format(case, scenario,
-                                                method, name)
-
-            # Test whether the 'weightcalc_data' file already exists
-            testlocation = filename('weightcalc_data')
+            # Test whether the 'weightcalc_data_box01' file already exists
+            testlocation = filename(method, 'weightcalc_data_box001')
             if not os.path.exists(testlocation):
                 # Continue with execution
-
-                # TODO: Get data_header directly
-                [weight_array, delay_array, datastore, data_header] = \
+                [weight_arrays, delay_arrays, datastores, data_header] = \
                     calc_weights(weightcalcdata, method, sigtest, scenario)
 
-                if writeoutput:
-                    # Write arrays to file
-                    np.savetxt(filename('maxweight_array'), weight_array,
-                               delimiter=',')
-                    np.savetxt(filename('delay_array'), delay_array,
-                               delimiter=',')
-                    # Write datastore to file
-                    writecsv_weightcalc(filename('weightcalc_data'), datastore,
-                                        data_header)
+                for boxindex in range(weightcalcdata.boxnum):
+                    if writeoutput:
+                        # Write arrays to file
+                        np.savetxt(
+                            filename(method,
+                                     maxweight_array_name.format(boxindex+1)),
+                            weight_arrays[boxindex],
+                            delimiter=',')
+                        np.savetxt(
+                            filename(method,
+                                     delay_array_name.format(boxindex+1)),
+                            delay_arrays[boxindex],
+                            delimiter=',')
+                        # Write datastore to file
+                        writecsv_weightcalc(
+                            filename(method,
+                                     weightcalc_data_name.format(boxindex+1)),
+                            datastores[boxindex],
+                            data_header)
             else:
                 logging.info("The requested results are in existence")

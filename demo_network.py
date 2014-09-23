@@ -130,8 +130,8 @@ katz_rankingdict_norm = norm_dict(katz_rankingdict)
 katz_rankingdict_weight = nx.katz_centrality(weightgraph,
                                              0.99, 1.0, 20000)
 
-nx.write_gml(gaingraph, os.path.join(saveloc, "gaingraph.gml"))
-nx.write_gml(weightgraph, os.path.join(saveloc, "weightgraph.gml"))
+#nx.write_gml(gaingraph, os.path.join(saveloc, "gaingraph.gml"))
+#nx.write_gml(weightgraph, os.path.join(saveloc, "weightgraph.gml"))
 #nx.draw(gaingraph)
 #plt.show()
 
