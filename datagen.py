@@ -14,6 +14,10 @@ from transentropy import vectorselection
 
 from functools import partial
 
+
+seed_list = [35, 88, 107, 52, 98]
+
+
 def connectionmatrix_maker(N):
     def maker():
         variables = ['X {}'.format(i) for i in range(1, N+1)]
@@ -31,8 +35,8 @@ def seed_random(method, seed, samples):
     np.random.seed(seed)
     return method(samples)
 
-seed_randn = partial(seed_random, method=np.random.randn)
-seed_rand = partial(seed_random, method=np.random.rand)
+seed_randn = partial(seed_random, np.random.randn)
+seed_rand = partial(seed_random, np.random.rand)
 
 
 def autoreg_gen(samples, delay):
@@ -43,14 +47,15 @@ def autoreg_gen(samples, delay):
     """
 
     # Define seed for initial source data
-    cause = seed_randn(35, samples + delay)
+    seeds = iter(seed_list)
+    cause = seed_randn(seeds.next(), samples + delay)
     affected = np.zeros_like(cause)
     # Very close covariance occassionally breaks the kde estimator
     # Another small random element is added to take care of this
     # This is not expected to be a problem on any "real" data
 
     # Define seed for noise data
-    affected_random_add = seed_rand(88, samples + delay)
+    affected_random_add = seed_rand(seeds.next(), samples + delay)
 
     for i in range(delay, len(cause)):
         affected[i] = affected[i - 1] + cause[i - delay]
@@ -73,14 +78,15 @@ def delay_gen(samples, delay):
     """
 
     # Define seed for initial source data
-    cause = seed_randn(35, samples + delay)
+    seeds = iter(seed_list)
+    cause = seed_randn(seeds.next(), samples + delay)
     affected = np.zeros_like(cause)
     # Very close covariance occassionally breaks the kde estimator
     # Another small random element is added to take care of this
     # This is not expected to be a problem on any "real" data
 
     # Define seed for noise data
-    affected_random_add = seed_rand(88, samples + delay)
+    affected_random_add = seed_rand(seeds.next(), samples + delay)
 
     for i in range(delay, len(cause)):
         affected[i] = cause[i - delay]
@@ -95,42 +101,11 @@ def delay_gen(samples, delay):
     return data.T
 
 
-def random_gen(samples, delay):
-    """Generates two completely independent random data vectors."""
+def random_gen(samples, delay, N):
+    """Generates N independent random data vectors"""
 
-    # Generate first vector
-    x1 = seed_randn(35, samples)
-
-    # Generate second vector
-    x2 = seed_randn(88, samples)
-
-    data = vstack([x1, x2])
-
-    return data.T
-
-
-def random_gen_5x5(samples, delay):
-    """Generates five completely independent random data vectors.
-
-
-    """
-
-    # Generate first vector
-    x1 = seed_randn(35, samples)
-
-    # Generate second vector
-    x2 = seed_randn(88, samples)
-
-    # Generate third vector
-    x3 = seed_randn(107, samples)
-
-    # Generate fourth vector
-    x4 = seed_randn(52, samples)
-
-    # Generate fifth vector
-    x5 = seed_randn(98, samples)
-
-    data = vstack([x1, x2, x3, x4, x5])
+    assert N < len(seed_list), "Not enough seeds in seed_list"
+    data = vstack([seed_randn(seed, samples) for seed in seed_list[:N]])
 
     return data.T
 
@@ -183,27 +158,13 @@ def sinusoid_shift_gen(samples, delay, period=100, noiseamp=0.1,
 
         sine = sine + sine_noise
 
-    # First vector is simply the first samples of the sine vector
-    x1 = sine[0:samples]
+    vectors = []
 
-    # Define the second vector
-    sampleshift = (period/4)*1
-    x2 = sine[sampleshift:samples+sampleshift]
+    for i in range(5):
+        sampleshift = (period/4)*i
+        vectors.append(sine[sampleshift:samples + sampleshift])
 
-    # Third vector
-    sampleshift = (period/4)*2
-    x3 = sine[sampleshift:samples+sampleshift]
-
-    # Fourth vector
-    sampleshift = (period/4)*3
-    x4 = sine[sampleshift:samples+sampleshift]
-
-    # Fifth vector
-    # The fifth vector is the same except for any noise added to the sine
-    sampleshift = (period/4)*4
-    x5 = sine[sampleshift:samples+sampleshift]
-
-    data = vstack([x1, x2, x3, x4, x5])
+    data = vstack(vectors)
 
     return data.T
 
