@@ -285,7 +285,8 @@ class TransentWeightcalc:
         self.data_header = ['causevar', 'affectedvar', 'base_ent',
                             'max_ent', 'max_delay', 'max_index', 'threshpass']
         # Setup Java class for infodynamics toolkit
-        self.teCalc = transentropy.setup_infodynamics_te()
+        self.teCalc = \
+            transentropy.setup_infodynamics_te(weightcalcdata.normalize)
 
     def calcweight(self, causevardata, affectedvardata, weightcalcdata,
                    causevarindex, affectedvarindex):

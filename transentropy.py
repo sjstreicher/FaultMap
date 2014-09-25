@@ -61,7 +61,7 @@ def vectorselection(data, timelag, sub_samples, k=1, l=1):
     return x_pred, x_hist, y_hist
 
 
-def setup_infodynamics_te():
+def setup_infodynamics_te(normalize):
     """Prepares the teCalc class of the infodynamics toolkit in order to
     calculate transfer entropy according to the kernel method.
 
@@ -70,8 +70,11 @@ def setup_infodynamics_te():
     teCalcClass = jpype.JPackage("infodynamics.measures.continuous.kernel") \
                        .TransferEntropyCalculatorKernel
     teCalc = teCalcClass()
-    # Normalise the individual variables
-    teCalc.setProperty("NORMALISE", "true")
+    # Normalise the individual variables if required
+    if normalize:
+        teCalc.setProperty("NORMALISE", "true")
+    else:
+        teCalc.setProperty("NORMALISE", "false")
 
     teCalcClass = None
     del teCalcClass
@@ -103,18 +106,12 @@ def calc_infodynamics_te(teCalc, affected_data, causal_data):
 
     """
 
-    # Normalise data to be safe
-    affected_data_norm = \
-        sklearn.preprocessing.scale(affected_data[np.newaxis, :], axis=1)
-    causal_data_norm = \
-        sklearn.preprocessing.scale(causal_data[np.newaxis, :], axis=1)
-
     # Use history length 1 (Schreiber k=1),
     # kernel width of 0.5 normalised units
     teCalc.initialise(1, 0.5)
 
-    sourceArray = causal_data_norm[0].tolist()
-    destArray = affected_data_norm[0].tolist()
+    sourceArray = causal_data[0].tolist()
+    destArray = affected_data[0].tolist()
 
     sourceArrayJava = jpype.JArray(jpype.JDouble, 1)(sourceArray)
     destArrayJava = jpype.JArray(jpype.JDouble, 1)(destArray)

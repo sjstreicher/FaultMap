@@ -84,6 +84,8 @@ class WeightcalcData:
         bandgap_filtering = self.caseconfig[scenario]['bandgap_filtering']
         self.transient = self.caseconfig[settings_name]['transient']
 
+        self.normalize = self.caseconfig[settings_name]['normalize']
+
         if self.datatype == 'file':
             # Get path to time series data input file in standard format
             # described in documentation under "Input data formats"
@@ -157,23 +159,28 @@ class WeightcalcData:
             self.affectedvarindexes = range(len(self.variables))
 
         # Normalise (mean centre and variance scale) the input data
-        self.inputdata_normalised = \
-            data_processing.normalise_data(raw_tsdata, self.inputdata_raw,
-                                           self.saveloc, self.casename,
-                                           scenario)
+
+        if self.normalize:
+            self.inputdata_normstep = \
+                data_processing.normalise_data(raw_tsdata, self.inputdata_raw,
+                                               self.saveloc, self.casename,
+                                               scenario)
+        else:
+            self.inputdata_normstep = self.inputdata_raw
+
         if bandgap_filtering:
             low_freq = self.caseconfig[scenario]['low_freq']
             high_freq = self.caseconfig[scenario]['high_freq']
             self.inputdata_bandgapfiltered = \
                 data_processing.bandgapfilter_data(raw_tsdata,
-                                                   self.inputdata_normalised,
+                                                   self.inputdata_normstep,
                                                    self.variables,
                                                    low_freq, high_freq,
                                                    self.saveloc, self.casename,
                                                    scenario)
             self.inputdata_originalrate = self.inputdata_bandgapfiltered
         else:
-            self.inputdata_originalrate = self.inputdata_normalised
+            self.inputdata_originalrate = self.inputdata_normstep
 
         # Subsample data if required
         # Get sub_sampling interval
