@@ -49,7 +49,8 @@ class GraphData:
                 ['case', 'method', 'scenario', 'boxindex', 'sourcevar',
                  'axis_limits']]
 
-        print self.method
+    def xvalues(self, graphname):
+        self.xvals = self.graphconfig[graphname]['xvals']
 
 
 def yaxislabel(method):
@@ -61,76 +62,6 @@ def yaxislabel(method):
         label_y = r'Directional transfer entropy (bits)'
 
     return label_y
-
-
-def fig_values_vs_delays(graphname):
-    """Generates a figure that shows dependence of method values on
-    time constant and delay for signal passed through
-    first order transfer functions.
-
-    """
-
-    graphdata = GraphData(graphname)
-
-    sourcefile = filename_template.format(graphdata.case, graphdata.scenario,
-                                          graphdata.method[0],
-                                          graphdata.boxindex,
-                                          graphdata.sourcevar)
-
-    valuematrix, headers = \
-        data_processing.read_header_values_datafile(sourcefile)
-
-    # Test whether the figure already exists
-    testlocation = graph_filename_template.format(graphname)
-    if not os.path.exists(testlocation):
-        plt.figure(1, (12, 6))
-        plt.plot(valuematrix[:, 0], valuematrix[:, 1], marker="o",
-                 markersize=4,
-                 label=r'$\tau = 0.2$ seconds')
-        plt.plot(valuematrix[:, 0], valuematrix[:, 2], marker="o",
-                 markersize=4,
-                 label=r'$\tau = 0.5$ seconds')
-        plt.plot(valuematrix[:, 0], valuematrix[:, 3], marker="o",
-                 markersize=4,
-                 label=r'$\tau = 1.0$ seconds')
-        plt.plot(valuematrix[:, 0], valuematrix[:, 4], marker="o",
-                 markersize=4,
-                 label=r'$\tau = 2.0$ seconds')
-        plt.plot(valuematrix[:, 0], valuematrix[:, 5], marker="o",
-                 markersize=4,
-                 label=r'$\tau = 5.0$ seconds')
-
-        plt.ylabel(yaxislabel(graphdata.method[0]), fontsize=14)
-        plt.xlabel(r'Delay (samples)', fontsize=14)
-        plt.legend(bbox_to_anchor=[0.25, 1])
-
-        if graphdata.axis_limits is not False:
-            plt.axis(graphdata.axis_limits)
-
-        plt.savefig(graph_filename_template.format(graphname))
-        plt.close()
-
-    else:
-        logging.info("The requested graph has already been drawn")
-
-    return None
-
-
-#######################################################################
-# Plot measure values vs. sample delay for range of first order time
-# constants.
-#######################################################################
-
-graphnames = ['firstorder_noiseonly_cc_vs_delays_scen01',
-              'firstorder_noiseonly_abs_te_vs_delays_scen01',
-              'firstorder_noiseonly_dir_te_vs_delays_scen01']
-
-for graphname in graphnames:
-    fig_values_vs_delays(graphname)
-
-#######################################################################
-# Plot maximum measure values vs. first order time constants
-#######################################################################
 
 
 def linelabels(method):
@@ -155,6 +86,53 @@ def fitlinelabels(method):
     return label
 
 
+def fig_values_vs_delays(graphname):
+    """Generates a figure that shows dependence of method values on
+    time constant and delay for signal passed through
+    first order transfer functions.
+
+    """
+
+    graphdata = GraphData(graphname)
+
+    sourcefile = filename_template.format(graphdata.case, graphdata.scenario,
+                                          graphdata.method[0],
+                                          graphdata.boxindex,
+                                          graphdata.sourcevar)
+
+    valuematrix, headers = \
+        data_processing.read_header_values_datafile(sourcefile)
+
+    plt.figure(1, (12, 6))
+    plt.plot(valuematrix[:, 0], valuematrix[:, 1], marker="o",
+             markersize=4,
+             label=r'$\tau = 0.2$ seconds')
+    plt.plot(valuematrix[:, 0], valuematrix[:, 2], marker="o",
+             markersize=4,
+             label=r'$\tau = 0.5$ seconds')
+    plt.plot(valuematrix[:, 0], valuematrix[:, 3], marker="o",
+             markersize=4,
+             label=r'$\tau = 1.0$ seconds')
+    plt.plot(valuematrix[:, 0], valuematrix[:, 4], marker="o",
+             markersize=4,
+             label=r'$\tau = 2.0$ seconds')
+    plt.plot(valuematrix[:, 0], valuematrix[:, 5], marker="o",
+             markersize=4,
+             label=r'$\tau = 5.0$ seconds')
+
+    plt.ylabel(yaxislabel(graphdata.method[0]), fontsize=14)
+    plt.xlabel(r'Delay (samples)', fontsize=14)
+    plt.legend(bbox_to_anchor=[0.25, 1])
+
+    if graphdata.axis_limits is not False:
+        plt.axis(graphdata.axis_limits)
+
+    plt.savefig(graph_filename_template.format(graphname))
+    plt.close()
+
+    return None
+
+
 def fig_maxval_vs_taus(graphname):
     """Generates a figure that shows dependence of method values on
     time constant and delay for signal passed through
@@ -164,160 +142,256 @@ def fig_maxval_vs_taus(graphname):
 
     graphdata = GraphData(graphname)
 
-    taus = [0.2, 0.5, 1.0, 2.0, 5.0]
+    # Get values of taus
+    graphdata.xvalues(graphname)
 
+    plt.figure(1, (12, 6))
+
+    for method in graphdata.method:
+
+        sourcefile = filename_template.format(
+            graphdata.case, graphdata.scenario,
+            method, graphdata.boxindex,
+            graphdata.sourcevar)
+
+        valuematrix, headers = \
+            data_processing.read_header_values_datafile(sourcefile)
+
+        max_values = [max(valuematrix[:, index+1]) for index in range(5)]
+
+        fit_params = np.polyfit(np.log(graphdata.xvals), np.log(max_values), 1)
+        fit_y = [(i*fit_params[0] + fit_params[1])
+                 for i in np.log(graphdata.xvals)]
+
+        fitted_vals = [np.exp(val) for val in fit_y]
+
+        plt.loglog(graphdata.xvals, max_values, ".", marker="o", markersize=4,
+                   label=linelabels(method))
+
+        plt.loglog(graphdata.xvals, fitted_vals, "--",
+                   label=fitlinelabels(method))
+
+    plt.ylabel(r'Measure value', fontsize=14)
+    plt.xlabel(r'Time constant ($\tau$)', fontsize=14)
+    plt.legend()
+
+    if graphdata.axis_limits is not False:
+        plt.axis(graphdata.axis_limits)
+
+    plt.savefig(graph_filename_template.format(graphname))
+    plt.close()
+
+    return None
+
+
+def get_data_vectors(graphdata):
+    """Extract value matrices from different scenarios.
+
+    """
+
+    valuematrices = []
+
+    for scenario in graphdata.scenario:
+        sourcefile = filename_template.format(
+            graphdata.case, scenario,
+            graphdata.method[0], graphdata.boxindex,
+            graphdata.sourcevar)
+        valuematrix, _ = \
+            data_processing.read_header_values_datafile(sourcefile)
+        valuematrices.append(valuematrix)
+
+    return valuematrices
+
+
+def fig_diffsamplinginterval_vs_delay(graphname):
+
+    graphdata = GraphData(graphname)
+
+    # Get x-axis values
+#    graphdata.xvalues(graphname)
+
+    plt.figure(1, (12, 6))
+
+    # Get valuematrices
+    valuematrices = get_data_vectors(graphdata)
+
+    relevant_values = []
+    for valuematrix in valuematrices:
+        # Get the maximum from each valuematrix in the entry
+        # which corresponds to the common element of interest.
+
+        values = valuematrix[:, 3]
+        relevant_values.append(values)
+
+    plt.plot(valuematrix[:, 0], relevant_values[0],  marker="o",
+             markersize=4,
+             label=r'Sample rate = 0.1 seconds')
+
+    plt.plot(valuematrix[:, 0], relevant_values[1],  marker="o",
+             markersize=4,
+             label=r'Sample rate = 0.01 seconds')
+
+    plt.plot(valuematrix[:, 0], relevant_values[2],  marker="o",
+             markersize=4,
+             label=r'Sample rate = 1.0 seconds')
+
+    plt.ylabel(yaxislabel(graphdata.method[0]), fontsize=14)
+    plt.xlabel(r'Delay (samples)', fontsize=14)
+    plt.legend(bbox_to_anchor=[0.37, 1])
+
+    if graphdata.axis_limits is not False:
+        plt.axis(graphdata.axis_limits)
+
+    plt.savefig(graph_filename_template.format(graphname))
+    plt.close()
+
+    return None
+
+
+def fig_diffnoisevariance_vs_delay(graphname):
+
+    graphdata = GraphData(graphname)
+
+    # Get x-axis values
+#    graphdata.xvalues(graphname)
+
+    plt.figure(1, (12, 6))
+
+    # Get valuematrices
+    valuematrices = get_data_vectors(graphdata)
+
+    relevant_values = []
+    for valuematrix in valuematrices:
+        # Get the maximum from each valuematrix in the entry
+        # which corresponds to the common element of interest.
+
+        values = valuematrix[:, 3]
+        relevant_values.append(values)
+
+    plt.plot(valuematrix[:, 0], relevant_values[0],  marker="o",
+             markersize=4,
+             label=r'Noise varaince = 0.1')
+
+    plt.plot(valuematrix[:, 0], relevant_values[1],  marker="o",
+             markersize=4,
+             label=r'Noise varaince = 0.2')
+
+    plt.plot(valuematrix[:, 0], relevant_values[2],  marker="o",
+             markersize=4,
+             label=r'Noise varaince = 0.5')
+
+    plt.ylabel(yaxislabel(graphdata.method[0]), fontsize=14)
+    plt.xlabel(r'Delay (samples)', fontsize=14)
+    plt.legend(bbox_to_anchor=[0.37, 1])
+
+    if graphdata.axis_limits is not False:
+        plt.axis(graphdata.axis_limits)
+
+    plt.savefig(graph_filename_template.format(graphname))
+    plt.close()
+
+    return None
+
+#######################################################################
+# Plot measure values vs. sample delay for range of first order time
+# constants.
+#######################################################################
+
+graphnames = ['firstorder_noiseonly_cc_vs_delays_scen01',
+              'firstorder_noiseonly_abs_te_vs_delays_scen01',
+              'firstorder_noiseonly_dir_te_vs_delays_scen01']
+
+for graphname in graphnames:
     # Test whether the figure already exists
     testlocation = graph_filename_template.format(graphname)
-
     if not os.path.exists(testlocation):
-        plt.figure(1, (12, 6))
-
-        for method in graphdata.method:
-            print method
-
-            sourcefile = filename_template.format(
-                graphdata.case, graphdata.scenario,
-                method, graphdata.boxindex,
-                graphdata.sourcevar)
-
-            valuematrix, headers = \
-                data_processing.read_header_values_datafile(sourcefile)
-
-            max_values = [max(valuematrix[:, index+1]) for index in range(5)]
-
-            fit_params = np.polyfit(np.log(taus), np.log(max_values), 1)
-            fit_y = [(i*fit_params[0] + fit_params[1]) for i in np.log(taus)]
-
-            fitted_vals = [np.exp(val) for val in fit_y]
-
-            plt.loglog(taus, max_values, ".", marker="o", markersize=4,
-                       label=linelabels(method))
-
-            plt.loglog(taus, fitted_vals, "--", label=fitlinelabels(method))
-
-        plt.ylabel(r'Measure value', fontsize=14)
-        plt.xlabel(r'Time constant ($\tau$)', fontsize=14)
-        plt.legend()
-
-        if graphdata.axis_limits is not False:
-            plt.axis(graphdata.axis_limits)
-
-        plt.savefig(graph_filename_template.format(graphname))
-        plt.close()
+        fig_values_vs_delays(graphname)
     else:
         logging.info("The requested graph has already been drawn")
 
-    return None
+#######################################################################
+# Plot maximum measure values vs. first order time constants
+#######################################################################
 
 graphnames = ['firstorder_noiseonly_cc_vs_tau_scen01',
               'firstorder_noiseonly_te_vs_tau_scen01']
 
 for graphname in graphnames:
-    fig_maxval_vs_taus(graphname)
+    # Test whether the figure already exists
+    testlocation = graph_filename_template.format(graphname)
+    if not os.path.exists(testlocation):
+        fig_maxval_vs_taus(graphname)
+    else:
+        logging.info("The requested graph has already been drawn")
+
+#######################################################################
+
+# Investigate effect of noise sampling rate, simulation time step and
+# noise variance  on values of measures.
+
+# Approach: Take the maximum measure value for a time constant of unity
+# from three different sets that vary the parameter of interest while
+# keeping the others at the value of the base case scenario.
+
+# In order to investigate noise sampling interval, these will be
+# sets 1, 2, and 3 with noise sampling intervals of
+# [0.1, 0.01, 1.0] respectively.
+
+# For the case of noise variance, these will be sets 1, 4 and 5
+# with noise variances of [0.1, 0.2 and 0.5] respectively.
+
+#######################################################################
 
 
-#
-## Investigate effect of noise sampling rate / simulation time step on
-## values of transfer entropies
-#
-## Approach: Take the maximum transfer entropy for a time constant of unity
-## from sets 1, 2, and 3 with noise sampling intervals of
-## [0.1, 0.01, 1.0] respectively.
-#
-#graphname = 'firstorder_noiseonly_sampling_rate_effect'
-#
-## Get the different data vectors required
-## Set 1 data
-#method = 'absolute_transfer_entropy'
-#scenario = 'noiseonly_nosubs_set1'
-#sourcefile = filename()
-#valuematrix_set1, _ = \
-#    data_processing.read_header_values_datafile(sourcefile)
-#
-#scenario = 'noiseonly_nosubs_set2'
-#sourcefile = filename()
-#valuematrix_set2, _ = \
-#    data_processing.read_header_values_datafile(sourcefile)
-#
-#scenario = 'noiseonly_nosubs_set3'
-#sourcefile = filename()
-#valuematrix_set3, _ = \
-#    data_processing.read_header_values_datafile(sourcefile)
-#
-#method = 'directional_transfer_entropy'
-#scenario = 'noiseonly_nosubs_set1'
-#sourcefile = filename()
-#valuematrix_set1_dir, _ = \
-#    data_processing.read_header_values_datafile(sourcefile)
-#
-#scenario = 'noiseonly_nosubs_set2'
-#sourcefile = filename()
-#valuematrix_set2_dir, _ = \
-#    data_processing.read_header_values_datafile(sourcefile)
-#
-#scenario = 'noiseonly_nosubs_set3'
-#sourcefile = filename()
-#valuematrix_set3_dir, _ = \
-#    data_processing.read_header_values_datafile(sourcefile)
-#
-#
-## The maximum values associated with a time constant of unity is in the
-## [100][3] entry
-#
-#te_abs_vals = [valuematrix_set2[100][3], valuematrix_set1[100][3],
-#               valuematrix_set3[100][3]]
-#te_dir_vals = [valuematrix_set2_dir[100][3], valuematrix_set1_dir[100][3],
-#               valuematrix_set3_dir[100][3]]
-#
-#sampling_intervals = [0.01, 0.1, 1.0]
-#
-#directional_params = np.polyfit(np.log(sampling_intervals),
-#                                np.log(te_dir_vals), 1)
-#
-#absolute_params = np.polyfit(np.log(sampling_intervals),
-#                                np.log(te_abs_vals), 1)
-#
-#dir_fit_y = [(i*directional_params[0] + directional_params[1])
-#             for i in np.log(sampling_intervals)]
-#abs_fit_y = [(i*absolute_params[0] + absolute_params[1])
-#             for i in np.log(sampling_intervals)]
-#
-#dir_fitted_vals = [np.exp(te) for te in dir_fit_y]
-#abs_fitted_vals = [np.exp(te) for te in abs_fit_y]
-#
-## Test whether the figure already exists
-#testlocation = graph_filename(graphname)
-##if not os.path.exists(testlocation):
-#if not False:
-#    plt.figure(1, (12, 6))
-#    plt.loglog(sampling_intervals, te_abs_vals, ".", marker="o", markersize=4,
-#               label=r'absolute')
-#    plt.loglog(sampling_intervals, te_dir_vals, ".", marker="o", markersize=4,
-#               label=r'directional')
-#    plt.loglog(sampling_intervals, abs_fitted_vals, "--", markersize=4,
-#               label=r'absolute fit')
-#    plt.loglog(sampling_intervals, dir_fitted_vals, "--", markersize=4,
-#               label=r'directional fit')
-#    plt.ylabel(r'Transfer entropy (bits)', fontsize=14)
-#    plt.xlabel(r'Noise sampling rate ($\frac{1}{s}$)', fontsize=14)
-#    plt.legend()
-#
-#    plt.savefig(graph_filename(graphname))
-#    plt.close()
-#
-#else:
-#    logging.info("The requested graph has already been drawn")
-#
-#
-## Template for storing difference and absolute plots from node ranking lists
-##            diffplot, absplot = plot_transient_importances(variablelist,
-##                                                           transientdict,
-##                                                           basevaldict)
-##            diffplot_filename = os.path.join(saveloc,
-##                                             "{}_diffplot.pdf"
-##                                             .format(scenario))
-##            absplot_filename = os.path.join(saveloc,
-##                                            "{}_absplot.pdf"
-##                                            .format(scenario))
-##            diffplot.savefig(diffplot_filename)
-##            absplot.savefig(absplot_filename)
+#######################################################################
+# Plot measure values vs. delays for range of noise
+# sampling intervals.
+#######################################################################
+
+graphnames = ['firstorder_noiseonly_sampling_rate_effect_abs_te',
+              'firstorder_noiseonly_sampling_rate_effect_dir_te',
+              'firstorder_noiseonly_sampling_rate_effect_cc']
+
+
+for graphname in graphnames:
+    # Test whether the figure already exists
+    testlocation = graph_filename_template.format(graphname)
+    if not os.path.exists(testlocation):
+        fig_diffsamplinginterval_vs_delay(graphname)
+    else:
+        logging.info("The requested graph has already been drawn")
+
+# Also consider finding a lograthmic fit.
+
+
+#######################################################################
+# Plot measure values vs. delays for range of noise variances.
+# The case where data is normalised simply confirms that the values
+# are unaffected and is not of particular interest.
+#######################################################################
+
+graphnames = ['firstorder_noiseonly_noise_variance_effect_abs_te',
+              'firstorder_noiseonly_noise_variance_effect_dir_te',
+              'firstorder_noiseonly_noise_variance_effect_cc']
+
+for graphname in graphnames:
+    # Test whether the figure already exists
+    testlocation = graph_filename_template.format(graphname)
+    if not os.path.exists(testlocation):
+        fig_diffnoisevariance_vs_delay(graphname)
+    else:
+        logging.info("The requested graph has already been drawn")
+
+
+# Template for storing difference and absolute plots from node ranking lists
+#            diffplot, absplot = plot_transient_importances(variablelist,
+#                                                           transientdict,
+#                                                           basevaldict)
+#            diffplot_filename = os.path.join(saveloc,
+#                                             "{}_diffplot.pdf"
+#                                             .format(scenario))
+#            absplot_filename = os.path.join(saveloc,
+#                                            "{}_absplot.pdf"
+#                                            .format(scenario))
+#            diffplot.savefig(diffplot_filename)
+#            absplot.savefig(absplot_filename)
