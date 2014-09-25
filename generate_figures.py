@@ -270,15 +270,15 @@ def fig_diffnoisevariance_vs_delay(graphname):
 
     plt.plot(valuematrix[:, 0], relevant_values[0],  marker="o",
              markersize=4,
-             label=r'Noise varaince = 0.1')
+             label=r'Noise variance = 0.1')
 
     plt.plot(valuematrix[:, 0], relevant_values[1],  marker="o",
              markersize=4,
-             label=r'Noise varaince = 0.2')
+             label=r'Noise variance = 0.2')
 
     plt.plot(valuematrix[:, 0], relevant_values[2],  marker="o",
              markersize=4,
-             label=r'Noise varaince = 0.5')
+             label=r'Noise variance = 0.5')
 
     plt.ylabel(yaxislabel(graphdata.method[0]), fontsize=14)
     plt.xlabel(r'Delay (samples)', fontsize=14)
@@ -300,6 +300,20 @@ def fig_diffnoisevariance_vs_delay(graphname):
 graphnames = ['firstorder_noiseonly_cc_vs_delays_scen01',
               'firstorder_noiseonly_abs_te_vs_delays_scen01',
               'firstorder_noiseonly_dir_te_vs_delays_scen01']
+
+for graphname in graphnames:
+    # Test whether the figure already exists
+    testlocation = graph_filename_template.format(graphname)
+    if not os.path.exists(testlocation):
+        fig_values_vs_delays(graphname)
+    else:
+        logging.info("The requested graph has already been drawn")
+
+# Do this for the case of no normalization as well...
+
+graphnames = ['firstorder_noiseonly_cc_vs_delays_nonorm_scen01',
+              'firstorder_noiseonly_abs_te_vs_delays_nonorm_scen01',
+              'firstorder_noiseonly_dir_te_vs_delays_nonorm_scen01']
 
 for graphname in graphnames:
     # Test whether the figure already exists
@@ -373,6 +387,18 @@ for graphname in graphnames:
 graphnames = ['firstorder_noiseonly_noise_variance_effect_abs_te',
               'firstorder_noiseonly_noise_variance_effect_dir_te',
               'firstorder_noiseonly_noise_variance_effect_cc']
+
+for graphname in graphnames:
+    # Test whether the figure already exists
+    testlocation = graph_filename_template.format(graphname)
+    if not os.path.exists(testlocation):
+        fig_diffnoisevariance_vs_delay(graphname)
+    else:
+        logging.info("The requested graph has already been drawn")
+
+graphnames = ['firstorder_noiseonly_noise_variance_effect_nonorm_abs_te',
+              'firstorder_noiseonly_noise_variance_effect_nonorm_dir_te',
+              'firstorder_noiseonly_noise_variance_effect_nonorm_cc']
 
 for graphname in graphnames:
     # Test whether the figure already exists

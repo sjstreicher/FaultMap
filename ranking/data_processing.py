@@ -221,6 +221,15 @@ def normalise_data(raw_tsdata, inputdata_raw, saveloc, case, scenario):
     return inputdata_normalised
 
 
+def subtract_mean(inputdata_raw):
+    """Subtracts mean from input data."""
+
+    mean = np.mean(inputdata_raw)
+    inputdata_lessmean = inputdata_raw - mean
+
+    return inputdata_lessmean
+
+
 def read_connectionmatrix(connection_loc):
     """This method imports the connection scheme for the data.
     The format should be:
