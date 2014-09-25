@@ -22,17 +22,19 @@ graphs_savedir = config_setup.ensure_existance(os.path.join(saveloc, 'graphs'),
 graph_filename_template = os.path.join(graphs_savedir, '{}.pdf')
 
 # Some settings appropriate to the next couple of figures
+# TODO: Use config files for figures
 
 
 def filename():
-    return filename_template.format(case, scenario, method, name)
+    return filename_template.format(case, scenario, method, boxindex, name)
 
 
 def graph_filename(graphname):
     return graph_filename_template.format(graphname)
 
 sourcedir = os.path.join(saveloc, 'weightdata')
-filename_template = os.path.join(sourcedir, '{}_{}_weights_{}_{}.csv')
+filename_template = os.path.join(sourcedir,
+                                 '{}_{}_weights_{}_box{:03d}_{}.csv')
 
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
@@ -40,12 +42,12 @@ plt.rc('font', family='serif')
 
 case = 'filters'
 scenario = 'noiseonly_nosubs_set1'
-
+boxindex = 1
 name = 'X 1'
 
 # Figure to show dependence of cross-correlation on time constant and delay
 
-method = 'absolute_cross_correlation'
+method = 'cross_correlation'
 
 sourcefile = filename()
 valuematrix, headers = data_processing.read_header_values_datafile(sourcefile)
@@ -154,7 +156,7 @@ else:
 
 
 # Plot maximum correllation coefficients vs. first order time constants
-method = 'absolute_cross_correlation'
+method = 'cross_correlation'
 
 graphname = 'firstorder_noiseonly_cc_vs_tau_scen01'
 
