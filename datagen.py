@@ -12,6 +12,11 @@ import control
 
 from transentropy import vectorselection
 
+from functools import partial
+
+
+seed_list = [35, 88, 107, 52, 98]
+
 
 def connectionmatrix_maker(N):
     def maker():
@@ -26,6 +31,14 @@ connectionmatrix_2x2, connectionmatrix_4x4, connectionmatrix_5x5 = [
     ]
 
 
+def seed_random(method, seed, samples):
+    np.random.seed(seed)
+    return method(samples)
+
+seed_randn = partial(seed_random, np.random.randn)
+seed_rand = partial(seed_random, np.random.rand)
+
+
 def autoreg_gen(samples, delay):
     """Generates an autoregressive set of vectors.
 
@@ -34,17 +47,15 @@ def autoreg_gen(samples, delay):
     """
 
     # Define seed for initial source data
-    np.random.seed(35)
-
-    cause = np.random.randn(samples + delay)
+    seeds = iter(seed_list)
+    cause = seed_randn(seeds.next(), samples + delay)
     affected = np.zeros_like(cause)
     # Very close covariance occassionally breaks the kde estimator
     # Another small random element is added to take care of this
     # This is not expected to be a problem on any "real" data
 
     # Define seed for noise data
-    np.random.seed(88)
-    affected_random_add = np.random.rand(samples + delay)
+    affected_random_add = seed_rand(seeds.next(), samples + delay)
 
     for i in range(delay, len(cause)):
         affected[i] = affected[i - 1] + cause[i - delay]
@@ -67,17 +78,15 @@ def delay_gen(samples, delay):
     """
 
     # Define seed for initial source data
-    np.random.seed(35)
-
-    cause = np.random.randn(samples + delay)
+    seeds = iter(seed_list)
+    cause = seed_randn(seeds.next(), samples + delay)
     affected = np.zeros_like(cause)
     # Very close covariance occassionally breaks the kde estimator
     # Another small random element is added to take care of this
     # This is not expected to be a problem on any "real" data
 
     # Define seed for noise data
-    np.random.seed(88)
-    affected_random_add = np.random.rand(samples + delay)
+    affected_random_add = seed_rand(seeds.next(), samples + delay)
 
     for i in range(delay, len(cause)):
         affected[i] = cause[i - delay]
@@ -92,49 +101,11 @@ def delay_gen(samples, delay):
     return data.T
 
 
-def random_gen(samples, delay):
-    """Generates two completely independent random data vectors."""
+def random_gen(samples, delay, N):
+    """Generates N independent random data vectors"""
 
-    # Generate first vector
-    np.random.seed(35)
-    x1 = np.random.randn(samples)
-
-    # Generate second vector
-    np.random.seed(88)
-    x2 = np.random.randn(samples)
-
-    data = vstack([x1, x2])
-
-    return data.T
-
-
-def random_gen_5x5(samples, delay):
-    """Generates five completely independent random data vectors.
-
-
-    """
-
-    # Generate first vector
-    np.random.seed(35)
-    x1 = np.random.randn(samples)
-
-    # Generate second vector
-    np.random.seed(88)
-    x2 = np.random.randn(samples)
-
-    # Generate third vector
-    np.random.seed(107)
-    x3 = np.random.randn(samples)
-
-    # Generate fourth vector
-    np.random.seed(52)
-    x4 = np.random.randn(samples)
-
-    # Generate fifth vector
-    np.random.seed(98)
-    x5 = np.random.randn(samples)
-
-    data = vstack([x1, x2, x3, x4, x5])
+    assert N < len(seed_list), "Not enough seeds in seed_list"
+    data = vstack([seed_randn(seed, samples) for seed in seed_list[:N]])
 
     return data.T
 
@@ -183,32 +154,17 @@ def sinusoid_shift_gen(samples, delay, period=100, noiseamp=0.1,
     sine = [np.sin(frequency * t*2*np.pi) for t in tspan]
 
     if addnoise:
-        np.random.seed(117)
-        sine_noise = (np.random.randn(len(tspan)) - 0.5) * noiseamp
+        sine_noise = (seed_randn(117, len(tspan)) - 0.5) * noiseamp
 
         sine = sine + sine_noise
 
-    # First vector is simply the first samples of the sine vector
-    x1 = sine[0:samples]
+    vectors = []
 
-    # Define the second vector
-    sampleshift = (period/4)*1
-    x2 = sine[sampleshift:samples+sampleshift]
+    for i in range(5):
+        sampleshift = (period/4)*i
+        vectors.append(sine[sampleshift:samples + sampleshift])
 
-    # Third vector
-    sampleshift = (period/4)*2
-    x3 = sine[sampleshift:samples+sampleshift]
-
-    # Fourth vector
-    sampleshift = (period/4)*3
-    x4 = sine[sampleshift:samples+sampleshift]
-
-    # Fifth vector
-    # The fifth vector is the same except for any noise added to the sine
-    sampleshift = (period/4)*4
-    x5 = sine[sampleshift:samples+sampleshift]
-
-    data = vstack([x1, x2, x3, x4, x5])
+    data = vstack(vectors)
 
     return data.T
 
@@ -234,8 +190,7 @@ def sinusoid_gen(samples, delay, period=0.01, noiseamp=1.0):
     for i in range(delay, len(cause)):
         affected[i] = cause[i - delay]
 
-    np.random.seed(117)
-    affected_random_add = (np.random.rand(samples + delay) - 0.5) * noiseamp
+    affected_random_add = (seed_rand(117, samples + delay) - 0.5) * noiseamp
 
     affected = affected + affected_random_add
 
@@ -263,8 +218,7 @@ def firstorder_gen(samples, delay, period=0.01, noiseamp=1.0):
 
     P1_response = control.matlab.lsim(P1, sine_input, timepoints)
 
-    np.random.seed(51)
-    affected_random_add = (np.random.rand(samples + delay) - 0.5) * noiseamp
+    affected_random_add = (seed_rand(51, samples + delay) - 0.5) * noiseamp
 
     cause = sine_input[:samples]
 
@@ -301,8 +255,7 @@ def oscillating_feedback_5x5(samples, delays=[3, 2, 5, 4], period=0.01,
     # Calculate response of first transfer function on pure sine signal
     TF_1 = control.matlab.tf([2], [3, 1])
     P1_response = control.matlab.lsim(TF_1, sine_source, timepoints)
-    np.random.seed(45)
-    P1_response_random_add = (np.random.rand(len(timepoints)) - 0.5) * noiseamp
+    P1_response_random_add = (seed_rand(45, len(timepoints)) - 0.5) * noiseamp
     TF_1_output_firstpass = P1_response[0] + P1_response_random_add
 
     return None
