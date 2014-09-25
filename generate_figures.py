@@ -49,28 +49,32 @@ class GraphData:
                 ['case', 'method', 'scenario', 'boxindex', 'sourcevar',
                  'axis_limits']]
 
+        print self.method
 
-def labelnames(method):
-    if method == 'cross_correlation':
+
+def yaxislabel(method):
+    if method == u'cross_correlation':
         label_y = r'Cross correlation'
-    if method == 'absolute_transfer_entropy':
+    if method == u'absolute_transfer_entropy':
         label_y = r'Absolute transfer entropy (bits)'
-    if method == 'directional_transfer_entropy':
+    if method == u'directional_transfer_entropy':
         label_y = r'Directional transfer entropy (bits)'
 
     return label_y
 
 
-def fig_values_over_delays(graphname):
-    """Figures to show dependence of method values on time constant and delay
-    for noise passed through first order transfer functions.
+def fig_values_vs_delays(graphname):
+    """Generates a figure that shows dependence of method values on
+    time constant and delay for signal passed through
+    first order transfer functions.
 
     """
 
     graphdata = GraphData(graphname)
 
     sourcefile = filename_template.format(graphdata.case, graphdata.scenario,
-                                          graphdata.method, graphdata.boxindex,
+                                          graphdata.method[0],
+                                          graphdata.boxindex,
                                           graphdata.sourcevar)
 
     valuematrix, headers = \
@@ -96,11 +100,12 @@ def fig_values_over_delays(graphname):
                  markersize=4,
                  label=r'$\tau = 5.0$ seconds')
 
-        plt.ylabel(labelnames(graphdata.method), fontsize=14)
+        plt.ylabel(yaxislabel(graphdata.method[0]), fontsize=14)
         plt.xlabel(r'Delay (samples)', fontsize=14)
         plt.legend(bbox_to_anchor=[0.25, 1])
 
-        plt.axis(graphdata.axis_limits)
+        if graphdata.axis_limits is not False:
+            plt.axis(graphdata.axis_limits)
 
         plt.savefig(graph_filename_template.format(graphname))
         plt.close()
@@ -108,113 +113,109 @@ def fig_values_over_delays(graphname):
     else:
         logging.info("The requested graph has already been drawn")
 
+    return None
 
-graphnames = ['firstorder_noiseonly_cc_scen01',
-              'firstorder_noiseonly_abs_te_scen01',
-              'firstorder_noiseonly_dir_te_scen01']
+
+#######################################################################
+# Plot measure values vs. sample delay for range of first order time
+# constants.
+#######################################################################
+
+graphnames = ['firstorder_noiseonly_cc_vs_delays_scen01',
+              'firstorder_noiseonly_abs_te_vs_delays_scen01',
+              'firstorder_noiseonly_dir_te_vs_delays_scen01']
 
 for graphname in graphnames:
-    fig_values_over_delays(graphname)
+    fig_values_vs_delays(graphname)
+
+#######################################################################
+# Plot maximum measure values vs. first order time constants
+#######################################################################
 
 
-#
-## Plot maximum correllation coefficients vs. first order time constants
-#method = 'cross_correlation'
-#
-#graphname = 'firstorder_noiseonly_cc_vs_tau_scen01'
-#
-#sourcefile = filename()
-#valuematrix_cc, headers = \
-#    data_processing.read_header_values_datafile(sourcefile)
-#
-#set1 = [valuematrix_cc[index+1][1]
-#        for index in range(valuematrix_cc.shape[0]-1)]
-#
-#max_correlations = [max(valuematrix_cc[:, index+1]) for index in range(5)]
-#
-#taus = [0.2, 0.5, 1.0, 2.0, 5.0]
-#
-## Test whether the figure already exists
-#testlocation = graph_filename(graphname)
-##if not os.path.exists(testlocation):
-#if not False:
-#    plt.figure(1, (12, 6))
-#    plt.loglog(taus, max_correlations, ".", marker="o", markersize=4,
-#               label=r'absolute')
-#
-#    plt.ylabel(r'Correlation', fontsize=14)
-#    plt.xlabel(r'Time constant ($\tau$)', fontsize=14)
-#    plt.legend()
-#
-#    plt.savefig(graph_filename(graphname))
-#    plt.close()
-#
-#else:
-#    logging.info("The requested graph has already been drawn")
-#
-## Plot maximum transfer entropies values vs. first order time constants
-#
-#method = 'directional_transfer_entropy'
-#
-#sourcefile = filename()
-#valuematrix_dir, headers = \
-#    data_processing.read_header_values_datafile(sourcefile)
-#
-#method = 'absolute_transfer_entropy'
-#
-#sourcefile = filename()
-#valuematrix_abs, headers = \
-#    data_processing.read_header_values_datafile(sourcefile)
-#
-#max_directional_te = valuematrix_dir[100][1:]
-#max_absolute_te = valuematrix_abs[100][1:]
-#
-#taus = [0.2, 0.5, 1.0, 2.0, 5.0]
-#
-##dir_vals = [te / tau for te, tau in zip(max_directional_te, taus)]
-##abs_vals = [te / tau for te, tau in zip(max_absolute_te, taus)]
-#
-#dir_vals = max_directional_te
-#abs_vals = max_absolute_te
-#
-#graphname = 'firstorder_noiseonly_te_vs_tau_logplot_scen01'
-#
-#directional_params = np.polyfit(np.log(taus), np.log(max_directional_te), 1)
-#
-#absolute_params = np.polyfit(np.log(taus), np.log(max_absolute_te), 1)
-#
-#dir_fit_y = [(i*directional_params[0] + directional_params[1])
-#             for i in np.log(taus)]
-#abs_fit_y = [(i*absolute_params[0] + absolute_params[1])
-#             for i in np.log(taus)]
-#
-#dir_fitted_vals = [np.exp(te) for te in dir_fit_y]
-#abs_fitted_vals = [np.exp(te) for te in abs_fit_y]
-##dir_fitted_vals = [np.exp(te) / tau for te, tau in zip(dir_fit_y, taus)]
-##abs_fitted_vals = [np.exp(te) / tau for te, tau in zip(abs_fit_y, taus)]
-#
-## Test whether the figure already exists
-#testlocation = graph_filename(graphname)
-#if not os.path.exists(testlocation):
-#    plt.figure(1, (12, 6))
-#    plt.loglog(taus, abs_vals, ".", marker="o", markersize=4,
-#               label=r'absolute')
-#    plt.loglog(taus, dir_vals, ".", marker="o", markersize=4,
-#               label=r'directional')
-#    plt.loglog(taus, abs_fitted_vals, "--",
-#               label=r'absolute fit')
-#    plt.loglog(taus, dir_fitted_vals, "--",
-#               label=r'directional fit')
-#
-#    plt.ylabel(r'Transfer entropy (bits)', fontsize=14)
-#    plt.xlabel(r'Time constant ($\tau$)', fontsize=14)
-#    plt.legend()
-#
-#    plt.savefig(graph_filename(graphname))
-#    plt.close()
-#
-#else:
-#    logging.info("The requested graph has already been drawn")
+def linelabels(method):
+    if method == 'cross_correlation':
+        label = r'Correllation'
+    if method == 'absolute_transfer_entropy':
+        label = r'Absolute TE'
+    if method == 'directional_transfer_entropy':
+        label = r'Directional TE'
+
+    return label
+
+
+def fitlinelabels(method):
+    if method == 'cross_correlation':
+        label = r'Correlation fit'
+    if method == 'absolute_transfer_entropy':
+        label = r'Absolute TE fit'
+    if method == 'directional_transfer_entropy':
+        label = r'Directional TE fit'
+
+    return label
+
+
+def fig_maxval_vs_taus(graphname):
+    """Generates a figure that shows dependence of method values on
+    time constant and delay for signal passed through
+    first order transfer functions.
+
+    """
+
+    graphdata = GraphData(graphname)
+
+    taus = [0.2, 0.5, 1.0, 2.0, 5.0]
+
+    # Test whether the figure already exists
+    testlocation = graph_filename_template.format(graphname)
+
+    if not os.path.exists(testlocation):
+        plt.figure(1, (12, 6))
+
+        for method in graphdata.method:
+            print method
+
+            sourcefile = filename_template.format(
+                graphdata.case, graphdata.scenario,
+                method, graphdata.boxindex,
+                graphdata.sourcevar)
+
+            valuematrix, headers = \
+                data_processing.read_header_values_datafile(sourcefile)
+
+            max_values = [max(valuematrix[:, index+1]) for index in range(5)]
+
+            fit_params = np.polyfit(np.log(taus), np.log(max_values), 1)
+            fit_y = [(i*fit_params[0] + fit_params[1]) for i in np.log(taus)]
+
+            fitted_vals = [np.exp(val) for val in fit_y]
+
+            plt.loglog(taus, max_values, ".", marker="o", markersize=4,
+                       label=linelabels(method))
+
+            plt.loglog(taus, fitted_vals, "--", label=fitlinelabels(method))
+
+        plt.ylabel(r'Measure value', fontsize=14)
+        plt.xlabel(r'Time constant ($\tau$)', fontsize=14)
+        plt.legend()
+
+        if graphdata.axis_limits is not False:
+            plt.axis(graphdata.axis_limits)
+
+        plt.savefig(graph_filename_template.format(graphname))
+        plt.close()
+    else:
+        logging.info("The requested graph has already been drawn")
+
+    return None
+
+graphnames = ['firstorder_noiseonly_cc_vs_tau_scen01',
+              'firstorder_noiseonly_te_vs_tau_scen01']
+
+for graphname in graphnames:
+    fig_maxval_vs_taus(graphname)
+
+
 #
 ## Investigate effect of noise sampling rate / simulation time step on
 ## values of transfer entropies
