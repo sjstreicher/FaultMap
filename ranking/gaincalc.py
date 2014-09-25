@@ -279,14 +279,16 @@ def calc_weights(weightcalcdata, method, sigtest, scenario):
 
     # Define filename structure for CSV file containing weights between
     # a specific causevar and all the subsequent affectedvars
-    def filename(name, method, causevar):
+    def filename(name, method, boxindex, causevar):
         return filename_template.format(weightcalcdata.casename,
-                                        scenario, name, method, causevar)
+                                        scenario, name, method, boxindex,
+                                        causevar)
 
     weightstoredir = config_setup.ensure_existance(
         os.path.join(weightcalcdata.saveloc, 'weightdata'), make=True)
 
-    filename_template = os.path.join(weightstoredir, '{}_{}_{}_{}_{}.csv')
+    filename_template = os.path.join(weightstoredir,
+                                     '{}_{}_{}_{}_box{:03d}_{}.csv')
 
     # Generate boxes to use
     boxes = data_processing.split_tsdata(weightcalcdata.inputdata,
@@ -316,6 +318,7 @@ def calc_weights(weightcalcdata, method, sigtest, scenario):
             datalines_directional = np.asarray(weightcalcdata.sample_delays)
             datalines_directional = datalines_directional[:, np.newaxis]
             datalines_absolute = datalines_directional.copy()
+            datalines_neutral = datalines_directional.copy()
 
             for affectedvarindex in weightcalcdata.affectedvarindexes:
                 affectedvar = weightcalcdata.variables[affectedvarindex]
@@ -354,8 +357,9 @@ def calc_weights(weightcalcdata, method, sigtest, scenario):
                         else:
                             weightlist.append(weight[0])
 
-                    directional_name = 'weights_directional_box{:03d}'
-                    absolute_name = 'weights_absolute_box{:03d}'
+                    directional_name = 'weights_directional'
+                    absolute_name = 'weights_absolute'
+                    neutral_name = 'weights'
 
                     if len(weight) > 1:
                         weightlist = [directional_weightlist,
@@ -379,23 +383,28 @@ def calc_weights(weightcalcdata, method, sigtest, scenario):
                                             weights_thisvar_absolute), axis=1)
 
                         writecsv_weightcalc(filename(
-                            directional_name.format(boxindex + 1),
-                            method, causevar),
+                            directional_name,
+                            method, boxindex+1, causevar),
                             datalines_directional, headerline)
 
-                    else:
-                        weights_thisvar_absolute = np.asarray(weightlist)
-                        weights_thisvar_absolute = \
-                            weights_thisvar_absolute[:, np.newaxis]
+                        writecsv_weightcalc(filename(
+                            absolute_name,
+                            method, boxindex+1, causevar),
+                            datalines_absolute, headerline)
 
-                        datalines_absolute = \
-                            np.concatenate((datalines_absolute,
-                                            weights_thisvar_absolute), axis=1)
+                    else:
+                        weights_thisvar_neutral = np.asarray(weightlist)
+                        weights_thisvar_neutral = \
+                            weights_thisvar_neutral[:, np.newaxis]
+
+                        datalines_neutral = \
+                            np.concatenate((datalines_neutral,
+                                            weights_thisvar_neutral), axis=1)
 
                         writecsv_weightcalc(filename(
-                            absolute_name.format(boxindex + 1),
-                            method, causevar),
-                            datalines_absolute, headerline)
+                            neutral_name,
+                            method, boxindex+1, causevar),
+                            datalines_neutral, headerline)
 
                     # Generate and store report files according to each method
                     [weight_array, delay_array, datastore] = \
