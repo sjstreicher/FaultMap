@@ -110,8 +110,8 @@ def calc_infodynamics_te(teCalc, affected_data, causal_data):
     # kernel width of 0.5 normalised units
     teCalc.initialise(1, 0.5)
 
-    sourceArray = causal_data[0].tolist()
-    destArray = affected_data[0].tolist()
+    sourceArray = causal_data.tolist()
+    destArray = affected_data.tolist()
 
     sourceArrayJava = jpype.JArray(jpype.JDouble, 1)(sourceArray)
     destArrayJava = jpype.JArray(jpype.JDouble, 1)(destArray)
