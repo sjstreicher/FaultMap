@@ -158,15 +158,16 @@ class WeightcalcData:
         if self.affectedvarindexes == 'all':
             self.affectedvarindexes = range(len(self.variables))
 
-        # Normalise (mean centre and variance scale) the input data
-
         if self.normalize:
+            # Normalise (mean centre and variance scale) the input data
             self.inputdata_normstep = \
                 data_processing.normalise_data(raw_tsdata, self.inputdata_raw,
                                                self.saveloc, self.casename,
                                                scenario)
         else:
-            self.inputdata_normstep = self.inputdata_raw
+            # Still norm centre the data
+            self.inputdata_normstep = data_processing.subtract_mean(
+                self.inputdata_raw)
 
         if bandgap_filtering:
             low_freq = self.caseconfig[scenario]['low_freq']
