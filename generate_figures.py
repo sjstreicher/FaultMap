@@ -52,38 +52,21 @@ class GraphData:
     def xvalues(self, graphname):
         self.xvals = self.graphconfig[graphname]['xvals']
 
-
-def yaxislabel(method):
-    if method == u'cross_correlation':
-        label_y = r'Cross correlation'
-    if method == u'absolute_transfer_entropy':
-        label_y = r'Absolute transfer entropy (bits)'
-    if method == u'directional_transfer_entropy':
-        label_y = r'Directional transfer entropy (bits)'
-
-    return label_y
+yaxislabel = \
+    {u'cross_correlation': r'Cross correlation',
+     u'absolute_transfer_entropy': r'Absolute transfer entropy (bits)',
+     u'directional_transfer_entropy': r'Directional transfer entropy (bits)'}
 
 
-def linelabels(method):
-    if method == 'cross_correlation':
-        label = r'Correllation'
-    if method == 'absolute_transfer_entropy':
-        label = r'Absolute TE'
-    if method == 'directional_transfer_entropy':
-        label = r'Directional TE'
+linelabels = \
+    {'cross_correlation': r'Correllation',
+     'absolute_transfer_entropy': r'Absolute TE',
+     'directional_transfer_entropy': r'Directional TE'}
 
-    return label
-
-
-def fitlinelabels(method):
-    if method == 'cross_correlation':
-        label = r'Correlation fit'
-    if method == 'absolute_transfer_entropy':
-        label = r'Absolute TE fit'
-    if method == 'directional_transfer_entropy':
-        label = r'Directional TE fit'
-
-    return label
+fitlinelabels = \
+    {'cross_correlation': r'Correlation fit',
+     'absolute_transfer_entropy': r'Absolute TE fit',
+     'directional_transfer_entropy': r'Directional TE fit'}
 
 
 def fig_values_vs_delays(graphname):
@@ -110,7 +93,7 @@ def fig_values_vs_delays(graphname):
                  markersize=4,
                  label=r'$\tau = {:1.1f}$ seconds'.format(tau))
 
-    plt.ylabel(yaxislabel(graphdata.method[0]), fontsize=14)
+    plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
     plt.xlabel(r'Delay (samples)', fontsize=14)
     plt.legend(bbox_to_anchor=[0.25, 1])
 
@@ -156,10 +139,10 @@ def fig_maxval_vs_taus(graphname):
         fitted_vals = [np.exp(val) for val in fit_y]
 
         plt.loglog(graphdata.xvals, max_values, ".", marker="o", markersize=4,
-                   label=linelabels(method))
+                   label=linelabels[method])
 
         plt.loglog(graphdata.xvals, fitted_vals, "--",
-                   label=fitlinelabels(method))
+                   label=fitlinelabels[method])
 
     plt.ylabel(r'Measure value', fontsize=14)
     plt.xlabel(r'Time constant ($\tau$)', fontsize=14)
@@ -225,7 +208,7 @@ def fig_diffsamplinginterval_vs_delay(graphname):
              markersize=4,
              label=r'Sample rate = 1.0 seconds')
 
-    plt.ylabel(yaxislabel(graphdata.method[0]), fontsize=14)
+    plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
     plt.xlabel(r'Delay (samples)', fontsize=14)
     plt.legend(bbox_to_anchor=[0.37, 1])
 
@@ -270,7 +253,7 @@ def fig_diffnoisevariance_vs_delay(graphname):
              markersize=4,
              label=r'Noise variance = 0.5')
 
-    plt.ylabel(yaxislabel(graphdata.method[0]), fontsize=14)
+    plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
     plt.xlabel(r'Delay (samples)', fontsize=14)
     plt.legend(bbox_to_anchor=[0.37, 1])
 
