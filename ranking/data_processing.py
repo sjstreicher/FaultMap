@@ -228,11 +228,8 @@ def subtract_mean(inputdata_raw):
 
     for col in range(inputdata_raw.shape[1]):
         colmean = np.mean(inputdata_raw[:, col])
-        inputdata_lessmean[:, col] = inputdata_raw[:, col] - colmean
-
-    print inputdata_raw
-    print inputdata_lessmean
-
+        inputdata_lessmean[:, col] = \
+            (inputdata_raw[:, col] - colmean)
     return inputdata_lessmean
 
 
