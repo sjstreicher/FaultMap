@@ -25,8 +25,12 @@ graph_filename_template = os.path.join(graphs_savedir, '{}.pdf')
 # Preamble
 
 sourcedir = os.path.join(saveloc, 'weightdata')
+sourcedir_normts = os.path.join(saveloc, 'normdata')
 filename_template = os.path.join(sourcedir,
                                  '{}_{}_weights_{}_box{:03d}_{}.csv')
+
+filename_normts_template = os.path.join(sourcedir_normts,
+                                        '{}_{}_normalised_data.csv')
 
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
@@ -43,11 +47,14 @@ class GraphData:
         self.graphconfig = json.load(open(os.path.join(
             dataloc, 'config_graphgen' + '.json')))
 
-        self.case, self.method, self.scenario, \
-            self.boxindex, self.sourcevar, self.axis_limits = \
+        self.case, self.method, self.scenario, self.axis_limits = \
             [self.graphconfig[graphname][item] for item in
-                ['case', 'method', 'scenario', 'boxindex', 'sourcevar',
-                 'axis_limits']]
+                ['case', 'method', 'scenario', 'axis_limits']]
+
+        if not self.method[0] == 'tsdata':
+            self.boxindex, self.sourcevar = \
+                [self.graphconfig[graphname][item] for item in
+                    ['boxindex', 'sourcevar']]
 
     def xvalues(self, graphname):
         self.xvals = self.graphconfig[graphname]['xvals']
@@ -70,6 +77,33 @@ fitlinelabels = \
     {'cross_correlation': r'Correlation fit',
      'absolute_transfer_entropy': r'Absolute TE fit',
      'directional_transfer_entropy': r'Directional TE fit'}
+
+
+def fig_timeseries(graphname):
+    """Plots time series data over time."""
+
+    graphdata = GraphData(graphname)
+
+    sourcefile = filename_normts_template.format(graphdata.case,
+                                                 graphdata.scenario)
+
+    valuematrix, headers = \
+        data_processing.read_header_values_datafile(sourcefile)
+
+    plt.figure(1, (12, 6))
+    plt.plot(valuematrix[:, 0], valuematrix[:, 1],
+             marker="o", markersize=4)
+
+    plt.ylabel('Normalised value', fontsize=14)
+    plt.xlabel(r'Time (seconds)', fontsize=14)
+
+    if graphdata.axis_limits is not False:
+        plt.axis(graphdata.axis_limits)
+
+    plt.savefig(graph_filename_template.format(graphname))
+    plt.close()
+
+    return None
 
 
 def fig_values_vs_delays(graphname):
@@ -229,7 +263,10 @@ graphnames = ['firstorder_noiseonly_cc_vs_delays_scen01',
               'firstorder_noiseonly_dir_te_vs_delays_scen01',
               'firstorder_sineonly_cc_vs_delays_scen01',
               'firstorder_sineonly_abs_te_vs_delays_scen01',
-              'firstorder_sineonly_dir_te_vs_delays_scen01']
+              'firstorder_sineonly_dir_te_vs_delays_scen01',
+              'firstorder_noiseandsine_cc_vs_delays_scen01',
+              'firstorder_noiseandsine_abs_te_vs_delays_scen01',
+              'firstorder_noiseandsine_dir_te_vs_delays_scen01']
 
 for graphname in graphnames:
     # Test whether the figure already exists
@@ -312,6 +349,21 @@ for graphname in graphnames:
     else:
         logging.info("The requested graph has already been drawn")
 
+
+graphnames = ['firstorder_sineonly_frequency_effect_abs_te',
+              'firstorder_sineonly_frequency_effect_dir_te',
+              'firstorder_sineonly_frequency_effect_cc']
+
+for graphname in graphnames:
+    # Test whether the figure already exists
+    testlocation = graph_filename_template.format(graphname)
+    logging.info("Now drawing graph: " + graphname)
+    if not os.path.exists(testlocation):
+        fig_diffvar_vs_delay(graphname, [1, 10, 0.1],
+                             r'Frequency = {:1.2f} Hz')
+    else:
+        logging.info("The requested graph has already been drawn")
+
 # Also consider finding a lograthmic fit.
 
 
@@ -357,7 +409,10 @@ for graphname in graphnames:
 
 graphnames = ['firstorder_noiseonly_sim_time_interval_effect_abs_te',
               'firstorder_noiseonly_sim_time_interval_effect_dir_te',
-              'firstorder_noiseonly_sim_time_interval_effect_cc']
+              'firstorder_noiseonly_sim_time_interval_effect_cc',
+              'firstorder_sineonly_sim_time_interval_effect_abs_te',
+              'firstorder_sineonly_sim_time_interval_effect_dir_te',
+              'firstorder_sineonly_sim_time_interval_effect_cc']
 
 for graphname in graphnames:
     # Test whether the figure already exists
@@ -374,7 +429,10 @@ for graphname in graphnames:
 
 graphnames = ['firstorder_noiseonly_sample_size_effect_abs_te',
               'firstorder_noiseonly_sample_size_effect_dir_te',
-              'firstorder_noiseonly_sample_size_effect_cc']
+              'firstorder_noiseonly_sample_size_effect_cc',
+              'firstorder_sineonly_sample_size_effect_abs_te',
+              'firstorder_sineonly_sample_size_effect_dir_te',
+              'firstorder_sineonly_sample_size_effect_cc']
 
 for graphname in graphnames:
     # Test whether the figure already exists
@@ -385,7 +443,21 @@ for graphname in graphnames:
     else:
         logging.info("The requested graph has already been drawn")
 
+#######################################################################
+# Plot signal over time.
+#######################################################################
 
+graphnames = ['noiseandsine_signal_normts_scen01',
+              'noiseonly_signal_normts_scen01',
+              'sineonly_signal_normts_scen01']
+
+for graphname in graphnames:
+    # Test whether the figure already exists
+    testlocation = graph_filename_template.format(graphname)
+    if not os.path.exists(testlocation):
+        fig_timeseries(graphname)
+    else:
+        logging.info("The requested graph has already been drawn")
 
 # Template for storing difference and absolute plots from node ranking lists
 #            diffplot, absplot = plot_transient_importances(variablelist,
