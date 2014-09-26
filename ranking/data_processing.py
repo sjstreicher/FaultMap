@@ -224,8 +224,14 @@ def normalise_data(raw_tsdata, inputdata_raw, saveloc, case, scenario):
 def subtract_mean(inputdata_raw):
     """Subtracts mean from input data."""
 
-    mean = np.mean(inputdata_raw)
-    inputdata_lessmean = inputdata_raw - mean
+    inputdata_lessmean = np.zeros_like(inputdata_raw)
+
+    for col in range(inputdata_raw.shape[1]):
+        colmean = np.mean(inputdata_raw[:, col])
+        inputdata_lessmean[:, col] = inputdata_raw[:, col] - colmean
+
+    print inputdata_raw
+    print inputdata_lessmean
 
     return inputdata_lessmean
 
