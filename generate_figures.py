@@ -104,21 +104,11 @@ def fig_values_vs_delays(graphname):
         data_processing.read_header_values_datafile(sourcefile)
 
     plt.figure(1, (12, 6))
-    plt.plot(valuematrix[:, 0], valuematrix[:, 1], marker="o",
-             markersize=4,
-             label=r'$\tau = 0.2$ seconds')
-    plt.plot(valuematrix[:, 0], valuematrix[:, 2], marker="o",
-             markersize=4,
-             label=r'$\tau = 0.5$ seconds')
-    plt.plot(valuematrix[:, 0], valuematrix[:, 3], marker="o",
-             markersize=4,
-             label=r'$\tau = 1.0$ seconds')
-    plt.plot(valuematrix[:, 0], valuematrix[:, 4], marker="o",
-             markersize=4,
-             label=r'$\tau = 2.0$ seconds')
-    plt.plot(valuematrix[:, 0], valuematrix[:, 5], marker="o",
-             markersize=4,
-             label=r'$\tau = 5.0$ seconds')
+    taus = [0.2, 0.5, 1.0, 2.0, 5.0]
+    for i, tau in enumerate(taus):
+        plt.plot(valuematrix[:, 0], valuematrix[:, i + 1], marker="o",
+                 markersize=4,
+                 label=r'$\tau = {:1.1f}$ seconds'.format(tau))
 
     plt.ylabel(yaxislabel(graphdata.method[0]), fontsize=14)
     plt.xlabel(r'Delay (samples)', fontsize=14)
