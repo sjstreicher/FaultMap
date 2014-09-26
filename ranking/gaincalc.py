@@ -323,7 +323,8 @@ def calc_weights(weightcalcdata, method, sigtest, scenario):
             causevar = weightcalcdata.variables[causevarindex]
 
             # Initiate datalines with delays
-            datalines_directional = np.asarray(weightcalcdata.sample_delays)
+            datalines_directional = \
+                np.asarray(weightcalcdata.actual_delays)
             datalines_directional = datalines_directional[:, np.newaxis]
             datalines_absolute = datalines_directional.copy()
             datalines_neutral = datalines_directional.copy()
