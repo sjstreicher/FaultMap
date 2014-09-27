@@ -56,11 +56,15 @@ class GraphData:
                 [self.graphconfig[graphname][item] for item in
                     ['boxindex', 'sourcevar']]
 
-    def xvalues(self, graphname):
+    def get_xvalues(self, graphname):
         self.xvals = self.graphconfig[graphname]['xvals']
 
     def get_legendbbox(self, graphname):
         self.legendbbox = self.graphconfig[graphname]['legendbbox']
+
+    def get_linelabels(self, graphname):
+        self.linelabels = self.graphconfig[graphname]['linelabels']
+
 
 yaxislabel = \
     {u'cross_correlation': r'Cross correlation',
@@ -114,6 +118,7 @@ def fig_values_vs_delays(graphname):
     """
 
     graphdata = GraphData(graphname)
+    graphdata.get_legendbbox(graphname)
 
     sourcefile = filename_template.format(graphdata.case, graphdata.scenario,
                                           graphdata.method[0],
@@ -132,7 +137,7 @@ def fig_values_vs_delays(graphname):
 
     plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
     plt.xlabel(r'Delay (samples)', fontsize=14)
-    plt.legend(bbox_to_anchor=[0.25, 1])
+    plt.legend(bbox_to_anchor=graphdata.legendbbox)
 
     if graphdata.axis_limits is not False:
         plt.axis(graphdata.axis_limits)
@@ -145,7 +150,7 @@ def fig_values_vs_delays(graphname):
 
 def fig_maxval_vs_taus(graphname):
     """Generates a figure that shows dependence of method values on
-    time constant and delay for signal passed through
+    time constant for signal passed through
     first order transfer functions.
 
     """
@@ -153,7 +158,7 @@ def fig_maxval_vs_taus(graphname):
     graphdata = GraphData(graphname)
 
     # Get values of taus
-    graphdata.xvalues(graphname)
+    graphdata.get_xvalues(graphname)
 
     plt.figure(1, (12, 6))
 
@@ -194,6 +199,67 @@ def fig_maxval_vs_taus(graphname):
     return None
 
 
+def fig_scenario_maxval_vs_taus(graphname, delays=False, drawfit=False):
+    """Generates a figure that shows dependence of method values on
+    time constant for signal passed through
+    first order transfer functions.
+
+    Draws one line for each scenario.
+
+    """
+
+    graphdata = GraphData(graphname)
+
+    # Get values for x-axis
+    graphdata.get_xvalues(graphname)
+    graphdata.get_linelabels(graphname)
+    graphdata.get_legendbbox(graphname)
+
+    plt.figure(1, (12, 6))
+
+    for count, scenario in enumerate(graphdata.scenario):
+
+        sourcefile = filename_template.format(
+            graphdata.case, scenario,
+            graphdata.method[0], graphdata.boxindex,
+            graphdata.sourcevar)
+
+        if delays:
+            valuematrix, headers = \
+                data_processing.read_header_values_datafile(sourcefile)
+            max_values = [max(valuematrix[:, index+1]) for index in range(5)]
+        else:
+            valuematrix, headers = \
+                data_processing.read_header_values_datafile(sourcefile)
+            max_values = valuematrix[1:]
+
+        plt.plot(graphdata.xvals, max_values, "--", marker="o", markersize=4,
+                 label=graphdata.linelabels[count])
+
+        if drawfit:
+            graphdata.fitlinelabels(graphname)
+            fit_params = np.polyfit(np.log(graphdata.xvals),
+                                    np.log(max_values), 1)
+            fit_y = [(i*fit_params[0] + fit_params[1])
+                     for i in np.log(graphdata.xvals)]
+            fitted_vals = [np.exp(val) for val in fit_y]
+
+            plt.loglog(graphdata.xvals, fitted_vals, "--",
+                       label=graphdata.fitlinelabels[count])
+
+    plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
+    plt.xlabel(r'Time constant ($\tau$)', fontsize=14)
+    plt.legend(bbox_to_anchor=graphdata.legendbbox)
+
+    if graphdata.axis_limits is not False:
+        plt.axis(graphdata.axis_limits)
+
+    plt.savefig(graph_filename_template.format(graphname))
+    plt.close()
+
+    return None
+
+
 def get_data_vectors(graphdata):
     """Extract value matrices from different scenarios.
 
@@ -219,7 +285,7 @@ def fig_diffvar_vs_delay(graphname, difvals, linetitle):
     graphdata.get_legendbbox(graphname)
 
     # Get x-axis values
-#    graphdata.xvalues(graphname)
+#    graphdata.get_xvalues(graphname)
 
     plt.figure(1, (12, 6))
 
@@ -266,7 +332,10 @@ graphnames = ['firstorder_noiseonly_cc_vs_delays_scen01',
               'firstorder_sineonly_dir_te_vs_delays_scen01',
               'firstorder_noiseandsine_cc_vs_delays_scen01',
               'firstorder_noiseandsine_abs_te_vs_delays_scen01',
-              'firstorder_noiseandsine_dir_te_vs_delays_scen01']
+              'firstorder_noiseandsine_dir_te_vs_delays_scen01',
+              'firstorder_twonoises_cc_vs_delays_scen01',
+              'firstorder_twonoises_abs_te_vs_delays_scen01',
+              'firstorder_twonoises_dir_te_vs_delays_scen01']
 
 for graphname in graphnames:
     # Test whether the figure already exists
@@ -410,15 +479,20 @@ for graphname in graphnames:
 graphnames = ['firstorder_noiseonly_sim_time_interval_effect_abs_te',
               'firstorder_noiseonly_sim_time_interval_effect_dir_te',
               'firstorder_noiseonly_sim_time_interval_effect_cc',
-              'firstorder_sineonly_sim_time_interval_effect_abs_te',
-              'firstorder_sineonly_sim_time_interval_effect_dir_te',
-              'firstorder_sineonly_sim_time_interval_effect_cc']
+              'firstorder_noiseonly_sim_time_interval_effect_full_abs_te',
+              'firstorder_noiseonly_sim_time_interval_effect_full_dir_te',
+              'firstorder_noiseonly_sim_time_interval_effect_full_cc']
+# Need to create a set for the sineonly case for a sim interval of 0.05
+# before these figures can be added back again:
+#              'firstorder_sineonly_sim_time_interval_effect_abs_te',
+#              'firstorder_sineonly_sim_time_interval_effect_dir_te',
+#              'firstorder_sineonly_sim_time_interval_effect_cc'
 
 for graphname in graphnames:
     # Test whether the figure already exists
     testlocation = graph_filename_template.format(graphname)
     if not os.path.exists(testlocation):
-        fig_diffvar_vs_delay(graphname, [0.01, 0.1],
+        fig_diffvar_vs_delay(graphname, [0.01, 0.05, 0.10],
                              r'Simulation time step = {:1.2f} seconds')
     else:
         logging.info("The requested graph has already been drawn")
@@ -443,6 +517,24 @@ for graphname in graphnames:
     else:
         logging.info("The requested graph has already been drawn")
 
+
+#######################################################################
+# Plot measure values vs. delays for range of sub-sampling intervals
+#######################################################################
+
+graphnames = ['firstorder_noiseonly_subsampling_effect_abs_te',
+              'firstorder_noiseonly_subsampling_effect_dir_te',
+              'firstorder_noiseonly_subsampling_effect_cc']
+
+for graphname in graphnames:
+    # Test whether the figure already exists
+    testlocation = graph_filename_template.format(graphname)
+    if not os.path.exists(testlocation):
+        fig_diffvar_vs_delay(graphname, [1, 2, 5],
+                             r'Sub-sampling interval = {}')
+    else:
+        logging.info("The requested graph has already been drawn")
+
 #######################################################################
 # Plot signal over time.
 #######################################################################
@@ -458,6 +550,36 @@ for graphname in graphnames:
         fig_timeseries(graphname)
     else:
         logging.info("The requested graph has already been drawn")
+
+#######################################################################
+# Plot measure values vs. taus for different sub-sampling intervals
+#######################################################################
+
+graphnames = ['firstorder_noiseonly_cc_subsampling_vs_tau_scen01',
+              'firstorder_noiseonly_abs_te_subsampling_vs_tau_scen01',
+              'firstorder_noiseonly_dir_te_subsampling_vs_tau_scen01']
+
+for graphname in graphnames:
+    # Test whether the figure already exists
+    testlocation = graph_filename_template.format(graphname)
+    if not os.path.exists(testlocation):
+        fig_scenario_maxval_vs_taus(graphname, True)
+    else:
+        logging.info("The requested graph has already been drawn")
+
+graphnames = ['firstorder_noiseonly_cc_subsampling_vs_tau_scen02',
+              'firstorder_noiseonly_abs_te_subsampling_vs_tau_scen02',
+              'firstorder_noiseonly_dir_te_subsampling_vs_tau_scen02']
+
+for graphname in graphnames:
+    # Test whether the figure already exists
+    testlocation = graph_filename_template.format(graphname)
+    if not os.path.exists(testlocation):
+        fig_scenario_maxval_vs_taus(graphname, False)
+    else:
+        logging.info("The requested graph has already been drawn")
+
+
 
 # Template for storing difference and absolute plots from node ranking lists
 #            diffplot, absplot = plot_transient_importances(variablelist,
