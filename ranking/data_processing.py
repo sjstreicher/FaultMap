@@ -263,7 +263,7 @@ def read_header_values_datafile(location):
 
     with open(location) as f:
         header = csv.reader(f).next()[:]
-        values = np.genfromtxt(f, delimiter=',')[:, :]
+        values = np.genfromtxt(f, delimiter=',')
 
     return values, header
 
