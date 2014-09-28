@@ -213,6 +213,8 @@ class WeightcalcData:
             self.sample_delays = [int(round(delay/self.sampling_rate))
                                   for delay in self.delays]
         # Create descriptive dictionary for later use
+        # This will need to be approached slightly differently to allow for
+        # different formats under the same "plant"
         self.descriptions = data_processing.descriptive_dictionary(
             os.path.join(self.casedir, 'data', 'tag_descriptions.csv'))
 
