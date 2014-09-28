@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 """This module is used to generate figures used in the LaTeX documents
 associated with this project.
@@ -227,7 +228,8 @@ def fig_scenario_maxval_vs_taus(graphname, delays=False, drawfit=False):
         if delays:
             valuematrix, headers = \
                 data_processing.read_header_values_datafile(sourcefile)
-            max_values = [max(valuematrix[:, index+1]) for index in range(9)]
+            max_values = [max(valuematrix[:, index+1])
+                          for index in range(valuematrix.shape[1]-1)]
         else:
             valuematrix, headers = \
                 data_processing.read_header_values_datafile(sourcefile)
@@ -381,58 +383,33 @@ def fig_subsampling_interval_effect(graphname, delays=False):
 # constants.
 #######################################################################
 
-graphnames = ['firstorder_noiseonly_cc_vs_delays_scen01',
-              'firstorder_noiseonly_abs_te_vs_delays_scen01',
-              'firstorder_noiseonly_dir_te_vs_delays_scen01',
-              'firstorder_sineonly_cc_vs_delays_scen01',
-              'firstorder_sineonly_abs_te_vs_delays_scen01',
-              'firstorder_sineonly_dir_te_vs_delays_scen01',
-              'firstorder_noiseandsine_cc_vs_delays_scen01',
-              'firstorder_noiseandsine_abs_te_vs_delays_scen01',
-              'firstorder_noiseandsine_dir_te_vs_delays_scen01',
-              'firstorder_twonoises_cc_vs_delays_scen01',
-              'firstorder_twonoises_abs_te_vs_delays_scen01',
-              'firstorder_twonoises_dir_te_vs_delays_scen01']
 
-for graphname in graphnames:
-    # Test whether the figure already exists
-    testlocation = graph_filename_template.format(graphname)
-    if not os.path.exists(testlocation):
-        fig_values_vs_delays(graphname)
-    else:
-        logging.info("The requested graph has already been drawn")
-
+graphs = [[fig_values_vs_delays,
+           ['firstorder_noiseonly_cc_vs_delays_scen01',
+            'firstorder_noiseonly_abs_te_vs_delays_scen01',
+            'firstorder_noiseonly_dir_te_vs_delays_scen01',
+            'firstorder_sineonly_cc_vs_delays_scen01',
+            'firstorder_sineonly_abs_te_vs_delays_scen01',
+            'firstorder_sineonly_dir_te_vs_delays_scen01',
+            'firstorder_noiseandsine_cc_vs_delays_scen01',
+            'firstorder_noiseandsine_abs_te_vs_delays_scen01',
+            'firstorder_noiseandsine_dir_te_vs_delays_scen01',
 # Do this for the case of no normalization as well...
 # Surpressed because it provides no useful graphs
-
-#graphnames = ['firstorder_noiseonly_cc_vs_delays_nonorm_scen01',
-#              'firstorder_noiseonly_abs_te_vs_delays_nonorm_scen01',
-#              'firstorder_noiseonly_dir_te_vs_delays_nonorm_scen01']
-#
-#for graphname in graphnames:
-#    # Test whether the figure already exists
-#    testlocation = graph_filename_template.format(graphname)
-#    if not os.path.exists(testlocation):
-#        fig_values_vs_delays(graphname)
-#    else:
-#        logging.info("The requested graph has already been drawn")
+          # 'firstorder_noiseonly_cc_vs_delays_nonorm_scen01',
+          # 'firstorder_noiseonly_abs_te_vs_delays_nonorm_scen01',
+          # 'firstorder_noiseonly_dir_te_vs_delays_nonorm_scen01',
+            ]],
 
 #######################################################################
 # Plot maximum measure values vs. first order time constants
 #######################################################################
-
-graphnames = ['firstorder_noiseonly_cc_vs_tau_scen01',
-              'firstorder_noiseonly_te_vs_tau_scen01',
-              'firstorder_sineonly_cc_vs_tau_scen01',
-              'firstorder_sineonly_te_vs_tau_scen01']
-
-for graphname in graphnames:
-    # Test whether the figure already exists
-    testlocation = graph_filename_template.format(graphname)
-    if not os.path.exists(testlocation):
-        fig_maxval_vs_taus(graphname)
-    else:
-        logging.info("The requested graph has already been drawn")
+          [fig_maxval_vs_taus,
+           ['firstorder_noiseonly_cc_vs_tau_scen01',
+            'firstorder_noiseonly_te_vs_tau_scen01',
+            'firstorder_sineonly_cc_vs_tau_scen01',
+            'firstorder_sineonly_te_vs_tau_scen01',
+           ]],
 
 #######################################################################
 
@@ -459,39 +436,21 @@ for graphname in graphnames:
 # Plot measure values vs. delays for range of noise
 # sampling intervals.
 #######################################################################
+          [lambda graphname: fig_diffvar_vs_delay(
+              graphname, [0.1, 0.01, 1.0],
+              r'Sample rate = {:1.2f} seconds'),
+           ['firstorder_noiseonly_sampling_rate_effect_abs_te',
+            'firstorder_noiseonly_sampling_rate_effect_dir_te',
+            'firstorder_noiseonly_sampling_rate_effect_cc',
+            ]],
 
-graphnames = ['firstorder_noiseonly_sampling_rate_effect_abs_te',
-              'firstorder_noiseonly_sampling_rate_effect_dir_te',
-              'firstorder_noiseonly_sampling_rate_effect_cc']
-
-
-for graphname in graphnames:
-    # Test whether the figure already exists
-    testlocation = graph_filename_template.format(graphname)
-    logging.info("Now drawing graph: " + graphname)
-    if not os.path.exists(testlocation):
-        fig_diffvar_vs_delay(graphname, [0.1, 0.01, 1.0],
-                             r'Sample rate = {:1.2f} seconds')
-    else:
-        logging.info("The requested graph has already been drawn")
-
-
-graphnames = ['firstorder_sineonly_frequency_effect_abs_te',
-              'firstorder_sineonly_frequency_effect_dir_te',
-              'firstorder_sineonly_frequency_effect_cc']
-
-for graphname in graphnames:
-    # Test whether the figure already exists
-    testlocation = graph_filename_template.format(graphname)
-    logging.info("Now drawing graph: " + graphname)
-    if not os.path.exists(testlocation):
-        fig_diffvar_vs_delay(graphname, [1, 10, 0.1],
-                             r'Frequency = {:1.2f} Hz')
-    else:
-        logging.info("The requested graph has already been drawn")
-
+          [lambda graphname: fig_diffvar_vs_delay(graphname, [1, 10, 0.1],
+                                                  r'Frequency = {:1.2f} Hz'),
+           ['firstorder_sineonly_frequency_effect_abs_te',
+            'firstorder_sineonly_frequency_effect_dir_te',
+            'firstorder_sineonly_frequency_effect_cc',
+           ]],
 # Also consider finding a lograthmic fit.
-
 
 #######################################################################
 # Plot measure values vs. delays for range of noise variances.
@@ -501,158 +460,122 @@ for graphname in graphnames:
 # This section does not produce useful graphs and
 # is therefore suppressed
 #######################################################################
+           # [lambda graphname: fig_diffvar_vs_delay(graphname, [0.1, 0.2, 0.5],
+           #                                         r'Noise variance = {:1.1f}')
+           #  ['firstorder_noiseonly_noise_variance_effect_abs_te',
+           #   'firstorder_noiseonly_noise_variance_effect_dir_te',
+           #   'firstorder_noiseonly_noise_variance_effect_cc',
 
-#graphnames = ['firstorder_noiseonly_noise_variance_effect_abs_te',
-#              'firstorder_noiseonly_noise_variance_effect_dir_te',
-#              'firstorder_noiseonly_noise_variance_effect_cc']
-#
-#for graphname in graphnames:
-#    # Test whether the figure already exists
-#    testlocation = graph_filename_template.format(graphname)
-#    if not os.path.exists(testlocation):
-#        fig_diffvar_vs_delay(graphname, [0.1, 0.2, 0.5],
-#                             r'Noise variance = {:1.1f}')
-#    else:
-#        logging.info("The requested graph has already been drawn")
-#
-#graphnames = ['firstorder_noiseonly_noise_variance_effect_nonorm_abs_te',
-#              'firstorder_noiseonly_noise_variance_effect_nonorm_dir_te',
-#              'firstorder_noiseonly_noise_variance_effect_nonorm_cc']
-#
-#for graphname in graphnames:
-#    # Test whether the figure already exists
-#    testlocation = graph_filename_template.format(graphname)
-#    if not os.path.exists(testlocation):
-#        fig_diffvar_vs_delay(graphname, [0.1, 0.2, 0.5],
-#                             r'Noise variance = {:1.1f}')
-#    else:
-#        logging.info("The requested graph has already been drawn")
+           #   'firstorder_noiseonly_noise_variance_effect_nonorm_abs_te',
+           #   'firstorder_noiseonly_noise_variance_effect_nonorm_dir_te',
+           #   'firstorder_noiseonly_noise_variance_effect_nonorm_cc'
+           #  ]],
 
 #######################################################################
 # Plot measure values vs. delays for range of different simulation
 # time steps.
 #######################################################################
 
-graphnames = ['firstorder_noiseonly_sim_time_interval_effect_abs_te',
-              'firstorder_noiseonly_sim_time_interval_effect_dir_te',
-              'firstorder_noiseonly_sim_time_interval_effect_cc',
-              'firstorder_noiseonly_sim_time_interval_effect_full_abs_te',
-              'firstorder_noiseonly_sim_time_interval_effect_full_dir_te',
-              'firstorder_noiseonly_sim_time_interval_effect_full_cc']
-# Need to create a set for the sineonly case for a sim interval of 0.05
-# before these figures can be added back again:
-#              'firstorder_sineonly_sim_time_interval_effect_abs_te',
-#              'firstorder_sineonly_sim_time_interval_effect_dir_te',
-#              'firstorder_sineonly_sim_time_interval_effect_cc'
-
-for graphname in graphnames:
-    # Test whether the figure already exists
-    testlocation = graph_filename_template.format(graphname)
-    if not os.path.exists(testlocation):
-        fig_diffvar_vs_delay(graphname, [0.01, 0.05, 0.10],
-                             r'Simulation time step = {:1.2f} seconds')
-    else:
-        logging.info("The requested graph has already been drawn")
+           [lambda graphname: fig_diffvar_vs_delay(
+               graphname, [0.01, 0.1],
+               r'Simulation time step = {:1.2f} seconds'),
+            ['firstorder_noiseonly_sim_time_interval_effect_abs_te',
+             'firstorder_noiseonly_sim_time_interval_effect_dir_te',
+             'firstorder_noiseonly_sim_time_interval_effect_cc',
+             'firstorder_sineonly_sim_time_interval_effect_abs_te',
+             'firstorder_sineonly_sim_time_interval_effect_dir_te',
+             'firstorder_sineonly_sim_time_interval_effect_cc',
+             ]],
 
 #######################################################################
 # Plot measure values vs. delays for range of sample sizes.
 #######################################################################
-
-graphnames = ['firstorder_noiseonly_sample_size_effect_abs_te',
-              'firstorder_noiseonly_sample_size_effect_dir_te',
-              'firstorder_noiseonly_sample_size_effect_cc',
-              'firstorder_sineonly_sample_size_effect_abs_te',
-              'firstorder_sineonly_sample_size_effect_dir_te',
-              'firstorder_sineonly_sample_size_effect_cc']
-
-for graphname in graphnames:
-    # Test whether the figure already exists
-    testlocation = graph_filename_template.format(graphname)
-    if not os.path.exists(testlocation):
-        fig_diffvar_vs_delay(graphname, [200, 500, 1000, 2000, 5000],
-                             r'Sample size = {}')
-    else:
-        logging.info("The requested graph has already been drawn")
+           [lambda graphname: fig_diffvar_vs_delay(
+               graphname, [200, 500, 1000, 2000, 5000],
+               r'Sample size = {}'),
+            ['firstorder_noiseonly_sample_size_effect_abs_te',
+             'firstorder_noiseonly_sample_size_effect_dir_te',
+             'firstorder_noiseonly_sample_size_effect_cc',
+             'firstorder_sineonly_sample_size_effect_abs_te',
+             'firstorder_sineonly_sample_size_effect_dir_te',
+             'firstorder_sineonly_sample_size_effect_cc',
+             ]],
 
 
 #######################################################################
 # Plot measure values vs. delays for range of sub-sampling intervals
 #######################################################################
 
-graphnames = ['firstorder_noiseonly_subsampling_effect_abs_te',
-              'firstorder_noiseonly_subsampling_effect_dir_te',
-              'firstorder_noiseonly_subsampling_effect_cc']
+           [lambda graphname: fig_diffvar_vs_delay(
+               graphname, [1, 2, 5],
+               r'Sub-sampling interval = {}'),
+            ['firstorder_noiseonly_subsampling_effect_abs_te',
+             'firstorder_noiseonly_subsampling_effect_dir_te',
+             'firstorder_noiseonly_subsampling_effect_cc',
+             ]],
 
-for graphname in graphnames:
-    # Test whether the figure already exists
-    testlocation = graph_filename_template.format(graphname)
-    if not os.path.exists(testlocation):
-        fig_diffvar_vs_delay(graphname, [1, 2, 5],
-                             r'Sub-sampling interval = {}')
-    else:
-        logging.info("The requested graph has already been drawn")
+
+#graphnames = ['firstorder_noiseonly_subsampling_effect_abs_te',
+#              'firstorder_noiseonly_subsampling_effect_dir_te',
+#              'firstorder_noiseonly_subsampling_effect_cc']
+#
+#for graphname in graphnames:
+#    # Test whether the figure already exists
+#    testlocation = graph_filename_template.format(graphname)
+#    if not os.path.exists(testlocation):
+#        fig_diffvar_vs_delay(graphname, [1, 2, 5],
+#                             r'Sub-sampling interval = {}')
+#    else:
+#        logging.info("The requested graph has already been drawn")
 
 #######################################################################
 # Plot signal over time.
 #######################################################################
-
-graphnames = ['noiseandsine_signal_normts_scen01',
+            [fig_timeseries,
+             ['noiseandsine_signal_normts_scen01',
               'noiseonly_signal_normts_scen01',
-              'sineonly_signal_normts_scen01']
-
-for graphname in graphnames:
-    # Test whether the figure already exists
-    testlocation = graph_filename_template.format(graphname)
-    if not os.path.exists(testlocation):
-        fig_timeseries(graphname)
-    else:
-        logging.info("The requested graph has already been drawn")
+              'sineonly_signal_normts_scen01',
+             ]],
 
 #######################################################################
 # Plot measure values vs. taus for different sub-sampling intervals
 #######################################################################
 
-graphnames = ['firstorder_noiseonly_cc_subsampling_vs_tau_scen01',
-              'firstorder_noiseonly_abs_te_subsampling_vs_tau_scen01',
-              'firstorder_noiseonly_dir_te_subsampling_vs_tau_scen01']
+           [lambda graphname: fig_scenario_maxval_vs_taus(
+               graphname, True),
+            ['firstorder_noiseonly_cc_subsampling_vs_tau_scen01',
+             'firstorder_noiseonly_abs_te_subsampling_vs_tau_scen01',
+             'firstorder_noiseonly_dir_te_subsampling_vs_tau_scen01',
+             ]],
 
-for graphname in graphnames:
-    # Test whether the figure already exists
-    testlocation = graph_filename_template.format(graphname)
-    if not os.path.exists(testlocation):
-        fig_scenario_maxval_vs_taus(graphname, True)
-    else:
-        logging.info("The requested graph has already been drawn")
-
-graphnames = ['firstorder_noiseonly_cc_subsampling_vs_tau_scen02',
-              'firstorder_noiseonly_abs_te_subsampling_vs_tau_scen02',
-              'firstorder_noiseonly_dir_te_subsampling_vs_tau_scen02']
-
-for graphname in graphnames:
-    # Test whether the figure already exists
-    testlocation = graph_filename_template.format(graphname)
-    if not os.path.exists(testlocation):
-        fig_scenario_maxval_vs_taus(graphname, False)
-    else:
-        logging.info("The requested graph has already been drawn")
+           [lambda graphname: fig_scenario_maxval_vs_taus(
+               graphname, False),
+            ['firstorder_noiseonly_cc_subsampling_vs_tau_scen02',
+             'firstorder_noiseonly_abs_te_subsampling_vs_tau_scen02',
+             'firstorder_noiseonly_dir_te_subsampling_vs_tau_scen02',
+             ]],
 
 #######################################################################
 # Plot measure values vs. sampling interval / noise sample variance
 # for different taus intervals
 #######################################################################
 
-graphnames = ['firstorder_noiseonly_cc_subsampling_vs_interval_effect',
-              'firstorder_noiseonly_abs_te_subsampling_vs_interval_effect',
-              'firstorder_noiseonly_dir_te_subsampling_vs_interval_effect']
+           [lambda graphname: fig_subsampling_interval_effect(
+               graphname, False),
+            ['firstorder_noiseonly_cc_subsampling_vs_interval_effect',
+             'firstorder_noiseonly_abs_te_subsampling_vs_interval_effect',
+             'firstorder_noiseonly_dir_te_subsampling_vs_interval_effect',
+             ]],
+          ]
 
-for graphname in graphnames:
-    # Test whether the figure already exists
-    testlocation = graph_filename_template.format(graphname)
-    if not os.path.exists(testlocation):
-        fig_subsampling_interval_effect(graphname, False)
-    else:
-        logging.info("The requested graph has already been drawn")
-
+for plot_function, graphnames in graphs:
+    for graphname in graphnames:
+        # Test whether the figure already exists
+        testlocation = graph_filename_template.format(graphname)
+        if not os.path.exists(testlocation):
+            plot_function(graphname)
+        else:
+            logging.info("The requested graph has already been drawn")
 
 
 # Template for storing difference and absolute plots from node ranking lists
