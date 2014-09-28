@@ -61,15 +61,30 @@ def vectorselection(data, timelag, sub_samples, k=1, l=1):
     return x_pred, x_hist, y_hist
 
 
-def setup_infodynamics_te(normalize):
+def setup_infodynamics_te(normalize, histlength=1, calcmethod='kernel'):
     """Prepares the teCalc class of the infodynamics toolkit in order to
     calculate transfer entropy according to the kernel method.
 
     """
+    if calcmethod == 'kernel':
+        teCalcClass = \
+            jpype.JPackage("infodynamics.measures.continuous.kernel") \
+            .TransferEntropyCalculatorKernel
+        teCalc = teCalcClass()
+        # Set history length (Schreiber k=1)
+        # Set kernel width to 0.5 normalised units
+        teCalc.initialise(histlength, 0.5)
 
-    teCalcClass = jpype.JPackage("infodynamics.measures.continuous.kernel") \
-                       .TransferEntropyCalculatorKernel
-    teCalc = teCalcClass()
+    elif calcmethod == 'kraskov':
+        teCalcClass = \
+            jpype.JPackage("infodynamics.measures.continuous.kraskov") \
+            .TransferEntropyCalculatorKraskov
+        teCalc = teCalcClass()
+        # Set history length (Schreiber k=1)
+        teCalc.initialise(histlength)
+        # Use Kraskov parameter K=4 for 4 nearest points
+        teCalc.setProperty("k", "4")
+
     # Normalise the individual variables if required
     if normalize:
         teCalc.setProperty("NORMALISE", "true")
@@ -105,11 +120,6 @@ def calc_infodynamics_te(teCalc, affected_data, causal_data):
     dead time between data indicating a causal relationship.
 
     """
-
-    # Use history length 1 (Schreiber k=1),
-    # kernel width of 0.5 normalised units
-    teCalc.initialise(1, 0.5)
-
     sourceArray = causal_data.tolist()
     destArray = affected_data.tolist()
 
