@@ -227,7 +227,7 @@ def fig_scenario_maxval_vs_taus(graphname, delays=False, drawfit=False):
         if delays:
             valuematrix, headers = \
                 data_processing.read_header_values_datafile(sourcefile)
-            max_values = [max(valuematrix[:, index+1]) for index in range(5)]
+            max_values = [max(valuematrix[:, index+1]) for index in range(9)]
         else:
             valuematrix, headers = \
                 data_processing.read_header_values_datafile(sourcefile)
@@ -309,6 +309,63 @@ def fig_diffvar_vs_delay(graphname, difvals, linetitle):
 
     plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
     plt.xlabel(r'Delay (seconds)', fontsize=14)
+    plt.legend(bbox_to_anchor=graphdata.legendbbox)
+
+    if graphdata.axis_limits is not False:
+        plt.axis(graphdata.axis_limits)
+
+    plt.savefig(graph_filename_template.format(graphname))
+    plt.close()
+
+    return None
+
+
+def fig_subsampling_interval_effect(graphname, delays=False):
+    """Draws graphs showing the effect that different sampling intervals have
+    on the causality measure values for different noise sampling rates.
+
+    """
+
+    # TODO: Rewrite this into general form with for loop and arguments for
+    # labels, etc.
+
+    graphdata = GraphData(graphname)
+    graphdata.get_legendbbox(graphname)
+
+    # Get x-axis values
+
+    plt.figure(1, (12, 6))
+
+    relevant_values = []
+    relevant_values_2 = []
+
+    for count, scenario in enumerate(graphdata.scenario):
+
+        sourcefile = filename_template.format(
+            graphdata.case, scenario,
+            graphdata.method[0], graphdata.boxindex,
+            graphdata.sourcevar)
+
+        if delays:
+            valuematrix, headers = \
+                data_processing.read_header_values_datafile(sourcefile)
+            relevant_values = [max(valuematrix[:, index+1])
+                               for index in range(9)]
+        else:
+            valuematrix, headers = \
+                data_processing.read_header_values_datafile(sourcefile)
+            relevant_values.append(valuematrix[2])
+            relevant_values_2.append(valuematrix[6])
+
+    xvals = np.linspace(0.1, 4, 40)
+
+    plt.plot(xvals, relevant_values, "--", marker="o", markersize=4,
+             label=r'$\tau = 0.05$ seconds')
+    plt.plot(xvals, relevant_values_2, "--", marker="o", markersize=4,
+             label=r'$\tau = 1.00$ seconds')
+
+    plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
+    plt.xlabel(r'Sampling interval / noise sample rate', fontsize=14)
     plt.legend(bbox_to_anchor=graphdata.legendbbox)
 
     if graphdata.axis_limits is not False:
@@ -576,6 +633,23 @@ for graphname in graphnames:
     testlocation = graph_filename_template.format(graphname)
     if not os.path.exists(testlocation):
         fig_scenario_maxval_vs_taus(graphname, False)
+    else:
+        logging.info("The requested graph has already been drawn")
+
+#######################################################################
+# Plot measure values vs. sampling interval / noise sample variance
+# for different taus intervals
+#######################################################################
+
+graphnames = ['firstorder_noiseonly_cc_subsampling_vs_interval_effect',
+              'firstorder_noiseonly_abs_te_subsampling_vs_interval_effect',
+              'firstorder_noiseonly_dir_te_subsampling_vs_interval_effect']
+
+for graphname in graphnames:
+    # Test whether the figure already exists
+    testlocation = graph_filename_template.format(graphname)
+    if not os.path.exists(testlocation):
+        fig_subsampling_interval_effect(graphname, False)
     else:
         logging.info("The requested graph has already been drawn")
 
