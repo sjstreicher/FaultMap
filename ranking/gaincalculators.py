@@ -321,20 +321,28 @@ class TransentWeightcalc:
         Returns list of surrogate transfer entropy values of length num.
 
         """
-        tsdata = np.array([affected_data, causal_data])
+
         # TODO: Research required number of iterations for good surrogate data
+        # The causal data is replaced by surrogate data, the affected data
+        # remains unchanged.
+
+        # Get the causal data in the correct format for surrogate generation
+        original_causal = np.zeros((1, len(causal_data)))
+        original_causal[0, :] = causal_data
+        # Create surrogate data generation object
+        surrogate_gen = pygeonetwork.surrogates.Surrogates(original_causal)
+
         surr_tsdata = \
-            [pygeonetwork.surrogates.Surrogates.SmallTestData().
-                get_refined_AAFT_surrogates(tsdata, 10)
+            [surrogate_gen.get_refined_AAFT_surrogates(original_causal, 10)
              for n in range(num)]
 
         surr_te_fwd = [transentropy.calc_infodynamics_te(self.teCalc,
-                                                         surr_tsdata[n][0],
-                                                         surr_tsdata[n][1])
+                                                         affected_data,
+                                                         surr_tsdata[n][0, :])
                        for n in range(num)]
         surr_te_bwd = [transentropy.calc_infodynamics_te(self.teCalc,
-                                                         surr_tsdata[n][1],
-                                                         surr_tsdata[n][0])
+                                                         surr_tsdata[n][0, :],
+                                                         affected_data)
                        for n in range(num)]
 
         surr_te_directional = \
