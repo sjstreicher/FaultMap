@@ -85,6 +85,7 @@ class WeightcalcData:
         self.transient = self.caseconfig[settings_name]['transient']
 
         self.normalize = self.caseconfig[settings_name]['normalize']
+        self.sigtest = self.caseconfig[settings_name]['sigtest']
 
         if self.datatype == 'file':
             # Get path to time series data input file in standard format
@@ -230,7 +231,7 @@ class WeightcalcData:
                                         scenario)
 
 
-def calc_weights(weightcalcdata, method, sigtest, scenario):
+def calc_weights(weightcalcdata, method, scenario):
     """Determines the maximum weight between two variables by searching through
     a specified set of delays.
 
@@ -422,7 +423,7 @@ def calc_weights(weightcalcdata, method, sigtest, scenario):
                         weightcalculator.report(weightcalcdata, causevarindex,
                                                 affectedvarindex, weightlist,
                                                 weight_array, delay_array,
-                                                datastore, sigtest)
+                                                datastore)
 
         # Delete entries from weightcalc matrix not used
         # Delete all rows and columns listed in affected_dellist, cause_dellist
@@ -450,7 +451,7 @@ def writecsv_weightcalc(filename, items, header):
         csv.writer(f).writerows(items)
 
 
-def weightcalc(mode, case, sigtest, writeoutput):
+def weightcalc(mode, case, writeoutput=False):
     """Reports the maximum weight as well as associated delay
     obtained by shifting the affected variable behind the causal variable a
     specified set of delays.
@@ -489,7 +490,7 @@ def weightcalc(mode, case, sigtest, writeoutput):
             if not os.path.exists(testlocation):
                 # Continue with execution
                 [weight_arrays, delay_arrays, datastores, data_header] = \
-                    calc_weights(weightcalcdata, method, sigtest, scenario)
+                    calc_weights(weightcalcdata, method, scenario)
 
                 for boxindex in range(weightcalcdata.boxnum):
                     if writeoutput:

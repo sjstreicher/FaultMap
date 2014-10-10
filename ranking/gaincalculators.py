@@ -13,6 +13,7 @@ import pygeonetwork
 # Own libraries
 import transentropy
 
+
 class CorrWeightcalc(object):
     """This class provides methods for calculating the weights according to the
     cross-correlation method.
@@ -43,7 +44,7 @@ class CorrWeightcalc(object):
         return [corrval]
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
-               weightlist, weight_array, delay_array, datastore, sigtest):
+               weightlist, weight_array, delay_array, datastore):
         """Calculates and reports the relevant output for each combination
         of variables tested.
 
@@ -91,7 +92,7 @@ class CorrWeightcalc(object):
 
         corrthreshpass = None
         dirthreshpass = None
-        if sigtest:
+        if weightcalcdata.sigtest:
             corrthreshpass = (maxcorr_abs >= self.threshcorr)
             dirthreshpass = (directionindex >= self.threshdir)
             if not (corrthreshpass and dirthreshpass):
@@ -131,7 +132,6 @@ class PartialCorrWeightcalc(CorrWeightcalc):
         super(PartialCorrWeightcalc, self).__init__(self, weightcalcdata)
 
         self.connections_used = weightcalcdata.connections_used
-
 
     def calcweight(self, causevardata, affectedvardata, weightcalcdata,
                    causevarindex, affectedvarindex):
@@ -233,7 +233,7 @@ class TransentWeightcalc:
         return [transent_directional, transent_absolute]
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
-               weightlist, weight_array, delay_array, datastore, sigtest,
+               weightlist, weight_array, delay_array, datastore,
                te_thresh_method='rankorder'):
         """Calculates and reports the relevant output for each combination
         of variables tested.
@@ -269,7 +269,7 @@ class TransentWeightcalc:
                      " and " + affectedvar + " is: " + str(maxval_directional))
 
         threshpass_directional = None
-        if sigtest:
+        if weightcalcdata.sigtest:
             # Calculate threshold for transfer entropy
             thresh_causevardata = \
                 inputdata[:, causevarindex][startindex:startindex+size]
@@ -321,8 +321,6 @@ class TransentWeightcalc:
         Returns list of surrogate transfer entropy values of length num.
 
         """
-
-        # TODO: Research required number of iterations for good surrogate data
         # The causal data is replaced by surrogate data, the affected data
         # remains unchanged.
 
