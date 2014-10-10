@@ -17,7 +17,6 @@ weightcalc_config = json.load(open(os.path.join(dataloc, 'config'
                                                 '_weightcalc' + '.json')))
 
 writeoutput = weightcalc_config['writeoutput']
-sigtest = weightcalc_config['sigtest']
 mode = weightcalc_config['mode']
 cases = weightcalc_config['cases']
 
@@ -29,5 +28,5 @@ def wrapper(func, *args, **kwargs):
 
 for case in cases:
     # TODO: For accurrate timing do it for the actual calculation only
-    wrapped = wrapper(weightcalc, mode, case, sigtest, writeoutput)
+    wrapped = wrapper(weightcalc, mode, case, writeoutput)
     print timeit.timeit(wrapped, number=1)
