@@ -73,8 +73,8 @@ class CorrWeightcalc(object):
                               (maxval + abs(minval)))
 
         signchange = not ((weightlist[0] / weightlist[delay_index]) >= 0)
-        corrthreshpass = (maxcorr_abs >= self.threshcorr)
-        dirthreshpass = (directionindex >= self.threshdir)
+#        corrthreshpass = (maxcorr_abs >= self.threshcorr)
+#        dirthreshpass = (directionindex >= self.threshdir)
 
         logging.info("Maximum correlation value: " + str(maxval))
         logging.info("Minimum correlation value: " + str(minval))
@@ -84,17 +84,18 @@ class CorrWeightcalc(object):
                      str(bestdelay))
         logging.info("The correlation with no delay is: "
                      + str(weightlist[0]))
-        logging.info("Correlation threshold passed: " +
-                     str(corrthreshpass))
+
         logging.info("Directionality value: " + str(directionindex))
-        logging.info("Directionality threshold passed: " +
-                     str(dirthreshpass))
 
         corrthreshpass = None
         dirthreshpass = None
         if weightcalcdata.sigtest:
             corrthreshpass = (maxcorr_abs >= self.threshcorr)
             dirthreshpass = (directionindex >= self.threshdir)
+            logging.info("Correlation threshold passed: " +
+                         str(corrthreshpass))
+            logging.info("Directionality threshold passed: " +
+                         str(dirthreshpass))
             if not (corrthreshpass and dirthreshpass):
                 maxcorr = 0
 
