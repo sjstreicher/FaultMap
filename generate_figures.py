@@ -262,10 +262,8 @@ def fig_scenario_maxval_vs_taus(graphname, delays=False, drawfit=False):
     return None
 
 
-def get_data_vectors(graphdata):
-    """Extract value matrices from different scenarios.
-
-    """
+def get_scenario_data_vectors(graphdata):
+    """Extract value matrices from different scenarios."""
 
     valuematrices = []
 
@@ -281,6 +279,33 @@ def get_data_vectors(graphdata):
     return valuematrices
 
 
+def get_box_data_vectors(graphdata):
+    """Extract value matrices from different boxes and different
+    source variables.
+
+    Returns a list of list, with entries in the first list referring to
+    a specific box, and entries in the second list referring to a specific
+    source variable.
+
+    """
+
+    valuematrices = []
+    # Get number of source variables
+    for box in graphdata.boxindex:
+        sourcevalues = []
+        for sourceindex, sourcevar in enumerate(graphdata.sourcevar):
+            sourcefile = filename_template.format(
+                graphdata.case, graphdata.scenario,
+                graphdata.method[0], box,
+                sourcevar)
+            valuematrix, _ = \
+                data_processing.read_header_values_datafile(sourcefile)
+            sourcevalues.append(valuematrix)
+        valuematrices.append(sourcevalues)
+
+    return valuematrices
+
+
 def fig_diffvar_vs_delay(graphname, difvals, linetitle):
 
     graphdata = GraphData(graphname)
@@ -292,7 +317,7 @@ def fig_diffvar_vs_delay(graphname, difvals, linetitle):
     plt.figure(1, (12, 6))
 
     # Get valuematrices
-    valuematrices = get_data_vectors(graphdata)
+    valuematrices = get_scenario_data_vectors(graphdata)
 
     xaxis_intervals = []
     relevant_values = []
@@ -334,8 +359,6 @@ def fig_subsampling_interval_effect(graphname, delays=False):
     graphdata = GraphData(graphname)
     graphdata.get_legendbbox(graphname)
 
-    # Get x-axis values
-
     plt.figure(1, (12, 6))
 
     relevant_values = []
@@ -372,6 +395,141 @@ def fig_subsampling_interval_effect(graphname, delays=False):
 
     if graphdata.axis_limits is not False:
         plt.axis(graphdata.axis_limits)
+
+    plt.savefig(graph_filename_template.format(graphname))
+    plt.close()
+
+    return None
+
+
+def fig_boxvals_differentsources(graphname):
+    """Plots the measure values for different boxes and multiple source
+    variables.
+
+    affectedindex is the index of the affected variable that is desired
+
+    """
+
+    graphdata = GraphData(graphname)
+    graphdata.get_legendbbox(graphname)
+
+    # Get x-axis values
+    graphdata.get_xvalues(graphname)
+
+    # Get valuematrices
+    valuematrices = get_box_data_vectors(graphdata)
+
+    plt.figure(1, (12, 6))
+
+    for sourceindex, sourceval in enumerate(graphdata.sourcevar):
+
+        relevant_values = []
+        for valuematrix in valuematrices:
+            # Extract the values corresponding to the current sourcevar
+            # and the desired affectedindex
+            relevant_values.append(valuematrix[sourceindex][1])
+
+        plt.plot(graphdata.xvals, relevant_values,
+                 "--", marker="o", markersize=4,
+                 label=r'Source {}'.format(sourceindex+1))
+
+    plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
+    plt.xlabel(r'Box number', fontsize=14)
+    plt.legend(bbox_to_anchor=graphdata.legendbbox)
+
+    if graphdata.axis_limits is not False:
+        plt.axis(graphdata.axis_limits)
+
+    plt.savefig(graph_filename_template.format(graphname))
+    plt.close()
+
+    return None
+
+
+def fig_boxvals_differentsources_ewma(graphname):
+    """Plots the measure values for different boxes and multiple source
+    variables.
+
+    affectedindex is the index of the affected variable that is desired
+
+    """
+
+    graphdata = GraphData(graphname)
+    graphdata.get_legendbbox(graphname)
+
+    # Get x-axis values
+    graphdata.get_xvalues(graphname)
+
+    # Get valuematrices
+    valuematrices = get_box_data_vectors(graphdata)
+
+    plt.figure(1, (12, 6))
+
+    for sourceindex, sourceval in enumerate(graphdata.sourcevar):
+
+        relevant_values = []
+        for valuematrix in valuematrices:
+            # Extract the values corresponding to the current sourcevar
+            # and the desired affectedindex
+            relevant_values.append(valuematrix[sourceindex][1])
+
+        # Calculate EWMA benchmarked data
+        ewma_benchmark = \
+            data_processing.ewma_weights_benchmark(relevant_values, 0.5)
+
+        adjusted_values = relevant_values - ewma_benchmark
+
+        plt.plot(graphdata.xvals, adjusted_values,
+                 "--", marker="o", markersize=4,
+                 label=r'Source {}'.format(sourceindex+1))
+
+    plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
+    plt.xlabel(r'Box number', fontsize=14)
+    plt.legend(bbox_to_anchor=graphdata.legendbbox)
+
+    if graphdata.axis_limits is not False:
+        plt.axis(graphdata.axis_limits)
+
+    plt.savefig(graph_filename_template.format(graphname))
+    plt.close()
+
+    return None
+
+
+def demo_fig_EWMA_adjusted_weights(graphname):
+    """Plots a step input weight, EWMA benchmark of step weight and difference
+    between weight and benchmark for demonstration purposes.
+
+    Hardcoded specific example
+    Make general if there is any purpose for doing so.
+
+    """
+
+    plt.figure(1, (12, 6))
+
+    # Create weight array with 10 zero entries followed by 30 entries of unity
+    weights = np.zeros(41)
+    weights[10:] = np.ones(31)
+
+    # Get benchmark weights with alpha = 0.3
+    benchmark_weights = data_processing.ewma_weights_benchmark(weights, 0.5)
+
+    # Get difference between weights and weight benchmark
+    weights_difference = weights - benchmark_weights
+
+    plt.plot(range(len(weights)), weights,
+             "--", marker="o", markersize=4,
+             label="Original weights")
+    plt.plot(range(len(weights)), benchmark_weights,
+             "--", marker="o", markersize=4,
+             label="Weight benchmark")
+    plt.plot(range(len(weights)), weights_difference,
+             "--", marker="o", markersize=4,
+             label="Benchmark adjusted weights")
+
+    plt.ylabel('Weight', fontsize=14)
+    plt.xlabel(r'Box number', fontsize=14)
+    plt.legend(bbox_to_anchor=[1.0, 1.0])
 
     plt.savefig(graph_filename_template.format(graphname))
     plt.close()
@@ -566,6 +724,32 @@ graphs = [[fig_values_vs_delays,
              'firstorder_noiseonly_abs_te_subsampling_vs_interval_effect',
              'firstorder_noiseonly_dir_te_subsampling_vs_interval_effect',
              ]],
+
+
+#######################################################################
+# Plot measure values vs. boxindex for different sources
+#######################################################################
+
+           [lambda graphname: fig_boxvals_differentsources(
+               graphname),
+            ['firstorder_twonoises_differenstarts_abs_te_weight_vs_box_scen01',
+             'firstorder_twonoises_differenstarts_abs_te_weight_vs_box_scen02',
+             ]],
+
+           [lambda graphname: fig_boxvals_differentsources_ewma(
+               graphname),
+            ['firstorder_twonoises_differenstarts_abs_te_weight_vs_box_scen01_ewma',
+             'firstorder_twonoises_differenstarts_abs_te_weight_vs_box_scen02_ewma',
+             ]],
+#######################################################################
+# Plot example of how EWMA weight benchmark affects weight changes
+#######################################################################
+
+           [lambda graphname: demo_fig_EWMA_adjusted_weights(
+               graphname),
+            ['demo_EWMA_adjusted_weights',
+             ]],
+
           ]
 
 for plot_function, graphnames in graphs:

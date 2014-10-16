@@ -429,12 +429,12 @@ def calc_weights(weightcalcdata, method, scenario):
         # Delete all rows and columns listed in affected_dellist, cause_dellist
         # from weight_array
         # Axis 0 is rows, axis 1 is columns
-        weight_array = np.delete(weight_array, cause_dellist, 1)
-        weight_array = np.delete(weight_array, affected_dellist, 0)
+#        weight_array = np.delete(weight_array, cause_dellist, 1)
+#        weight_array = np.delete(weight_array, affected_dellist, 0)
 
         # Do the same for delay_array
-        delay_array = np.delete(delay_array, cause_dellist, 1)
-        delay_array = np.delete(delay_array, affected_dellist, 0)
+#        delay_array = np.delete(delay_array, cause_dellist, 1)
+#        delay_array = np.delete(delay_array, affected_dellist, 0)
 
         weight_arrays.append(weight_array)
         delay_arrays.append(delay_array)
