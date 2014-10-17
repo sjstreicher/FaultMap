@@ -65,16 +65,16 @@ def setup_infodynamics_te(normalize, calcmethod='kernel', histlength=1):
     """Prepares the teCalc class of the Java Infodyamics Toolkit (JIDK)
     in order to calculate transfer entropy according to the kernel or Kraskov
     estimator method.
-    
+
     Currently implemented for the case of k = 1 and l = 1 only.
-    
+
     The embedding dimension of the destination or target variable (k) can
     easily be set by adjusting the histlength parameter.
-    
+
     # TODO: Allow for different destination embedding dimensions of the source
     variable (l) by making use of the multivariable transfer entropy
     implementation - currently only available for the implementation making use
-    of Kraskov MI estimators 
+    of Kraskov MI estimators
 
     """
     if calcmethod == 'kernel':
@@ -134,45 +134,45 @@ def calc_infodynamics_te(teCalc, affected_data, causal_data):
 
     return transentropy
 
-  
+
 def setup_infodynamics_entropy(normalize):
     """Prepares the entropyCalc class of the Java Infodyamics Toolkit (JIDK)
     in order to calculate differential entropy (continuous signals) according
     to the box kernel estimation method.
 
     """
-    
+
     entropyCalcClass = \
-            jpype.JPackage("infodynamics.measures.continuous.kernel") \
-            .EntropyCalculatorKernel
+        jpype.JPackage("infodynamics.measures.continuous.kernel") \
+        .EntropyCalculatorKernel
     entropyCalc = entropyCalcClass()
     # Set kernel width to 0.5 normalised units
     entropyCalc.initialise(0.5)
-    
+
     # Normalise the individual variables if required
     if normalize:
         entropyCalc.setProperty("NORMALISE", "true")
     else:
         entropyCalc.setProperty("NORMALISE", "false")
-        
+
     entropyCalcClass = None
     del entropyCalcClass
     jpype.java.lang.System.gc()
-    
+
     return entropyCalc
- 
-   
+
+
 def calc_infodynamics_entropy(entropyCalc, data):
     """Estimates the entropy of a single signal.
-    
-    Makes use of the box kernel estimation method.    
+
+    Makes use of the box kernel estimation method.
     """
-    
+
     dataArray = data.tolist()
     dataArrayJava = jpype.JArray(jpype.JDouble, 1)(dataArray)
-    
+
     entropyCalc.setObservations(dataArrayJava)
-    
+
     entropy = entropyCalc.computeAverageLocalOfObservations()
-    
+
     return entropy
