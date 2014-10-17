@@ -144,6 +144,8 @@ def bandgapfilter_data(raw_tsdata, normalised_tsdata, variables,
      other software, for example TOPCAT.
 
      """
+
+    # TODO: add two buffer indices to the start and end to eliminate ringing
     # Header and time from main source file
     headerline = np.genfromtxt(raw_tsdata, delimiter=',', dtype='string')[0, :]
     time = np.genfromtxt(raw_tsdata, delimiter=',')[1:, 0]
@@ -342,8 +344,7 @@ def split_tsdata(inputdata, samplerate, boxsize, boxnum):
     """Splits the inputdata into arrays useful for analysing the change of
     weights over time.
 
-    inputdata is a numpy array with the format of variables along the
-    What is the exact format - single variable data?
+    inputdata is a numpy array containing values for a single variable
 
     samplerate is the rate of sampling in time units
     boxsize is the size of each returned dataset in time units
@@ -371,10 +372,30 @@ def split_tsdata(inputdata, samplerate, boxsize, boxnum):
         boxstartindex[:] = np.NAN
         boxstartindex[0] = 0
         boxstartindex[-1] = samples - boxsizesamples
-        samplesbetween = int(round(boxstartindex[-1]/(boxnum-1)))
+        samplesbetween = int(round(samples/(boxnum+1)))
         boxstartindex[1:-1] = [(samplesbetween * index)
                                for index in range(1, boxnum-1)]
         boxes = [inputdata[int(boxstartindex[i]):int(boxstartindex[i]) +
                            int(boxsizesamples)]
                  for i in range(int(boxnum))]
     return boxes
+
+
+def ewma_weights_benchmark(weights, alpha_rate):
+    """Calculates an exponential moving average of weights
+    for different boxes to use as a benchmark.
+
+    weights is a list of weights for different boxes
+
+    """
+    benchmark_weights = np.zeros_like(weights)
+
+    for index, weight in enumerate(weights):
+        if index == 0:
+            benchmark_weights[index] = weights[index]
+        else:
+            benchmark_weights[index] = \
+                (alpha_rate * benchmark_weights[index-1]) + \
+                ((1-alpha_rate) * weights[index])
+
+    return benchmark_weights

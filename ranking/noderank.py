@@ -314,7 +314,7 @@ def gainmatrix_preprocessing(gainmatrix):
 
 def calc_gainrank(gainmatrix, noderankdata, dummycreation,
                   dummyweight, m):
-    """Calculates the forward and backward rankings.
+    """Calculates backward rankings.
 
     """
 
