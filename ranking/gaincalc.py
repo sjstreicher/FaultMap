@@ -47,7 +47,7 @@ class WeightcalcData:
     weight calculation methods.
 
     """
-    def __init__(self, mode, case):
+    def __init__(self, mode, case, single_entropies):
         # Get file locations from configuration file
         self.saveloc, self.casedir, infodynamicsloc = \
             config_setup.runsetup(mode, case)
@@ -71,6 +71,9 @@ class WeightcalcData:
                                "-Djava.class.path=" + infodynamicsloc)
 
         self.casename = case
+
+        # Flag for calculating single signal entropies
+        self.single_entropies = single_entropies
 
     def scenariodata(self, scenario):
         """Retrieves data particular to each scenario for the case being
@@ -295,11 +298,22 @@ def calc_weights(weightcalcdata, method, scenario):
                                         scenario, name, method, boxindex,
                                         causevar)
 
+    def signalent_filename(name, boxindex, causevar):
+        return signalent_filename_template.format(
+            weightcalcdata.casename, scenario, name, method, boxindex,
+            causevar)
+
     weightstoredir = config_setup.ensure_existance(
         os.path.join(weightcalcdata.saveloc, 'weightdata'), make=True)
 
+    signalentstoredir = config_setup.ensure_existance(
+        os.path.join(weightcalcdata.saveloc, 'signal_entopries'), make=True)
+
     filename_template = os.path.join(weightstoredir,
                                      '{}_{}_{}_{}_box{:03d}_{}.csv')
+
+    signalent_filename_template = os.path.join(signalentstoredir,
+                                               '{}_{}_{}_box{:03d}_{}.csv')
 
     # Generate boxes to use
     boxes = data_processing.split_tsdata(weightcalcdata.inputdata,
@@ -322,6 +336,35 @@ def calc_weights(weightcalcdata, method, scenario):
         delay_array[:] = np.NAN
         datastore = []
 
+        # Calculate single signal entropies - do not worry about
+        # delays, but still do it according to different boxes
+        if weightcalcdata.single_entropies:
+                # Calculate single signal entropies of all variables
+                # and save output in similar format to
+                # standard weight calculation results
+            signalentlist = []
+            for varindex, variable in enumerate(weightcalcdata.variables):
+                vardata = box[:, varindex][startindex:startindex+size]
+                entropy = data_processing.calc_signalent(weightcalcdata,
+                                                         vardata)
+                signalentlist.append(entropy)
+
+
+#                        signalent_thisvar = np.asarray(signalentlist)
+#                        signalent_thisvar = \
+#                            signalent_thisvar[:, np.newaxis]
+#
+#                        datalines_signalent = \
+#                            np.concatenate((datalines_signalent,
+#                                            signalent_thisvar), axis=1)
+
+#            writecsv_weightcalc(signalent_filename(
+#                'signal_entropy',
+#                boxindex+1, causevar),
+#                datalines_signalent, headerline)
+
+
+
         for causevarindex in weightcalcdata.causevarindexes:
             causevar = weightcalcdata.variables[causevarindex]
 
@@ -331,6 +374,7 @@ def calc_weights(weightcalcdata, method, scenario):
             datalines_directional = datalines_directional[:, np.newaxis]
             datalines_absolute = datalines_directional.copy()
             datalines_neutral = datalines_directional.copy()
+            datalines_signalent = datalines_directional.copy()
 
             for affectedvarindex in weightcalcdata.affectedvarindexes:
                 affectedvar = weightcalcdata.variables[affectedvarindex]
@@ -418,6 +462,7 @@ def calc_weights(weightcalcdata, method, scenario):
                             method, boxindex+1, causevar),
                             datalines_neutral, headerline)
 
+
                     # Generate and store report files according to each method
                     [weight_array, delay_array, datastore] = \
                         weightcalculator.report(weightcalcdata, causevarindex,
@@ -451,7 +496,7 @@ def writecsv_weightcalc(filename, items, header):
         csv.writer(f).writerows(items)
 
 
-def weightcalc(mode, case, writeoutput=False):
+def weightcalc(mode, case, writeoutput=False, single_entropies=False):
     """Reports the maximum weight as well as associated delay
     obtained by shifting the affected variable behind the causal variable a
     specified set of delays.

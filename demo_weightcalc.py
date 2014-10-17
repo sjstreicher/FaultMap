@@ -16,7 +16,12 @@ dataloc, _ = config_setup.get_locations()
 weightcalc_config = json.load(open(os.path.join(dataloc, 'config'
                                                 '_weightcalc' + '.json')))
 
+# Flag indicating whether calculated results should be written to disk
 writeoutput = weightcalc_config['writeoutput']
+# Flag indicating whether single signal entropy values for each
+# signal involved should be calculated
+single_entropies = weightcalc_config['calc_single_entropies']
+# Provide the mode and case names to calculate
 mode = weightcalc_config['mode']
 cases = weightcalc_config['cases']
 
@@ -28,5 +33,5 @@ def wrapper(func, *args, **kwargs):
 
 for case in cases:
     # TODO: For accurrate timing do it for the actual calculation only
-    wrapped = wrapper(weightcalc, mode, case, writeoutput)
+    wrapped = wrapper(weightcalc, mode, case, writeoutput, single_entropies)
     print timeit.timeit(wrapped, number=1)
