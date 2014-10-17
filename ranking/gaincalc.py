@@ -244,10 +244,17 @@ def calc_weights(weightcalcdata, method, scenario):
 
     if method == 'cross_correlation':
         weightcalculator = CorrWeightcalc(weightcalcdata)
-    elif method == 'transfer_entropy':
-        weightcalculator = TransentWeightcalc(weightcalcdata)
+    elif method == 'transfer_entropy_kernel':
+        weightcalculator = TransentWeightcalc(weightcalcdata, 'kernel')
+    elif method == 'transfer_entropy_kraskov':
+        weightcalculator = TransentWeightcalc(weightcalcdata, 'kraskov')
     elif method == 'partial_correlation':
         weightcalculator = PartialCorrWeightcalc(weightcalcdata)
+        
+    if weightcalcdata.sigtest:
+        sigstatus = 'sigtested'
+    elif not weightcalcdata.sigtest:
+        sigstatus = 'nosigtest'
 
     vardims = len(weightcalcdata.variables)
     startindex = weightcalcdata.startindex
@@ -293,10 +300,10 @@ def calc_weights(weightcalcdata, method, scenario):
 
     # Define filename structure for CSV file containing weights between
     # a specific causevar and all the subsequent affectedvars
-    def filename(name, method, boxindex, causevar):
+    def filename(name, method, boxindex, sigstatus, causevar):
         return filename_template.format(weightcalcdata.casename,
-                                        scenario, name, method, boxindex,
-                                        causevar)
+                                        scenario, name, method, sigstatus,
+                                        boxindex, causevar)
 
     def signalent_filename(name, boxindex, causevar):
         return signalent_filename_template.format(
@@ -310,7 +317,7 @@ def calc_weights(weightcalcdata, method, scenario):
         os.path.join(weightcalcdata.saveloc, 'signal_entopries'), make=True)
 
     filename_template = os.path.join(weightstoredir,
-                                     '{}_{}_{}_{}_box{:03d}_{}.csv')
+                                     '{}_{}_{}_{}_{}_box{:03d}_{}.csv')
 
     signalent_filename_template = os.path.join(signalentstoredir,
                                                '{}_{}_{}_box{:03d}_{}.csv')
@@ -440,12 +447,12 @@ def calc_weights(weightcalcdata, method, scenario):
 
                         writecsv_weightcalc(filename(
                             directional_name,
-                            method, boxindex+1, causevar),
+                            method, boxindex+1, sigstatus, causevar),
                             datalines_directional, headerline)
 
                         writecsv_weightcalc(filename(
                             absolute_name,
-                            method, boxindex+1, causevar),
+                            method, boxindex+1, sigstatus, causevar),
                             datalines_absolute, headerline)
 
                     else:
