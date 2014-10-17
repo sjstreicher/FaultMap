@@ -403,6 +403,7 @@ def ewma_weights_benchmark(weights, alpha_rate):
 
     return benchmark_weights
 
+
 def calc_signalent(vardata, weightcalcdata):
     """Calculates single signal differential entropies
     by making use of the JIDT continuous box-kernel implementation.
@@ -410,9 +411,8 @@ def calc_signalent(vardata, weightcalcdata):
     """
 
     # Setup Java class for infodynamics toolkit
-        self.teCalc = \
-            transentropy.setup_infodynamics_te(weightcalcdata.normalize)
+    entropyCalc = \
+        transentropy.setup_infodynamics_entropy(weightcalcdata.normalize)
 
-
-
+    entropy = transentropy.calc_infodynamics_entropy(entropyCalc, vardata.T)
     return entropy

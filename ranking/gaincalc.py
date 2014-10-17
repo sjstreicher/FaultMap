@@ -250,7 +250,7 @@ def calc_weights(weightcalcdata, method, scenario):
         weightcalculator = TransentWeightcalc(weightcalcdata, 'kraskov')
     elif method == 'partial_correlation':
         weightcalculator = PartialCorrWeightcalc(weightcalcdata)
-        
+
     if weightcalcdata.sigtest:
         sigstatus = 'sigtested'
     elif not weightcalcdata.sigtest:
@@ -291,13 +291,6 @@ def calc_weights(weightcalcdata, method, scenario):
             affectedvarname = weightcalcdata.variables[affectedvarindex]
             headerline.append(affectedvarname)
 
-    # Store the weight calculation results in similar format as original data
-    def writecsv_weightcalc(filename, items, header):
-        """CSV writer customized for use in weightcalc function."""
-        with open(filename, 'wb') as f:
-            csv.writer(f).writerow(header)
-            csv.writer(f).writerows(items)
-
     # Define filename structure for CSV file containing weights between
     # a specific causevar and all the subsequent affectedvars
     def filename(name, method, boxindex, sigstatus, causevar):
@@ -305,22 +298,34 @@ def calc_weights(weightcalcdata, method, scenario):
                                         scenario, name, method, sigstatus,
                                         boxindex, causevar)
 
-    def signalent_filename(name, boxindex, causevar):
-        return signalent_filename_template.format(
-            weightcalcdata.casename, scenario, name, method, boxindex,
-            causevar)
+    # Store the weight calculation results in similar format as original data
+    def writecsv_weightcalc(filename, items, header):
+        """CSV writer customized for use in weightcalc function."""
+        with open(filename, 'wb') as f:
+            csv.writer(f).writerow(header)
+            csv.writer(f).writerows(items)
 
     weightstoredir = config_setup.ensure_existance(
         os.path.join(weightcalcdata.saveloc, 'weightdata'), make=True)
 
-    signalentstoredir = config_setup.ensure_existance(
-        os.path.join(weightcalcdata.saveloc, 'signal_entopries'), make=True)
-
     filename_template = os.path.join(weightstoredir,
                                      '{}_{}_{}_{}_{}_box{:03d}_{}.csv')
 
-    signalent_filename_template = os.path.join(signalentstoredir,
-                                               '{}_{}_{}_box{:03d}_{}.csv')
+    if weightcalcdata.single_entropies:
+        # Initiate headerline for single signal entropies storage file
+        signalent_headerline = weightcalcdata.variables
+        # Define filename structure for CSV file
+
+        def signalent_filename(name, boxindex):
+            return signalent_filename_template.format(
+                weightcalcdata.casename, scenario, name, boxindex)
+
+        signalentstoredir = config_setup.ensure_existance(
+            os.path.join(weightcalcdata.saveloc, 'signal_entopries'),
+            make=True)
+
+        signalent_filename_template = \
+            os.path.join(signalentstoredir, '{}_{}_{}_box{:03d}.csv')
 
     # Generate boxes to use
     boxes = data_processing.split_tsdata(weightcalcdata.inputdata,
@@ -356,6 +361,11 @@ def calc_weights(weightcalcdata, method, scenario):
                                                          vardata)
                 signalentlist.append(entropy)
 
+            # Write the signal entropies to file - one file for each box
+            # Each file will only have one line as we are not
+            # calculating for different delays as is done for the case of
+            # variable pairs.
+
 
 #                        signalent_thisvar = np.asarray(signalentlist)
 #                        signalent_thisvar = \
@@ -365,12 +375,10 @@ def calc_weights(weightcalcdata, method, scenario):
 #                            np.concatenate((datalines_signalent,
 #                                            signalent_thisvar), axis=1)
 
-#            writecsv_weightcalc(signalent_filename(
-#                'signal_entropy',
-#                boxindex+1, causevar),
-#                datalines_signalent, headerline)
-
-
+            writecsv_weightcalc(signalent_filename(
+                'signal_entropy',
+                boxindex+1),
+                signalentlist, signalent_headerline)
 
         for causevarindex in weightcalcdata.causevarindexes:
             causevar = weightcalcdata.variables[causevarindex]
@@ -381,7 +389,6 @@ def calc_weights(weightcalcdata, method, scenario):
             datalines_directional = datalines_directional[:, np.newaxis]
             datalines_absolute = datalines_directional.copy()
             datalines_neutral = datalines_directional.copy()
-            datalines_signalent = datalines_directional.copy()
 
             for affectedvarindex in weightcalcdata.affectedvarindexes:
                 affectedvar = weightcalcdata.variables[affectedvarindex]
@@ -513,7 +520,7 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False):
 
     """
 
-    weightcalcdata = WeightcalcData(mode, case)
+    weightcalcdata = WeightcalcData(mode, case, single_entropies)
 
     # Define export directories and filenames
     weightdir = config_setup.ensure_existance(os.path.join(
