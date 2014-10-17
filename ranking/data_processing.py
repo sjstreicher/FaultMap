@@ -123,6 +123,7 @@ def fft_calculation(raw_tsdata, normalised_tsdata, variables, sampling_rate,
 
 def bandgap(min_freq, max_freq, vardata):
     """Bandgap filter based on FFT"""
+    # TODO: Add buffer values in order to prevent ringing
     freqlist = np.fft.rfftfreq(vardata.size, 1)
     # Investigate effect of using abs()
     var_fft = np.fft.rfft(vardata)
@@ -163,6 +164,7 @@ def bandgapfilter_data(raw_tsdata, normalised_tsdata, variables,
 
     if bool(normalised_tsdata.shape[0] % 2):
         # Only write from the second time entry as there is one less datapoint
+        # TODO: Currently it seems to exclude the last instead? Confirm
         datalines = np.concatenate((time[:-1],
                                     inputdata_bandgapfiltered), axis=1)
     else:
@@ -320,7 +322,7 @@ def read_dictionary(filename):
 def rankbackward(variables, gainmatrix, connections,
                  dummyweight, dummycreation):
     """This method adds a unit gain node to all nodes with an out-degree
-    of 1; now all of these nodes should have an out-degree of 2.
+    of 1 in order for the relative scale to be retained.
     Therefore all nodes with pointers should have 2 or more edges
     pointing away from them.
 
