@@ -16,6 +16,9 @@ import json
 
 import config_setup
 
+# Own libraries
+import transentropy
+
 
 def csv_to_h5(saveloc, raw_tsdata, scenario, case):
 
@@ -397,3 +400,17 @@ def ewma_weights_benchmark(weights, alpha_rate):
                 ((1-alpha_rate) * weights[index])
 
     return benchmark_weights
+
+def calc_signalent(vardata, weightcalcdata):
+    """Calculates single signal differential entropies
+    by making use of the JIDT continuous box-kernel implementation.
+
+    """
+
+    # Setup Java class for infodynamics toolkit
+        self.teCalc = \
+            transentropy.setup_infodynamics_te(weightcalcdata.normalize)
+
+
+
+    return entropy
