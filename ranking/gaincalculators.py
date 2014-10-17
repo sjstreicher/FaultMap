@@ -199,12 +199,15 @@ class TransentWeightcalc:
 
     """
 
-    def __init__(self, weightcalcdata):
+    def __init__(self, weightcalcdata, estimator):
         self.data_header = ['causevar', 'affectedvar', 'base_ent',
                             'max_ent', 'max_delay', 'max_index', 'threshpass']
         # Setup Java class for infodynamics toolkit
         self.teCalc = \
-            transentropy.setup_infodynamics_te(weightcalcdata.normalize)
+            transentropy.setup_infodynamics_te(weightcalcdata.normalize,
+                                               estimator)
+                                               
+        self.estimator = estimator
 
     def calcweight(self, causevardata, affectedvardata, weightcalcdata,
                    causevarindex, affectedvarindex):
