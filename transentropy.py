@@ -61,9 +61,20 @@ def vectorselection(data, timelag, sub_samples, k=1, l=1):
     return x_pred, x_hist, y_hist
 
 
-def setup_infodynamics_te(normalize, histlength=1, calcmethod='kernel'):
-    """Prepares the teCalc class of the infodynamics toolkit in order to
-    calculate transfer entropy according to the kernel method.
+def setup_infodynamics_te(normalize, calcmethod='kernel', histlength=1):
+    """Prepares the teCalc class of the Java Infodyamics Toolkit (JIDK)
+    in order to calculate transfer entropy according to the kernel or Kraskov
+    estimator method.
+    
+    Currently implemented for the case of k = 1 and l = 1 only.
+    
+    The embedding dimension of the destination or target variable (k) can
+    easily be set by adjusting the histlength parameter.
+    
+    # TODO: Allow for different destination embedding dimensions of the source
+    variable (l) by making use of the multivariable transfer entropy
+    implementation - currently only available for the implementation making use
+    of Kraskov MI estimators 
 
     """
     if calcmethod == 'kernel':
@@ -105,18 +116,8 @@ def calc_infodynamics_te(teCalc, affected_data, causal_data):
     This implementation makes use of the infodynamics toolkit:
     https://code.google.com/p/information-dynamics-toolkit/
 
-    sub_samples is the amount of samples in the dataset used to calculate the
-    transfer entropy between two vectors (taken from the end of the dataset)
-    and must satisfy sub_samples <= samples
-
-    Currently only supports k = 1 and l = 1
-
-    Used to search through a set of timelags in an attempt to identify the
-    original delay, as well as to assign a weight to the causal relationship
-    between two tags.
-
     The transfer entropy should have a maximum value when timelag = delay
-    used to generate the autoregressive dataset, or will otherwise indicate the
+    used to generate an autoregressive dataset, or will otherwise indicate the
     dead time between data indicating a causal relationship.
 
     """
@@ -132,3 +133,46 @@ def calc_infodynamics_te(teCalc, affected_data, causal_data):
     transentropy = teCalc.computeAverageLocalOfObservations()
 
     return transentropy
+
+  
+def setup_infodynamics_entropy(normalize):
+    """Prepares the entropyCalc class of the Java Infodyamics Toolkit (JIDK)
+    in order to calculate differential entropy (continuous signals) according
+    to the box kernel estimation method.
+
+    """
+    
+    entropyCalcClass = \
+            jpype.JPackage("infodynamics.measures.continuous.kernel") \
+            .EntropyCalculatorKernel
+    entropyCalc = entropyCalcClass()
+    # Set kernel width to 0.5 normalised units
+    entropyCalc.initialise(0.5)
+    
+    # Normalise the individual variables if required
+    if normalize:
+        entropyCalc.setProperty("NORMALISE", "true")
+    else:
+        entropyCalc.setProperty("NORMALISE", "false")
+        
+    entropyCalcClass = None
+    del entropyCalcClass
+    jpype.java.lang.System.gc()
+    
+    return entropyCalc
+ 
+   
+def calc_infodynamics_entropy(entropyCalc, data):
+    """Estimates the entropy of a single signal.
+    
+    Makes use of the box kernel estimation method.    
+    """
+    
+    dataArray = data.tolist()
+    dataArrayJava = jpype.JArray(jpype.JDouble, 1)(dataArray)
+    
+    entropyCalc.setObservations(dataArrayJava)
+    
+    entropy = entropyCalc.computeAverageLocalOfObservations()
+    
+    return entropy
