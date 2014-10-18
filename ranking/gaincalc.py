@@ -357,8 +357,8 @@ def calc_weights(weightcalcdata, method, scenario):
             signalentlist = []
             for varindex, variable in enumerate(weightcalcdata.variables):
                 vardata = box[:, varindex][startindex:startindex+size]
-                entropy = data_processing.calc_signalent(weightcalcdata,
-                                                         vardata)
+                entropy = data_processing.calc_signalent(vardata,
+                                                         weightcalcdata)
                 signalentlist.append(entropy)
 
             # Write the signal entropies to file - one file for each box
@@ -473,9 +473,8 @@ def calc_weights(weightcalcdata, method, scenario):
 
                         writecsv_weightcalc(filename(
                             neutral_name,
-                            method, boxindex+1, causevar),
+                            method, boxindex+1, sigstatus, causevar),
                             datalines_neutral, headerline)
-
 
                     # Generate and store report files according to each method
                     [weight_array, delay_array, datastore] = \
