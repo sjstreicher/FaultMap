@@ -61,14 +61,12 @@ class WeightcalcData:
         # Get methods
         self.methods = self.caseconfig['methods']
 
-        # Start JVM if required
-        if 'transfer_entropy_kraskov' or 'transfer_entropy_kernel' in self.methods:
-            if not jpype.isJVMStarted():
-                jpype.startJVM(jpype.getDefaultJVMPath(),
-                               "-Xms32M",
-                               "-Xmx512M",
-                               "-ea",
-                               "-Djava.class.path=" + infodynamicsloc)
+        if not jpype.isJVMStarted():
+            jpype.startJVM(jpype.getDefaultJVMPath(),
+                           "-Xms32M",
+                           "-Xmx512M",
+                           "-ea",
+                           "-Djava.class.path=" + infodynamicsloc)
 
         self.casename = case
 
@@ -374,6 +372,12 @@ def calc_weights(weightcalcdata, method, scenario):
 #                        datalines_signalent = \
 #                            np.concatenate((datalines_signalent,
 #                                            signalent_thisvar), axis=1)
+
+            # Need to add anotehr axis to signalentlist in order to make
+            # it a sequence
+            signalentlist = np.asarray(signalentlist)
+            signalentlist = \
+                signalentlist[np.newaxis, :]
 
             writecsv_weightcalc(signalent_filename(
                 'signal_entropy',
