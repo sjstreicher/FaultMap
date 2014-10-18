@@ -10,6 +10,8 @@ import ranking.gaincalc
 mode = 'plants'
 case = 'propylene_compressor'
 scenario = 'raw_set3'
+single_entropies = True
 
-testdataclass = ranking.gaincalc.WeightcalcData(mode, case)
+
+testdataclass = ranking.gaincalc.WeightcalcData(mode, case, single_entropies)
 testscenario = testdataclass.scenariodata(scenario)

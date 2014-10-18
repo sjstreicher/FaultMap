@@ -47,7 +47,7 @@ for timelag in range(0, 11):
 
     # Calculate transfer entropy according to infodynamics method:
 
-    teCalc = setup_infodynamics_te(True)
+    teCalc = setup_infodynamics_te(True, 'kraskov')
 
     result = calc_infodynamics_te(teCalc, x_hist_norm[0], y_hist_norm[0])
     print("Infodynamics TE result: %.4f bits" % (result))
