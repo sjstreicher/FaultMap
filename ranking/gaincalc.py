@@ -519,7 +519,7 @@ def calc_weights(weightcalcdata, method, scenario):
                                 axis=1)
 
                             datalines_sigthresh_absolute = \
-                                np.concatenate((datalines_absolute,
+                                np.concatenate((datalines_sigthresh_absolute,
                                                 sigthresh_thisvar_absolute),
                                                axis=1)
 
