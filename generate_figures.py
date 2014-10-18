@@ -28,7 +28,7 @@ graph_filename_template = os.path.join(graphs_savedir, '{}.pdf')
 sourcedir = os.path.join(saveloc, 'weightdata')
 sourcedir_normts = os.path.join(saveloc, 'normdata')
 filename_template = os.path.join(sourcedir,
-                                 '{}_{}_weights_{}_box{:03d}_{}.csv')
+                                 '{}_{}_weights_{}_{}_box{:03d}_{}.csv')
 
 filename_normts_template = os.path.join(sourcedir_normts,
                                         '{}_{}_normalised_data.csv')
@@ -69,19 +69,19 @@ class GraphData:
 
 yaxislabel = \
     {u'cross_correlation': r'Cross correlation',
-     u'absolute_transfer_entropy': r'Absolute transfer entropy (bits)',
-     u'directional_transfer_entropy': r'Directional transfer entropy (bits)'}
+     u'absolute_transfer_entropy_kernel': r'Absolute transfer entropy (bits)',
+     u'directional_transfer_entropy_kernel': r'Directional transfer entropy (bits)'}
 
 
 linelabels = \
     {'cross_correlation': r'Correllation',
-     'absolute_transfer_entropy': r'Absolute TE',
-     'directional_transfer_entropy': r'Directional TE'}
+     'absolute_transfer_entropy_kernel': r'Absolute TE',
+     'directional_transfer_entropy_kernel': r'Directional TE'}
 
 fitlinelabels = \
     {'cross_correlation': r'Correlation fit',
-     'absolute_transfer_entropy': r'Absolute TE fit',
-     'directional_transfer_entropy': r'Directional TE fit'}
+     'absolute_transfer_entropy_kernel': r'Absolute TE fit',
+     'directional_transfer_entropy_kernel': r'Directional TE fit'}
 
 
 def fig_timeseries(graphname):
@@ -122,7 +122,7 @@ def fig_values_vs_delays(graphname):
     graphdata.get_legendbbox(graphname)
 
     sourcefile = filename_template.format(graphdata.case, graphdata.scenario,
-                                          graphdata.method[0],
+                                          graphdata.method[0], 'nosigtest',
                                           graphdata.boxindex,
                                           graphdata.sourcevar)
 
@@ -167,7 +167,7 @@ def fig_maxval_vs_taus(graphname):
 
         sourcefile = filename_template.format(
             graphdata.case, graphdata.scenario,
-            method, graphdata.boxindex,
+            method, 'nosigtest', graphdata.boxindex,
             graphdata.sourcevar)
 
         valuematrix, headers = \
@@ -222,7 +222,7 @@ def fig_scenario_maxval_vs_taus(graphname, delays=False, drawfit=False):
 
         sourcefile = filename_template.format(
             graphdata.case, scenario,
-            graphdata.method[0], graphdata.boxindex,
+            graphdata.method[0], 'nosigtest', graphdata.boxindex,
             graphdata.sourcevar)
 
         if delays:
@@ -270,7 +270,7 @@ def get_scenario_data_vectors(graphdata):
     for scenario in graphdata.scenario:
         sourcefile = filename_template.format(
             graphdata.case, scenario,
-            graphdata.method[0], graphdata.boxindex,
+            graphdata.method[0], 'nosigtest', graphdata.boxindex,
             graphdata.sourcevar)
         valuematrix, _ = \
             data_processing.read_header_values_datafile(sourcefile)
@@ -296,7 +296,7 @@ def get_box_data_vectors(graphdata):
         for sourceindex, sourcevar in enumerate(graphdata.sourcevar):
             sourcefile = filename_template.format(
                 graphdata.case, graphdata.scenario,
-                graphdata.method[0], box,
+                graphdata.method[0], 'nosigtest', box,
                 sourcevar)
             valuematrix, _ = \
                 data_processing.read_header_values_datafile(sourcefile)
@@ -368,7 +368,7 @@ def fig_subsampling_interval_effect(graphname, delays=False):
 
         sourcefile = filename_template.format(
             graphdata.case, scenario,
-            graphdata.method[0], graphdata.boxindex,
+            graphdata.method[0], 'nosigtest', graphdata.boxindex,
             graphdata.sourcevar)
 
         if delays:
