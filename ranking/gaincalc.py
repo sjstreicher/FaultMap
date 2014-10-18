@@ -62,7 +62,7 @@ class WeightcalcData:
         self.methods = self.caseconfig['methods']
 
         # Start JVM if required
-        if 'transfer_entropy' in self.methods:
+        if 'transfer_entropy_kraskov' or 'transfer_entropy_kernel' in self.methods:
             if not jpype.isJVMStarted():
                 jpype.startJVM(jpype.getDefaultJVMPath(),
                                "-Xms32M",
