@@ -30,6 +30,9 @@ sourcedir_normts = os.path.join(saveloc, 'normdata')
 filename_template = os.path.join(sourcedir,
                                  '{}_{}_weights_{}_{}_box{:03d}_{}.csv')
 
+sig_filename_template = os.path.join(sourcedir,
+                                     '{}_{}_sigthresh_{}_box{:03d}_{}.csv')
+
 filename_normts_template = os.path.join(sourcedir_normts,
                                         '{}_{}_normalised_data.csv')
 
@@ -48,14 +51,20 @@ class GraphData:
         self.graphconfig = json.load(open(os.path.join(
             dataloc, 'config_graphgen' + '.json')))
 
-        self.case, self.method, self.scenario, self.axis_limits = \
+        self.case, self.method, self.scenario, \
+            self.axis_limits, self.sigtest = \
             [self.graphconfig[graphname][item] for item in
-                ['case', 'method', 'scenario', 'axis_limits']]
+                ['case', 'method', 'scenario', 'axis_limits', 'sigtest']]
 
         if not self.method[0] == 'tsdata':
             self.boxindex, self.sourcevar = \
                 [self.graphconfig[graphname][item] for item in
                     ['boxindex', 'sourcevar']]
+
+        if self.sigtest:
+            self.sigstatus = 'sigtested'
+        else:
+            self.sigstatus = 'nosigtest'
 
     def get_xvalues(self, graphname):
         self.xvals = self.graphconfig[graphname]['xvals']
@@ -122,7 +131,8 @@ def fig_values_vs_delays(graphname):
     graphdata.get_legendbbox(graphname)
 
     sourcefile = filename_template.format(graphdata.case, graphdata.scenario,
-                                          graphdata.method[0], 'nosigtest',
+                                          graphdata.method[0],
+                                          graphdata.sigstatus,
                                           graphdata.boxindex,
                                           graphdata.sourcevar)
 
@@ -167,7 +177,7 @@ def fig_maxval_vs_taus(graphname):
 
         sourcefile = filename_template.format(
             graphdata.case, graphdata.scenario,
-            method, 'nosigtest', graphdata.boxindex,
+            method, graphdata.sigstatus, graphdata.boxindex,
             graphdata.sourcevar)
 
         valuematrix, headers = \
@@ -222,7 +232,7 @@ def fig_scenario_maxval_vs_taus(graphname, delays=False, drawfit=False):
 
         sourcefile = filename_template.format(
             graphdata.case, scenario,
-            graphdata.method[0], 'nosigtest', graphdata.boxindex,
+            graphdata.method[0], graphdata.sigstatus, graphdata.boxindex,
             graphdata.sourcevar)
 
         if delays:
@@ -270,7 +280,7 @@ def get_scenario_data_vectors(graphdata):
     for scenario in graphdata.scenario:
         sourcefile = filename_template.format(
             graphdata.case, scenario,
-            graphdata.method[0], 'nosigtest', graphdata.boxindex,
+            graphdata.method[0], graphdata.sigstatus, graphdata.boxindex,
             graphdata.sourcevar)
         valuematrix, _ = \
             data_processing.read_header_values_datafile(sourcefile)
@@ -296,7 +306,34 @@ def get_box_data_vectors(graphdata):
         for sourceindex, sourcevar in enumerate(graphdata.sourcevar):
             sourcefile = filename_template.format(
                 graphdata.case, graphdata.scenario,
-                graphdata.method[0], 'nosigtest', box,
+                graphdata.method[0], graphdata.sigstatus, box,
+                sourcevar)
+            valuematrix, _ = \
+                data_processing.read_header_values_datafile(sourcefile)
+            sourcevalues.append(valuematrix)
+        valuematrices.append(sourcevalues)
+
+    return valuematrices
+
+
+def get_box_threshold_vectors(graphdata):
+    """Extract significance threshold matrices from different boxes and different
+    source variables.
+
+    Returns a list of list, with entries in the first list referring to
+    a specific box, and entries in the second list referring to a specific
+    source variable.
+
+    """
+
+    valuematrices = []
+    # Get number of source variables
+    for box in graphdata.boxindex:
+        sourcevalues = []
+        for sourceindex, sourcevar in enumerate(graphdata.sourcevar):
+            sourcefile = sig_filename_template.format(
+                graphdata.case, graphdata.scenario,
+                graphdata.method[0], box,
                 sourcevar)
             valuematrix, _ = \
                 data_processing.read_header_values_datafile(sourcefile)
@@ -368,7 +405,7 @@ def fig_subsampling_interval_effect(graphname, delays=False):
 
         sourcefile = filename_template.format(
             graphdata.case, scenario,
-            graphdata.method[0], 'nosigtest', graphdata.boxindex,
+            graphdata.method[0], graphdata.sigstatus, graphdata.boxindex,
             graphdata.sourcevar)
 
         if delays:
@@ -432,6 +469,58 @@ def fig_boxvals_differentsources(graphname):
         plt.plot(graphdata.xvals, relevant_values,
                  "--", marker="o", markersize=4,
                  label=r'Source {}'.format(sourceindex+1))
+
+    plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
+    plt.xlabel(r'Box number', fontsize=14)
+    plt.legend(bbox_to_anchor=graphdata.legendbbox)
+
+    if graphdata.axis_limits is not False:
+        plt.axis(graphdata.axis_limits)
+
+    plt.savefig(graph_filename_template.format(graphname))
+    plt.close()
+
+    return None
+
+
+def fig_boxvals_differentsources_threshold(graphname):
+    """Plots the measure values for different boxes and multiple source
+    variables.
+
+    affectedindex is the index of the affected variable that is desired
+
+    """
+
+    graphdata = GraphData(graphname)
+    graphdata.get_legendbbox(graphname)
+
+    # Get x-axis values
+    graphdata.get_xvalues(graphname)
+
+    # Get valuematrices
+    valuematrices = get_box_data_vectors(graphdata)
+
+    thresholdmatrices = get_box_threshold_vectors(graphdata)
+
+    plt.figure(1, (12, 6))
+
+    for sourceindex, sourceval in enumerate(graphdata.sourcevar):
+        relevant_values = []
+        relevant_thresholds = []
+        for valuematrix, thresholdmatrix in zip(valuematrices,
+                                                thresholdmatrices):
+            # Extract the values corresponding to the current sourcevar
+            # and the desired affectedindex
+            relevant_values.append(valuematrix[sourceindex][1])
+            relevant_thresholds.append(thresholdmatrix[sourceindex][1])
+
+        plt.plot(graphdata.xvals, relevant_values,
+                 "--", marker="o", markersize=4,
+                 label=r'Source {}'.format(sourceindex+1))
+
+        plt.plot(graphdata.xvals, relevant_thresholds,
+                 "-", markersize=4,
+                 label=r'Source {} threshold'.format(sourceindex+1))
 
     plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
     plt.xlabel(r'Box number', fontsize=14)
@@ -542,32 +631,34 @@ def demo_fig_EWMA_adjusted_weights(graphname):
 #######################################################################
 
 
-graphs = [[fig_values_vs_delays,
-           ['firstorder_noiseonly_cc_vs_delays_scen01',
-            'firstorder_noiseonly_abs_te_vs_delays_scen01',
-            'firstorder_noiseonly_dir_te_vs_delays_scen01',
-            'firstorder_sineonly_cc_vs_delays_scen01',
-            'firstorder_sineonly_abs_te_vs_delays_scen01',
-            'firstorder_sineonly_dir_te_vs_delays_scen01',
-            'firstorder_noiseandsine_cc_vs_delays_scen01',
-            'firstorder_noiseandsine_abs_te_vs_delays_scen01',
-            'firstorder_noiseandsine_dir_te_vs_delays_scen01',
+graphs = [
+
+#          [fig_values_vs_delays,
+#           ['firstorder_noiseonly_cc_vs_delays_scen01',
+#            'firstorder_noiseonly_abs_te_vs_delays_scen01',
+#            'firstorder_noiseonly_dir_te_vs_delays_scen01',
+#            'firstorder_sineonly_cc_vs_delays_scen01',
+#            'firstorder_sineonly_abs_te_vs_delays_scen01',
+#            'firstorder_sineonly_dir_te_vs_delays_scen01',
+#            'firstorder_noiseandsine_cc_vs_delays_scen01',
+#            'firstorder_noiseandsine_abs_te_vs_delays_scen01',
+#            'firstorder_noiseandsine_dir_te_vs_delays_scen01',
 # Do this for the case of no normalization as well...
 # Surpressed because it provides no useful graphs
           # 'firstorder_noiseonly_cc_vs_delays_nonorm_scen01',
           # 'firstorder_noiseonly_abs_te_vs_delays_nonorm_scen01',
           # 'firstorder_noiseonly_dir_te_vs_delays_nonorm_scen01',
-            ]],
+#            ]],
 
 #######################################################################
 # Plot maximum measure values vs. first order time constants
 #######################################################################
-          [fig_maxval_vs_taus,
-           ['firstorder_noiseonly_cc_vs_tau_scen01',
-            'firstorder_noiseonly_te_vs_tau_scen01',
-            'firstorder_sineonly_cc_vs_tau_scen01',
-            'firstorder_sineonly_te_vs_tau_scen01',
-           ]],
+#          [fig_maxval_vs_taus,
+#           ['firstorder_noiseonly_cc_vs_tau_scen01',
+#            'firstorder_noiseonly_te_vs_tau_scen01',
+#            'firstorder_sineonly_cc_vs_tau_scen01',
+#            'firstorder_sineonly_te_vs_tau_scen01',
+#           ]],
 
 #######################################################################
 
@@ -594,20 +685,20 @@ graphs = [[fig_values_vs_delays,
 # Plot measure values vs. delays for range of noise
 # sampling intervals.
 #######################################################################
-          [lambda graphname: fig_diffvar_vs_delay(
-              graphname, [0.1, 0.01, 1.0],
-              r'Sample rate = {:1.2f} seconds'),
-           ['firstorder_noiseonly_sampling_rate_effect_abs_te',
-            'firstorder_noiseonly_sampling_rate_effect_dir_te',
-            'firstorder_noiseonly_sampling_rate_effect_cc',
-            ]],
-
-          [lambda graphname: fig_diffvar_vs_delay(graphname, [1, 10, 0.1],
-                                                  r'Frequency = {:1.2f} Hz'),
-           ['firstorder_sineonly_frequency_effect_abs_te',
-            'firstorder_sineonly_frequency_effect_dir_te',
-            'firstorder_sineonly_frequency_effect_cc',
-           ]],
+#          [lambda graphname: fig_diffvar_vs_delay(
+#              graphname, [0.1, 0.01, 1.0],
+#              r'Sample rate = {:1.2f} seconds'),
+#           ['firstorder_noiseonly_sampling_rate_effect_abs_te',
+#            'firstorder_noiseonly_sampling_rate_effect_dir_te',
+#            'firstorder_noiseonly_sampling_rate_effect_cc',
+#            ]],
+#
+#          [lambda graphname: fig_diffvar_vs_delay(graphname, [1, 10, 0.1],
+#                                                  r'Frequency = {:1.2f} Hz'),
+#           ['firstorder_sineonly_frequency_effect_abs_te',
+#            'firstorder_sineonly_frequency_effect_dir_te',
+#            'firstorder_sineonly_frequency_effect_cc',
+#           ]],
 # Also consider finding a lograthmic fit.
 
 #######################################################################
@@ -634,43 +725,43 @@ graphs = [[fig_values_vs_delays,
 # time steps.
 #######################################################################
 
-           [lambda graphname: fig_diffvar_vs_delay(
-               graphname, [0.01, 0.1],
-               r'Simulation time step = {:1.2f} seconds'),
-            ['firstorder_noiseonly_sim_time_interval_effect_abs_te',
-             'firstorder_noiseonly_sim_time_interval_effect_dir_te',
-             'firstorder_noiseonly_sim_time_interval_effect_cc',
-             'firstorder_sineonly_sim_time_interval_effect_abs_te',
-             'firstorder_sineonly_sim_time_interval_effect_dir_te',
-             'firstorder_sineonly_sim_time_interval_effect_cc',
-             ]],
+#           [lambda graphname: fig_diffvar_vs_delay(
+#               graphname, [0.01, 0.1],
+#               r'Simulation time step = {:1.2f} seconds'),
+#            ['firstorder_noiseonly_sim_time_interval_effect_abs_te',
+#             'firstorder_noiseonly_sim_time_interval_effect_dir_te',
+#             'firstorder_noiseonly_sim_time_interval_effect_cc',
+#             'firstorder_sineonly_sim_time_interval_effect_abs_te',
+#             'firstorder_sineonly_sim_time_interval_effect_dir_te',
+#             'firstorder_sineonly_sim_time_interval_effect_cc',
+#             ]],
 
 #######################################################################
 # Plot measure values vs. delays for range of sample sizes.
 #######################################################################
-           [lambda graphname: fig_diffvar_vs_delay(
-               graphname, [200, 500, 1000, 2000, 5000],
-               r'Sample size = {}'),
-            ['firstorder_noiseonly_sample_size_effect_abs_te',
-             'firstorder_noiseonly_sample_size_effect_dir_te',
-             'firstorder_noiseonly_sample_size_effect_cc',
-             'firstorder_sineonly_sample_size_effect_abs_te',
-             'firstorder_sineonly_sample_size_effect_dir_te',
-             'firstorder_sineonly_sample_size_effect_cc',
-             ]],
+#           [lambda graphname: fig_diffvar_vs_delay(
+#               graphname, [200, 500, 1000, 2000, 5000],
+#               r'Sample size = {}'),
+#            ['firstorder_noiseonly_sample_size_effect_abs_te',
+#             'firstorder_noiseonly_sample_size_effect_dir_te',
+#             'firstorder_noiseonly_sample_size_effect_cc',
+#             'firstorder_sineonly_sample_size_effect_abs_te',
+#             'firstorder_sineonly_sample_size_effect_dir_te',
+#             'firstorder_sineonly_sample_size_effect_cc',
+#             ]],
 
 
 #######################################################################
 # Plot measure values vs. delays for range of sub-sampling intervals
 #######################################################################
 
-           [lambda graphname: fig_diffvar_vs_delay(
-               graphname, [1, 2, 5],
-               r'Sub-sampling interval = {}'),
-            ['firstorder_noiseonly_subsampling_effect_abs_te',
-             'firstorder_noiseonly_subsampling_effect_dir_te',
-             'firstorder_noiseonly_subsampling_effect_cc',
-             ]],
+#           [lambda graphname: fig_diffvar_vs_delay(
+#               graphname, [1, 2, 5],
+#               r'Sub-sampling interval = {}'),
+#            ['firstorder_noiseonly_subsampling_effect_abs_te',
+#             'firstorder_noiseonly_subsampling_effect_dir_te',
+#             'firstorder_noiseonly_subsampling_effect_cc',
+#             ]],
 
 
 #graphnames = ['firstorder_noiseonly_subsampling_effect_abs_te',
@@ -689,58 +780,64 @@ graphs = [[fig_values_vs_delays,
 #######################################################################
 # Plot signal over time.
 #######################################################################
-            [fig_timeseries,
-             ['noiseandsine_signal_normts_scen01',
-              'noiseonly_signal_normts_scen01',
-              'sineonly_signal_normts_scen01',
-             ]],
+#            [fig_timeseries,
+#             ['noiseandsine_signal_normts_scen01',
+#              'noiseonly_signal_normts_scen01',
+#              'sineonly_signal_normts_scen01',
+#             ]],
 
 #######################################################################
 # Plot measure values vs. taus for different sub-sampling intervals
 #######################################################################
 
-           [lambda graphname: fig_scenario_maxval_vs_taus(
-               graphname, True),
-            ['firstorder_noiseonly_cc_subsampling_vs_tau_scen01',
-             'firstorder_noiseonly_abs_te_subsampling_vs_tau_scen01',
-             'firstorder_noiseonly_dir_te_subsampling_vs_tau_scen01',
-             ]],
+#           [lambda graphname: fig_scenario_maxval_vs_taus(
+#               graphname, True),
+#            ['firstorder_noiseonly_cc_subsampling_vs_tau_scen01',
+#             'firstorder_noiseonly_abs_te_subsampling_vs_tau_scen01',
+#             'firstorder_noiseonly_dir_te_subsampling_vs_tau_scen01',
+#             ]],
 
-           [lambda graphname: fig_scenario_maxval_vs_taus(
-               graphname, False),
-            ['firstorder_noiseonly_cc_subsampling_vs_tau_scen02',
-             'firstorder_noiseonly_abs_te_subsampling_vs_tau_scen02',
-             'firstorder_noiseonly_dir_te_subsampling_vs_tau_scen02',
-             ]],
+#           [lambda graphname: fig_scenario_maxval_vs_taus(
+#               graphname, False),
+#            ['firstorder_noiseonly_cc_subsampling_vs_tau_scen02',
+#             'firstorder_noiseonly_abs_te_subsampling_vs_tau_scen02',
+#             'firstorder_noiseonly_dir_te_subsampling_vs_tau_scen02',
+#             ]],
 
 #######################################################################
 # Plot measure values vs. sampling interval / noise sample variance
 # for different taus intervals
 #######################################################################
 
-           [lambda graphname: fig_subsampling_interval_effect(
-               graphname, False),
-            ['firstorder_noiseonly_cc_subsampling_vs_interval_effect',
-             'firstorder_noiseonly_abs_te_subsampling_vs_interval_effect',
-             'firstorder_noiseonly_dir_te_subsampling_vs_interval_effect',
-             ]],
+#           [lambda graphname: fig_subsampling_interval_effect(
+#               graphname, False),
+#            ['firstorder_noiseonly_cc_subsampling_vs_interval_effect',
+#             'firstorder_noiseonly_abs_te_subsampling_vs_interval_effect',
+#             'firstorder_noiseonly_dir_te_subsampling_vs_interval_effect',
+#             ]],
 
 
 #######################################################################
 # Plot measure values vs. boxindex for different sources
 #######################################################################
 
-           [lambda graphname: fig_boxvals_differentsources(
+#           [lambda graphname: fig_boxvals_differentsources(
+#               graphname),
+#            ['firstorder_twonoises_differenstarts_abs_te_weight_vs_box_scen01',
+#             'firstorder_twonoises_differenstarts_abs_te_weight_vs_box_scen02',
+#             ]],
+
+           [lambda graphname: fig_boxvals_differentsources_threshold(
                graphname),
-            ['firstorder_twonoises_differenstarts_abs_te_weight_vs_box_scen01',
-             'firstorder_twonoises_differenstarts_abs_te_weight_vs_box_scen02',
+            ['firstorder_twonoises_differenstarts_abs_te_sigtest_weight_vs_box_scen01',
+             'firstorder_twonoises_differenstarts_abs_te_sigtest_weight_vs_box_scen02',
              ]],
 
-           [lambda graphname: fig_boxvals_differentsources_ewma(
-               graphname),
-            ['firstorder_twonoises_differenstarts_abs_te_weight_vs_box_scen01_ewma',
-             'firstorder_twonoises_differenstarts_abs_te_weight_vs_box_scen02_ewma',
-             ]],
+#           [lambda graphname: fig_boxvals_differentsources_ewma(
+#               graphname),
+#            ['firstorder_twonoises_differenstarts_abs_te_weight_vs_box_scen01_ewma',
+#             'firstorder_twonoises_differenstarts_abs_te_weight_vs_box_scen02_ewma',
+#             ]],
 #######################################################################
 # Plot example of how EWMA weight benchmark affects weight changes
 #######################################################################
