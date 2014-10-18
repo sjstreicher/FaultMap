@@ -205,8 +205,8 @@ class TransentWeightcalc:
         # Setup Java class for infodynamics toolkit
         self.teCalc = \
             transentropy.setup_infodynamics_te(weightcalcdata.normalize,
-                                               estimator)
-                                               
+                                               calcmethod=estimator)
+
         self.estimator = estimator
 
     def calcweight(self, causevardata, affectedvardata, weightcalcdata,

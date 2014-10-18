@@ -61,7 +61,7 @@ def vectorselection(data, timelag, sub_samples, k=1, l=1):
     return x_pred, x_hist, y_hist
 
 
-def setup_infodynamics_te(normalize, calcmethod='kernel', histlength=1):
+def setup_infodynamics_te(normalize, calcmethod, histlength=1):
     """Prepares the teCalc class of the Java Infodyamics Toolkit (JIDK)
     in order to calculate transfer entropy according to the kernel or Kraskov
     estimator method.
