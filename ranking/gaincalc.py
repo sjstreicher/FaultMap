@@ -218,8 +218,8 @@ class WeightcalcData:
         # Create descriptive dictionary for later use
         # This will need to be approached slightly differently to allow for
         # different formats under the same "plant"
-        self.descriptions = data_processing.descriptive_dictionary(
-            os.path.join(self.casedir, 'data', 'tag_descriptions.csv'))
+#        self.descriptions = data_processing.descriptive_dictionary(
+#            os.path.join(self.casedir, 'data', 'tag_descriptions.csv'))
 
         # FFT the data and write back in format that can be analysed in
         # TOPCAT in a plane plot
