@@ -78,19 +78,25 @@ class GraphData:
 
 yaxislabel = \
     {u'cross_correlation': r'Cross correlation',
-     u'absolute_transfer_entropy_kernel': r'Absolute transfer entropy (bits)',
-     u'directional_transfer_entropy_kernel': r'Directional transfer entropy (bits)'}
+     u'absolute_transfer_entropy_kernel': r'Absolute transfer entropy (Kernel) (bits)',
+     u'directional_transfer_entropy_kernel': r'Directional transfer entropy (Kernel) (bits)',
+     u'absolute_transfer_entropy_kraskov': r'Absolute transfer entropy (Kraskov) (bits)',
+     u'directional_transfer_entropy_kraskov': r'Directional transfer entropy (Kraskov) (bits)'}
 
 
 linelabels = \
     {'cross_correlation': r'Correllation',
-     'absolute_transfer_entropy_kernel': r'Absolute TE',
-     'directional_transfer_entropy_kernel': r'Directional TE'}
+     'absolute_transfer_entropy_kernel': r'Absolute TE (Kernel)',
+     'directional_transfer_entropy_kernel': r'Directional TE (Kernel)',
+     'absolute_transfer_entropy_kraskov': r'Absolute TE (Kraskov)',
+     'directional_transfer_entropy_kraskov': r'Directional TE (Kraskov)'}
 
 fitlinelabels = \
     {'cross_correlation': r'Correlation fit',
-     'absolute_transfer_entropy_kernel': r'Absolute TE fit',
-     'directional_transfer_entropy_kernel': r'Directional TE fit'}
+     'absolute_transfer_entropy_kernel': r'Absolute TE (Kernel) fit',
+     'directional_transfer_entropy_kernel': r'Directional TE (Kernel) fit',
+     'absolute_transfer_entropy_kraskov': r'Absolute TE (Kraskov) fit',
+     'directional_transfer_entropy_kraskov': r'Directional TE (Kraskov) fit'}
 
 
 def fig_timeseries(graphname):
@@ -650,6 +656,13 @@ graphs = [
           # 'firstorder_noiseonly_dir_te_vs_delays_nonorm_scen01',
 #            ]],
 
+
+          [fig_values_vs_delays,
+           ['firstorder_noiseandsine_abs_te_vs_delays_scen01',
+            'firstorder_noiseandsine_dir_te_vs_delays_scen01',
+            'firstorder_noiseandsine_abs_te__kraskov_vs_delays_scen01',
+            ]],
+
 #######################################################################
 # Plot maximum measure values vs. first order time constants
 #######################################################################
@@ -827,11 +840,11 @@ graphs = [
 #             'firstorder_twonoises_differenstarts_abs_te_weight_vs_box_scen02',
 #             ]],
 
-           [lambda graphname: fig_boxvals_differentsources_threshold(
-               graphname),
-            ['firstorder_twonoises_differenstarts_abs_te_sigtest_weight_vs_box_scen01',
-             'firstorder_twonoises_differenstarts_abs_te_sigtest_weight_vs_box_scen02',
-             ]],
+#           [lambda graphname: fig_boxvals_differentsources_threshold(
+#               graphname),
+#            ['firstorder_twonoises_differenstarts_abs_te_sigtest_weight_vs_box_scen01',
+#             'firstorder_twonoises_differenstarts_abs_te_sigtest_weight_vs_box_scen02',
+#             ]],
 
 #           [lambda graphname: fig_boxvals_differentsources_ewma(
 #               graphname),
