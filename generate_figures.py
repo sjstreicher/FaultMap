@@ -80,8 +80,8 @@ yaxislabel = \
     {u'cross_correlation': r'Cross correlation',
      u'absolute_transfer_entropy_kernel': r'Absolute transfer entropy (Kernel) (bits)',
      u'directional_transfer_entropy_kernel': r'Directional transfer entropy (Kernel) (bits)',
-     u'absolute_transfer_entropy_kraskov': r'Absolute transfer entropy (Kraskov) (bits)',
-     u'directional_transfer_entropy_kraskov': r'Directional transfer entropy (Kraskov) (bits)'}
+     u'absolute_transfer_entropy_kraskov': r'Absolute transfer entropy (Kraskov) (nats)',
+     u'directional_transfer_entropy_kraskov': r'Directional transfer entropy (Kraskov) (nats)'}
 
 
 linelabels = \
@@ -661,6 +661,7 @@ graphs = [
            ['firstorder_noiseandsine_abs_te_vs_delays_scen01',
             'firstorder_noiseandsine_dir_te_vs_delays_scen01',
             'firstorder_noiseandsine_abs_te__kraskov_vs_delays_scen01',
+            'firstorder_noiseandsine_dir_te__kraskov_vs_delays_scen01',
             ]],
 
 #######################################################################
