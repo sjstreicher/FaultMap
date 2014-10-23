@@ -47,7 +47,7 @@ class WeightcalcData:
     weight calculation methods.
 
     """
-    def __init__(self, mode, case, single_entropies):
+    def __init__(self, mode, case, single_entropies, fftcalc):
         # Get file locations from configuration file
         self.saveloc, self.casedir, infodynamicsloc = \
             config_setup.runsetup(mode, case)
@@ -72,6 +72,8 @@ class WeightcalcData:
 
         # Flag for calculating single signal entropies
         self.single_entropies = single_entropies
+        # Flag for calculating FFT of all signals
+        self.fftcalc = fftcalc
 
     def scenariodata(self, scenario):
         """Retrieves data particular to each scenario for the case being
@@ -205,6 +207,12 @@ class WeightcalcData:
             # as the original data file - but it does not play a role at all
             # in the actual for the case of boxnum = 1
 
+        # Select which of the boxes to evaluate
+        self.boxindexes = self.caseconfig[scenario]['boxindexes']
+        if self.boxindexes == 'all':
+            self.boxindexes = range(len(self.boxindexes))
+        print self.boxindexes
+
         if self.delaytype == 'datapoints':
                 self.actual_delays = [(delay * self.sampling_rate *
                                        sub_sampling_interval)
@@ -223,14 +231,15 @@ class WeightcalcData:
 
         # FFT the data and write back in format that can be analysed in
         # TOPCAT in a plane plot
-        data_processing.fft_calculation(raw_tsdata,
-                                        self.inputdata_originalrate,
-                                        self.variables,
-                                        self.sampling_rate,
-                                        self.sampling_unit,
-                                        self.saveloc,
-                                        self.casename,
-                                        scenario)
+        if self.fftcalc:
+            data_processing.fft_calculation(raw_tsdata,
+                                            self.inputdata_originalrate,
+                                            self.variables,
+                                            self.sampling_rate,
+                                            self.sampling_unit,
+                                            self.saveloc,
+                                            self.casename,
+                                            scenario)
 
 
 def calc_weights(weightcalcdata, method, scenario):
@@ -349,7 +358,10 @@ def calc_weights(weightcalcdata, method, scenario):
     delay_arrays = []
     datastores = []
 
-    for boxindex, box in enumerate(boxes):
+    for boxindex in weightcalcdata.boxindexes:
+        box = boxes[boxindex]
+
+#    for boxindex, box in enumerate(boxes):
 
         weight_array = np.empty((vardims, vardims))
         delay_array = np.empty((vardims, vardims))
@@ -596,7 +608,8 @@ def writecsv_weightcalc(filename, items, header):
         csv.writer(f).writerows(items)
 
 
-def weightcalc(mode, case, writeoutput=False, single_entropies=False):
+def weightcalc(mode, case, writeoutput=False, single_entropies=False,
+               fftcalc=False):
     """Reports the maximum weight as well as associated delay
     obtained by shifting the affected variable behind the causal variable a
     specified set of delays.
@@ -606,7 +619,7 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False):
 
     """
 
-    weightcalcdata = WeightcalcData(mode, case, single_entropies)
+    weightcalcdata = WeightcalcData(mode, case, single_entropies, fftcalc)
 
     # Define export directories and filenames
     weightdir = config_setup.ensure_existance(os.path.join(
