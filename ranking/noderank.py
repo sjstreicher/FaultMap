@@ -424,13 +424,10 @@ def looprank(mode, case, writeoutput, preprocessing=False):
         os.path.join(savedir, '{}_{}_{}_originalgainmatrix_box{:03d}.csv')
 
     graphfile_template = os.path.join(savedir,
-                                      '{}_{}_{}_{}_graph_{}_box{:03d}.gml')
+                                      '{}_{}_{}_{}_graph_{}_{}_box{:03d}.gml')
 
     importances_template = os.path.join(
-        savedir, '{}_{}_{}_{}_importances_{}_box{:03d}.csv')
-
-    importances_dumsup_template = os.path.join(
-        savedir, '{}_{}_{}_{}_importances_{}_box{:03d}.csv')
+        savedir, '{}_{}_{}_{}_importances_{}_{}_box{:03d}.csv')
 
     graph_filename = os.path.join(savedir,
                                   "{}_{}_{}_{}_graph_dumsup_box{:03d}.gml")
@@ -528,12 +525,14 @@ def looprank(mode, case, writeoutput, preprocessing=False):
                                     directions, rankinglists, rankingdicts,
                                     connections, variables, gains):
                                 idtuple = (case, scenario, weight_method,
-                                           direction,
+                                           direction, rank_method,
                                            dummystatus, index+1)
+
                                 # Save the ranking list to file
                                 savename = importances_template.format(
                                     *idtuple)
                                 writecsv_looprank(savename, rankinglist)
+
                                 # Save the graphs to file
                                 graph, _ = \
                                     create_importance_graph(
@@ -541,7 +540,6 @@ def looprank(mode, case, writeoutput, preprocessing=False):
                                         rankingdict)
                                 graph_filename = \
                                     graphfile_template.format(*idtuple)
-
                                 nx.readwrite.write_gml(graph, graph_filename)
 
                             if noderankdata.dummies:
@@ -566,6 +564,7 @@ def looprank(mode, case, writeoutput, preprocessing=False):
                                     graph,
                                     graph_filename.format(case, scenario,
                                                           weight_method,
+                                                          rank_method,
                                                           direction, index+1))
 
                                 # Calculate and export normalised ranking lists
@@ -578,13 +577,14 @@ def looprank(mode, case, writeoutput, preprocessing=False):
                                             rankingdict,
                                             noderankdata.variablelist)
                                     writecsv_looprank(
-                                        importances_dumsup_template.format(
+                                        importances_template.format(
                                             case, scenario, weight_method,
+                                            rank_method,
                                             direction, index+1),
                                         normalised_rankinglist)
 
                     # Get the transient and base value dictionaries
-                    transientdict, basevaldict, boxrankdict = \
+                    _, _, boxrankdict = \
                         calc_transient_importancediffs(
                             backward_rankingdicts, noderankdata.variablelist)
 
