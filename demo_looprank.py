@@ -17,10 +17,8 @@ noderank_config = json.load(open(os.path.join(dataloc, 'config'
                                               '_noderank' + '.json')))
 
 writeoutput = noderank_config['writeoutput']
-m = noderank_config['m']
 mode = noderank_config['mode']
 cases = noderank_config['cases']
 
 for case in cases:
-    for dummycreation in [False]:
-        looprank(mode, case, dummycreation, writeoutput, m)
+    looprank(mode, case, writeoutput)
