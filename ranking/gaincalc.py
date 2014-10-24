@@ -208,10 +208,12 @@ class WeightcalcData:
             # in the actual for the case of boxnum = 1
 
         # Select which of the boxes to evaluate
-        self.boxindexes = self.caseconfig[scenario]['boxindexes']
-        if self.boxindexes == 'all':
-            self.boxindexes = range(len(self.boxindexes))
-        print self.boxindexes
+        if self.transient:
+            self.boxindexes = self.caseconfig[scenario]['boxindexes']
+            if self.boxindexes == 'all':
+                self.boxindexes = range(len(self.boxindexes))
+        else:
+            self.boxindexes = 'all'
 
         if self.delaytype == 'datapoints':
                 self.actual_delays = [(delay * self.sampling_rate *
@@ -649,6 +651,9 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False,
                 # Continue with execution
                 [weight_arrays, delay_arrays, datastores, data_header] = \
                     calc_weights(weightcalcdata, method, scenario)
+
+                # TODO: Call this code on each weight array as soon as its
+                # calculation is finished.
 
                 for boxindex in range(weightcalcdata.boxnum):
                     if writeoutput:
