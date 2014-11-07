@@ -241,8 +241,8 @@ def subtract_mean(inputdata_raw):
 
 
 def read_connectionmatrix(connection_loc):
-    """This method imports the connection scheme for the data.
-    The format should be:
+    """Imports the connection scheme for the data.
+    The format of the CSV file should be:
     empty space, var1, var2, etc... (first row)
     var1, value, value, value, etc... (second row)
     var2, value, value, value, etc... (third row)
@@ -258,6 +258,18 @@ def read_connectionmatrix(connection_loc):
         connectionmatrix = np.genfromtxt(f, delimiter=',')[:, 1:]
 
     return connectionmatrix, variables
+
+
+def read_biasvector(biasvector_loc):
+    """Imports the bias vector for ranking purposes.
+    The format of the CSV file should be:
+    var1, var2, etc ... (first row)
+    bias1, bias2, etc ... (second row)
+    """
+    with open(biasvector_loc) as f:
+        variables = csv.reader(f).next()[1:]
+        biasvector = np.genfromtxt(f, delimiter=',')[:]
+    return biasvector, variables
 
 
 def read_header_values_datafile(location):
@@ -338,6 +350,8 @@ def rankbackward(variables, gainmatrix, connections,
     generate the reverse option.
 
     """
+
+    # TODO: Modify bias vector to assign zero weight to all dummy nodes
 
     digraph = buildgraph(variables, gainmatrix, connections)
     return buildcase(dummyweight, digraph, 'DV BWD ', dummycreation)

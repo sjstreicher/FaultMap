@@ -61,12 +61,17 @@ class NoderankData:
         settings_name = self.caseconfig[scenario]['settings']
         self.connections_used = (self.caseconfig[settings_name]
                                  ['use_connections'])
+        self.bias_used = (self.caseconfig[settings_name]
+                          ['use_bias'])
+        self.dummies = self.caseconfig[settings_name]['dummies']
 
         self.m = self.caseconfig[scenario]['m']
         self.alpha = self.caseconfig[scenario]['alpha']
-        self.dummies = self.caseconfig[settings_name]['dummies']
 
         if self.datatype == 'file':
+            # Get the gain matrices directory
+            self.gainloc = os.path.join(self.casedir, 'gainmatrix')
+
             # Retrieve connection matrix criteria from settings
             if self.connections_used:
                 # Get connection (adjacency) matrix
@@ -76,8 +81,18 @@ class NoderankData:
                 self.connectionmatrix, self.variablelist = \
                     data_processing.read_connectionmatrix(connectionloc)
 
-            # Get the gain matrices directory
-            self.gainloc = os.path.join(self.casedir, 'gainmatrix')
+            if self.bias_used:
+                # Read the bias vector from file
+                # Get the bias vector file location
+                biasloc = os.path.join(self.casedir, 'biasvectors',
+                                       self.caseconfig[scenario]
+                                       ['biasvector'])
+                self.biasvector, _ = \
+                    data_processing.read_biasvector(biasloc)
+
+            else:
+                # If no bias vector is defined, use a vector of equal weights
+                self.biasvector = np.ones(len(self.variablelist))
 
         elif self.datatype == 'function':
             # Get variables, connection matrix and gainmatrix
@@ -109,9 +124,6 @@ def calc_simple_rank(gainmatrix, variables, noderankdata, rank_method,
     original LoopRank idea.
 
     """
-    # Transpose gainmatrix so that we are looking at the backwards
-    # ranking problem
-    gainmatrix = gainmatrix.T
     # Length of gain matrix = number of nodes
     n = gainmatrix.shape[0]
     gainmatrix = np.asmatrix(gainmatrix, dtype=float)
@@ -128,16 +140,45 @@ def calc_simple_rank(gainmatrix, variables, noderankdata, rank_method,
         else:
             gainmatrix[:, col] = (gainmatrix[:, col] / colsum)
 
+    # Generate the reset matrix
     # The reset matrix is also refferred to as the personalisation matrix
-    resetmatrix = np.ones((n, n), dtype=float)/n
+    relative_reset_vector = noderankdata.biasvector
+    relative_reset_vector_norm = \
+         np.asarray(relative_reset_vector, dtype=float) \
+         / sum(relative_reset_vector)
+
+    resetmatrix = np.array([relative_reset_vector_norm, ]*n)
+
     m = noderankdata.m
     alpha = noderankdata.alpha
-    reset_gainmatrix = (m * gainmatrix) + ((1-m) * resetmatrix)
+    weightmatrix = (m * gainmatrix) + ((1-m) * resetmatrix)
+    # Transpose the weightmatrix to ensure the correct direction of analysis
+    weightmatrix = weightmatrix.T
 
-    # Normalize the reset_weightmatrix columns
+    # Normalize the weightmatrix columns
     for col in range(n):
-        reset_gainmatrix[:, col] = (reset_gainmatrix[:, col]
-                                    / np.sum(abs(reset_gainmatrix[:, col])))
+        weightmatrix[:, col] = (weightmatrix[:, col]
+                                / np.sum(abs(weightmatrix[:, col])))
+
+    # Transpose the gainmatrix for when it is used in isolation.
+    # It is important that this only happens after the weightmatrix has been
+    # created.
+    gainmatrix = gainmatrix.T
+
+    # Normalise the transposed gainmatrix columns
+    # (it will now be both row and column normalised)
+    # Normalize the gainmatrix columns
+    for col in range(n):
+        colsum = np.sum(abs(gainmatrix[:, col]))
+        if colsum == 0:
+            # Option :1 do nothing
+            None
+            # Option 2: equally connect to all other nodes
+    #        for row in range(n):
+    #            gainmatrix[row, col] = (1. / n)
+        else:
+            gainmatrix[:, col] = (gainmatrix[:, col] / colsum)
+
 
     if package == 'networkx':
         # Calculate rankings using networkx methods
@@ -149,7 +190,7 @@ def calc_simple_rank(gainmatrix, variables, noderankdata, rank_method,
                 # Create fully connected weighted graph for use with
                 # eigenvector centrality analysis
                 reset_gaingraph.add_edge(rowvar, colvar,
-                                         weight=reset_gainmatrix[row, col])
+                                         weight=weightmatrix[row, col])
                 # Create sparsely connected graph based on
                 # significant edge weights
                 # only for use with Katz centrality analysis
@@ -185,7 +226,7 @@ def calc_simple_rank(gainmatrix, variables, noderankdata, rank_method,
             # Only for development and confirmation purposes that networkx is
             # being used correctly.
 
-            [eigval, eigvec] = np.linalg.eig(reset_gainmatrix)
+            [eigval, eigvec] = np.linalg.eig(weightmatrix)
 #           [eigval_gain, eigvec_gain] = np.linalg.eig(gainmatrix)
             maxeigindex = np.argmax(eigval)
             rankarray = eigvec[:, maxeigindex]
