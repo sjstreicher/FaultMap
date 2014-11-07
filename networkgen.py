@@ -25,8 +25,10 @@ def graphname(name):
 
 alltestfunctions = []
 
+
 # TODO: Replace this with a proper class
-def test_function_builder(connections, gainmatrix=None, filename=None, variables=None, doc=None):
+def test_function_builder(connections, gainmatrix=None, filename=None,
+                          variables=None, doc=None):
     N, _ = connections.shape
 
     if gainmatrix is None:
