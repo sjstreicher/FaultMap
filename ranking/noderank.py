@@ -115,7 +115,8 @@ def norm_dict(dictionary):
     return {key: value/total for key, value in dictionary.items()}
 
 
-def calc_simple_rank(gainmatrix, variables, noderankdata, rank_method,
+def calc_simple_rank(gainmatrix, variables, biasvector, noderankdata,
+                     rank_method,
                      package='networkx'):
     """Constructs the ranking dictionary using the eigenvector approach
     i.e. Ax = x where A is the local gain matrix.
@@ -140,18 +141,23 @@ def calc_simple_rank(gainmatrix, variables, noderankdata, rank_method,
         else:
             gainmatrix[:, col] = (gainmatrix[:, col] / colsum)
 
+    print gainmatrix
+
     # Generate the reset matrix
     # The reset matrix is also refferred to as the personalisation matrix
-    relative_reset_vector = noderankdata.biasvector
+    relative_reset_vector = np.asarray(biasvector)
     relative_reset_vector_norm = \
-         np.asarray(relative_reset_vector, dtype=float) \
-         / sum(relative_reset_vector)
+        np.asarray(relative_reset_vector, dtype=float) \
+        / sum(relative_reset_vector)
 
     resetmatrix = np.array([relative_reset_vector_norm, ]*n)
 
     m = noderankdata.m
     alpha = noderankdata.alpha
     weightmatrix = (m * gainmatrix) + ((1-m) * resetmatrix)
+
+    print weightmatrix
+
     # Transpose the weightmatrix to ensure the correct direction of analysis
     weightmatrix = weightmatrix.T
 
@@ -178,7 +184,6 @@ def calc_simple_rank(gainmatrix, variables, noderankdata, rank_method,
     #            gainmatrix[row, col] = (1. / n)
         else:
             gainmatrix[:, col] = (gainmatrix[:, col] / colsum)
-
 
     if package == 'networkx':
         # Calculate rankings using networkx methods
@@ -385,14 +390,15 @@ def calc_gainrank(gainmatrix, noderankdata, rank_method,
 
     """
 
-    backwardconnection, backwardgain, backwardvariablelist = \
+    backwardconnection, backwardgain, backwardvariablelist, backwardbias = \
         data_processing.rankbackward(noderankdata.variablelist, gainmatrix,
                                      noderankdata.connectionmatrix,
+                                     noderankdata.biasvector,
                                      dummyweight, noderankdata.dummies)
 
     backwardrankingdict, backwardrankinglist = \
-        calc_simple_rank(backwardgain, backwardvariablelist, noderankdata,
-                         rank_method)
+        calc_simple_rank(backwardgain, backwardvariablelist, backwardbias,
+                         noderankdata, rank_method)
 
     rankingdicts = [backwardrankingdict]
     rankinglists = [backwardrankinglist]
@@ -436,7 +442,7 @@ def get_gainmatrices(noderankdata, countlocation, gainmatrix_filename,
     return gainmatrices
 
 
-def looprank(mode, case, writeoutput, preprocessing=False):
+def noderankcalc(mode, case, writeoutput, preprocessing=False):
     """Ranks the nodes in a network based on gain matrices already generated.
 
     Preprocessing is experimental and should always be set to False at this
