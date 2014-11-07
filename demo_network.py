@@ -28,22 +28,29 @@ onesgraph = nx.DiGraph()
 #                         [1, 0, 0, 0],
 #                         [0, 1, 1, 0]])
 
-
 #gainmatrix = np.matrix([[0.00, 0.00, 0.00, 0.35],
 #                        [0.82, 0.00, 0.00, 0.63],
 #                        [0.42, 0.00, 0.00, 0.00],
 #                        [0.00, 0.00, 0.21, 0.00]])
 
-[_, gainmatrix, variables, _] = networkgen.series_equal_five()
+gainmatrix = np.matrix([[0.0, 0.0, 0.0, 0.0, 0.0],
+                        [0.0, 0.0, 0.0, 0.0, 0.0],
+                        [2.0, 1.0, 0.0, 0.0, 0.0],
+                        [0.0, 0.0, 1.0, 0.0, 0.0],
+                        [1.0, 2.0, 0.0, 0.0, 0.0]])
+
+variables = ['X 1', 'X 2', 'X 3', 'X 4', 'X 5']
+#[_, gainmatrix, variables, _] = networkgen.series_equal_five()
 
 n = gainmatrix.shape[0]
 
 gainmatrix = np.asmatrix(gainmatrix, dtype=float)
 
+print gainmatrix
+
 # Should the transpose happen before or after the column normalization?
 # I have a feeling that it should definitely be before...
 
-gainmatrix = gainmatrix.T
 
 # Normalize the gainmatrix columns
 for col in range(n):
@@ -58,25 +65,30 @@ for col in range(n):
         gainmatrix[:, col] = (gainmatrix[:, col]
                               / colsum)
 
+print gainmatrix
+
 onesmatrix = np.ones_like(gainmatrix)
 
 m = 0.9999
 
-relative_reset_vector = [1, 1, 1, 1, 1]
+relative_reset_vector = [5, 1, 1, 1, 1]
 
 relative_reset_vector_norm = np.asarray(relative_reset_vector, dtype=float) \
     / sum(relative_reset_vector)
 
-resetmatrix = np.array([relative_reset_vector_norm, ]*n).T
-
+#resetmatrix = np.array([relative_reset_vector_norm, ]*n).T
+resetmatrix = np.array([relative_reset_vector_norm, ]*n)
 #resetmatrix = (1./n) * np.ones_like(gainmatrix)
 
 weightmatrix = (m * gainmatrix) + ((1-m) * resetmatrix)
+
+weightmatrix = weightmatrix.T
 
 # Normalize the weightmatrix columns
 for col in range(n):
     weightmatrix[:, col] = (weightmatrix[:, col]
                             / np.sum(abs(weightmatrix[:, col])))
+
 
 [eigval, eigvec] = np.linalg.eig(weightmatrix)
 [eigval_gain, eigvec_gain] = np.linalg.eig(gainmatrix)
@@ -86,10 +98,14 @@ rankarray = eigvec[:, maxeigindex]
 
 # Take absolute values of ranking values
 rankarray = abs(np.asarray(rankarray))
+
+print rankarray
 # This is the 1-dimensional array composed of rankings (normalised)
 rankarray_norm = (1 / sum(rankarray)) * rankarray
 # Remove the useless imaginary +0j
 rankarray_norm = rankarray_norm.real
+
+print rankarray_norm
 
 for col, colvar in enumerate(variables):
     for row, rowvar in enumerate(variables):
