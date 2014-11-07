@@ -306,15 +306,21 @@ def buildcase(dummyweight, digraph, name, dummycreation):
                 # TODO: Investigate the effect of different weights
                 nameofscale = name + str(counter)
                 digraph.add_edge(node, nameofscale, weight=dummyweight)
+                digraph.add_node(nameofscale, bias=0)
                 counter += 1
 
     connection = nx.to_numpy_matrix(digraph, weight=None)
     gain = nx.to_numpy_matrix(digraph, weight='weight')
     variablelist = digraph.nodes()
-    return np.array(connection), gain, variablelist
+    nodedatalist = digraph.nodes(data=True)
+
+    biaslist = []
+    for nodeindex, node in enumerate(digraph.nodes()):
+        biaslist.append(nodedatalist[nodeindex][1]['bias'])
+    return np.array(connection), gain, variablelist, biaslist
 
 
-def buildgraph(variables, gainmatrix, connections):
+def buildgraph(variables, gainmatrix, connections, biasvector):
     digraph = nx.DiGraph()
     # Construct the graph with connections
     for col, colvar in enumerate(variables):
@@ -323,6 +329,11 @@ def buildgraph(variables, gainmatrix, connections):
             # the convention that columns are sources and rows are sinks
             if (connections[row, col] != 0):
                 digraph.add_edge(rowvar, colvar, weight=gainmatrix[row, col])
+
+    # Add the bias information to the graph nodes
+    for nodeindex, nodename in enumerate(variables):
+        digraph.add_node(nodename, bias=biasvector[nodeindex])
+
     return digraph
 
 
@@ -336,7 +347,7 @@ def read_dictionary(filename):
         return json.load(f)
 
 
-def rankbackward(variables, gainmatrix, connections,
+def rankbackward(variables, gainmatrix, connections, biasvector,
                  dummyweight, dummycreation):
     """This method adds a unit gain node to all nodes with an out-degree
     of 1 in order for the relative scale to be retained.
@@ -346,14 +357,11 @@ def rankbackward(variables, gainmatrix, connections,
     It uses the number of dummy variables to construct these gain,
     connection and variable name matrices.
 
-    This method transposes the original no dummy variables to
-    generate the reverse option.
-
     """
 
     # TODO: Modify bias vector to assign zero weight to all dummy nodes
 
-    digraph = buildgraph(variables, gainmatrix, connections)
+    digraph = buildgraph(variables, gainmatrix, connections, biasvector)
     return buildcase(dummyweight, digraph, 'DV BWD ', dummycreation)
 
 
