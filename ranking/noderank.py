@@ -57,7 +57,8 @@ class NoderankData:
         investigated.
 
         """
-        print "The scenario name is: " + scenario
+
+        "The scenario name is: " + scenario
         settings_name = self.caseconfig[scenario]['settings']
         self.connections_used = (self.caseconfig[settings_name]
                                  ['use_connections'])
@@ -141,8 +142,6 @@ def calc_simple_rank(gainmatrix, variables, biasvector, noderankdata,
         else:
             gainmatrix[:, col] = (gainmatrix[:, col] / colsum)
 
-    print gainmatrix
-
     # Generate the reset matrix
     # The reset matrix is also refferred to as the personalisation matrix
     relative_reset_vector = np.asarray(biasvector)
@@ -155,8 +154,6 @@ def calc_simple_rank(gainmatrix, variables, biasvector, noderankdata,
     m = noderankdata.m
     alpha = noderankdata.alpha
     weightmatrix = (m * gainmatrix) + ((1-m) * resetmatrix)
-
-    print weightmatrix
 
     # Transpose the weightmatrix to ensure the correct direction of analysis
     weightmatrix = weightmatrix.T
@@ -523,8 +520,10 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                         else:
                             modgainmatrix = gainmatrix
 
-                        _, dummyweight = \
-                            gainmatrix_preprocessing(gainmatrix)
+#                        _, dummyweight = \
+#                            gainmatrix_preprocessing(gainmatrix)
+                        # Set dummyweight to unity
+                        dummyweight = 1
 
                         # This is where the actual ranking calculation happens
                         rankingdicts, rankinglists, connections, \
@@ -630,27 +629,31 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                                             direction, index+1),
                                         normalised_rankinglist)
 
-                    # Get the transient and base value dictionaries
-                    _, _, boxrankdict = \
-                        calc_transient_importancediffs(
-                            backward_rankingdicts, noderankdata.variablelist)
+                            # Get the transient and base value dictionaries
+                            _, _, boxrankdict = \
+                                calc_transient_importancediffs(
+                                    backward_rankingdicts,
+                                    noderankdata.variablelist)
 
-                    # Store dictonaries using JSON
+                            # Store dictonaries using JSON
 
-    #                data_processing.write_dictionary(
-    #                    transientdict_name.format(case, scenario,
-    #                                              weight_method, direction),
-    #                    transientdict)
-
-    #                data_processing.write_dictionary(
-    #                    basevaldict_name.format(case, scenario,
-    #                                            weight_method, direction),
-    #                    basevaldict)
-
-                    data_processing.write_dictionary(
-                        boxrankdict_name.format(case, scenario,
-                                                weight_method, direction),
-                        boxrankdict)
+#                            data_processing.write_dictionary(
+#                                transientdict_name.format(case, scenario,
+#                                                          weight_method,
+#                                                          direction),
+#                                transientdict)
+#
+#                            data_processing.write_dictionary(
+#                                basevaldict_name.format(case, scenario,
+#                                                        weight_method,
+#                                                        direction),
+#                                basevaldict)
+#
+#                            data_processing.write_dictionary(
+#                                boxrankdict_name.format(case, scenario,
+#                                                        weight_method,
+#                                                        direction),
+#                                boxrankdict)
 
                 else:
                     logging.info("The requested results are in existence")
