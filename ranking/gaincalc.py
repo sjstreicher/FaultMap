@@ -655,7 +655,7 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False,
                 # TODO: Call this code on each weight array as soon as its
                 # calculation is finished.
 
-                for boxindex in range(weightcalcdata.boxnum):
+                for boxindex in weightcalcdata.boxindexes:
                     if writeoutput:
                         # Write arrays to file
                         np.savetxt(
