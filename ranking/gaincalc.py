@@ -655,23 +655,24 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False,
                 # TODO: Call this code on each weight array as soon as its
                 # calculation is finished.
 
-                for boxindex in weightcalcdata.boxindexes:
+                for boxindex, boxnumber in \
+                        enumerate(weightcalcdata.boxindexes):
                     if writeoutput:
                         # Write arrays to file
                         np.savetxt(
                             filename(method,
-                                     maxweight_array_name.format(boxindex+1)),
+                                     maxweight_array_name.format(boxnumber+1)),
                             weight_arrays[boxindex],
                             delimiter=',')
                         np.savetxt(
                             filename(method,
-                                     delay_array_name.format(boxindex+1)),
+                                     delay_array_name.format(boxnumber+1)),
                             delay_arrays[boxindex],
                             delimiter=',')
                         # Write datastore to file
                         writecsv_weightcalc(
                             filename(method,
-                                     weightcalc_data_name.format(boxindex+1)),
+                                     weightcalc_data_name.format(boxnumber+1)),
                             datastores[boxindex],
                             data_header)
             else:
