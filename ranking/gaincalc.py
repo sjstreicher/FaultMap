@@ -213,7 +213,7 @@ class WeightcalcData:
             if self.boxindexes == 'all':
                 self.boxindexes = range(len(self.boxindexes))
         else:
-            self.boxindexes = 'all'
+            self.boxindexes = [0]
 
         if self.delaytype == 'datapoints':
                 self.actual_delays = [(delay * self.sampling_rate *
