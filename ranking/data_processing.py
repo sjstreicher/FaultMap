@@ -305,8 +305,8 @@ def buildcase(dummyweight, digraph, name, dummycreation):
             if digraph.in_degree(node) == 1:
                 # TODO: Investigate the effect of different weights
                 nameofscale = name + str(counter)
-                digraph.add_edge(node, nameofscale, weight=dummyweight)
-                digraph.add_node(nameofscale, bias=1)
+                digraph.add_edge(nameofscale, node, weight=dummyweight)
+                digraph.add_node(nameofscale, bias=1.)
                 counter += 1
 
     connection = nx.to_numpy_matrix(digraph, weight=None)
