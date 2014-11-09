@@ -45,15 +45,17 @@ onesgraph = nx.DiGraph()
 #                        [1.0, 1.0, 1.0, 1.0, 1.0],
 #                        [1.0, 1.0, 1.0, 1.0, 1.0]])
 
+dw = 10.
+
 gainmatrix = np.matrix([[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                         [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                         [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                         [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                         [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                        [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                        [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                        [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                        [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]])
+                        [dw, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                        [0.0, dw, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                        [0.0, 0.0, dw, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                        [0.0, 0.0, 0.0, dw, 0.0, 0.0, 0.0, 0.0, 0.0]])
 
 variables = ['X 1', 'X 2', 'X 3', 'X 4', 'X 5', 'D 1', 'D 2', 'D 3', 'D 4']
 #[_, gainmatrix, variables, _] = networkgen.series_equal_five()
@@ -87,12 +89,15 @@ print gainmatrix
 
 #onesmatrix = np.ones_like(gainmatrix)
 
-m = 0.999
+m = 0.99
 
 relative_reset_vector = [1., 1., 1., 1., 1., 1., 1., 1., 1.]
+#relative_reset_vector = [1., 1., 1., 1., 1.]
 
 relative_reset_vector_norm = np.asarray(relative_reset_vector, dtype=float) \
     / sum(relative_reset_vector)
+
+#n = n-4
 
 #resetmatrix = np.array([relative_reset_vector_norm, ]*n).T
 resetmatrix = np.array([relative_reset_vector_norm, ]*(n))
@@ -111,16 +116,16 @@ for col in range((n)):
     weightmatrix[:, col] = (weightmatrix[:, col]
                             / np.sum(abs(weightmatrix[:, col])))
 
-weightmatrix = weightmatrix[:-4, :-4]
+#weightmatrix = weightmatrix[:-4, :-4]
 
-print weightmatrix
+#print weightmatrix
 
 
 [eigval, eigvec] = np.linalg.eig(weightmatrix)
 [eigval_gain, eigvec_gain] = np.linalg.eig(gainmatrix)
 maxeigindex = np.argmax(eigval)
 
-rankarray = eigvec[:, maxeigindex][:]
+rankarray = eigvec[:, maxeigindex][:-4]
 
 # Take absolute values of ranking values
 rankarray = abs(np.asarray(rankarray))
