@@ -153,7 +153,7 @@ def fig_values_vs_delays(graphname):
                  label=r'$\tau = {:1.1f}$ seconds'.format(tau))
 
     plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
-    plt.xlabel(r'Delay (samples)', fontsize=14)
+    plt.xlabel(r'Delay (time units)', fontsize=14)
     plt.legend(bbox_to_anchor=graphdata.legendbbox)
 
     if graphdata.axis_limits is not False:
@@ -624,7 +624,8 @@ def demo_fig_EWMA_adjusted_weights(graphname):
 
     plt.ylabel('Weight', fontsize=14)
     plt.xlabel(r'Box number', fontsize=14)
-    plt.legend(bbox_to_anchor=[1.0, 1.0])
+    plt.legend(bbox_to_anchor=[1.0, 0.8])
+    plt.axis([0, 40, -0.1, 1.1])
 
     plt.savefig(graph_filename_template.format(graphname))
     plt.close()
@@ -639,29 +640,22 @@ def demo_fig_EWMA_adjusted_weights(graphname):
 
 graphs = [
 
-#          [fig_values_vs_delays,
-#           ['firstorder_noiseonly_cc_vs_delays_scen01',
-#            'firstorder_noiseonly_abs_te_vs_delays_scen01',
-#            'firstorder_noiseonly_dir_te_vs_delays_scen01',
-#            'firstorder_sineonly_cc_vs_delays_scen01',
-#            'firstorder_sineonly_abs_te_vs_delays_scen01',
-#            'firstorder_sineonly_dir_te_vs_delays_scen01',
-#            'firstorder_noiseandsine_cc_vs_delays_scen01',
-#            'firstorder_noiseandsine_abs_te_vs_delays_scen01',
-#            'firstorder_noiseandsine_dir_te_vs_delays_scen01',
-# Do this for the case of no normalization as well...
-# Surpressed because it provides no useful graphs
-          # 'firstorder_noiseonly_cc_vs_delays_nonorm_scen01',
-          # 'firstorder_noiseonly_abs_te_vs_delays_nonorm_scen01',
-          # 'firstorder_noiseonly_dir_te_vs_delays_nonorm_scen01',
-#            ]],
-
-
           [fig_values_vs_delays,
-           ['firstorder_noiseandsine_abs_te_vs_delays_scen01',
-            'firstorder_noiseandsine_dir_te_vs_delays_scen01',
-            'firstorder_noiseandsine_abs_te__kraskov_vs_delays_scen01',
-            'firstorder_noiseandsine_dir_te__kraskov_vs_delays_scen01',
+           ['firstorder_noiseonly_cc_vs_delays_scen01',
+            'firstorder_noiseonly_abs_te_kernel_vs_delays_scen01',
+            'firstorder_noiseonly_dir_te_kernel_vs_delays_scen01',
+            'firstorder_noiseonly_abs_te_kraskov_vs_delays_scen01',
+            'firstorder_noiseonly_dir_te_kraskov_vs_delays_scen01',
+            'firstorder_sineonly_cc_vs_delays_scen01',
+            'firstorder_sineonly_abs_te_kernel_vs_delays_scen01',
+            'firstorder_sineonly_dir_te_kernel_vs_delays_scen01',
+            'firstorder_sineonly_abs_te_kraskov_vs_delays_scen01',
+            'firstorder_sineonly_dir_te_kraskov_vs_delays_scen01',
+            'firstorder_noiseandsine_cc_vs_delays_scen01',
+            'firstorder_noiseandsine_abs_te_kernel_vs_delays_scen01',
+            'firstorder_noiseandsine_dir_te_kernel_vs_delays_scen01',
+            'firstorder_noiseandsine_abs_te_kraskov_vs_delays_scen01',
+            'firstorder_noiseandsine_dir_te_kraskov_vs_delays_scen01',
             ]],
 
 #######################################################################
