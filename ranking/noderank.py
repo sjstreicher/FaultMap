@@ -473,17 +473,14 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
     importances_template = os.path.join(
         savedir, '{}_{}_{}_{}_importances_{}_{}_box{:03d}.csv')
 
-    graph_filename = os.path.join(savedir,
-                                  "{}_{}_{}_{}_graph_dumsup_box{:03d}.gml")
-
 #    transientdict_name = os.path.join(savedir,
 #                                      '{}_{}_{}_{}_transientdict.json')
 #
 #    basevaldict_name = os.path.join(savedir,
 #                                    '{}_{}_{}_{}_basevaldict.json')
 
-    boxrankdict_name = os.path.join(savedir,
-                                    '{}_{}_{}_{}_boxrankdict.json')
+#    boxrankdict_name = os.path.join(savedir,
+#                                    '{}_{}_{}_{}_boxrankdict.json')
 
     for scenario in noderankdata.scenarios:
         logging.info("Running scenario {}".format(scenario))
@@ -522,8 +519,8 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
 
 #                        _, dummyweight = \
 #                            gainmatrix_preprocessing(gainmatrix)
-                        # Set dummyweight to unity
-                        dummyweight = 1
+                        # Set dummyweight to 10
+                        dummyweight = 10
 
                         # This is where the actual ranking calculation happens
                         rankingdicts, rankinglists, connections, \
@@ -606,28 +603,27 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                                         gainmatrix,
                                         rankingdict)
 
+                                graph_filename = \
+                                    graphfile_template.format(
+                                        case, scenario, weight_method,
+                                        direction, rank_method, 'dumsup',
+                                        index+1)
                                 nx.readwrite.write_gml(
-                                    graph,
-                                    graph_filename.format(case, scenario,
-                                                          weight_method,
-                                                          rank_method,
-                                                          direction, index+1))
+                                    graph, graph_filename)
 
                                 # Calculate and export normalised ranking lists
                                 # with dummy variables exluded from results
-                                for direction, rankingdict \
-                                    in zip(directions[1:],
-                                           rankingdicts[1:]):
-                                    normalised_rankinglist = \
-                                        normalise_rankinglist(
-                                            rankingdict,
-                                            noderankdata.variablelist)
-                                    writecsv_looprank(
-                                        importances_template.format(
-                                            case, scenario, weight_method,
-                                            rank_method,
-                                            direction, index+1),
-                                        normalised_rankinglist)
+
+                                normalised_rankinglist = \
+                                    normalise_rankinglist(
+                                        rankingdict,
+                                        noderankdata.variablelist)
+                                writecsv_looprank(
+                                    importances_template.format(
+                                        case, scenario, weight_method,
+                                        direction, rank_method, 'dumsup',
+                                        index+1),
+                                    normalised_rankinglist)
 
                             # Get the transient and base value dictionaries
                             _, _, boxrankdict = \
