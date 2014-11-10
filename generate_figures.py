@@ -26,6 +26,7 @@ graph_filename_template = os.path.join(graphs_savedir, '{}.pdf')
 # Preamble
 
 sourcedir = os.path.join(saveloc, 'weightdata')
+importancedir = os.path.join(saveloc, 'noderank')
 sourcedir_normts = os.path.join(saveloc, 'normdata')
 filename_template = os.path.join(sourcedir,
                                  '{}_{}_weights_{}_{}_box{:03d}_{}.csv')
@@ -35,6 +36,10 @@ sig_filename_template = os.path.join(sourcedir,
 
 filename_normts_template = os.path.join(sourcedir_normts,
                                         '{}_{}_normalised_data.csv')
+
+importancedict_filename_template = os.path.join(
+    importancedir,
+    '{}_{}_{}_backward_boxrankdict.json')
 
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
@@ -320,6 +325,27 @@ def get_box_data_vectors(graphdata):
         valuematrices.append(sourcevalues)
 
     return valuematrices
+
+
+def get_box_ranking_scores(graphdata):
+    """Extract rankings scores for different variables over a range of boxes.
+
+    Makes use of the boxrankdict as input.
+
+    Returns a list of list, with entries in the first list referring to
+    a specific node, and entries in the second list referring to a specific
+    box.
+
+    """
+
+    importancedict_filename = importancedict_filename_template.format(
+        graphdata.case, graphdata.scenario,
+        graphdata.method[0])
+
+    boxrankdict = json.load(open(importancedict_filename))
+    importancelist = boxrankdict.items()
+
+    return importancelist
 
 
 def get_box_threshold_vectors(graphdata):
@@ -632,6 +658,42 @@ def demo_fig_EWMA_adjusted_weights(graphname):
 
     return None
 
+
+def fig_rankings_boxes(graphname):
+    """Plots the ranking values for different variables over a range of boxes.
+
+    """
+
+    graphdata = GraphData(graphname)
+    graphdata.get_legendbbox(graphname)
+
+    # TODO: Rewrite this to get the number of boxes automatically
+    # Get x-axis values
+#    graphdata.get_xvalues(graphname)
+
+    # Get list of importances
+
+    importancelist = get_box_ranking_scores(graphdata)
+    graphdata.xvals = range(len(importancelist[0][1]))
+
+    plt.figure(1, (12, 6))
+
+    for entry in importancelist:
+        plt.plot(graphdata.xvals, entry[1],
+                 "--", marker="o", markersize=4,
+                 label=entry[0])
+
+    plt.ylabel(r'Relative importance', fontsize=14)
+    plt.xlabel(r'Box number', fontsize=14)
+    plt.legend(bbox_to_anchor=graphdata.legendbbox)
+#
+#    if graphdata.axis_limits is not False:
+#        plt.axis(graphdata.axis_limits)
+#
+    plt.savefig(graph_filename_template.format(graphname))
+    plt.close()
+
+    return None
 #######################################################################
 # Plot measure values vs. sample delay for range of first order time
 # constants.
@@ -853,6 +915,15 @@ graphs = [
            [lambda graphname: demo_fig_EWMA_adjusted_weights(
                graphname),
             ['demo_EWMA_adjusted_weights',
+             ]],
+
+#######################################################################
+# Plot importance scores for selected variables from boxerankdict
+#######################################################################
+
+           [lambda graphname: fig_rankings_boxes(
+               graphname),
+            ['te_dist8_dist11_steps_te_kernel_importances_vs_boxes',
              ]],
 
           ]
