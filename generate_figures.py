@@ -39,7 +39,7 @@ filename_normts_template = os.path.join(sourcedir_normts,
 
 importancedict_filename_template = os.path.join(
     importancedir,
-    '{}_{}_{}_backward_boxrankdict.json')
+    '{}_{}_{}_backward_rel_boxrankdict.json')
 
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
@@ -674,14 +674,15 @@ def fig_rankings_boxes(graphname):
     # Get list of importances
 
     importancelist = get_box_ranking_scores(graphdata)
-    graphdata.xvals = range(len(importancelist[0][1]))
+    graphdata.xvals = range(len(importancelist[0][1])+1)[1:]
 
     plt.figure(1, (12, 6))
 
     for entry in importancelist:
-        plt.plot(graphdata.xvals, entry[1],
-                 "--", marker="o", markersize=4,
-                 label=entry[0])
+        if max(entry[1]) >= 0.7:
+            plt.plot(graphdata.xvals, entry[1],
+                     "--", marker="o", markersize=4,
+                     label=entry[0])
 
     plt.ylabel(r'Relative importance', fontsize=14)
     plt.xlabel(r'Box number', fontsize=14)
