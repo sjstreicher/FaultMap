@@ -291,13 +291,20 @@ def calc_transient_importancediffs(rankingdicts, variablelist):
     boxrankdict simply lists the importance scores for each box in a vector
     associated with each variable
 
+    rel_boxrankdict shows the relative importance score
+    (divided by maximum score that occurs in each box)
+    for each box in a vector associated with each variable
+
     """
     transientdict = dict()
     basevaldict = dict()
     boxrankdict = dict()
+    rel_boxrankdict = dict()
     for variable in variablelist:
         diffvect = np.empty((1, len(rankingdicts)-1))[0]
         rankvect = np.empty((1, len(rankingdicts)))[0]
+        rel_rankvect = np.empty((1, len(rankingdicts)))[0]
+        rel_rankvect[:] = np.NAN
         rankvect[:] = np.NAN
         diffvect[:] = np.NAN
         basevaldict[variable] = rankingdicts[0][variable]
@@ -308,10 +315,13 @@ def calc_transient_importancediffs(rankingdicts, variablelist):
             prev_importance = rankingdict[variable]
         transientdict[variable] = diffvect.tolist()
         for index, rankingdict in enumerate(rankingdicts[:]):
+            maximum = max(rankingdict.values())
+            rel_rankvect[index] = rankingdict[variable] / maximum
             rankvect[index] = rankingdict[variable]
         boxrankdict[variable] = rankvect.tolist()
+        rel_boxrankdict[variable] = rel_rankvect.tolist()
 
-    return transientdict, basevaldict, boxrankdict
+    return transientdict, basevaldict, boxrankdict, rel_boxrankdict
 
 
 def create_importance_graph(variablelist, closedconnections,
@@ -484,6 +494,9 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
     boxrankdict_name = os.path.join(savedir,
                                     '{}_{}_{}_{}_boxrankdict.json')
 
+    rel_boxrankdict_name = os.path.join(savedir,
+                                    '{}_{}_{}_{}_rel_boxrankdict.json')
+
     for scenario in noderankdata.scenarios:
         logging.info("Running scenario {}".format(scenario))
         # Update scenario-specific fields of weightcalcdata object
@@ -628,7 +641,7 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                                     normalised_rankinglist)
 
                             # Get the transient and base value dictionaries
-                            _, _, boxrankdict = \
+                            _, _, boxrankdict, rel_boxrankdict = \
                                 calc_transient_importancediffs(
                                     backward_rankingdicts,
                                     noderankdata.variablelist)
@@ -652,6 +665,12 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                                                         weight_method,
                                                         direction),
                                 boxrankdict)
+
+                            data_processing.write_dictionary(
+                                rel_boxrankdict_name.format(case, scenario,
+                                                            weight_method,
+                                                            direction),
+                                rel_boxrankdict)
 
                 else:
                     logging.info("The requested results are in existence")
