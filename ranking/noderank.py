@@ -67,7 +67,8 @@ class NoderankData:
         self.dummies = self.caseconfig[settings_name]['dummies']
 
         self.m = self.caseconfig[scenario]['m']
-        self.alpha = self.caseconfig[scenario]['alpha']
+        if 'katz' in self.rank_methods:
+            self.alpha = self.caseconfig[scenario]['alpha']
 
         if self.datatype == 'file':
             # Get the gain matrices directory
@@ -152,7 +153,7 @@ def calc_simple_rank(gainmatrix, variables, biasvector, noderankdata,
     resetmatrix = np.array([relative_reset_vector_norm, ]*n)
 
     m = noderankdata.m
-    alpha = noderankdata.alpha
+
     weightmatrix = (m * gainmatrix) + ((1-m) * resetmatrix)
 
     # Transpose the weightmatrix to ensure the correct direction of analysis
@@ -209,6 +210,7 @@ def calc_simple_rank(gainmatrix, variables, biasvector, noderankdata,
             rankingdict = eig_rankingdict_norm
 
         elif rank_method == 'katz':
+            alpha = noderankdata.alpha
             katz_rankingdict = nx.katz_centrality(sparse_gaingraph.reverse(),
                                                   alpha)
             katz_rankingdict_norm = norm_dict(katz_rankingdict)
@@ -479,8 +481,8 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
 #    basevaldict_name = os.path.join(savedir,
 #                                    '{}_{}_{}_{}_basevaldict.json')
 
-#    boxrankdict_name = os.path.join(savedir,
-#                                    '{}_{}_{}_{}_boxrankdict.json')
+    boxrankdict_name = os.path.join(savedir,
+                                    '{}_{}_{}_{}_boxrankdict.json')
 
     for scenario in noderankdata.scenarios:
         logging.info("Running scenario {}".format(scenario))
@@ -645,11 +647,11 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
 #                                                        direction),
 #                                basevaldict)
 #
-#                            data_processing.write_dictionary(
-#                                boxrankdict_name.format(case, scenario,
-#                                                        weight_method,
-#                                                        direction),
-#                                boxrankdict)
+                            data_processing.write_dictionary(
+                                boxrankdict_name.format(case, scenario,
+                                                        weight_method,
+                                                        direction),
+                                boxrankdict)
 
                 else:
                     logging.info("The requested results are in existence")
