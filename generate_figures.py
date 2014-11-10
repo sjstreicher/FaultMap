@@ -28,14 +28,19 @@ graph_filename_template = os.path.join(graphs_savedir, '{}.pdf')
 sourcedir = os.path.join(saveloc, 'weightdata')
 importancedir = os.path.join(saveloc, 'noderank')
 sourcedir_normts = os.path.join(saveloc, 'normdata')
+sourcedir_fft = os.path.join(saveloc, 'fftdata')
+
 filename_template = os.path.join(sourcedir,
                                  '{}_{}_weights_{}_{}_box{:03d}_{}.csv')
 
-sig_filename_template = os.path.join(sourcedir,
+filename_sig_template = os.path.join(sourcedir,
                                      '{}_{}_sigthresh_{}_box{:03d}_{}.csv')
 
 filename_normts_template = os.path.join(sourcedir_normts,
                                         '{}_{}_normalised_data.csv')
+
+filename_fft_template = os.path.join(sourcedir_fft,
+                                     '{}_{}_fft.csv')
 
 importancedict_filename_template = os.path.join(
     importancedir,
@@ -57,19 +62,18 @@ class GraphData:
             dataloc, 'config_graphgen' + '.json')))
 
         self.case, self.method, self.scenario, \
-            self.axis_limits, self.sigtest = \
+            self.axis_limits = \
             [self.graphconfig[graphname][item] for item in
-                ['case', 'method', 'scenario', 'axis_limits', 'sigtest']]
+                ['case', 'method', 'scenario', 'axis_limits']]
 
-        if not self.method[0] == 'tsdata':
-            self.boxindex, self.sourcevar = \
+        if not self.method[0] in ['tsdata', 'fft']:
+            self.boxindex, self.sourcevar, self.sigtest = \
                 [self.graphconfig[graphname][item] for item in
-                    ['boxindex', 'sourcevar']]
-
-        if self.sigtest:
-            self.sigstatus = 'sigtested'
-        else:
-            self.sigstatus = 'nosigtest'
+                    ['boxindex', 'sourcevar', 'sigtest']]
+            if self.sigtest:
+                self.sigstatus = 'sigtested'
+            else:
+                self.sigstatus = 'nosigtest'
 
     def get_xvalues(self, graphname):
         self.xvals = self.graphconfig[graphname]['xvals']
@@ -79,6 +83,15 @@ class GraphData:
 
     def get_linelabels(self, graphname):
         self.linelabels = self.graphconfig[graphname]['linelabels']
+
+    def get_plotvars(self, graphname):
+        self.plotvars = self.graphconfig[graphname]['plotvarnames']
+
+    def get_starttime(self, graphname):
+        self.starttime = self.graphconfig[graphname]['starttime']
+
+    def get_frequencyunit(self, graphname):
+        self.frequencyunit = self.graphconfig[graphname]['frequency_unit']
 
 
 yaxislabel = \
@@ -104,10 +117,105 @@ fitlinelabels = \
      'directional_transfer_entropy_kraskov': r'Directional TE (Kraskov) fit'}
 
 
+def get_scenario_data_vectors(graphdata):
+    """Extract value matrices from different scenarios."""
+
+    valuematrices = []
+
+    for scenario in graphdata.scenario:
+        sourcefile = filename_template.format(
+            graphdata.case, scenario,
+            graphdata.method[0], graphdata.sigstatus, graphdata.boxindex,
+            graphdata.sourcevar)
+        valuematrix, _ = \
+            data_processing.read_header_values_datafile(sourcefile)
+        valuematrices.append(valuematrix)
+
+    return valuematrices
+
+
+def get_box_data_vectors(graphdata):
+    """Extract value matrices from different boxes and different
+    source variables.
+
+    Returns a list of list, with entries in the first list referring to
+    a specific box, and entries in the second list referring to a specific
+    source variable.
+
+    """
+
+    valuematrices = []
+    # Get number of source variables
+    for box in graphdata.boxindex:
+        sourcevalues = []
+        for sourceindex, sourcevar in enumerate(graphdata.sourcevar):
+            sourcefile = filename_template.format(
+                graphdata.case, graphdata.scenario,
+                graphdata.method[0], graphdata.sigstatus, box,
+                sourcevar)
+            valuematrix, _ = \
+                data_processing.read_header_values_datafile(sourcefile)
+            sourcevalues.append(valuematrix)
+        valuematrices.append(sourcevalues)
+
+    return valuematrices
+
+
+def get_box_ranking_scores(graphdata):
+    """Extract rankings scores for different variables over a range of boxes.
+
+    Makes use of the boxrankdict as input.
+
+    Returns a list of list, with entries in the first list referring to
+    a specific node, and entries in the second list referring to a specific
+    box.
+
+    """
+
+    importancedict_filename = importancedict_filename_template.format(
+        graphdata.case, graphdata.scenario,
+        graphdata.method[0])
+
+    boxrankdict = json.load(open(importancedict_filename))
+    importancelist = boxrankdict.items()
+
+    return importancelist
+
+
+def get_box_threshold_vectors(graphdata):
+    """Extract significance threshold matrices from different boxes and different
+    source variables.
+
+    Returns a list of list, with entries in the first list referring to
+    a specific box, and entries in the second list referring to a specific
+    source variable.
+
+    """
+
+    valuematrices = []
+    # Get number of source variables
+    for box in graphdata.boxindex:
+        sourcevalues = []
+        for sourceindex, sourcevar in enumerate(graphdata.sourcevar):
+            sourcefile = filename_sig_template.format(
+                graphdata.case, graphdata.scenario,
+                graphdata.method[0], box,
+                sourcevar)
+            valuematrix, _ = \
+                data_processing.read_header_values_datafile(sourcefile)
+            sourcevalues.append(valuematrix)
+        valuematrices.append(sourcevalues)
+
+    return valuematrices
+
+
 def fig_timeseries(graphname):
     """Plots time series data over time."""
 
     graphdata = GraphData(graphname)
+    graphdata.get_legendbbox(graphname)
+    graphdata.get_plotvars(graphname)
+    graphdata.get_starttime(graphname)
 
     sourcefile = filename_normts_template.format(graphdata.case,
                                                  graphdata.scenario)
@@ -116,11 +224,52 @@ def fig_timeseries(graphname):
         data_processing.read_header_values_datafile(sourcefile)
 
     plt.figure(1, (12, 6))
-    plt.plot(valuematrix[:, 0], valuematrix[:, 1],
-             marker="o", markersize=4)
+
+    for varname in graphdata.plotvars:
+        varindex = headers.index(varname)
+        plt.plot(valuematrix[:, 0] - graphdata.starttime,
+                 valuematrix[:, varindex],
+                 "-",
+                 label=r'{}'.format(headers[varindex]))
 
     plt.ylabel('Normalised value', fontsize=14)
     plt.xlabel(r'Time (seconds)', fontsize=14)
+    plt.legend(bbox_to_anchor=graphdata.legendbbox)
+
+    if graphdata.axis_limits is not False:
+        plt.axis(graphdata.axis_limits)
+
+    plt.savefig(graph_filename_template.format(graphname))
+    plt.close()
+
+    return None
+
+
+def fig_fft(graphname):
+    """Plots FFT over frequency range."""
+
+    graphdata = GraphData(graphname)
+    graphdata.get_legendbbox(graphname)
+    graphdata.get_frequencyunit(graphname)
+    graphdata.get_plotvars(graphname)
+
+    sourcefile = filename_fft_template.format(graphdata.case,
+                                              graphdata.scenario)
+
+    valuematrix, headers = \
+        data_processing.read_header_values_datafile(sourcefile)
+
+    plt.figure(1, (12, 6))
+
+    for varname in graphdata.plotvars:
+        varindex = headers.index(varname)
+        plt.plot(valuematrix[:, 0], valuematrix[:, varindex],
+                 "-",
+                 label=r'{}'.format(headers[varindex]))
+
+    plt.ylabel('Normalised value', fontsize=14)
+    plt.xlabel(r'Frequency ({})'.format(graphdata.frequencyunit), fontsize=14)
+    plt.legend(bbox_to_anchor=graphdata.legendbbox)
 
     if graphdata.axis_limits is not False:
         plt.axis(graphdata.axis_limits)
@@ -281,98 +430,6 @@ def fig_scenario_maxval_vs_taus(graphname, delays=False, drawfit=False):
     plt.close()
 
     return None
-
-
-def get_scenario_data_vectors(graphdata):
-    """Extract value matrices from different scenarios."""
-
-    valuematrices = []
-
-    for scenario in graphdata.scenario:
-        sourcefile = filename_template.format(
-            graphdata.case, scenario,
-            graphdata.method[0], graphdata.sigstatus, graphdata.boxindex,
-            graphdata.sourcevar)
-        valuematrix, _ = \
-            data_processing.read_header_values_datafile(sourcefile)
-        valuematrices.append(valuematrix)
-
-    return valuematrices
-
-
-def get_box_data_vectors(graphdata):
-    """Extract value matrices from different boxes and different
-    source variables.
-
-    Returns a list of list, with entries in the first list referring to
-    a specific box, and entries in the second list referring to a specific
-    source variable.
-
-    """
-
-    valuematrices = []
-    # Get number of source variables
-    for box in graphdata.boxindex:
-        sourcevalues = []
-        for sourceindex, sourcevar in enumerate(graphdata.sourcevar):
-            sourcefile = filename_template.format(
-                graphdata.case, graphdata.scenario,
-                graphdata.method[0], graphdata.sigstatus, box,
-                sourcevar)
-            valuematrix, _ = \
-                data_processing.read_header_values_datafile(sourcefile)
-            sourcevalues.append(valuematrix)
-        valuematrices.append(sourcevalues)
-
-    return valuematrices
-
-
-def get_box_ranking_scores(graphdata):
-    """Extract rankings scores for different variables over a range of boxes.
-
-    Makes use of the boxrankdict as input.
-
-    Returns a list of list, with entries in the first list referring to
-    a specific node, and entries in the second list referring to a specific
-    box.
-
-    """
-
-    importancedict_filename = importancedict_filename_template.format(
-        graphdata.case, graphdata.scenario,
-        graphdata.method[0])
-
-    boxrankdict = json.load(open(importancedict_filename))
-    importancelist = boxrankdict.items()
-
-    return importancelist
-
-
-def get_box_threshold_vectors(graphdata):
-    """Extract significance threshold matrices from different boxes and different
-    source variables.
-
-    Returns a list of list, with entries in the first list referring to
-    a specific box, and entries in the second list referring to a specific
-    source variable.
-
-    """
-
-    valuematrices = []
-    # Get number of source variables
-    for box in graphdata.boxindex:
-        sourcevalues = []
-        for sourceindex, sourcevar in enumerate(graphdata.sourcevar):
-            sourcefile = sig_filename_template.format(
-                graphdata.case, graphdata.scenario,
-                graphdata.method[0], box,
-                sourcevar)
-            valuematrix, _ = \
-                data_processing.read_header_values_datafile(sourcefile)
-            sourcevalues.append(valuematrix)
-        valuematrices.append(sourcevalues)
-
-    return valuematrices
 
 
 def fig_diffvar_vs_delay(graphname, difvals, linetitle):
@@ -703,23 +760,23 @@ def fig_rankings_boxes(graphname):
 
 graphs = [
 
-          [fig_values_vs_delays,
-           ['firstorder_noiseonly_cc_vs_delays_scen01',
-            'firstorder_noiseonly_abs_te_kernel_vs_delays_scen01',
-            'firstorder_noiseonly_dir_te_kernel_vs_delays_scen01',
-            'firstorder_noiseonly_abs_te_kraskov_vs_delays_scen01',
-            'firstorder_noiseonly_dir_te_kraskov_vs_delays_scen01',
-            'firstorder_sineonly_cc_vs_delays_scen01',
-            'firstorder_sineonly_abs_te_kernel_vs_delays_scen01',
-            'firstorder_sineonly_dir_te_kernel_vs_delays_scen01',
-            'firstorder_sineonly_abs_te_kraskov_vs_delays_scen01',
-            'firstorder_sineonly_dir_te_kraskov_vs_delays_scen01',
-            'firstorder_noiseandsine_cc_vs_delays_scen01',
-            'firstorder_noiseandsine_abs_te_kernel_vs_delays_scen01',
-            'firstorder_noiseandsine_dir_te_kernel_vs_delays_scen01',
-            'firstorder_noiseandsine_abs_te_kraskov_vs_delays_scen01',
-            'firstorder_noiseandsine_dir_te_kraskov_vs_delays_scen01',
-            ]],
+#          [fig_values_vs_delays,
+#           ['firstorder_noiseonly_cc_vs_delays_scen01',
+#            'firstorder_noiseonly_abs_te_kernel_vs_delays_scen01',
+#            'firstorder_noiseonly_dir_te_kernel_vs_delays_scen01',
+#            'firstorder_noiseonly_abs_te_kraskov_vs_delays_scen01',
+#            'firstorder_noiseonly_dir_te_kraskov_vs_delays_scen01',
+#            'firstorder_sineonly_cc_vs_delays_scen01',
+#            'firstorder_sineonly_abs_te_kernel_vs_delays_scen01',
+#            'firstorder_sineonly_dir_te_kernel_vs_delays_scen01',
+#            'firstorder_sineonly_abs_te_kraskov_vs_delays_scen01',
+#            'firstorder_sineonly_dir_te_kraskov_vs_delays_scen01',
+#            'firstorder_noiseandsine_cc_vs_delays_scen01',
+#            'firstorder_noiseandsine_abs_te_kernel_vs_delays_scen01',
+#            'firstorder_noiseandsine_dir_te_kernel_vs_delays_scen01',
+#            'firstorder_noiseandsine_abs_te_kraskov_vs_delays_scen01',
+#            'firstorder_noiseandsine_dir_te_kraskov_vs_delays_scen01',
+#            ]],
 
 #######################################################################
 # Plot maximum measure values vs. first order time constants
@@ -913,18 +970,40 @@ graphs = [
 # Plot example of how EWMA weight benchmark affects weight changes
 #######################################################################
 
-           [lambda graphname: demo_fig_EWMA_adjusted_weights(
-               graphname),
-            ['demo_EWMA_adjusted_weights',
-             ]],
+#           [lambda graphname: demo_fig_EWMA_adjusted_weights(
+#               graphname),
+#            ['demo_EWMA_adjusted_weights',
+#             ]],
 
 #######################################################################
 # Plot importance scores for selected variables from boxerankdict
 #######################################################################
 
-           [lambda graphname: fig_rankings_boxes(
+#           [lambda graphname: fig_rankings_boxes(
+#               graphname),
+#            ['te_dist8_dist11_steps_te_kernel_importances_vs_boxes',
+#             ]],
+
+
+#######################################################################
+# Propylene Compressor Case Study
+#######################################################################
+
+#######################################################################
+# Plot signal over time.
+#######################################################################
+            [fig_timeseries,
+             ['propylene_compressor_raw_set3_normts_compsetpoint',
+              'propylene_compressor_raw_set3_normts_2ndstagepressure',
+             ]],
+#######################################################################
+# Plot FFT data for selected variables
+#######################################################################
+
+           [lambda graphname: fig_fft(
                graphname),
-            ['te_dist8_dist11_steps_te_kernel_importances_vs_boxes',
+            ['propylene_compressor_raw_set3_fft_compsignals_lowfreq',
+             'propylene_compressor_raw_set3_fft_compsignals_highfreq',
              ]],
 
           ]
