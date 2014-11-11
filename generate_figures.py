@@ -990,12 +990,13 @@ graphs = [
 #######################################################################
 
 #######################################################################
-# Plot signal over time.
+# Plot normalised signal over time.
 #######################################################################
-            [fig_timeseries,
-             ['propylene_compressor_raw_set3_normts_compsetpoint',
-              'propylene_compressor_raw_set3_normts_2ndstagepressure',
-             ]],
+#            [fig_timeseries,
+#             ['propylene_compressor_raw_set3_normts_compsetpoint',
+#              'propylene_compressor_raw_set3_normts_2ndstagepressure',
+#              'alcoholrecovery_truncated_normts_L1003',
+#             ]],
 #######################################################################
 # Plot FFT data for selected variables
 #######################################################################
@@ -1004,6 +1005,29 @@ graphs = [
                graphname),
             ['propylene_compressor_raw_set3_fft_compsignals_lowfreq',
              'propylene_compressor_raw_set3_fft_compsignals_highfreq',
+             'propylene_compressor_raw_set3_fft_25secperiod',
+             'propylene_compressor_raw_set3_fft_150secperiod',
+             'propylene_compressor_raw_set3_fft_LIC46007_LIC46010',
+             ]],
+
+#######################################################################
+# Alcohol Recovery Case Study
+#######################################################################
+
+#######################################################################
+# Plot normalised signal over time.
+#######################################################################
+            [fig_timeseries,
+             ['alcoholrecovery_truncated_normts_L1003',
+              'alcoholrecovery_truncated_normts_TYC1002',
+             ]],
+#######################################################################
+# Plot FFT data for selected variables
+#######################################################################
+           [lambda graphname: fig_fft(
+               graphname),
+            ['alcoholrecovery_truncated_fft_L1003',
+             'alcoholrecovery_truncated_fft_TYC1002'
              ]],
 
           ]
