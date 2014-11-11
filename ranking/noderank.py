@@ -105,6 +105,22 @@ class NoderankData:
 
         logging.info("Number of tags: {}".format(len(self.variablelist)))
 
+    def get_boxes(self, case, scenario, weight_method):
+        boxindexes = self.caseconfig[scenario]['boxindexes']
+        if boxindexes == "all":
+            countfile_template = '{}_{}_{}_maxweight_array_box*.csv'
+            countlocation = \
+                countfile_template.format(case, scenario,
+                                          weight_method)
+
+            boxcount = 0
+            for index, file in enumerate(os.listdir(self.gainloc)):
+                if fnmatch.fnmatch(file, countlocation):
+                    boxcount += 1
+            self.boxes = range(boxcount)
+        else:
+            self.boxes = boxindexes
+
 
 def writecsv_looprank(filename, items):
     with open(filename, 'wb') as f:
@@ -418,7 +434,7 @@ def calc_gainrank(gainmatrix, noderankdata, rank_method,
     return rankingdicts, rankinglists, connections, variables, gains
 
 
-def get_gainmatrices(noderankdata, countlocation, gainmatrix_filename,
+def get_gainmatrices(noderankdata, gainmatrix_filename,
                      case, scenario, method):
     """Searches in countlocation for all gainmatrices CSV files
     associated with the specific case, scenario and method at hand and
@@ -433,13 +449,7 @@ def get_gainmatrices(noderankdata, countlocation, gainmatrix_filename,
     # where method refers to the method used to calculate the gain
     gainmatrices = []
 
-    boxcount = 0
-
-    for index, file in enumerate(os.listdir(noderankdata.gainloc)):
-        if fnmatch.fnmatch(file, countlocation):
-            boxcount += 1
-
-    for boxindex in range(boxcount):
+    for boxindex in noderankdata.boxes:
         gainmatrix = data_processing.read_gainmatrix(
             os.path.join(noderankdata.gainloc,
                          gainmatrix_filename.format(case, scenario,
@@ -460,7 +470,6 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
     """
     noderankdata = NoderankData(mode, case)
 
-    countfile_template = '{}_{}_{}_maxweight_array_box*.csv'
     gainmatrix_filename = '{}_{}_{}_maxweight_array_box{:03d}.csv'
 
     # Define export directories and filenames
@@ -495,12 +504,13 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                                     '{}_{}_{}_{}_boxrankdict.json')
 
     rel_boxrankdict_name = os.path.join(savedir,
-                                    '{}_{}_{}_{}_rel_boxrankdict.json')
+                                        '{}_{}_{}_{}_rel_boxrankdict.json')
 
     for scenario in noderankdata.scenarios:
         logging.info("Running scenario {}".format(scenario))
         # Update scenario-specific fields of weightcalcdata object
         noderankdata.scenariodata(scenario)
+
         for rank_method in noderankdata.rank_methods:
             for weight_method in noderankdata.weight_methods:
                 # Test whether the 'rankinglist_rankingmethod_box001' CSV file
@@ -511,12 +521,9 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                 # TODO: Implement method in filename down below as well
                 if not os.path.exists(testlocation):
                     # Continue with execution
-                    countlocation = \
-                        countfile_template.format(case, scenario,
-                                                  weight_method)
+                    noderankdata.get_boxes(case, scenario, weight_method)
 
                     gainmatrices = get_gainmatrices(noderankdata,
-                                                    countlocation,
                                                     gainmatrix_filename, case,
                                                     scenario, weight_method)
 
@@ -554,19 +561,21 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                             writecsv_looprank(
                                 rankinglist_filename.format(
                                     case, scenario, weight_method, rank_method,
-                                    index+1),
+                                    noderankdata.boxes[index]+1),
                                 rankinglists[0])
 
                             # Save the modified gainmatrix
                             writecsv_looprank(
                                 modgainmatrix_template.format(
-                                    case, scenario, weight_method, index+1),
+                                    case, scenario, weight_method,
+                                    noderankdata.boxes[index]+1),
                                 modgainmatrix)
 
                             # Save the original gainmatrix
                             writecsv_looprank(
                                 originalgainmatrix_template.format(
-                                    case, scenario, weight_method, index+1),
+                                    case, scenario, weight_method,
+                                    noderankdata.boxes[index]+1),
                                 gainmatrix)
 
                             # Export graph files with dummy variables included
@@ -584,7 +593,8 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                                     connections, variables, gains):
                                 idtuple = (case, scenario, weight_method,
                                            direction, rank_method,
-                                           dummystatus, index+1)
+                                           dummystatus,
+                                           noderankdata.boxes[index]+1)
 
                                 # Save the ranking list to file
                                 savename = importances_template.format(
@@ -622,7 +632,7 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                                     graphfile_template.format(
                                         case, scenario, weight_method,
                                         direction, rank_method, 'dumsup',
-                                        index+1)
+                                        noderankdata.boxes[index]+1)
                                 nx.readwrite.write_gml(
                                     graph, graph_filename)
 
@@ -637,7 +647,7 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                                     importances_template.format(
                                         case, scenario, weight_method,
                                         direction, rank_method, 'dumsup',
-                                        index+1),
+                                        noderankdata.boxes[index]+1),
                                     normalised_rankinglist)
 
                             # Get the transient and base value dictionaries
