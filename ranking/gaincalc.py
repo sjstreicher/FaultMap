@@ -211,7 +211,7 @@ class WeightcalcData:
         if self.transient:
             self.boxindexes = self.caseconfig[scenario]['boxindexes']
             if self.boxindexes == 'all':
-                self.boxindexes = range(len(self.boxindexes))
+                self.boxindexes = range(len(self.boxnum))
         else:
             self.boxindexes = [0]
 
