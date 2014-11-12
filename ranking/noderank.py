@@ -608,7 +608,8 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                                         rankingdict)
                                 graph_filename = \
                                     graphfile_template.format(*idtuple)
-                                nx.readwrite.write_gml(graph, graph_filename)
+                                nx.readwrite.write_gml(graph.reverse(),
+                                                       graph_filename)
 
                             if noderankdata.dummies:
                                 # Export backward ranking graphs
@@ -634,7 +635,7 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                                         direction, rank_method, 'dumsup',
                                         noderankdata.boxes[index]+1)
                                 nx.readwrite.write_gml(
-                                    graph, graph_filename)
+                                    graph.reverse(), graph_filename)
 
                                 # Calculate and export normalised ranking lists
                                 # with dummy variables exluded from results
