@@ -1,8 +1,11 @@
+<<<<<<< HEAD
+=======
+# -*- coding: utf-8 -*-
+>>>>>>> 1f6caa51e8064a130161ed917e2ad3c56a9d1f49
 """
 @author: Simon Streicher
 
 """
-
 import logging
 import json
 import os
@@ -17,7 +20,6 @@ noderank_config = json.load(open(os.path.join(dataloc, 'config'
                                               '_noderank' + '.json')))
 
 writeoutput = noderank_config['writeoutput']
-#writeoutput = False
 mode = noderank_config['mode']
 cases = noderank_config['cases']
 
