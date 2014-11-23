@@ -451,7 +451,10 @@ def fig_diffvar_vs_delay(graphname, difvals, linetitle):
         # Get the maximum from each valuematrix in the entry
         # which corresponds to the common element of interest.
 
-        values = valuematrix[:, 3]
+        # TODO: Fix this old hardcoded remnant
+        # 3 referred to the index of tau=1 for many cases involved
+#        values = valuematrix[:, 3]
+        values = valuematrix[:, 1]
         xaxis_intervals.append(valuematrix[:, 0])
         relevant_values.append(values)
 
@@ -462,7 +465,7 @@ def fig_diffvar_vs_delay(graphname, difvals, linetitle):
 
     plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
     plt.xlabel(r'Delay (seconds)', fontsize=14)
-    plt.legend(bbox_to_anchor=graphdata.legendbbox)
+#    plt.legend(bbox_to_anchor=graphdata.legendbbox)
 
     if graphdata.axis_limits is not False:
         plt.axis(graphdata.axis_limits)
@@ -763,7 +766,7 @@ graphs = [
           [fig_values_vs_delays,
            [
 #            'firstorder_noiseonly_cc_vs_delays_scen01',
-            'firstorder_noiseonly_abs_te_kernel_vs_delays_scen01',
+#            'firstorder_noiseonly_abs_te_kernel_vs_delays_scen01',
 #            'firstorder_noiseonly_dir_te_kernel_vs_delays_scen01',
 #            'firstorder_noiseonly_abs_te_kraskov_vs_delays_scen01',
 #            'firstorder_noiseonly_dir_te_kraskov_vs_delays_scen01',
@@ -777,8 +780,8 @@ graphs = [
 #            'firstorder_noiseandsine_dir_te_kernel_vs_delays_scen01',
 #            'firstorder_noiseandsine_abs_te_kraskov_vs_delays_scen01',
 #            'firstorder_noiseandsine_dir_te_kraskov_vs_delays_scen01',
-              'firstorder_noiseonly_abs_te_kernel_vs_delays_scen04',
-              'firstorder_noiseonly_abs_te_kernel_vs_delays_scen05',
+#              'firstorder_noiseonly_abs_te_kernel_vs_delays_scen04',
+#              'firstorder_noiseonly_abs_te_kernel_vs_delays_scen05',
             ]],
 
 #######################################################################
@@ -1018,6 +1021,16 @@ graphs = [
 #             'propylene_compressor_raw_set3_fft_150secperiod',
 #             'propylene_compressor_raw_set3_fft_LIC46007_LIC46010',
 #             ]],
+
+#######################################################################
+# Plot directional transfer entropy over delay for selected variables
+#######################################################################
+
+           [lambda graphname: fig_diffvar_vs_delay(
+               graphname, [1], "Test"),
+            ['propylene_compressor_raw_set3_dir_te_kernel_PIC43024PV_FIC43006PV',
+             'propylene_compressor_raw_set3_dir_te_kernel_FIC43006PV_PIC43024PV',
+             ]],
 
 #######################################################################
 # Alcohol Recovery Case Study
