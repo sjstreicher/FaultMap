@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 """This module is used to generate figures used in the LaTeX documents
 associated with this project.
@@ -289,6 +288,7 @@ def fig_values_vs_delays(graphname):
 
     graphdata = GraphData(graphname)
     graphdata.get_legendbbox(graphname)
+    graphdata.get_linelabels(graphname)
 
     sourcefile = filename_template.format(graphdata.case, graphdata.scenario,
                                           graphdata.method[0],
@@ -300,7 +300,7 @@ def fig_values_vs_delays(graphname):
         data_processing.read_header_values_datafile(sourcefile)
 
     plt.figure(1, (12, 6))
-    taus = [0.2, 0.5, 1.0, 2.0, 5.0]
+    taus = graphdata.linelabels
     for i, tau in enumerate(taus):
         plt.plot(valuematrix[:, 0], valuematrix[:, i + 1], marker="o",
                  markersize=4,
@@ -760,9 +760,10 @@ def fig_rankings_boxes(graphname):
 
 graphs = [
 
-#          [fig_values_vs_delays,
-#           ['firstorder_noiseonly_cc_vs_delays_scen01',
-#            'firstorder_noiseonly_abs_te_kernel_vs_delays_scen01',
+          [fig_values_vs_delays,
+           [
+#            'firstorder_noiseonly_cc_vs_delays_scen01',
+            'firstorder_noiseonly_abs_te_kernel_vs_delays_scen01',
 #            'firstorder_noiseonly_dir_te_kernel_vs_delays_scen01',
 #            'firstorder_noiseonly_abs_te_kraskov_vs_delays_scen01',
 #            'firstorder_noiseonly_dir_te_kraskov_vs_delays_scen01',
@@ -776,7 +777,9 @@ graphs = [
 #            'firstorder_noiseandsine_dir_te_kernel_vs_delays_scen01',
 #            'firstorder_noiseandsine_abs_te_kraskov_vs_delays_scen01',
 #            'firstorder_noiseandsine_dir_te_kraskov_vs_delays_scen01',
-#            ]],
+              'firstorder_noiseonly_abs_te_kernel_vs_delays_scen04',
+              'firstorder_noiseonly_abs_te_kernel_vs_delays_scen05',
+            ]],
 
 #######################################################################
 # Plot maximum measure values vs. first order time constants
@@ -932,6 +935,12 @@ graphs = [
 #             'firstorder_noiseonly_dir_te_subsampling_vs_tau_scen02',
 #             ]],
 
+#           [lambda graphname: fig_scenario_maxval_vs_taus(
+#               graphname, False),
+#            ['firstorder_noiseonly_cc_subsampling_vs_tau_scen03',
+#             'firstorder_noiseonly_abs_te_subsampling_vs_tau_scen03',
+#             'firstorder_noiseonly_dir_te_subsampling_vs_tau_scen03',
+#             ]],
 #######################################################################
 # Plot measure values vs. sampling interval / noise sample variance
 # for different taus intervals
@@ -1017,19 +1026,19 @@ graphs = [
 #######################################################################
 # Plot normalised signal over time.
 #######################################################################
-            [fig_timeseries,
-             ['alcoholrecovery_truncated_normts_L1003',
-              'alcoholrecovery_truncated_normts_TYC1002',
-              'alcoholrecovery_truncated_normts_feedstep',
-             ]],
+#            [fig_timeseries,
+#             ['alcoholrecovery_truncated_normts_L1003',
+#              'alcoholrecovery_truncated_normts_TYC1002',
+#              'alcoholrecovery_truncated_normts_feedstep',
+#             ]],
 #######################################################################
 # Plot FFT data for selected variables
 #######################################################################
-           [lambda graphname: fig_fft(
-               graphname),
-            ['alcoholrecovery_truncated_fft_L1003',
-             'alcoholrecovery_truncated_fft_TYC1002'
-             ]],
+#           [lambda graphname: fig_fft(
+#               graphname),
+#            ['alcoholrecovery_truncated_fft_L1003',
+#             'alcoholrecovery_truncated_fft_TYC1002'
+#             ]],
 
           ]
 
