@@ -1,7 +1,5 @@
-<<<<<<< HEAD
-=======
 # -*- coding: utf-8 -*-
->>>>>>> 1f6caa51e8064a130161ed917e2ad3c56a9d1f49
+
 """
 @author: Simon Streicher
 
