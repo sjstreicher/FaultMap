@@ -92,6 +92,10 @@ class GraphData:
     def get_frequencyunit(self, graphname):
         self.frequencyunit = self.graphconfig[graphname]['frequency_unit']
 
+    def get_varindexes(self, graphname):
+        self.varindexes = [x+1 for x in
+                           self.graphconfig[graphname]['varindexes']]
+
 
 yaxislabel = \
     {u'cross_correlation': r'Cross correlation',
@@ -433,9 +437,15 @@ def fig_scenario_maxval_vs_taus(graphname, delays=False, drawfit=False):
 
 
 def fig_diffvar_vs_delay(graphname, difvals, linetitle):
+    """Plot many variables from a single scenario.
+
+    Assumes only a single scenario is defined.
+
+    """
 
     graphdata = GraphData(graphname)
     graphdata.get_legendbbox(graphname)
+    graphdata.get_varindexes(graphname)
 
     # Get x-axis values
 #    graphdata.get_xvalues(graphname)
@@ -454,7 +464,59 @@ def fig_diffvar_vs_delay(graphname, difvals, linetitle):
         # TODO: Fix this old hardcoded remnant
         # 3 referred to the index of tau=1 for many cases involved
 #        values = valuematrix[:, 3]
-        values = valuematrix[:, 1]
+        values = valuematrix[:, graphdata.varindexes]
+        xaxis_intervals.append(valuematrix[:, 0])
+        relevant_values.append(values)
+
+#    print xaxis_intervals[0]
+#    print relevant_values[0][:, 0]
+    for i, val in enumerate(difvals):
+        plt.plot(xaxis_intervals[0], relevant_values[0][:, i], marker="o",
+                 markersize=4,
+                 label=linetitle.format(val))
+
+    plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
+    plt.xlabel(r'Delay (seconds)', fontsize=14)
+    plt.legend(bbox_to_anchor=graphdata.legendbbox)
+
+    if graphdata.axis_limits is not False:
+        plt.axis(graphdata.axis_limits)
+
+    plt.savefig(graph_filename_template.format(graphname))
+    plt.close()
+
+    return None
+
+
+def fig_diffscen_vs_delay(graphname, difvals, linetitle):
+    """Plot one variable from different scenarios.
+
+    Assumes only a single index in varindexes.
+
+    """
+
+    graphdata = GraphData(graphname)
+    graphdata.get_legendbbox(graphname)
+    graphdata.get_varindexes(graphname)
+
+    # Get x-axis values
+#    graphdata.get_xvalues(graphname)
+
+    plt.figure(1, (12, 6))
+
+    # Get valuematrices
+    valuematrices = get_scenario_data_vectors(graphdata)
+
+    xaxis_intervals = []
+    relevant_values = []
+    for valuematrix in valuematrices:
+        # Get the maximum from each valuematrix in the entry
+        # which corresponds to the common element of interest.
+
+        # TODO: Fix this old hardcoded remnant
+        # 3 referred to the index of tau=1 for many cases involved
+#        values = valuematrix[:, 3]
+        values = valuematrix[:, graphdata.varindexes]
         xaxis_intervals.append(valuematrix[:, 0])
         relevant_values.append(values)
 
@@ -1026,11 +1088,22 @@ graphs = [
 # Plot directional transfer entropy over delay for selected variables
 #######################################################################
 
+#           [lambda graphname: fig_diffvar_vs_delay(
+#               graphname, [1], "Test"),
+#            ['propylene_compressor_raw_set3_dir_te_kernel_PIC43024PV_FIC43006PV',
+#             'propylene_compressor_raw_set3_dir_te_kernel_FIC43006PV_PIC43024PV',
+#             ]],
+
+
+#######################################################################
+# Plot cross correlation over delay for selected variables
+#######################################################################
+
            [lambda graphname: fig_diffvar_vs_delay(
-               graphname, [1], "Test"),
-            ['propylene_compressor_raw_set3_dir_te_kernel_PIC43024PV_FIC43006PV',
-             'propylene_compressor_raw_set3_dir_te_kernel_FIC43006PV_PIC43024PV',
+               graphname, ['PIC43024.PV', 'PIC43024.MV', 'FIC43006.PV', 'FIC43006.MV'], "Destination: {}"),
+            ['propylene_compressor_raw_set3_cc_PIC43024PV_selected',
              ]],
+
 
 #######################################################################
 # Alcohol Recovery Case Study

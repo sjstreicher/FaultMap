@@ -259,6 +259,8 @@ class TransentWeightcalc:
         """Calculates and reports the relevant output for each combination
         of variables tested.
 
+        te_thresh_method can be either 'rankorder' or 'sixsigma'
+
         """
 
         variables = weightcalcdata.variables
