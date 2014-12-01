@@ -371,8 +371,9 @@ def split_tsdata(inputdata, samplerate, boxsize, boxnum):
     weights over time.
 
     inputdata is a numpy array containing values for a single variable
+    (after sub-sampling)
 
-    samplerate is the rate of sampling in time units
+    samplerate is the rate of sampling in time units (after sub-sampling)
     boxsize is the size of each returned dataset in time units
     boxnum is the number of boxes that need to be analyzed
 
