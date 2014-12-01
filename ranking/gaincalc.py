@@ -190,11 +190,12 @@ class WeightcalcData:
 
         # Subsample data if required
         # Get sub_sampling interval
-        sub_sampling_interval = \
+        self.sub_sampling_interval = \
             self.caseconfig[settings_name]['sub_sampling_interval']
         # TODO: Use proper pandas.tseries.resample techniques
         # if it will really add any functionality
-        self.inputdata = self.inputdata_originalrate[0::sub_sampling_interval]
+        self.inputdata = \
+            self.inputdata_originalrate[0::self.sub_sampling_interval]
 
         if self.transient:
             self.boxnum = self.caseconfig[settings_name]['boxnum']
@@ -205,7 +206,7 @@ class WeightcalcData:
                 self.sampling_rate
             # This box should now return the same size
             # as the original data file - but it does not play a role at all
-            # in the actual for the case of boxnum = 1
+            # in the actual box determination for the case of boxnum = 1
 
         # Select which of the boxes to evaluate
         if self.transient:
@@ -217,7 +218,7 @@ class WeightcalcData:
 
         if self.delaytype == 'datapoints':
                 self.actual_delays = [(delay * self.sampling_rate *
-                                       sub_sampling_interval)
+                                       self.sub_sampling_interval)
                                       for delay in self.delays]
                 self.sample_delays = self.delays
         elif self.delaytype == 'intervals':
@@ -348,10 +349,11 @@ def calc_weights(weightcalcdata, method, scenario):
             os.path.join(signalentstoredir, '{}_{}_{}_box{:03d}.csv')
 
     # Generate boxes to use
-    boxes = data_processing.split_tsdata(weightcalcdata.inputdata,
-                                         weightcalcdata.sampling_rate,
-                                         weightcalcdata.boxsize,
-                                         weightcalcdata.boxnum)
+    boxes = data_processing.split_tsdata(
+        weightcalcdata.inputdata,
+        weightcalcdata.sampling_rate*weightcalcdata.sub_sampling_interval,
+        weightcalcdata.boxsize,
+        weightcalcdata.boxnum)
 
     # Create storage lists weight_arrays, delay_arrays and datastores
     # that will be generated for each box
