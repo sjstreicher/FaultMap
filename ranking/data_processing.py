@@ -328,7 +328,7 @@ def buildgraph(variables, gainmatrix, connections, biasvector):
         for row, rowvar in enumerate(variables):
             # The node order is source, sink according to
             # the convention that columns are sources and rows are sinks
-            if (gainmatrix[row, col] != 0):
+            if (connections[row, col] != 0):
                 digraph.add_edge(rowvar, colvar, weight=gainmatrix[row, col])
 
     # Add the bias information to the graph nodes
