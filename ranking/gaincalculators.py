@@ -255,7 +255,7 @@ class TransentWeightcalc:
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
                weightlist, weight_array, delay_array, datastore,
-               te_thresh_method='rankorder'):
+               te_thresh_method='sixsigma'):
         """Calculates and reports the relevant output for each combination
         of variables tested.
 
@@ -320,6 +320,10 @@ class TransentWeightcalc:
                 maxval_directional = 0
 
             logging.info("TE threshold passed: " + str(threshpass_directional))
+        else:
+            # Still delete all negative entries
+            if maxval_directional < 0:
+                maxval_directional = 0
 
         weight_array[affectedvarindex, causevarindex] = maxval_directional
 
