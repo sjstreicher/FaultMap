@@ -1,7 +1,7 @@
-LoopRank
+FaultMap
 ========
 
-Base layer control loop importance ranking for maintenance prioritisation.
+Converting time series data into directed graphs with node importance scores for the purposes of root cause fault detection and maintenance prioritisation.
 
 Use the demo_all.py script to run all code actively used.
 
