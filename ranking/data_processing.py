@@ -241,8 +241,8 @@ def subtract_mean(inputdata_raw):
 
 
 def read_connectionmatrix(connection_loc):
-    """This method imports the connection scheme for the data.
-    The format should be:
+    """Imports the connection scheme for the data.
+    The format of the CSV file should be:
     empty space, var1, var2, etc... (first row)
     var1, value, value, value, etc... (second row)
     var2, value, value, value, etc... (third row)
@@ -258,6 +258,18 @@ def read_connectionmatrix(connection_loc):
         connectionmatrix = np.genfromtxt(f, delimiter=',')[:, 1:]
 
     return connectionmatrix, variables
+
+
+def read_biasvector(biasvector_loc):
+    """Imports the bias vector for ranking purposes.
+    The format of the CSV file should be:
+    var1, var2, etc ... (first row)
+    bias1, bias2, etc ... (second row)
+    """
+    with open(biasvector_loc) as f:
+        variables = csv.reader(f).next()[1:]
+        biasvector = np.genfromtxt(f, delimiter=',')[:]
+    return biasvector, variables
 
 
 def read_header_values_datafile(location):
@@ -290,19 +302,26 @@ def buildcase(dummyweight, digraph, name, dummycreation):
     if dummycreation:
         counter = 1
         for node in digraph.nodes():
-            if digraph.out_degree(node) == 1:
+            if digraph.in_degree(node) == 1:
                 # TODO: Investigate the effect of different weights
                 nameofscale = name + str(counter)
-                digraph.add_edge(node, nameofscale, weight=dummyweight)
+                digraph.add_edge(nameofscale, node, weight=dummyweight)
+                digraph.add_node(nameofscale, bias=1.)
                 counter += 1
 
     connection = nx.to_numpy_matrix(digraph, weight=None)
     gain = nx.to_numpy_matrix(digraph, weight='weight')
     variablelist = digraph.nodes()
-    return np.array(connection), gain, variablelist
+    nodedatalist = digraph.nodes(data=True)
+
+    biaslist = []
+    for nodeindex, node in enumerate(digraph.nodes()):
+        biaslist.append(nodedatalist[nodeindex][1]['bias'])
+
+    return np.array(connection), gain, variablelist, biaslist
 
 
-def buildgraph(variables, gainmatrix, connections):
+def buildgraph(variables, gainmatrix, connections, biasvector):
     digraph = nx.DiGraph()
     # Construct the graph with connections
     for col, colvar in enumerate(variables):
@@ -311,6 +330,11 @@ def buildgraph(variables, gainmatrix, connections):
             # the convention that columns are sources and rows are sinks
             if (connections[row, col] != 0):
                 digraph.add_edge(rowvar, colvar, weight=gainmatrix[row, col])
+
+    # Add the bias information to the graph nodes
+    for nodeindex, nodename in enumerate(variables):
+        digraph.add_node(nodename, bias=biasvector[nodeindex])
+
     return digraph
 
 
@@ -324,7 +348,7 @@ def read_dictionary(filename):
         return json.load(f)
 
 
-def rankbackward(variables, gainmatrix, connections,
+def rankbackward(variables, gainmatrix, connections, biasvector,
                  dummyweight, dummycreation):
     """This method adds a unit gain node to all nodes with an out-degree
     of 1 in order for the relative scale to be retained.
@@ -334,12 +358,11 @@ def rankbackward(variables, gainmatrix, connections,
     It uses the number of dummy variables to construct these gain,
     connection and variable name matrices.
 
-    This method transposes the original no dummy variables to
-    generate the reverse option.
-
     """
 
-    digraph = buildgraph(variables, gainmatrix, connections)
+    # TODO: Modify bias vector to assign zero weight to all dummy nodes
+
+    digraph = buildgraph(variables, gainmatrix, connections, biasvector)
     return buildcase(dummyweight, digraph, 'DV BWD ', dummycreation)
 
 
@@ -348,8 +371,9 @@ def split_tsdata(inputdata, samplerate, boxsize, boxnum):
     weights over time.
 
     inputdata is a numpy array containing values for a single variable
+    (after sub-sampling)
 
-    samplerate is the rate of sampling in time units
+    samplerate is the rate of sampling in time units (after sub-sampling)
     boxsize is the size of each returned dataset in time units
     boxnum is the number of boxes that need to be analyzed
 
@@ -375,7 +399,7 @@ def split_tsdata(inputdata, samplerate, boxsize, boxnum):
         boxstartindex[:] = np.NAN
         boxstartindex[0] = 0
         boxstartindex[-1] = samples - boxsizesamples
-        samplesbetween = int(round(samples/(boxnum+1)))
+        samplesbetween = int(round(samples/boxnum))
         boxstartindex[1:-1] = [(samplesbetween * index)
                                for index in range(1, boxnum-1)]
         boxes = [inputdata[int(boxstartindex[i]):int(boxstartindex[i]) +

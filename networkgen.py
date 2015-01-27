@@ -25,8 +25,10 @@ def graphname(name):
 
 alltestfunctions = []
 
+
 # TODO: Replace this with a proper class
-def test_function_builder(connections, gainmatrix=None, filename=None, variables=None, doc=None):
+def test_function_builder(connections, gainmatrix=None, filename=None,
+                          variables=None, doc=None):
     N, _ = connections.shape
 
     if gainmatrix is None:
@@ -36,7 +38,8 @@ def test_function_builder(connections, gainmatrix=None, filename=None, variables
         variables = numberedvars('X', N)
 
     def graph_generator(draw=False):
-        testgraph = buildgraph(variables, gainmatrix, connections)
+        testgraph = buildgraph(variables, gainmatrix, connections,
+                               np.ones(len(variables)))
 
         if draw and filename:
             nx.write_gml(testgraph, filename)
