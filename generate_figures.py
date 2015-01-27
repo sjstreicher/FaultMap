@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 """This module is used to generate figures used in the LaTeX documents
 associated with this project.
@@ -26,15 +25,25 @@ graph_filename_template = os.path.join(graphs_savedir, '{}.pdf')
 # Preamble
 
 sourcedir = os.path.join(saveloc, 'weightdata')
+importancedir = os.path.join(saveloc, 'noderank')
 sourcedir_normts = os.path.join(saveloc, 'normdata')
+sourcedir_fft = os.path.join(saveloc, 'fftdata')
+
 filename_template = os.path.join(sourcedir,
                                  '{}_{}_weights_{}_{}_box{:03d}_{}.csv')
 
-sig_filename_template = os.path.join(sourcedir,
+filename_sig_template = os.path.join(sourcedir,
                                      '{}_{}_sigthresh_{}_box{:03d}_{}.csv')
 
 filename_normts_template = os.path.join(sourcedir_normts,
                                         '{}_{}_normalised_data.csv')
+
+filename_fft_template = os.path.join(sourcedir_fft,
+                                     '{}_{}_fft.csv')
+
+importancedict_filename_template = os.path.join(
+    importancedir,
+    '{}_{}_{}_backward_rel_boxrankdict.json')
 
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
@@ -52,19 +61,18 @@ class GraphData:
             dataloc, 'config_graphgen' + '.json')))
 
         self.case, self.method, self.scenario, \
-            self.axis_limits, self.sigtest = \
+            self.axis_limits = \
             [self.graphconfig[graphname][item] for item in
-                ['case', 'method', 'scenario', 'axis_limits', 'sigtest']]
+                ['case', 'method', 'scenario', 'axis_limits']]
 
-        if not self.method[0] == 'tsdata':
-            self.boxindex, self.sourcevar = \
+        if not self.method[0] in ['tsdata', 'fft']:
+            self.boxindex, self.sourcevar, self.sigtest = \
                 [self.graphconfig[graphname][item] for item in
-                    ['boxindex', 'sourcevar']]
-
-        if self.sigtest:
-            self.sigstatus = 'sigtested'
-        else:
-            self.sigstatus = 'nosigtest'
+                    ['boxindex', 'sourcevar', 'sigtest']]
+            if self.sigtest:
+                self.sigstatus = 'sigtested'
+            else:
+                self.sigstatus = 'nosigtest'
 
     def get_xvalues(self, graphname):
         self.xvals = self.graphconfig[graphname]['xvals']
@@ -75,28 +83,142 @@ class GraphData:
     def get_linelabels(self, graphname):
         self.linelabels = self.graphconfig[graphname]['linelabels']
 
+    def get_plotvars(self, graphname):
+        self.plotvars = self.graphconfig[graphname]['plotvarnames']
+
+    def get_starttime(self, graphname):
+        self.starttime = self.graphconfig[graphname]['starttime']
+
+    def get_frequencyunit(self, graphname):
+        self.frequencyunit = self.graphconfig[graphname]['frequency_unit']
+
+    def get_varindexes(self, graphname):
+        self.varindexes = [x+1 for x in
+                           self.graphconfig[graphname]['varindexes']]
+
 
 yaxislabel = \
     {u'cross_correlation': r'Cross correlation',
-     u'absolute_transfer_entropy_kernel': r'Absolute transfer entropy (bits)',
-     u'directional_transfer_entropy_kernel': r'Directional transfer entropy (bits)'}
+     u'absolute_transfer_entropy_kernel': r'Absolute transfer entropy (Kernel) (bits)',
+     u'directional_transfer_entropy_kernel': r'Directional transfer entropy (Kernel) (bits)',
+     u'absolute_transfer_entropy_kraskov': r'Absolute transfer entropy (Kraskov) (nats)',
+     u'directional_transfer_entropy_kraskov': r'Directional transfer entropy (Kraskov) (nats)'}
 
 
 linelabels = \
     {'cross_correlation': r'Correllation',
-     'absolute_transfer_entropy_kernel': r'Absolute TE',
-     'directional_transfer_entropy_kernel': r'Directional TE'}
+     'absolute_transfer_entropy_kernel': r'Absolute TE (Kernel)',
+     'directional_transfer_entropy_kernel': r'Directional TE (Kernel)',
+     'absolute_transfer_entropy_kraskov': r'Absolute TE (Kraskov)',
+     'directional_transfer_entropy_kraskov': r'Directional TE (Kraskov)'}
 
 fitlinelabels = \
     {'cross_correlation': r'Correlation fit',
-     'absolute_transfer_entropy_kernel': r'Absolute TE fit',
-     'directional_transfer_entropy_kernel': r'Directional TE fit'}
+     'absolute_transfer_entropy_kernel': r'Absolute TE (Kernel) fit',
+     'directional_transfer_entropy_kernel': r'Directional TE (Kernel) fit',
+     'absolute_transfer_entropy_kraskov': r'Absolute TE (Kraskov) fit',
+     'directional_transfer_entropy_kraskov': r'Directional TE (Kraskov) fit'}
+
+
+def get_scenario_data_vectors(graphdata):
+    """Extract value matrices from different scenarios."""
+
+    valuematrices = []
+
+    for scenario in graphdata.scenario:
+        sourcefile = filename_template.format(
+            graphdata.case, scenario,
+            graphdata.method[0], graphdata.sigstatus, graphdata.boxindex,
+            graphdata.sourcevar)
+        valuematrix, _ = \
+            data_processing.read_header_values_datafile(sourcefile)
+        valuematrices.append(valuematrix)
+
+    return valuematrices
+
+
+def get_box_data_vectors(graphdata):
+    """Extract value matrices from different boxes and different
+    source variables.
+
+    Returns a list of list, with entries in the first list referring to
+    a specific box, and entries in the second list referring to a specific
+    source variable.
+
+    """
+
+    valuematrices = []
+    # Get number of source variables
+    for box in graphdata.boxindex:
+        sourcevalues = []
+        for sourceindex, sourcevar in enumerate(graphdata.sourcevar):
+            sourcefile = filename_template.format(
+                graphdata.case, graphdata.scenario,
+                graphdata.method[0], graphdata.sigstatus, box,
+                sourcevar)
+            valuematrix, _ = \
+                data_processing.read_header_values_datafile(sourcefile)
+            sourcevalues.append(valuematrix)
+        valuematrices.append(sourcevalues)
+
+    return valuematrices
+
+
+def get_box_ranking_scores(graphdata):
+    """Extract rankings scores for different variables over a range of boxes.
+
+    Makes use of the boxrankdict as input.
+
+    Returns a list of list, with entries in the first list referring to
+    a specific node, and entries in the second list referring to a specific
+    box.
+
+    """
+
+    importancedict_filename = importancedict_filename_template.format(
+        graphdata.case, graphdata.scenario,
+        graphdata.method[0])
+
+    boxrankdict = json.load(open(importancedict_filename))
+    importancelist = boxrankdict.items()
+
+    return importancelist
+
+
+def get_box_threshold_vectors(graphdata):
+    """Extract significance threshold matrices from different boxes and different
+    source variables.
+
+    Returns a list of list, with entries in the first list referring to
+    a specific box, and entries in the second list referring to a specific
+    source variable.
+
+    """
+
+    valuematrices = []
+    # Get number of source variables
+    for box in graphdata.boxindex:
+        sourcevalues = []
+        for sourceindex, sourcevar in enumerate(graphdata.sourcevar):
+            sourcefile = filename_sig_template.format(
+                graphdata.case, graphdata.scenario,
+                graphdata.method[0], box,
+                sourcevar)
+            valuematrix, _ = \
+                data_processing.read_header_values_datafile(sourcefile)
+            sourcevalues.append(valuematrix)
+        valuematrices.append(sourcevalues)
+
+    return valuematrices
 
 
 def fig_timeseries(graphname):
     """Plots time series data over time."""
 
     graphdata = GraphData(graphname)
+    graphdata.get_legendbbox(graphname)
+    graphdata.get_plotvars(graphname)
+    graphdata.get_starttime(graphname)
 
     sourcefile = filename_normts_template.format(graphdata.case,
                                                  graphdata.scenario)
@@ -105,11 +227,52 @@ def fig_timeseries(graphname):
         data_processing.read_header_values_datafile(sourcefile)
 
     plt.figure(1, (12, 6))
-    plt.plot(valuematrix[:, 0], valuematrix[:, 1],
-             marker="o", markersize=4)
+
+    for varname in graphdata.plotvars:
+        varindex = headers.index(varname)
+        plt.plot(valuematrix[:, 0] - graphdata.starttime,
+                 valuematrix[:, varindex],
+                 "-",
+                 label=r'{}'.format(headers[varindex]))
 
     plt.ylabel('Normalised value', fontsize=14)
     plt.xlabel(r'Time (seconds)', fontsize=14)
+    plt.legend(bbox_to_anchor=graphdata.legendbbox)
+
+    if graphdata.axis_limits is not False:
+        plt.axis(graphdata.axis_limits)
+
+    plt.savefig(graph_filename_template.format(graphname))
+    plt.close()
+
+    return None
+
+
+def fig_fft(graphname):
+    """Plots FFT over frequency range."""
+
+    graphdata = GraphData(graphname)
+    graphdata.get_legendbbox(graphname)
+    graphdata.get_frequencyunit(graphname)
+    graphdata.get_plotvars(graphname)
+
+    sourcefile = filename_fft_template.format(graphdata.case,
+                                              graphdata.scenario)
+
+    valuematrix, headers = \
+        data_processing.read_header_values_datafile(sourcefile)
+
+    plt.figure(1, (12, 6))
+
+    for varname in graphdata.plotvars:
+        varindex = headers.index(varname)
+        plt.plot(valuematrix[:, 0], valuematrix[:, varindex],
+                 "-",
+                 label=r'{}'.format(headers[varindex]))
+
+    plt.ylabel('Normalised value', fontsize=14)
+    plt.xlabel(r'Frequency ({})'.format(graphdata.frequencyunit), fontsize=14)
+    plt.legend(bbox_to_anchor=graphdata.legendbbox)
 
     if graphdata.axis_limits is not False:
         plt.axis(graphdata.axis_limits)
@@ -129,6 +292,7 @@ def fig_values_vs_delays(graphname):
 
     graphdata = GraphData(graphname)
     graphdata.get_legendbbox(graphname)
+    graphdata.get_linelabels(graphname)
 
     sourcefile = filename_template.format(graphdata.case, graphdata.scenario,
                                           graphdata.method[0],
@@ -140,14 +304,14 @@ def fig_values_vs_delays(graphname):
         data_processing.read_header_values_datafile(sourcefile)
 
     plt.figure(1, (12, 6))
-    taus = [0.2, 0.5, 1.0, 2.0, 5.0]
+    taus = graphdata.linelabels
     for i, tau in enumerate(taus):
         plt.plot(valuematrix[:, 0], valuematrix[:, i + 1], marker="o",
                  markersize=4,
                  label=r'$\tau = {:1.1f}$ seconds'.format(tau))
 
     plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
-    plt.xlabel(r'Delay (samples)', fontsize=14)
+    plt.xlabel(r'Delay (time units)', fontsize=14)
     plt.legend(bbox_to_anchor=graphdata.legendbbox)
 
     if graphdata.axis_limits is not False:
@@ -272,81 +436,16 @@ def fig_scenario_maxval_vs_taus(graphname, delays=False, drawfit=False):
     return None
 
 
-def get_scenario_data_vectors(graphdata):
-    """Extract value matrices from different scenarios."""
-
-    valuematrices = []
-
-    for scenario in graphdata.scenario:
-        sourcefile = filename_template.format(
-            graphdata.case, scenario,
-            graphdata.method[0], graphdata.sigstatus, graphdata.boxindex,
-            graphdata.sourcevar)
-        valuematrix, _ = \
-            data_processing.read_header_values_datafile(sourcefile)
-        valuematrices.append(valuematrix)
-
-    return valuematrices
-
-
-def get_box_data_vectors(graphdata):
-    """Extract value matrices from different boxes and different
-    source variables.
-
-    Returns a list of list, with entries in the first list referring to
-    a specific box, and entries in the second list referring to a specific
-    source variable.
-
-    """
-
-    valuematrices = []
-    # Get number of source variables
-    for box in graphdata.boxindex:
-        sourcevalues = []
-        for sourceindex, sourcevar in enumerate(graphdata.sourcevar):
-            sourcefile = filename_template.format(
-                graphdata.case, graphdata.scenario,
-                graphdata.method[0], graphdata.sigstatus, box,
-                sourcevar)
-            valuematrix, _ = \
-                data_processing.read_header_values_datafile(sourcefile)
-            sourcevalues.append(valuematrix)
-        valuematrices.append(sourcevalues)
-
-    return valuematrices
-
-
-def get_box_threshold_vectors(graphdata):
-    """Extract significance threshold matrices from different boxes and different
-    source variables.
-
-    Returns a list of list, with entries in the first list referring to
-    a specific box, and entries in the second list referring to a specific
-    source variable.
-
-    """
-
-    valuematrices = []
-    # Get number of source variables
-    for box in graphdata.boxindex:
-        sourcevalues = []
-        for sourceindex, sourcevar in enumerate(graphdata.sourcevar):
-            sourcefile = sig_filename_template.format(
-                graphdata.case, graphdata.scenario,
-                graphdata.method[0], box,
-                sourcevar)
-            valuematrix, _ = \
-                data_processing.read_header_values_datafile(sourcefile)
-            sourcevalues.append(valuematrix)
-        valuematrices.append(sourcevalues)
-
-    return valuematrices
-
-
 def fig_diffvar_vs_delay(graphname, difvals, linetitle):
+    """Plot many variables from a single scenario.
+
+    Assumes only a single scenario is defined.
+
+    """
 
     graphdata = GraphData(graphname)
     graphdata.get_legendbbox(graphname)
+    graphdata.get_varindexes(graphname)
 
     # Get x-axis values
 #    graphdata.get_xvalues(graphname)
@@ -362,7 +461,62 @@ def fig_diffvar_vs_delay(graphname, difvals, linetitle):
         # Get the maximum from each valuematrix in the entry
         # which corresponds to the common element of interest.
 
-        values = valuematrix[:, 3]
+        # TODO: Fix this old hardcoded remnant
+        # 3 referred to the index of tau=1 for many cases involved
+#        values = valuematrix[:, 3]
+        values = valuematrix[:, graphdata.varindexes]
+        xaxis_intervals.append(valuematrix[:, 0])
+        relevant_values.append(values)
+
+#    print xaxis_intervals[0]
+#    print relevant_values[0][:, 0]
+    for i, val in enumerate(difvals):
+        plt.plot(xaxis_intervals[0], relevant_values[0][:, i], marker="o",
+                 markersize=4,
+                 label=linetitle.format(val))
+
+    plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
+    plt.xlabel(r'Delay (seconds)', fontsize=14)
+    plt.legend(bbox_to_anchor=graphdata.legendbbox)
+
+    if graphdata.axis_limits is not False:
+        plt.axis(graphdata.axis_limits)
+
+    plt.savefig(graph_filename_template.format(graphname))
+    plt.close()
+
+    return None
+
+
+def fig_diffscen_vs_delay(graphname, difvals, linetitle):
+    """Plot one variable from different scenarios.
+
+    Assumes only a single index in varindexes.
+
+    """
+
+    graphdata = GraphData(graphname)
+    graphdata.get_legendbbox(graphname)
+    graphdata.get_varindexes(graphname)
+
+    # Get x-axis values
+#    graphdata.get_xvalues(graphname)
+
+    plt.figure(1, (12, 6))
+
+    # Get valuematrices
+    valuematrices = get_scenario_data_vectors(graphdata)
+
+    xaxis_intervals = []
+    relevant_values = []
+    for valuematrix in valuematrices:
+        # Get the maximum from each valuematrix in the entry
+        # which corresponds to the common element of interest.
+
+        # TODO: Fix this old hardcoded remnant
+        # 3 referred to the index of tau=1 for many cases involved
+#        values = valuematrix[:, 3]
+        values = valuematrix[:, graphdata.varindexes]
         xaxis_intervals.append(valuematrix[:, 0])
         relevant_values.append(values)
 
@@ -373,7 +527,7 @@ def fig_diffvar_vs_delay(graphname, difvals, linetitle):
 
     plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
     plt.xlabel(r'Delay (seconds)', fontsize=14)
-    plt.legend(bbox_to_anchor=graphdata.legendbbox)
+#    plt.legend(bbox_to_anchor=graphdata.legendbbox)
 
     if graphdata.axis_limits is not False:
         plt.axis(graphdata.axis_limits)
@@ -618,13 +772,51 @@ def demo_fig_EWMA_adjusted_weights(graphname):
 
     plt.ylabel('Weight', fontsize=14)
     plt.xlabel(r'Box number', fontsize=14)
-    plt.legend(bbox_to_anchor=[1.0, 1.0])
+    plt.legend(bbox_to_anchor=[1.0, 0.8])
+    plt.axis([0, 40, -0.1, 1.1])
 
     plt.savefig(graph_filename_template.format(graphname))
     plt.close()
 
     return None
 
+
+def fig_rankings_boxes(graphname):
+    """Plots the ranking values for different variables over a range of boxes.
+
+    """
+
+    graphdata = GraphData(graphname)
+    graphdata.get_legendbbox(graphname)
+
+    # TODO: Rewrite this to get the number of boxes automatically
+    # Get x-axis values
+#    graphdata.get_xvalues(graphname)
+
+    # Get list of importances
+
+    importancelist = get_box_ranking_scores(graphdata)
+    graphdata.xvals = range(len(importancelist[0][1])+1)[1:]
+
+    plt.figure(1, (12, 6))
+
+    for entry in importancelist:
+        if max(entry[1]) >= 0.7:
+            plt.plot(graphdata.xvals, entry[1],
+                     "--", marker="o", markersize=4,
+                     label=entry[0])
+
+    plt.ylabel(r'Relative importance', fontsize=14)
+    plt.xlabel(r'Box number', fontsize=14)
+    plt.legend(bbox_to_anchor=graphdata.legendbbox)
+#
+#    if graphdata.axis_limits is not False:
+#        plt.axis(graphdata.axis_limits)
+#
+    plt.savefig(graph_filename_template.format(graphname))
+    plt.close()
+
+    return None
 #######################################################################
 # Plot measure values vs. sample delay for range of first order time
 # constants.
@@ -633,22 +825,26 @@ def demo_fig_EWMA_adjusted_weights(graphname):
 
 graphs = [
 
-#          [fig_values_vs_delays,
-#           ['firstorder_noiseonly_cc_vs_delays_scen01',
-#            'firstorder_noiseonly_abs_te_vs_delays_scen01',
-#            'firstorder_noiseonly_dir_te_vs_delays_scen01',
+          [fig_values_vs_delays,
+           [
+#            'firstorder_noiseonly_cc_vs_delays_scen01',
+#            'firstorder_noiseonly_abs_te_kernel_vs_delays_scen01',
+#            'firstorder_noiseonly_dir_te_kernel_vs_delays_scen01',
+#            'firstorder_noiseonly_abs_te_kraskov_vs_delays_scen01',
+#            'firstorder_noiseonly_dir_te_kraskov_vs_delays_scen01',
 #            'firstorder_sineonly_cc_vs_delays_scen01',
-#            'firstorder_sineonly_abs_te_vs_delays_scen01',
-#            'firstorder_sineonly_dir_te_vs_delays_scen01',
+#            'firstorder_sineonly_abs_te_kernel_vs_delays_scen01',
+#            'firstorder_sineonly_dir_te_kernel_vs_delays_scen01',
+#            'firstorder_sineonly_abs_te_kraskov_vs_delays_scen01',
+#            'firstorder_sineonly_dir_te_kraskov_vs_delays_scen01',
 #            'firstorder_noiseandsine_cc_vs_delays_scen01',
-#            'firstorder_noiseandsine_abs_te_vs_delays_scen01',
-#            'firstorder_noiseandsine_dir_te_vs_delays_scen01',
-# Do this for the case of no normalization as well...
-# Surpressed because it provides no useful graphs
-          # 'firstorder_noiseonly_cc_vs_delays_nonorm_scen01',
-          # 'firstorder_noiseonly_abs_te_vs_delays_nonorm_scen01',
-          # 'firstorder_noiseonly_dir_te_vs_delays_nonorm_scen01',
-#            ]],
+#            'firstorder_noiseandsine_abs_te_kernel_vs_delays_scen01',
+#            'firstorder_noiseandsine_dir_te_kernel_vs_delays_scen01',
+#            'firstorder_noiseandsine_abs_te_kraskov_vs_delays_scen01',
+#            'firstorder_noiseandsine_dir_te_kraskov_vs_delays_scen01',
+#              'firstorder_noiseonly_abs_te_kernel_vs_delays_scen04',
+#              'firstorder_noiseonly_abs_te_kernel_vs_delays_scen05',
+            ]],
 
 #######################################################################
 # Plot maximum measure values vs. first order time constants
@@ -804,6 +1000,12 @@ graphs = [
 #             'firstorder_noiseonly_dir_te_subsampling_vs_tau_scen02',
 #             ]],
 
+#           [lambda graphname: fig_scenario_maxval_vs_taus(
+#               graphname, False),
+#            ['firstorder_noiseonly_cc_subsampling_vs_tau_scen03',
+#             'firstorder_noiseonly_abs_te_subsampling_vs_tau_scen03',
+#             'firstorder_noiseonly_dir_te_subsampling_vs_tau_scen03',
+#             ]],
 #######################################################################
 # Plot measure values vs. sampling interval / noise sample variance
 # for different taus intervals
@@ -827,11 +1029,11 @@ graphs = [
 #             'firstorder_twonoises_differenstarts_abs_te_weight_vs_box_scen02',
 #             ]],
 
-           [lambda graphname: fig_boxvals_differentsources_threshold(
-               graphname),
-            ['firstorder_twonoises_differenstarts_abs_te_sigtest_weight_vs_box_scen01',
-             'firstorder_twonoises_differenstarts_abs_te_sigtest_weight_vs_box_scen02',
-             ]],
+#           [lambda graphname: fig_boxvals_differentsources_threshold(
+#               graphname),
+#            ['firstorder_twonoises_differenstarts_abs_te_sigtest_weight_vs_box_scen01',
+#             'firstorder_twonoises_differenstarts_abs_te_sigtest_weight_vs_box_scen02',
+#             ]],
 
 #           [lambda graphname: fig_boxvals_differentsources_ewma(
 #               graphname),
@@ -842,10 +1044,87 @@ graphs = [
 # Plot example of how EWMA weight benchmark affects weight changes
 #######################################################################
 
-           [lambda graphname: demo_fig_EWMA_adjusted_weights(
-               graphname),
-            ['demo_EWMA_adjusted_weights',
+#           [lambda graphname: demo_fig_EWMA_adjusted_weights(
+#               graphname),
+#            ['demo_EWMA_adjusted_weights',
+#             ]],
+
+#######################################################################
+# Plot importance scores for selected variables from boxerankdict
+#######################################################################
+
+#           [lambda graphname: fig_rankings_boxes(
+#               graphname),
+#            ['te_dist8_dist11_steps_te_kernel_importances_vs_boxes',
+#             ]],
+
+
+#######################################################################
+# Propylene Compressor Case Study
+#######################################################################
+
+#######################################################################
+# Plot normalised signal over time.
+#######################################################################
+#            [fig_timeseries,
+#             ['propylene_compressor_raw_set3_normts_compsetpoint',
+#              'propylene_compressor_raw_set3_normts_2ndstagepressure',
+#              'alcoholrecovery_truncated_normts_L1003',
+#             ]],
+#######################################################################
+# Plot FFT data for selected variables
+#######################################################################
+
+#           [lambda graphname: fig_fft(
+#               graphname),
+#            ['propylene_compressor_raw_set3_fft_compsignals_lowfreq',
+#             'propylene_compressor_raw_set3_fft_compsignals_highfreq',
+#             'propylene_compressor_raw_set3_fft_25secperiod',
+#             'propylene_compressor_raw_set3_fft_150secperiod',
+#             'propylene_compressor_raw_set3_fft_LIC46007_LIC46010',
+#             ]],
+
+#######################################################################
+# Plot directional transfer entropy over delay for selected variables
+#######################################################################
+
+#           [lambda graphname: fig_diffvar_vs_delay(
+#               graphname, [1], "Test"),
+#            ['propylene_compressor_raw_set3_dir_te_kernel_PIC43024PV_FIC43006PV',
+#             'propylene_compressor_raw_set3_dir_te_kernel_FIC43006PV_PIC43024PV',
+#             ]],
+
+
+#######################################################################
+# Plot cross correlation over delay for selected variables
+#######################################################################
+
+           [lambda graphname: fig_diffvar_vs_delay(
+               graphname, ['PIC43024.PV', 'PIC43024.MV', 'FIC43006.PV', 'FIC43006.MV'], "Destination: {}"),
+            ['propylene_compressor_raw_set3_cc_PIC43024PV_selected',
              ]],
+
+
+#######################################################################
+# Alcohol Recovery Case Study
+#######################################################################
+
+#######################################################################
+# Plot normalised signal over time.
+#######################################################################
+#            [fig_timeseries,
+#             ['alcoholrecovery_truncated_normts_L1003',
+#              'alcoholrecovery_truncated_normts_TYC1002',
+#              'alcoholrecovery_truncated_normts_feedstep',
+#             ]],
+#######################################################################
+# Plot FFT data for selected variables
+#######################################################################
+#           [lambda graphname: fig_fft(
+#               graphname),
+#            ['alcoholrecovery_truncated_fft_L1003',
+#             'alcoholrecovery_truncated_fft_TYC1002'
+#             ]],
 
           ]
 
