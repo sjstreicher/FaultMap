@@ -160,7 +160,7 @@ def calc_simple_rank(gainmatrix, variables, biasvector, noderankdata,
             gainmatrix[:, col] = (gainmatrix[:, col] / colsum)
 
     # Generate the reset matrix
-    # The reset matrix is also refferred to as the personalisation matrix
+    # The reset matrix is also referred to as the personalisation matrix
     relative_reset_vector = np.asarray(biasvector)
     relative_reset_vector_norm = \
         np.asarray(relative_reset_vector, dtype=float) \
