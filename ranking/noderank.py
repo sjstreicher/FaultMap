@@ -179,6 +179,7 @@ def calc_simple_rank(gainmatrix, variables, biasvector, noderankdata,
     for col in range(n):
         weightmatrix[:, col] = (weightmatrix[:, col]
                                 / np.sum(abs(weightmatrix[:, col])))
+                                
 
     # Transpose the gainmatrix for when it is used in isolation.
     # It is important that this only happens after the weightmatrix has been
@@ -420,16 +421,17 @@ def calc_gainrank(gainmatrix, noderankdata, rank_method,
                                      noderankdata.connectionmatrix,
                                      noderankdata.biasvector,
                                      dummyweight, noderankdata.dummies)
-
+    
+    connections = [backwardconnection]
+    variables = [backwardvariablelist]
+    gains = [np.array(backwardgain)]   
+    
     backwardrankingdict, backwardrankinglist = \
         calc_simple_rank(backwardgain, backwardvariablelist, backwardbias,
                          noderankdata, rank_method)
 
     rankingdicts = [backwardrankingdict]
     rankinglists = [backwardrankinglist]
-    connections = [backwardconnection]
-    variables = [backwardvariablelist]
-    gains = [np.array(backwardgain)]
 
     return rankingdicts, rankinglists, connections, variables, gains
 
@@ -473,6 +475,7 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
     gainmatrix_filename = '{}_{}_{}_maxweight_array_box{:03d}.csv'
 
     # Define export directories and filenames
+
     # Get the directory to save in
     savedir = \
         config_setup.ensure_existance(
