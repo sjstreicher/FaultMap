@@ -25,13 +25,6 @@ import json
 import logging
 
 import config_setup
-dataloc, _ = config_setup.get_locations()
-graphreduce_config = json.load(open(os.path.join(dataloc, 'config'
-                                              '_graphreduce' + '.json')))
-
-writeoutput = graphreduce_config['writeoutput']
-mode = graphreduce_config['mode']
-cases = graphreduce_config['cases']
 
 class GraphReduceData:
     """Creates a data object from file and or function definitions for use in
@@ -65,13 +58,19 @@ class GraphReduceData:
 def reducegraph(mode, case, writeoutput):
     graphreducedata = GraphReduceData(mode, case)
     
+    # Get the source directory    
+    sourcedir = \
+        config_setup.ensure_existance(
+            os.path.join(graphreducedata.casedir,
+                         'graphs'))
+    
     # Get the directory to save in
     savedir = \
         config_setup.ensure_existance(
             os.path.join(graphreducedata.saveloc,
-                         'graph'), make=True)
+                         'graphs'), make=True)
     
-    graph_filename = os.path.join(savedir, '{}.gml')    
+    graph_filename = os.path.join(sourcedir, '{}.gml')    
     simplified_graph_filename = os.path.join(savedir, '{}_simplified.gml')
     
     for scenario in graphreducedata.scenarios:
@@ -85,15 +84,63 @@ def reducegraph(mode, case, writeoutput):
         
         if not os.path.exists(testlocation):
             # Open the original graph
-            original_graph = nx.readwrite.read_gml(graph_filename)
+            original_graph = nx.readwrite.read_gml(graph_filename.format(
+                graphreducedata.graph))
+            # Get appropriate weight threshold for deleting edges from graph
+            threshold = compute_edge_threshold(original_graph)
+            # Delete low value edges from graph
+            lowedge_graph = delete_lowval_edges(original_graph, threshold)            
             # Get simplified graph
-            simplified_graph = deletehighorderedges(original_graph)
+#            simplified_graph = delete_highorder_edges(lowedge_graph)
             # Write simplified graph to file
-            nx.readwrite.write_gml(simplified_graph,
-                simplified_graph_filename(graphreducedata.graph))
-            
+            if writeoutput:
+                nx.readwrite.write_gml(simplified_graph,
+                    simplified_graph_filename.format(graphreducedata.graph))
 
-def deletehighorderedges(graph):
+def compute_edge_threshold(graph):
+    """Calculates the threshold that should be used to delete edges from the
+    original graph based on determined templates.
+    
+    """
+    
+    return 0.01
+                    
+def delete_lowval_edges(graph, weight_threshold):
+    """Deletes all edges with weight below the threshold value."""
+    lowedge_graph = graph.copy()
+    
+    edge_dellist = []  
+    edge_totlist = []
+    weight_dict = nx.get_edge_attributes(lowedge_graph, 'weight')
+    for edge in lowedge_graph.edges_iter():
+        edge_totlist.append(edge)
+        if weight_dict[edge] < weight_threshold:
+            edge_dellist.append(edge)
+    lowedge_graph.remove_edges_from(edge_dellist)
+    
+    logging.info("Deleted " + str(len(edge_dellist)) + "/" +
+        str(graph.number_of_edges()) + " edges")
+    
+    return lowedge_graph
+            
+def delete_highorder_edges(graph):
+    """For each node in the graph, check to see if any childs of a child node
+    is also a child of the node being investigated.
+    If true, delete the edge from the parent node to the child node that
+    appears as a child of a child.
+    
+    Also deletes all self-loops.
+    
+    """
+    
+    # First, delete all self-loops
+    selfloop_list = graph.selfloop_edges()
+    graph.remove_edges_from(selfloop_list)
+    
+    print nx.info(graph)
+    
+    for node in graph.nodes_iter():
+        print nx.info(graph,node)
     
     simplified_graph = graph
     
