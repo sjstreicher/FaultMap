@@ -87,13 +87,18 @@ def reducegraph(mode, case, writeoutput):
             # Open the original graph
             original_graph = nx.readwrite.read_gml(graph_filename.format(
                 graphreducedata.graph))
+            # Reverse graph to make follow conventional nomenclature
+            original_graph = original_graph.reverse()
             # Get appropriate weight threshold for deleting edges from graph
             threshold = compute_edge_threshold(original_graph,
                                                graphreducedata.percentile)
             # Delete low value edges from graph
             lowedge_graph = delete_lowval_edges(original_graph, threshold)            
             # Get simplified graph
-            simplified_graph = delete_highorder_edges(lowedge_graph)
+            simplified_graph = delete_loworder_edges(lowedge_graph)
+            # Reverse simplified graph to conform to Cytoscape styling
+            # requirements
+            simplified_graph = simplified_graph.reverse()
             # Write simplified graph to file
             if writeoutput:
                 nx.readwrite.write_gml(simplified_graph,
@@ -143,7 +148,7 @@ def delete_lowval_edges(graph, weight_threshold):
     
     return lowedge_graph
             
-def delete_highorder_edges(graph):
+def delete_loworder_edges(graph):
     """For each node in the graph, check to see if any childs of a child node
     is also a child of the node being investigated.
     If true, delete the edge from the parent node to the child node that
@@ -154,8 +159,48 @@ def delete_highorder_edges(graph):
     """
     simplified_graph = graph.copy()
     
-#    for node in graph.nodes_iter():
-#        print nx.info(graph, node)
+    removed_edges = []
+    for node in simplified_graph.nodes_iter():
+        child_list = simplified_graph.successors(node)
+        for child in child_list:
+            second_deg_list = simplified_graph.successors(child)
+            intersection_list = [val for val in child_list if val
+                                 in second_deg_list]
+            for duplicate in intersection_list:
+                if simplified_graph.has_edge(node, duplicate):
+                    simplified_graph.remove_edge(node, duplicate)
+                    removed_edge = [node, duplicate]
+                    removed_edges.append(removed_edge)
+    logging.info("Removed " + str(len(removed_edges)) + " edges")
+    
+    # Remove nodes without edges
+    # Get full dictionary of out-degree
+    
+#    out_deg_dict = simplified_graph.out_degree()
+#    print out_deg_dict
+#    # Remove nodes with out degree of zero
+#    node_dellist = []
+#    for node in simplified_graph.nodes_iter():
+#        if out_deg_dict[node] == 0:
+#            node_dellist.append(node)
+#    simplified_graph.remove_nodes_from(node_dellist)
+    
+    logging.info("Simplified graph has " + 
+                 str(simplified_graph.number_of_nodes()) + 
+                 " nodes and " + str(simplified_graph.number_of_edges()) + 
+                 " edges")
+    
+    # Get dictionary of node names
+#    names_dict = nx.get_node_attributes(simplified_graph, 'label')
+#    print names_dict
+
+    # This method should work, but is slow
+#    for source_node in [0]:
+#        for destination_node in [1]:
+#            pathlist = nx.all_simple_paths(simplified_graph, source_node,
+#                                destination_node)
+#            # Get index of longest path
+#            print max(enumerate(pathlist), key = lambda tup: len(tup[1]))
     
     return simplified_graph
                     
