@@ -54,6 +54,7 @@ class GraphReduceData:
 
         "The scenario name is: " + scenario
         self.graph = self.caseconfig[scenario]['graph']
+        self.percentile = self.caseconfig[scenario]['percentile']
 
 def reducegraph(mode, case, writeoutput):
     graphreducedata = GraphReduceData(mode, case)
@@ -87,28 +88,47 @@ def reducegraph(mode, case, writeoutput):
             original_graph = nx.readwrite.read_gml(graph_filename.format(
                 graphreducedata.graph))
             # Get appropriate weight threshold for deleting edges from graph
-            threshold = compute_edge_threshold(original_graph)
+            threshold = compute_edge_threshold(original_graph,
+                                               graphreducedata.percentile)
             # Delete low value edges from graph
             lowedge_graph = delete_lowval_edges(original_graph, threshold)            
             # Get simplified graph
-#            simplified_graph = delete_highorder_edges(lowedge_graph)
+            simplified_graph = delete_highorder_edges(lowedge_graph)
             # Write simplified graph to file
             if writeoutput:
                 nx.readwrite.write_gml(simplified_graph,
                     simplified_graph_filename.format(graphreducedata.graph))
 
-def compute_edge_threshold(graph):
+def compute_edge_threshold(graph, percentile):
     """Calculates the threshold that should be used to delete edges from the
     original graph based on determined templates.
     
     """
-    
-    return 0.01
+    # Get list of all edge weights
+    weight_dict = nx.get_edge_attributes(graph, 'weight')
+    edge_weightlist = []
+    for edge in graph.edges_iter():
+       edge_weightlist.append(weight_dict[edge])
+     
+    threshold = np.percentile(np.asarray(edge_weightlist), percentile)
+        
+    logging.info("The " + str(percentile) + "th percentile is: " + \
+        str(threshold))
+    return threshold
                     
 def delete_lowval_edges(graph, weight_threshold):
-    """Deletes all edges with weight below the threshold value."""
+    """Deletes all edges with weight below the threshold value.
+    Also deletes all self-looping edges.
+    
+    """
+    
     lowedge_graph = graph.copy()
     
+    # First, delete all self-loops
+    selfloop_list = lowedge_graph.selfloop_edges()
+    lowedge_graph.remove_edges_from(selfloop_list)
+    logging.info("Deleted " + str(len(selfloop_list)) + " self-looping edges")
+
     edge_dellist = []  
     edge_totlist = []
     weight_dict = nx.get_edge_attributes(lowedge_graph, 'weight')
@@ -132,17 +152,10 @@ def delete_highorder_edges(graph):
     Also deletes all self-loops.
     
     """
+    simplified_graph = graph.copy()
     
-    # First, delete all self-loops
-    selfloop_list = graph.selfloop_edges()
-    graph.remove_edges_from(selfloop_list)
-    
-    print nx.info(graph)
-    
-    for node in graph.nodes_iter():
-        print nx.info(graph,node)
-    
-    simplified_graph = graph
+#    for node in graph.nodes_iter():
+#        print nx.info(graph, node)
     
     return simplified_graph
                     
