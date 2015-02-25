@@ -73,6 +73,7 @@ def reducegraph(mode, case, writeoutput):
     
     graph_filename = os.path.join(sourcedir, '{}.gml')    
     simplified_graph_filename = os.path.join(savedir, '{}_simplified.gml')
+    lowedge_graph_filename = os.path.join(savedir, '{}_lowedge.gml')
     
     for scenario in graphreducedata.scenarios:
         logging.info("Running scenario {}".format(scenario))
@@ -96,13 +97,20 @@ def reducegraph(mode, case, writeoutput):
             lowedge_graph = delete_lowval_edges(original_graph, threshold)            
             # Get simplified graph
             simplified_graph = delete_loworder_edges(lowedge_graph)
-            # Reverse simplified graph to conform to Cytoscape styling
+            # Reverse simplified and lowedge graph to conform to Cytoscape styling
             # requirements
             simplified_graph = simplified_graph.reverse()
+            lowedge_graph = lowedge_graph.reverse()
             # Write simplified graph to file
             if writeoutput:
+                # Write simplified graph
                 nx.readwrite.write_gml(simplified_graph,
                     simplified_graph_filename.format(graphreducedata.graph))
+                # Write lowedge graph                
+                nx.readwrite.write_gml(lowedge_graph,
+                    lowedge_graph_filename.format(graphreducedata.graph))
+        else:
+            logging.info("The requested output is in existance")
 
 def compute_edge_threshold(graph, percentile):
     """Calculates the threshold that should be used to delete edges from the
@@ -158,6 +166,7 @@ def delete_loworder_edges(graph):
     
     """
     simplified_graph = graph.copy()
+    weight_dict = nx.get_edge_attributes(simplified_graph, 'weight')
     
     removed_edges = []
     for node in simplified_graph.nodes_iter():
@@ -168,22 +177,31 @@ def delete_loworder_edges(graph):
                                  in second_deg_list]
             for duplicate in intersection_list:
                 if simplified_graph.has_edge(node, duplicate):
+#                    # Only remove the edge if its weight is less than the
+#                    # direct connection
+#                    # Find the importance of the first order connection
+#                    firstweight = weight_dict[(node, child)]
+#                    # Find the importance of the second order connection
+#                    # Find the number of the second degree node
+#                    secondweight = weight_dict[(child, duplicate)]
+#                    if firstweight < secondweight:
                     simplified_graph.remove_edge(node, duplicate)
                     removed_edge = [node, duplicate]
                     removed_edges.append(removed_edge)
     logging.info("Removed " + str(len(removed_edges)) + " edges")
     
-    # Remove nodes without edges
-    # Get full dictionary of out-degree
-    
-#    out_deg_dict = simplified_graph.out_degree()
-#    print out_deg_dict
-#    # Remove nodes with out degree of zero
-#    node_dellist = []
-#    for node in simplified_graph.nodes_iter():
-#        if out_deg_dict[node] == 0:
-#            node_dellist.append(node)
-#    simplified_graph.remove_nodes_from(node_dellist)
+#     Remove nodes without edges
+#     Get full dictionary of in- and out-degree
+    out_deg_dict = simplified_graph.out_degree()
+    in_deg_dict = simplified_graph.in_degree()
+    # Remove nodes with sum(out+in) degree of zero
+    node_dellist = []
+    for node in simplified_graph.nodes_iter():
+        if (out_deg_dict[node] == 0) and (in_deg_dict[node] == 0):
+            node_dellist.append(node)
+    simplified_graph.remove_nodes_from(node_dellist)
+    logging.info("Removed " + str(len(node_dellist)) + \
+        " nodes that were left hanging")
     
     logging.info("Simplified graph has " + 
                  str(simplified_graph.number_of_nodes()) + 
@@ -194,7 +212,7 @@ def delete_loworder_edges(graph):
 #    names_dict = nx.get_node_attributes(simplified_graph, 'label')
 #    print names_dict
 
-    # This method should work, but is slow
+    # This method should also work, but is slow
 #    for source_node in [0]:
 #        for destination_node in [1]:
 #            pathlist = nx.all_simple_paths(simplified_graph, source_node,
