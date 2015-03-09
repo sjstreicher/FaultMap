@@ -146,6 +146,7 @@ class WeightcalcData:
             # Get inputdata
             self.inputdata_raw = eval('datagen.' + raw_tsdata_gen)(samples,
                                                                    func_delay)
+            self.inputdata_raw = np.asarray(self.inputdata_raw)
             # Get the variables and connection matrix
             self.variables, self.connectionmatrix = \
                 eval('datagen.' + connectionloc)()
@@ -372,8 +373,6 @@ def calc_weights(weightcalcdata, method, scenario):
 
     for boxindex in weightcalcdata.boxindexes:
         box = boxes[boxindex]
-
-#    for boxindex, box in enumerate(boxes):
 
         weight_array = np.empty((vardims, vardims))
         delay_array = np.empty((vardims, vardims))

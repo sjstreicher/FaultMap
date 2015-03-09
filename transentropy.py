@@ -7,7 +7,6 @@ Created on Mon Feb 24 15:18:33 2014
 """
 import numpy as np
 import jpype
-import sklearn
 
 
 def vectorselection(data, timelag, sub_samples, k=1, l=1):
