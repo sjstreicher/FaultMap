@@ -16,7 +16,7 @@
 	"sub_sampling_interval": 1,
 	"sampling_unit": "seconds",
 	"testsize": 200,
-	"startindex": 1000,
+	"startindex": 0,
 	"sigtest": true,
 	"allthresh": false,
 	"gensamples": 1000,

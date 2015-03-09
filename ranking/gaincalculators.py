@@ -229,6 +229,7 @@ class TransentWeightcalc:
         self.teCalc = \
             transentropy.setup_infodynamics_te(weightcalcdata.normalize,
                                                calcmethod=self.estimator)
+                                            
         transent_fwd = \
             transentropy.calc_infodynamics_te(self.teCalc, affectedvardata.T,
                                               causevardata.T)
