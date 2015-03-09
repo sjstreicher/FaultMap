@@ -28,6 +28,8 @@ import h5py
 import logging
 import json
 
+import sklearn.preprocessing
+
 # Non-standard external libraries
 import jpype
 
@@ -38,7 +40,6 @@ import data_processing
 # Gain calculators
 from gaincalculators import (PartialCorrWeightcalc, CorrWeightcalc,
                              TransentWeightcalc)
-
 import datagen
 
 
@@ -90,6 +91,14 @@ class WeightcalcData:
         self.normalize = self.caseconfig[settings_name]['normalize']
         self.sigtest = self.caseconfig[settings_name]['sigtest']
         self.allthresh = self.caseconfig[settings_name]['allthresh']
+        
+        # Get sampling rate and unit name
+        self.sampling_rate = (self.caseconfig[settings_name]
+                              ['sampling_rate'])
+        self.sampling_unit = (self.caseconfig[settings_name]
+                              ['sampling_unit'])
+        # Get starting index
+        self.startindex = self.caseconfig[settings_name]['startindex']
 
         if self.datatype == 'file':
             # Get path to time series data input file in standard format
@@ -106,13 +115,7 @@ class WeightcalcData:
                 self.connectionmatrix, _ = \
                     data_processing.read_connectionmatrix(connectionloc)
 
-            # Get sampling rate and unit name
-            self.sampling_rate = (self.caseconfig[settings_name]
-                                  ['sampling_rate'])
-            self.sampling_unit = (self.caseconfig[settings_name]
-                                  ['sampling_unit'])
-            # Get starting index
-            self.startindex = self.caseconfig[settings_name]['startindex']
+            
             # Convert timeseries data in CSV file to H5 data format
             datapath = data_processing.csv_to_h5(self.saveloc, raw_tsdata,
                                                  scenario, self.casename)
@@ -121,6 +124,18 @@ class WeightcalcData:
             # Get inputdata from H5 table created
             self.inputdata_raw = np.array(h5py.File(os.path.join(
                 datapath, scenario + '.h5'), 'r')[scenario])
+                
+            if self.normalize:
+                # Normalise (mean centre and variance scale) the input data
+                self.inputdata_normstep = \
+                    data_processing.normalise_data(raw_tsdata,
+                                                   self.inputdata_raw,
+                                                   self.saveloc, self.casename,
+                                                   scenario)
+            else:
+                # Still norm centre the data
+                self.inputdata_normstep = data_processing.subtract_mean(
+                    self.inputdata_raw)
 
         elif self.datatype == 'function':
             raw_tsdata_gen = self.caseconfig[scenario]['datagen']
@@ -132,8 +147,12 @@ class WeightcalcData:
             self.inputdata_raw = eval('datagen.' + raw_tsdata_gen)(samples,
                                                                    func_delay)
             # Get the variables and connection matrix
-            self.connectionmatrix = eval('datagen.' + connectionloc)()
-            self.startindex = 0
+            self.variables, self.connectionmatrix = \
+                eval('datagen.' + connectionloc)()
+            
+            if self.normalize:            
+                self.inputdata_normstep = \
+                    sklearn.preprocessing.scale(self.inputdata_raw, axis=0)
 
         # Get delay type
         self.delaytype = self.caseconfig[settings_name]['delaytype']
@@ -162,17 +181,6 @@ class WeightcalcData:
             self.caseconfig[scenario]['affectedvarindexes']
         if self.affectedvarindexes == 'all':
             self.affectedvarindexes = range(len(self.variables))
-
-        if self.normalize:
-            # Normalise (mean centre and variance scale) the input data
-            self.inputdata_normstep = \
-                data_processing.normalise_data(raw_tsdata, self.inputdata_raw,
-                                               self.saveloc, self.casename,
-                                               scenario)
-        else:
-            # Still norm centre the data
-            self.inputdata_normstep = data_processing.subtract_mean(
-                self.inputdata_raw)
 
         if bandgap_filtering:
             low_freq = self.caseconfig[scenario]['low_freq']
