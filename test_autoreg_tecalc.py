@@ -7,12 +7,14 @@ Created on Mon Feb 24 14:56:25 2014
 @author: Simon Streicher
 """
 
+import unittest
+
+import jpype
+from sklearn import preprocessing
+
 from transentropy import setup_infodynamics_te as te_info_setup
 from transentropy import calc_infodynamics_te as te_info
 from datagen import autoreg_datagen
-from sklearn import preprocessing
-import unittest
-import jpype
 
 
 class TestAutoregressiveTransferEntropy(unittest.TestCase):
@@ -21,9 +23,9 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
         """Generate list of entropies to test"""
 
         # Define number of samples to generate
-        self.samples = 10000
+        self.samples = 2500
         # Define number of samples to analyse
-        self.sub_samples = 5000
+        self.sub_samples = 1000
         # Delay in actul data
         self.delay = 5
 
@@ -56,7 +58,7 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
             # Calculate transfer entropy according to infodynamics method:
 
             # Get teCalc object
-            teCalc = te_info_setup()
+            teCalc = te_info_setup(True, 'kraskov')
 
             result_infodyn = te_info(teCalc, x_hist_norm[0], y_hist_norm[0])
             self.entropies_infodyn.append(result_infodyn)

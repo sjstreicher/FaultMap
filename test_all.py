@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This script runs all demos and is used for coverage analysis
+"""This script runs all tests and demo's and is used for coverage analysis
 """
 
 import glob
@@ -14,7 +14,7 @@ def runall(pattern, exclude=[]):
             logging.info('Running {}'.format(f))
             execfile(f)
 
-# Demos
-runall('demo_*.py', ['demo_all.py'])
 # Tests
-runall('test_*.py')
+runall('test_*.py', ['test_all.py'])
+# Demos
+runall('demo_*.py')
