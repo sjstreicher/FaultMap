@@ -2,22 +2,25 @@
   "datatype": "function",
   "methods": [
       "cross_correlation",
-	  "transfer_entropy"
+	  "transfer_entropy_kernel"
   ],
   "scenarios": [
 	  "sinusoid_5x5"
   ],
   "settings_standard": {
     "use_connections": true,
+	"transient": false,
+	"normalize": true,
     "delaytype": "datapoints",
 	"sampling_rate": 1,
-	"transient": false,
 	"sub_sampling_interval": 1,
 	"sampling_unit": "seconds",
 	"testsize": 200,
+	"startindex": 1000,
+	"sigtest": true,
+	"allthresh": false,
 	"gensamples": 1000,
-	"delay": 0,
-	"startindex": 1000
+	"delay": 0
   },
   "random_2x2": {
     "connections": "connectionmatrix_2x2",

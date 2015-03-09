@@ -71,6 +71,9 @@ def fft_calculation(raw_tsdata, normalised_tsdata, variables, sampling_rate,
     freqlist = freqlist[:, np.newaxis]
 
     fft_data = np.zeros((len(freqlist), len(variables)))
+    
+    def filename(name):
+        return filename_template.format(case, scenario, name)
 
     for varindex in range(len(variables)):
         variable = variables[varindex]
@@ -97,9 +100,6 @@ def fft_calculation(raw_tsdata, normalised_tsdata, variables, sampling_rate,
             filename_template = os.path.join(plotdir,
                                              'FFT_{}_{}_{}.pdf')
 
-            def filename(variablename):
-                return filename_template.format(case, scenario, variablename)
-
             plt.savefig(filename(variable))
             plt.close()
 
@@ -115,9 +115,6 @@ def fft_calculation(raw_tsdata, normalised_tsdata, variables, sampling_rate,
         os.path.join(saveloc, 'fftdata'), make=True)
 
     filename_template = os.path.join(datadir, '{}_{}_{}.csv')
-
-    def filename(name):
-        return filename_template.format(case, scenario, name)
 
     writecsv(filename('fft'), datalines, headerline)
 
