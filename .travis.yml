@@ -6,13 +6,24 @@ virtualenv:
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq openjdk-7-jdk openjdk-7-jre ant
+  - sudo apt-get install git
   - sudo apt-get install python-dev
-  - sudo apt-get install python-jpype
-  - sudo apt-get install -qq python-numpy python-scipy python-h5py
-  - sudo apt-get install python-matplotlib
+#  - sudo apt-get install python-jpype
+#  - sudo apt-get install -qq python-numpy python-scipy python-h5py
+#  - sudo apt-get install python-matplotlib
+
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install:
   - pip install -r requirements.txt
+  # Need command for Pyunicorn
+#  - wget 
+  # Command for JPype (specific working commit)
+  - git clone https://github.com/originell/jpype.git
+  - cd jpype
+  - git reset --hard 50cfd194bb20631feda50fedae41ed18eeca1668
+  - python setup.py install
+  
+
 # command to run tests, e.g. python setup.py test
 script:
   - nosetests
