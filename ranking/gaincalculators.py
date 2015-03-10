@@ -73,8 +73,11 @@ class CorrWeightcalc(object):
         # Correlation thresholds from Bauer2008 eq. 4
         maxcorr_abs = max(maxval, abs(minval))
         bestdelay = weightcalcdata.actual_delays[delay_index]
-        directionindex = 2 * (abs(maxval + minval) /
-                              (maxval + abs(minval)))
+        if not (maxval and minval) <> 0:
+            directionindex = 2 * (abs(maxval + minval) /
+                                  (maxval + abs(minval)))
+        else:
+            directionindex = 0
 
         signchange = not ((weightlist[0] / weightlist[delay_index]) >= 0)
 #        corrthreshpass = (maxcorr_abs >= self.threshcorr)
@@ -358,7 +361,8 @@ class TransentWeightcalc:
         original_causal = np.zeros((1, len(causal_data)))
         original_causal[0, :] = causal_data
         # Create surrogate data generation object
-        surrogate_gen = pygeonetwork.surrogates.Surrogates(original_causal)
+        surrogate_gen = pygeonetwork.surrogates.Surrogates(original_causal,
+                                                           silence_level=2)
 
         surr_tsdata = \
             [surrogate_gen.get_refined_AAFT_surrogates(original_causal, 10)
