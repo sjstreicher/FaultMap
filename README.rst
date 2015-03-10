@@ -20,5 +20,5 @@ which can be installed using pip as follows:
 
 In addition to these packages, you also need the following dependencies:
 
-* [PyUnicorn](http://www.pik-potsdam.de/~donges/pyunicorn/installation.html) - you will have to e-mail the author for the code.
+* [PyUnicorn](http://www.pik-potsdam.de/~donges/pyunicorn/installing.html) - you will have to e-mail the author for the code.
 * [Java Information Dynamics Toolkit](https://code.google.com/p/information-dynamics-toolkit/) - copy the infodynamics.jar file into the repository directory.
