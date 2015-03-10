@@ -256,9 +256,10 @@ class WeightcalcData:
                                             self.casename,
                                             scenario)
                                             
-def calc_weights_onepair(weightcalcdata, weightcalculator,
+def calc_weights_onepair(affectedvarindex,
+                         causevarindex,
+                         weightcalcdata, weightcalculator,
                          box, startindex, size,
-                         causevarindex, affectedvarindex,
                          newconnectionmatrix,
                          datalines_directional, datalines_absolute,
                          filename, method, boxindex, sigstatus, headerline,
@@ -270,6 +271,12 @@ def calc_weights_onepair(weightcalcdata, weightcalculator,
                          sig_filename,
                          weight_array, delay_array, datastore):
                              
+    affectedvar = weightcalcdata.variables[affectedvarindex]    
+    
+    logging.info("Analysing effect of: " + causevar + " on " +
+                 affectedvar + " for box number: " +
+                 str(boxindex + 1))
+                             
     if not(newconnectionmatrix[affectedvarindex,
                                            causevarindex] == 0):
                     weightlist = []
@@ -280,7 +287,7 @@ def calc_weights_onepair(weightcalcdata, weightcalculator,
                     absolute_sigthreshlist = []
 
                     for delay in weightcalcdata.sample_delays:
-                        logging.info("Now testing delay: " + str(delay))
+#                        logging.info("Now testing delay: " + str(delay))
 
                         causevardata = \
                             (box[:, causevarindex]
@@ -434,7 +441,6 @@ def calc_weights_onepair(weightcalcdata, weightcalculator,
                                                 datastore)
                                                 
     return weight_array, delay_array, datastore
-    
 
 
 def calc_weights(weightcalcdata, method, scenario):
@@ -606,24 +612,24 @@ def calc_weights(weightcalcdata, method, scenario):
             datalines_sigthresh_directional = datalines_directional.copy()
             datalines_sigthresh_absolute = datalines_directional.copy()
             datalines_sigthresh_neutral = datalines_directional.copy()
+            
+            # This is the part that needs to be parallelised
+            ################################################
 
             for affectedvarindex in weightcalcdata.affectedvarindexes:
                 # Attempt to start parallelising code here
                 # Create one process for each affectedvar
                 # Each parallel process will need to calculate
                 # weight_array, delay_array and datastore
-                # These will need to be retrieved in order at the end
-                
-                affectedvar = weightcalcdata.variables[affectedvarindex]
-                logging.info("Analysing effect of: " + causevar + " on " +
-                             affectedvar + " for box number: " +
-                             str(boxindex + 1))
+                # These will need to be retrieved in order at the end                
+
                 
                 weight_array, delay_array, datastore = \
                     calc_weights_onepair(
+                         affectedvarindex,
+                         causevarindex,
                          weightcalcdata, weightcalculator,
                          box, startindex, size,
-                         causevarindex, affectedvarindex,
                          newconnectionmatrix,
                          datalines_directional, datalines_absolute,
                          filename, method, boxindex, sigstatus, headerline,
@@ -634,6 +640,10 @@ def calc_weights(weightcalcdata, method, scenario):
                          datalines_sigthresh_neutral,
                          sig_filename,
                          weight_array, delay_array, datastore)
+                         
+            ########################################################
+                         
+            
 
         # Delete entries from weightcalc matrix not used
         # Delete all rows and columns listed in affected_dellist, cause_dellist
