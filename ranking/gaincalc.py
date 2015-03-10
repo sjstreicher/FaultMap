@@ -262,7 +262,13 @@ def calc_weights_onepair(weightcalcdata, weightcalculator,
                          newconnectionmatrix,
                          datalines_directional, datalines_absolute,
                          filename, method, boxindex, sigstatus, headerline,
-                         causevar, ):
+                         causevar,
+                         datalines_sigthresh_directional,
+                         datalines_sigthresh_absolute,
+                         datalines_neutral,
+                         datalines_sigthresh_neutral,
+                         sig_filename,
+                         weight_array, delay_array, datastore):
                              
     if not(newconnectionmatrix[affectedvarindex,
                                            causevarindex] == 0):
@@ -613,10 +619,21 @@ def calc_weights(weightcalcdata, method, scenario):
                              affectedvar + " for box number: " +
                              str(boxindex + 1))
                 
-                weight_array, delay_array, datastore = calc_weights_onepair(
-                )
-
-                
+                weight_array, delay_array, datastore = \
+                    calc_weights_onepair(
+                         weightcalcdata, weightcalculator,
+                         box, startindex, size,
+                         causevarindex, affectedvarindex,
+                         newconnectionmatrix,
+                         datalines_directional, datalines_absolute,
+                         filename, method, boxindex, sigstatus, headerline,
+                         causevar,
+                         datalines_sigthresh_directional,
+                         datalines_sigthresh_absolute,
+                         datalines_neutral,
+                         datalines_sigthresh_neutral,
+                         sig_filename,
+                         weight_array, delay_array, datastore)
 
         # Delete entries from weightcalc matrix not used
         # Delete all rows and columns listed in affected_dellist, cause_dellist
