@@ -13,6 +13,7 @@ import sklearn.preprocessing
 import os
 import matplotlib.pyplot as plt
 import json
+import logging
 
 import config_setup
 
@@ -59,6 +60,7 @@ def writecsv(filename, items, header=None):
 def fft_calculation(raw_tsdata, normalised_tsdata, variables, sampling_rate,
                     sampling_unit, saveloc, case, scenario,
                     plotting=False, plotting_endsample=500):
+    logging.info("Starting FFT calculations")
 
     headerline = np.genfromtxt(raw_tsdata, delimiter=',', dtype='string')[0, :]
 
@@ -71,7 +73,7 @@ def fft_calculation(raw_tsdata, normalised_tsdata, variables, sampling_rate,
     freqlist = freqlist[:, np.newaxis]
 
     fft_data = np.zeros((len(freqlist), len(variables)))
-    
+
     def filename(name):
         return filename_template.format(case, scenario, name)
 
@@ -117,6 +119,8 @@ def fft_calculation(raw_tsdata, normalised_tsdata, variables, sampling_rate,
     filename_template = os.path.join(datadir, '{}_{}_{}.csv')
 
     writecsv(filename('fft'), datalines, headerline)
+
+    logging.info("Done with FFT calculations")
 
     return None
 
