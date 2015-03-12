@@ -27,8 +27,11 @@ import numpy as np
 import h5py
 import logging
 import json
-
 import sklearn.preprocessing
+
+# Functions needed for multiprocessing
+from functools import partial
+from multiprocessing import Pool
 
 # Non-standard external libraries
 import jpype
@@ -40,8 +43,6 @@ import data_processing
 # Gain calculators
 from gaincalculators import (PartialCorrWeightcalc, CorrWeightcalc,
                              TransentWeightcalc)
-                             
-import gaincalc_onepair
 
 import datagen
 
@@ -94,7 +95,7 @@ class WeightcalcData:
         self.normalize = self.caseconfig[settings_name]['normalize']
         self.sigtest = self.caseconfig[settings_name]['sigtest']
         self.allthresh = self.caseconfig[settings_name]['allthresh']
-        
+
         # Get sampling rate and unit name
         self.sampling_rate = (self.caseconfig[settings_name]
                               ['sampling_rate'])
@@ -118,7 +119,6 @@ class WeightcalcData:
                 self.connectionmatrix, _ = \
                     data_processing.read_connectionmatrix(connectionloc)
 
-            
             # Convert timeseries data in CSV file to H5 data format
             datapath = data_processing.csv_to_h5(self.saveloc, raw_tsdata,
                                                  scenario, self.casename)
@@ -127,7 +127,7 @@ class WeightcalcData:
             # Get inputdata from H5 table created
             self.inputdata_raw = np.array(h5py.File(os.path.join(
                 datapath, scenario + '.h5'), 'r')[scenario])
-                
+
             if self.normalize:
                 # Normalise (mean centre and variance scale) the input data
                 self.inputdata_normstep = \
@@ -153,8 +153,8 @@ class WeightcalcData:
             # Get the variables and connection matrix
             self.variables, self.connectionmatrix = \
                 eval('datagen.' + connectionloc)()
-            
-            if self.normalize:            
+
+            if self.normalize:
                 self.inputdata_normstep = \
                     sklearn.preprocessing.scale(self.inputdata_raw, axis=0)
 
@@ -255,9 +255,10 @@ class WeightcalcData:
                                             self.saveloc,
                                             self.casename,
                                             scenario)
-                                            
-def calc_weights_onepair(affectedvarindex,
-                         causevarindex,
+
+
+# Need to rewrite this to not make use of classes
+def calc_weights_onepair(causevarindex,
                          weightcalcdata, weightcalculator,
                          box, startindex, size,
                          newconnectionmatrix,
@@ -269,16 +270,17 @@ def calc_weights_onepair(affectedvarindex,
                          datalines_neutral,
                          datalines_sigthresh_neutral,
                          sig_filename,
-                         weight_array, delay_array, datastore):
-                             
-    affectedvar = weightcalcdata.variables[affectedvarindex]    
-    
+                         weight_array, delay_array, datastore,
+                         affectedvarindex):
+
+    affectedvar = weightcalcdata.variables[affectedvarindex]
+
     logging.info("Analysing effect of: " + causevar + " on " +
                  affectedvar + " for box number: " +
                  str(boxindex + 1))
-                             
+
     if not(newconnectionmatrix[affectedvarindex,
-                                           causevarindex] == 0):
+                               causevarindex] == 0):
                     weightlist = []
                     directional_weightlist = []
                     absolute_weightlist = []
@@ -287,7 +289,7 @@ def calc_weights_onepair(affectedvarindex,
                     absolute_sigthreshlist = []
 
                     for delay in weightcalcdata.sample_delays:
-#                        logging.info("Now testing delay: " + str(delay))
+                        logging.info("Now testing delay: " + str(delay))
 
                         causevardata = \
                             (box[:, causevarindex]
@@ -297,6 +299,9 @@ def calc_weights_onepair(affectedvarindex,
                             (box[:, affectedvarindex]
                                 [startindex+delay:startindex+size+delay])
 
+                        # This function might be causing troube as it is in
+                        # a class - rather import it directly
+                        # How does it make use of weightcalcdata?
                         weight = weightcalculator.calcweight(causevardata,
                                                              affectedvardata,
                                                              weightcalcdata,
@@ -439,7 +444,7 @@ def calc_weights_onepair(affectedvarindex,
                                                 affectedvarindex, weightlist,
                                                 weight_array, delay_array,
                                                 datastore)
-                                                
+
     return weight_array, delay_array, datastore
 
 
@@ -612,38 +617,70 @@ def calc_weights(weightcalcdata, method, scenario):
             datalines_sigthresh_directional = datalines_directional.copy()
             datalines_sigthresh_absolute = datalines_directional.copy()
             datalines_sigthresh_neutral = datalines_directional.copy()
-            
+
+            ##########################################3
+
+            # Create a partial funciton with all arguments except the
+            # affectedvar which is the iterable item.
+            partial_gaincalc_onepair = partial(
+                calc_weights_onepair,
+                causevarindex,
+                weightcalcdata, weightcalculator,
+                box, startindex, size,
+                newconnectionmatrix,
+                datalines_directional, datalines_absolute,
+                filename, method, boxindex, sigstatus, headerline,
+                causevar,
+                datalines_sigthresh_directional,
+                datalines_sigthresh_absolute,
+                datalines_neutral,
+                datalines_sigthresh_neutral,
+                sig_filename,
+                weight_array, delay_array, datastore)
+
+#            pool = Pool(processes=4)
+#            result = pool.map(partial_gaingcalc_onepair,
+#                              weightcalcdata.affectedvarindexes)
+
             # This is the part that needs to be parallelised
             ################################################
 
             for affectedvarindex in weightcalcdata.affectedvarindexes:
                 # Attempt to start parallelising code here
-                # Create one process for each affectedvar
+                # Create one process for each affectedvarindex
                 # Each parallel process will need to calculate
                 # weight_array, delay_array and datastore
-                # These will need to be retrieved in order at the end                
+                # These will need to be retrieved in order at the end
 
-                
                 weight_array, delay_array, datastore = \
-                    calc_weights_onepair(
-                         affectedvarindex,
-                         causevarindex,
-                         weightcalcdata, weightcalculator,
-                         box, startindex, size,
-                         newconnectionmatrix,
-                         datalines_directional, datalines_absolute,
-                         filename, method, boxindex, sigstatus, headerline,
-                         causevar,
-                         datalines_sigthresh_directional,
-                         datalines_sigthresh_absolute,
-                         datalines_neutral,
-                         datalines_sigthresh_neutral,
-                         sig_filename,
-                         weight_array, delay_array, datastore)
-                         
+                    partial_gaincalc_onepair(affectedvarindex)
+
+
+
+#
+#
+#
+#
+#                weight_array, delay_array, datastore = \
+#                    calc_weights_onepair(
+#                         affectedvarindex,
+#                         causevarindex,
+#                         weightcalcdata, weightcalculator,
+#                         box, startindex, size,
+#                         newconnectionmatrix,
+#                         datalines_directional, datalines_absolute,
+#                         filename, method, boxindex, sigstatus, headerline,
+#                         causevar,
+#                         datalines_sigthresh_directional,
+#                         datalines_sigthresh_absolute,
+#                         datalines_neutral,
+#                         datalines_sigthresh_neutral,
+#                         sig_filename,
+#                         weight_array, delay_array, datastore)
+
             ########################################################
-                         
-            
+
+
 
         # Delete entries from weightcalc matrix not used
         # Delete all rows and columns listed in affected_dellist, cause_dellist
