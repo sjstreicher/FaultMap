@@ -10,21 +10,7 @@ import os
 import config_setup
 from ranking.gaincalc import weightcalc
 
-logging.basicConfig(level=logging.INFO)
-
-dataloc, _ = config_setup.get_locations()
-weightcalc_config = json.load(open(os.path.join(dataloc, 'config'
-                                                '_weightcalc' + '.json')))
-
-# Flag indicating whether calculated results should be written to disk
-writeoutput = weightcalc_config['writeoutput']
-# Flag indicating whether single signal entropy values for each
-# signal involved should be calculated
-single_entropies = weightcalc_config['calc_single_entropies']
-# Provide the mode and case names to calculate
-mode = weightcalc_config['mode']
-cases = weightcalc_config['cases']
-fftcalc = weightcalc_config['fft_calc']
+import multiprocessing
 
 
 def wrapper(func, *args, **kwargs):
@@ -32,8 +18,25 @@ def wrapper(func, *args, **kwargs):
         return func(*args, **kwargs)
     return wrapped
 
-for case in cases:
-    # TODO: For accurrate timing do it for the actual calculation only
-    wrapped = wrapper(weightcalc, mode, case, writeoutput, single_entropies,
-                      fftcalc)
+if __name__ == '__main__':
+    multiprocessing.freeze_support()
+    logging.basicConfig(level=logging.INFO)
+    dataloc, _ = config_setup.get_locations()
+    weightcalc_config = json.load(open(os.path.join(dataloc, 'config'
+                                                    '_weightcalc' + '.json')))
+
+    # Flag indicating whether calculated results should be written to disk
+    writeoutput = weightcalc_config['writeoutput']
+    # Flag indicating whether single signal entropy values for each
+    # signal involved should be calculated
+    single_entropies = weightcalc_config['calc_single_entropies']
+    # Provide the mode and case names to calculate
+    mode = weightcalc_config['mode']
+    cases = weightcalc_config['cases']
+    fftcalc = weightcalc_config['fft_calc']
+
+    for case in cases:
+        # TODO: For accurrate timing do it for the actual calculation only
+        wrapped = wrapper(weightcalc, mode, case, writeoutput,
+                          single_entropies, fftcalc)
     print timeit.timeit(wrapped, number=1)

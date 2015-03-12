@@ -5,7 +5,6 @@ Created on Thu Mar 12 10:56:02 2015
 @author: STREICSJ1
 """
 
-import sys
 import logging
 import numpy as np
 import csv
@@ -21,7 +20,6 @@ def writecsv_weightcalc(filename, items, header):
         csv.writer(f).writerows(items)
 
 
-# Need to rewrite this to not make use of classes
 def calc_weights_onepair(causevarindex,
                          weightcalcdata, weightcalculator,
                          box, startindex, size,
@@ -212,7 +210,21 @@ def calc_weights_onepair(causevarindex,
     return weight_array, delay_array, datastore
 
 
-if __name__ == '__main__':
+def run(non_iter_args):
+    [causevarindex,
+     weightcalcdata, weightcalculator,
+     box, startindex, size,
+     newconnectionmatrix,
+     datalines_directional, datalines_absolute,
+     filename, method, boxindex, sigstatus, headerline,
+     causevar,
+     datalines_sigthresh_directional,
+     datalines_sigthresh_absolute,
+     datalines_neutral,
+     datalines_sigthresh_neutral,
+     sig_filename,
+     weight_array, delay_array, datastore] = non_iter_args
+
     partial_gaincalc_onepair = partial(
                 calc_weights_onepair,
                 causevarindex,
@@ -237,4 +249,6 @@ if __name__ == '__main__':
     result = pool.map(partial_gaincalc_onepair,
                       weightcalcdata.affectedvarindexes)
 
-    # Can make use of CSV files or stdout
+    weight_array, delay_array, datastore = result[0]
+
+    return weight_array, delay_array, datastore
