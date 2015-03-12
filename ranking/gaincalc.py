@@ -29,13 +29,6 @@ import logging
 import json
 import sklearn.preprocessing
 
-from functools import partial
-#import subprocess
-
-# Functions needed for multiprocessing
-
-#from pathos.multiprocessing import ProcessingPool as Pool
-
 # Non-standard external libraries
 import jpype
 
@@ -47,9 +40,8 @@ import data_processing
 from gaincalculators import (PartialCorrWeightcalc, CorrWeightcalc,
                              TransentWeightcalc)
 
-#import gaincalc_onepair
-
-from gaincalc_onepair import calc_weights_onepair
+import gaincalc_onepair
+import multiprocessing
 
 
 class WeightcalcData:
@@ -442,10 +434,11 @@ def calc_weights(weightcalcdata, method, scenario):
             # weight_array, delay_array and datastore
             # These will need to be retrieved in order at the end
 
-            #############
+            #######################################################
 
-            partial_gaincalc_onepair = partial(
-                calc_weights_onepair,
+            print causevarindex
+
+            non_iter_args = [
                 causevarindex,
                 weightcalcdata, weightcalculator,
                 box, startindex, size,
@@ -458,25 +451,11 @@ def calc_weights(weightcalcdata, method, scenario):
                 datalines_neutral,
                 datalines_sigthresh_neutral,
                 sig_filename,
-                weight_array, delay_array, datastore)
+                weight_array, delay_array, datastore]
 
-#            non_iter_args = [causevarindex,
-#                             weightcalcdata, weightcalculator,
-#                             box, startindex, size,
-#                             newconnectionmatrix,
-#                             datalines_directional, datalines_absolute,
-#                             filename, method, boxindex, sigstatus, headerline,
-#                             causevar,
-#                             datalines_sigthresh_directional,
-#                             datalines_sigthresh_absolute,
-#                             datalines_neutral,
-#                             datalines_sigthresh_neutral,
-#                             sig_filename,
-#                             weight_array, delay_array, datastore]
-
-            for affectedvarindex in weightcalcdata.affectedvarindexes:
-                weight_array, delay_array, datastore = \
-                    partial_gaincalc_onepair(affectedvarindex)
+            # Run the script that will handle multiprocessing
+            weight_array, delay_array, datastore = \
+                gaincalc_onepair.run(non_iter_args)
 
             ########################################################
 
@@ -573,3 +552,6 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False,
                             data_header)
             else:
                 logging.info("The requested results are in existence")
+
+if __name__ == '__main__':
+    multiprocessing.freezeSupport()

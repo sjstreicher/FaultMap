@@ -60,7 +60,10 @@ def writecsv(filename, items, header=None):
 def fft_calculation(raw_tsdata, normalised_tsdata, variables, sampling_rate,
                     sampling_unit, saveloc, case, scenario,
                     plotting=False, plotting_endsample=500):
-    logging.info("Starting FFT calculations")
+
+    # logging.info("Starting FFT calculations")
+    # Using a print command instead as logging is late
+    print "Starting FFT calculations"
 
     headerline = np.genfromtxt(raw_tsdata, delimiter=',', dtype='string')[0, :]
 
@@ -120,7 +123,8 @@ def fft_calculation(raw_tsdata, normalised_tsdata, variables, sampling_rate,
 
     writecsv(filename('fft'), datalines, headerline)
 
-    logging.info("Done with FFT calculations")
+#    logging.info("Done with FFT calculations")
+    print "Done with FFT calculations"
 
     return None
 
