@@ -73,7 +73,7 @@ class CorrWeightcalc(object):
         # Correlation thresholds from Bauer2008 eq. 4
         maxcorr_abs = max(maxval, abs(minval))
         bestdelay = weightcalcdata.actual_delays[delay_index]
-        if not (maxval and minval) <> 0:
+        if not (maxval and minval) != 0:
             directionindex = 2 * (abs(maxval + minval) /
                                   (maxval + abs(minval)))
         else:
@@ -89,8 +89,8 @@ class CorrWeightcalc(object):
                      " and " + affectedvar + " is: " + str(maxcorr))
         logging.info("The corresponding delay is: " +
                      str(bestdelay))
-        logging.info("The correlation with no delay is: "
-                     + str(weightlist[0]))
+        logging.info("The correlation with no delay is: " +
+                     str(weightlist[0]))
 
         logging.info("Directionality value: " + str(directionindex))
 
@@ -232,7 +232,7 @@ class TransentWeightcalc:
         self.teCalc = \
             transentropy.setup_infodynamics_te(weightcalcdata.normalize,
                                                calcmethod=self.estimator)
-                                            
+
         transent_fwd = \
             transentropy.calc_infodynamics_te(self.teCalc, affectedvardata.T,
                                               causevardata.T)
@@ -313,8 +313,8 @@ class TransentWeightcalc:
                 self.thresh_sixsigma(thresh_affectedvardata.T,
                                      thresh_causevardata.T)
 
-            logging.info("The directional TE threshold is: "
-                         + str(self.threshent_directional))
+            logging.info("The directional TE threshold is: " +
+                         str(self.threshent_directional))
 
             if maxval_directional >= self.threshent_directional \
                     and maxval_directional >= 0:
@@ -338,8 +338,8 @@ class TransentWeightcalc:
 
         datastore.append(dataline)
 
-        logging.info("The corresponding delay is: "
-                     + str(bestdelay_directional))
+        logging.info("The corresponding delay is: " +
+                     str(bestdelay_directional))
         logging.info("The TE with no delay is: " + str(weightlist[0][0]))
 
         return weight_array, delay_array, datastore
