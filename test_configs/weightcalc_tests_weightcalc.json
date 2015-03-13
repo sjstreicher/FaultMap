@@ -1,7 +1,8 @@
 {
   "datatype": "function",
   "methods": [
-      "cross_correlation"
+      "cross_correlation",
+	  "transfer_entropy_kernel"
   ],
   "scenarios": [
 	  "sinusoid_5x5"

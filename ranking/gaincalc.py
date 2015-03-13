@@ -29,9 +29,6 @@ import logging
 import json
 import sklearn.preprocessing
 
-# Non-standard external libraries
-import jpype
-
 # Own libraries
 import config_setup
 import data_processing
@@ -51,7 +48,7 @@ class WeightcalcData:
     """
     def __init__(self, mode, case, single_entropies, fftcalc):
         # Get file locations from configuration file
-        self.saveloc, self.casedir, infodynamicsloc = \
+        self.saveloc, self.casedir, self.infodynamicsloc = \
             config_setup.runsetup(mode, case)
         # Load case config file
         self.caseconfig = json.load(open(os.path.join(self.casedir, case +
@@ -62,13 +59,6 @@ class WeightcalcData:
         self.scenarios = self.caseconfig['scenarios']
         # Get methods
         self.methods = self.caseconfig['methods']
-
-        if not jpype.isJVMStarted():
-            jpype.startJVM(jpype.getDefaultJVMPath(),
-                           "-Xms32M",
-                           "-Xmx512M",
-                           "-ea",
-                           "-Djava.class.path=" + infodynamicsloc)
 
         self.casename = case
 
