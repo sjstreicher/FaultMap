@@ -210,10 +210,6 @@ class TransentWeightcalc:
         self.data_header = ['causevar', 'affectedvar', 'base_ent',
                             'max_ent', 'max_delay', 'max_index', 'threshold',
                             'threshpass']
-        # Setup Java class for infodynamics toolkit
-        self.teCalc = \
-            transentropy.setup_infodynamics_te(weightcalcdata.normalize,
-                                               calcmethod=estimator)
 
         self.estimator = estimator
         self.normalize = weightcalcdata.normalize
@@ -229,20 +225,17 @@ class TransentWeightcalc:
 
         # Initialise for each calculation in an attempt to fix
         # Kraskov calculator execution
-        self.teCalc = \
-            transentropy.setup_infodynamics_te(weightcalcdata.normalize,
-                                               calcmethod=self.estimator)
 
         transent_fwd = \
-            transentropy.calc_infodynamics_te(self.teCalc, affectedvardata.T,
+            transentropy.calc_infodynamics_te(self.normalize,
+                                              self.estimator,
+                                              affectedvardata.T,
                                               causevardata.T)
 
-        self.teCalc = \
-            transentropy.setup_infodynamics_te(weightcalcdata.normalize,
-                                               calcmethod=self.estimator)
-
         transent_bwd = \
-            transentropy.calc_infodynamics_te(self.teCalc, causevardata.T,
+            transentropy.calc_infodynamics_te(self.normalize,
+                                              self.estimator,
+                                              causevardata.T,
                                               affectedvardata.T)
 
         transent_directional = transent_fwd - transent_bwd
@@ -373,20 +366,16 @@ class TransentWeightcalc:
         for n in range(num):
             # Necessary to reinitialize class on each execution for Kraskov
             # methods to work
-            self.teCalc = \
-                transentropy.setup_infodynamics_te(self.normalize,
-                                                   calcmethod=self.estimator)
+            # This now happens automatically as part of the
+            # calc_infodynamics_te function
 
             surr_te_fwd.append(transentropy.calc_infodynamics_te(
-                self.teCalc, affected_data, surr_tsdata[n][0, :]))
-
-            # Reinitializing again...
-            self.teCalc = \
-                transentropy.setup_infodynamics_te(self.normalize,
-                                                   calcmethod=self.estimator)
+                self.normalize, self.estimator,
+                affected_data, surr_tsdata[n][0, :]))
 
             surr_te_bwd.append(transentropy.calc_infodynamics_te(
-                self.teCalc, surr_tsdata[n][0, :], affected_data))
+                self.normalize, self.estimator,
+                surr_tsdata[n][0, :], affected_data))
 
 #        surr_te_fwd = [transentropy.calc_infodynamics_te(self.teCalc,
 #                                                         affected_data,
