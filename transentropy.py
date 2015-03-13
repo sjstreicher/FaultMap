@@ -76,6 +76,7 @@ def setup_infodynamics_te(normalize, calcmethod, histlength=1):
     of Kraskov MI estimators
 
     """
+
     if calcmethod == 'kernel':
         teCalcClass = \
             jpype.JPackage("infodynamics.measures.continuous.kernel") \
@@ -101,14 +102,15 @@ def setup_infodynamics_te(normalize, calcmethod, histlength=1):
     else:
         teCalc.setProperty("NORMALISE", "false")
 
-    teCalcClass = None
-    del teCalcClass
-    jpype.java.lang.System.gc()
+    # This slows it down - do not think it was responsible for the leak anyway
+#    teCalcClass = None
+#    del teCalcClass
+#    jpype.java.lang.System.gc()
 
     return teCalc
 
 
-def calc_infodynamics_te(teCalc, affected_data, causal_data):
+def calc_infodynamics_te(normalize, calcmethod, affected_data, causal_data):
     """Calculates the transfer entropy for a specific timelag (equal to
     prediction horison) between two sets of time series data.
 
@@ -120,6 +122,9 @@ def calc_infodynamics_te(teCalc, affected_data, causal_data):
     dead time between data indicating a causal relationship.
 
     """
+
+    teCalc = setup_infodynamics_te(normalize, calcmethod)
+
     sourceArray = causal_data.tolist()
     destArray = affected_data.tolist()
 
