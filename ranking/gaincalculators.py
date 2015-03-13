@@ -7,11 +7,30 @@ used by the gaincalc module.
 import numpy as np
 import logging
 
-# Non-standard external libraries
-import pygeonetwork
-
 # Own libraries
 import transentropy
+
+# Non-standard external libraries
+from contextlib import contextmanager
+
+import sys
+import os
+
+
+@contextmanager
+def suppress_stdout():
+    with open(os.devnull, "w") as devnull:
+        old_stdout = sys.stdout
+        sys.stdout = devnull
+        try:
+            yield
+        finally:
+            sys.stdout = old_stdout
+
+with suppress_stdout():
+    import pygeonetwork
+
+
 
 
 class CorrWeightcalc(object):
