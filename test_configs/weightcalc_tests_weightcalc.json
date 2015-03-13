@@ -1,7 +1,6 @@
 {
   "datatype": "function",
   "methods": [
-      "cross_correlation",
 	  "transfer_entropy_kernel"
   ],
   "scenarios": [

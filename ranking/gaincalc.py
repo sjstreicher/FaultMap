@@ -426,7 +426,9 @@ def calc_weights(weightcalcdata, method, scenario):
 
             #######################################################
 
-            print causevarindex
+            logging.info("Analysing causal variable: " + causevar +
+                         "[" + str(causevarindex+1) + "/" +
+                         str(len(weightcalcdata.causevarindexes)) + "]")
 
             non_iter_args = [
                 causevarindex,
