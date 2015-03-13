@@ -9,7 +9,10 @@ import logging
 import numpy as np
 import csv
 from functools import partial
+import pathos
 from pathos.multiprocessing import ProcessingPool as Pool
+
+do_multiprocessing = False
 
 
 def writecsv_weightcalc(filename, items, header):
@@ -241,14 +244,24 @@ def run(non_iter_args):
                 sig_filename,
                 weight_array, delay_array, datastore)
 
-#    for affectedvarindex in weightcalcdata.affectedvarindexes:
-#        weight_array, delay_array, datastore = \
-#                    partial_gaincalc_onepair(affectedvarindex)
+    if do_multiprocessing:
+        pool = Pool(processes=1)
+        result = pool.map(partial_gaincalc_onepair,
+                          weightcalcdata.affectedvarindexes)
 
-    pool = Pool(processes=4)
-    result = pool.map(partial_gaincalc_onepair,
-                      weightcalcdata.affectedvarindexes)
+        # Current solution to no close and join methods on ProcessingPool
+        # https://github.com/uqfoundation/pathos/issues/46
 
-    weight_array, delay_array, datastore = result[0]
+        s = pathos.multiprocessing.__STATE['pool']
+        s.close()
+        s.join()
+        pathos.multiprocessing.__STATE['pool'] = None
+
+        weight_array, delay_array, datastore = result[0]
+
+    else:
+        for affectedvarindex in weightcalcdata.affectedvarindexes:
+            weight_array, delay_array, datastore = \
+                        partial_gaincalc_onepair(affectedvarindex)
 
     return weight_array, delay_array, datastore
