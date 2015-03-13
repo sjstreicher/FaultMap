@@ -54,7 +54,7 @@ def calc_weights_onepair(causevarindex,
                     absolute_sigthreshlist = []
 
                     for delay in weightcalcdata.sample_delays:
-                        logging.info("Now testing delay: " + str(delay))
+#                        logging.info("Now testing delay: " + str(delay))
 
                         causevardata = \
                             (box[:, causevarindex]
