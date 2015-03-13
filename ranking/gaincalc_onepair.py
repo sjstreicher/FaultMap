@@ -12,7 +12,7 @@ from functools import partial
 import pathos
 from pathos.multiprocessing import ProcessingPool as Pool
 
-do_multiprocessing = False
+do_multiprocessing = True
 
 
 def writecsv_weightcalc(filename, items, header):

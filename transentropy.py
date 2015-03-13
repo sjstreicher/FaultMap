@@ -60,7 +60,8 @@ def vectorselection(data, timelag, sub_samples, k=1, l=1):
     return x_pred, x_hist, y_hist
 
 
-def setup_infodynamics_te(normalize, calcmethod, histlength=1):
+def setup_infodynamics_te(infodynamicsloc,
+                          normalize, calcmethod, histlength=1):
     """Prepares the teCalc class of the Java Infodyamics Toolkit (JIDK)
     in order to calculate transfer entropy according to the kernel or Kraskov
     estimator method.
@@ -76,6 +77,13 @@ def setup_infodynamics_te(normalize, calcmethod, histlength=1):
     of Kraskov MI estimators
 
     """
+
+    if not jpype.isJVMStarted():
+        jpype.startJVM(jpype.getDefaultJVMPath(),
+                       "-Xms32M",
+                       "-Xmx512M",
+                       "-ea",
+                       "-Djava.class.path=" + infodynamicsloc)
 
     if calcmethod == 'kernel':
         teCalcClass = \
@@ -110,7 +118,8 @@ def setup_infodynamics_te(normalize, calcmethod, histlength=1):
     return teCalc
 
 
-def calc_infodynamics_te(normalize, calcmethod, affected_data, causal_data):
+def calc_infodynamics_te(infodynamicsloc, normalize, calcmethod,
+                         affected_data, causal_data):
     """Calculates the transfer entropy for a specific timelag (equal to
     prediction horison) between two sets of time series data.
 
@@ -123,7 +132,7 @@ def calc_infodynamics_te(normalize, calcmethod, affected_data, causal_data):
 
     """
 
-    teCalc = setup_infodynamics_te(normalize, calcmethod)
+    teCalc = setup_infodynamics_te(infodynamicsloc, normalize, calcmethod)
 
     sourceArray = causal_data.tolist()
     destArray = affected_data.tolist()
