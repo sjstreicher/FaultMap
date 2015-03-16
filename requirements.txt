@@ -17,3 +17,4 @@ pycairo
 python-igraph
 progressbar
 control
+pathos
