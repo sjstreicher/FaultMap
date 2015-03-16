@@ -13,11 +13,15 @@ from functools import partial
 import pathos
 from pathos.multiprocessing import ProcessingPool as Pool
 
-do_multiprocessing = True
+do_multiprocessing = False
 
 
 def writecsv_weightcalc(filename, datalines_basis, new_dataline, header):
     """CSV writer customized for use in weightcalc function."""
+
+    # TODO: This needs to make use of a dictionary of some sort in order
+    # to write results collected at different times and write them in the
+    # correct columns
 
     # Check if file is already in existence
     if not os.path.isfile(filename):
@@ -253,7 +257,9 @@ def run(non_iter_args):
         s.join()
         pathos.multiprocessing.__STATE['pool'] = None
 
-        weight_array, delay_array, datastore = result[0]
+        # TODO: The correct way of using these results still needs to be found
+
+#        weight_array, delay_array, datastore = result[0]
 
     else:
         for affectedvarindex in weightcalcdata.affectedvarindexes:
