@@ -245,6 +245,14 @@ class WeightcalcData:
                                             scenario)
 
 
+def writecsv_weightcalc(filename, items, header):
+    """CSV writer customized for use in weightcalc function."""
+
+    with open(filename, 'wb') as f:
+        csv.writer(f).writerow(header)
+        csv.writer(f).writerows(items)
+
+
 def calc_weights(weightcalcdata, method, scenario):
     """Determines the maximum weight between two variables by searching through
     a specified set of delays.
@@ -317,11 +325,6 @@ def calc_weights(weightcalcdata, method, scenario):
                                             boxindex, causevar)
 
     # Store the weight calculation results in similar format as original data
-    def writecsv_weightcalc(filename, items, header):
-        """CSV writer customized for use in weightcalc function."""
-        with open(filename, 'wb') as f:
-            csv.writer(f).writerow(header)
-            csv.writer(f).writerows(items)
 
     weightstoredir = config_setup.ensure_existance(
         os.path.join(weightcalcdata.saveloc, 'weightdata'), make=True)
@@ -418,7 +421,7 @@ def calc_weights(weightcalcdata, method, scenario):
             # Create a partial funciton with all arguments except the
             # affectedvar which is the iterable item.
 
-            # Sstart parallelising code here
+            # Start parallelising code here
             # Create one process for each affectedvarindex
             # Each parallel process will need to calculate
             # weight_array, delay_array and datastore
@@ -467,14 +470,6 @@ def calc_weights(weightcalcdata, method, scenario):
         datastores.append(datastore)
 
     return weight_arrays, delay_arrays, datastores, data_header
-
-
-def writecsv_weightcalc(filename, items, header):
-    """CSV writer customized for use in weightcalc function."""
-
-    with open(filename, 'wb') as f:
-        csv.writer(f).writerow(header)
-        csv.writer(f).writerows(items)
 
 
 def weightcalc(mode, case, writeoutput=False, single_entropies=False,
