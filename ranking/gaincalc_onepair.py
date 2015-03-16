@@ -245,7 +245,7 @@ def run(non_iter_args):
                 weight_array, delay_array, datastore)
 
     if do_multiprocessing:
-        pool = Pool(processes=4)
+        pool = Pool(processes=pathos.multiprocessing.cpu_count())
         result = pool.map(partial_gaincalc_onepair,
                           weightcalcdata.affectedvarindexes)
 
