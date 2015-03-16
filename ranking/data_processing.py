@@ -29,8 +29,6 @@ def csv_to_h5(saveloc, raw_tsdata, scenario, case):
     datapath = config_setup.ensure_existance(os.path.join(
         saveloc, 'data', case), make=True)
 
-    print datapath
-
     hdf5writer = tb.open_file(os.path.join(datapath, scenario + '.h5'), 'w')
     data = np.genfromtxt(raw_tsdata, delimiter=',')
     # Strip time column and labels first row
