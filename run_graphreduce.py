@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 
 dataloc, _ = config_setup.get_locations()
 graphreduce_config = json.load(open(os.path.join(dataloc, 'config'
-                                              '_graphreduce' + '.json')))
+                                                 '_graphreduce' + '.json')))
 
 writeoutput = graphreduce_config['writeoutput']
 mode = graphreduce_config['mode']
