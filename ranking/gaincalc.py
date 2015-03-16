@@ -418,7 +418,7 @@ def calc_weights(weightcalcdata, method, scenario):
             # Create a partial funciton with all arguments except the
             # affectedvar which is the iterable item.
 
-            # Attempt to start parallelising code here
+            # Sstart parallelising code here
             # Create one process for each affectedvarindex
             # Each parallel process will need to calculate
             # weight_array, delay_array and datastore

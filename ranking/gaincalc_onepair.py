@@ -5,6 +5,7 @@ Created on Thu Mar 12 10:56:02 2015
 @author: STREICSJ1
 """
 
+import os
 import logging
 import numpy as np
 import csv
@@ -12,15 +13,36 @@ from functools import partial
 import pathos
 from pathos.multiprocessing import ProcessingPool as Pool
 
-do_multiprocessing = True
+do_multiprocessing = False
 
 
-def writecsv_weightcalc(filename, items, header):
+def writecsv_weightcalc(filename, datalines_basis, new_dataline, header):
     """CSV writer customized for use in weightcalc function."""
 
-    with open(filename, 'wb') as f:
-        csv.writer(f).writerow(header)
-        csv.writer(f).writerows(items)
+    # Check if file is already in existence
+    if not os.path.isfile(filename):
+        # If file does not exist, create it and write header
+        # as well as current dataline
+        datalines = \
+             np.concatenate((datalines_basis,
+                             new_dataline),
+                            axis=1)
+        datalines = datalines
+
+        with open(filename, 'wb') as f:
+            csv.writer(f).writerow(header)
+            csv.writer(f).writerows(datalines)
+
+    else:
+        # If file already exists, add the current dataline
+        # First read all entries below headerline
+        prev_datalines = np.genfromtxt(filename, delimiter=',', skip_header=1)
+        # Add current item to colums
+        datalines = np.concatenate((prev_datalines, new_dataline), axis=1)
+        # Write updated set of datalines to file
+        with open(filename, 'wb') as f:
+            csv.writer(f).writerow(header)
+            csv.writer(f).writerows(datalines)
 
 
 def calc_weights_onepair(causevarindex,
@@ -54,7 +76,7 @@ def calc_weights_onepair(causevarindex,
                     absolute_sigthreshlist = []
 
                     for delay in weightcalcdata.sample_delays:
-#                        logging.info("Now testing delay: " + str(delay))
+                        logging.info("Now testing delay: " + str(delay))
 
                         causevardata = \
                             (box[:, causevarindex]
@@ -64,9 +86,6 @@ def calc_weights_onepair(causevarindex,
                             (box[:, affectedvarindex]
                                 [startindex+delay:startindex+size+delay])
 
-                        # This function might be causing troube as it is in
-                        # a class - rather import it directly
-                        # How does it make use of weightcalcdata?
                         weight = weightcalculator.calcweight(causevardata,
                                                              affectedvardata,
                                                              weightcalcdata,
@@ -118,25 +137,17 @@ def calc_weights_onepair(causevarindex,
                         weights_thisvar_absolute = \
                             weights_thisvar_absolute[:, np.newaxis]
 
-                        datalines_directional = \
-                            np.concatenate((datalines_directional,
-                                            weights_thisvar_directional),
-                                           axis=1)
-
-                        datalines_absolute = \
-                            np.concatenate((datalines_absolute,
-                                            weights_thisvar_absolute),
-                                           axis=1)
-
                         writecsv_weightcalc(filename(
                             directional_name,
                             method, boxindex+1, sigstatus, causevar),
-                            datalines_directional, headerline)
+                            datalines_directional,
+                            weights_thisvar_directional, headerline)
 
                         writecsv_weightcalc(filename(
                             absolute_name,
                             method, boxindex+1, sigstatus, causevar),
-                            datalines_absolute, headerline)
+                            datalines_absolute,
+                            weights_thisvar_absolute, headerline)
 
                         # Do the same for the significance threshold
                         if weightcalcdata.allthresh:
@@ -153,39 +164,28 @@ def calc_weights_onepair(causevarindex,
                             sigthresh_thisvar_absolute = \
                                 sigthresh_thisvar_absolute[:, np.newaxis]
 
-                            datalines_sigthresh_directional = np.concatenate(
-                                (datalines_sigthresh_directional,
-                                 sigthresh_thisvar_directional),
-                                axis=1)
-
-                            datalines_sigthresh_absolute = \
-                                np.concatenate((datalines_sigthresh_absolute,
-                                                sigthresh_thisvar_absolute),
-                                               axis=1)
-
                             writecsv_weightcalc(sig_filename(
                                 sig_directional_name,
                                 method, boxindex+1, causevar),
-                                datalines_sigthresh_directional, headerline)
+                                datalines_sigthresh_directional,
+                                sigthresh_thisvar_directional, headerline)
 
                             writecsv_weightcalc(sig_filename(
                                 sig_absolute_name,
                                 method, boxindex+1, causevar),
-                                datalines_sigthresh_absolute, headerline)
+                                datalines_sigthresh_absolute,
+                                sigthresh_thisvar_absolute, headerline)
 
                     else:
                         weights_thisvar_neutral = np.asarray(weightlist)
                         weights_thisvar_neutral = \
                             weights_thisvar_neutral[:, np.newaxis]
 
-                        datalines_neutral = \
-                            np.concatenate((datalines_neutral,
-                                            weights_thisvar_neutral), axis=1)
-
                         writecsv_weightcalc(filename(
                             neutral_name,
                             method, boxindex+1, sigstatus, causevar),
-                            datalines_neutral, headerline)
+                            datalines_neutral,
+                            weights_thisvar_neutral, headerline)
 
                         # Write the significance thresholds to file
                         if weightcalcdata.allthresh:
@@ -193,15 +193,11 @@ def calc_weights_onepair(causevarindex,
                             sigthresh_thisvar_neutral = \
                                 sigthresh_thisvar_neutral[:, np.newaxis]
 
-                            datalines_sigthresh_neutral = \
-                                np.concatenate((datalines_sigthresh_neutral,
-                                                sigthresh_thisvar_neutral),
-                                               axis=1)
-
                             writecsv_weightcalc(sig_filename(
                                 sig_neutral_name,
                                 method, boxindex+1, causevar),
-                                datalines_sigthresh_neutral, headerline)
+                                datalines_sigthresh_neutral,
+                                sigthresh_thisvar_neutral, headerline)
 
                     # Generate and store report files according to each method
                     [weight_array, delay_array, datastore] = \

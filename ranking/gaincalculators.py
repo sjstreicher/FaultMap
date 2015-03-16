@@ -31,8 +31,6 @@ with suppress_stdout():
     import pygeonetwork
 
 
-
-
 class CorrWeightcalc(object):
     """This class provides methods for calculating the weights according to the
     cross-correlation method.
