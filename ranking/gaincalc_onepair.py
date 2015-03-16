@@ -13,6 +13,7 @@ from functools import partial
 import pathos
 from pathos.multiprocessing import ProcessingPool as Pool
 
+# This should be kept as False until result retrieval issues are resolved
 do_multiprocessing = False
 
 
