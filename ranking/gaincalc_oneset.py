@@ -13,8 +13,9 @@ from functools import partial
 import pathos
 from pathos.multiprocessing import ProcessingPool as Pool
 
-# This should be kept as False until result retrieval issues are resolved
-do_multiprocessing = False
+from data_processing import result_reconstruction
+
+do_multiprocessing = True
 
 
 def writecsv_weightcalc(filename, datalines_basis, new_dataline, header):
@@ -60,6 +61,10 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
 
     causevar = weightcalcdata.variables[causevarindex]
 
+    print ("Start analysing causal variable: " + causevar +
+           " [" + str(causevarindex+1) + "/" +
+           str(len(weightcalcdata.causevarindexes)) + "]")
+
     # Initiate datalines with delays
     datalines_directional = \
         np.asarray(weightcalcdata.actual_delays)
@@ -89,7 +94,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
             absolute_sigthreshlist = []
 
             for delay in weightcalcdata.sample_delays:
-#                logging.info("Now testing delay: " + str(delay))
+                logging.info("Now testing delay: " + str(delay))
 
                 causevardata = \
                     (box[:, causevarindex]
@@ -230,6 +235,10 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
 #        delay_array = np.delete(delay_array, cause_dellist, 1)
 #        delay_array = np.delete(delay_array, affected_dellist, 0)
 
+    print ("Done analysing causal variable: " + causevar +
+           " [" + str(causevarindex+1) + "/" +
+           str(len(weightcalcdata.causevarindexes)) + "]")
+
     return weight_array, delay_array, datastore
 
 
@@ -255,8 +264,6 @@ def run(non_iter_args):
         result = pool.map(partial_gaincalc_oneset,
                           weightcalcdata.causevarindexes)
 
-        print result
-
         # Current solution to no close and join methods on ProcessingPool
         # https://github.com/uqfoundation/pathos/issues/46
 
@@ -265,15 +272,12 @@ def run(non_iter_args):
         s.join()
         pathos.multiprocessing.__STATE['pool'] = None
 
-        # TODO: The correct way of using these results still needs to be found
-
-#        weight_array, delay_array, datastore = result[0]
+        weight_array, delay_array, datastore = \
+            result_reconstruction(result, weightcalcdata)
 
     else:
         for causevarindex in weightcalcdata.causevarindexes:
             weight_array, delay_array, datastore = \
                         partial_gaincalc_oneset(causevarindex)
-
-        print weight_array
 
     return weight_array, delay_array, datastore
