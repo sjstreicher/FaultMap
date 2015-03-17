@@ -89,7 +89,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
             absolute_sigthreshlist = []
 
             for delay in weightcalcdata.sample_delays:
-                logging.info("Now testing delay: " + str(delay))
+#                logging.info("Now testing delay: " + str(delay))
 
                 causevardata = \
                     (box[:, causevarindex]
@@ -212,12 +212,12 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                         datalines_sigthresh_neutral,
                         sigthresh_thisvar_neutral, headerline)
 
-                # Generate and store report files according to each method
-                [weight_array, delay_array, datastore] = \
-                    weightcalculator.report(weightcalcdata, causevarindex,
-                                            affectedvarindex, weightlist,
-                                            weight_array, delay_array,
-                                            datastore)
+            # Generate and store report files according to each method
+            [weight_array, delay_array, datastore] = \
+                weightcalculator.report(weightcalcdata, causevarindex,
+                                        affectedvarindex, weightlist,
+                                        weight_array, delay_array,
+                                        datastore)
 
         # Delete entries from weightcalc matrix not used
         # Delete all rows and columns listed in affected_dellist, cause_dellist
@@ -273,5 +273,7 @@ def run(non_iter_args):
         for causevarindex in weightcalcdata.causevarindexes:
             weight_array, delay_array, datastore = \
                         partial_gaincalc_oneset(causevarindex)
+
+        print weight_array
 
     return weight_array, delay_array, datastore
