@@ -37,7 +37,7 @@ import data_processing
 from gaincalculators import (PartialCorrWeightcalc, CorrWeightcalc,
                              TransentWeightcalc)
 
-import gaincalc_onepair
+import gaincalc_oneset
 import multiprocessing
 
 
@@ -403,67 +403,24 @@ def calc_weights(weightcalcdata, method, scenario):
                 boxindex+1),
                 signalentlist, signalent_headerline)
 
-        for causevarindex in weightcalcdata.causevarindexes:
-            causevar = weightcalcdata.variables[causevarindex]
+        # Start parallelising code here
+        # Create one process for each causevarindex
 
-            # Initiate datalines with delays
-            datalines_directional = \
-                np.asarray(weightcalcdata.actual_delays)
-            datalines_directional = datalines_directional[:, np.newaxis]
-            datalines_absolute = datalines_directional.copy()
-            datalines_neutral = datalines_directional.copy()
-            # Datalines needed to store significance threshold values
-            # for each variable combination
-            datalines_sigthresh_directional = datalines_directional.copy()
-            datalines_sigthresh_absolute = datalines_directional.copy()
-            datalines_sigthresh_neutral = datalines_directional.copy()
+        ###########################################################
 
-            # Create a partial funciton with all arguments except the
-            # affectedvar which is the iterable item.
+        non_iter_args = [
+            weightcalcdata, weightcalculator,
+            box, startindex, size,
+            newconnectionmatrix,
+            filename, method, boxindex, sigstatus, headerline,
+            sig_filename,
+            weight_array, delay_array, datastore]
 
-            # Start parallelising code here
-            # Create one process for each affectedvarindex
-            # Each parallel process will need to calculate
-            # weight_array, delay_array and datastore
-            # These will need to be retrieved in order at the end
+        # Run the script that will handle multiprocessing
+        weight_array, delay_array, datastore = \
+            gaincalc_oneset.run(non_iter_args)
 
-            #######################################################
-
-            logging.info("Analysing causal variable: " + causevar +
-                         "[" + str(causevarindex+1) + "/" +
-                         str(len(weightcalcdata.causevarindexes)) + "]")
-
-            non_iter_args = [
-                causevarindex,
-                weightcalcdata, weightcalculator,
-                box, startindex, size,
-                newconnectionmatrix,
-                datalines_directional, datalines_absolute,
-                filename, method, boxindex, sigstatus, headerline,
-                causevar,
-                datalines_sigthresh_directional,
-                datalines_sigthresh_absolute,
-                datalines_neutral,
-                datalines_sigthresh_neutral,
-                sig_filename,
-                weight_array, delay_array, datastore]
-
-            # Run the script that will handle multiprocessing
-            weight_array, delay_array, datastore = \
-                gaincalc_onepair.run(non_iter_args)
-
-            ########################################################
-
-        # Delete entries from weightcalc matrix not used
-        # Delete all rows and columns listed in affected_dellist, cause_dellist
-        # from weight_array
-        # Axis 0 is rows, axis 1 is columns
-#        weight_array = np.delete(weight_array, cause_dellist, 1)
-#        weight_array = np.delete(weight_array, affected_dellist, 0)
-
-        # Do the same for delay_array
-#        delay_array = np.delete(delay_array, cause_dellist, 1)
-#        delay_array = np.delete(delay_array, affected_dellist, 0)
+        ########################################################
 
         weight_arrays.append(weight_array)
         delay_arrays.append(delay_array)

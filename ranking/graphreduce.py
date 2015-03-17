@@ -172,8 +172,10 @@ def delete_loworder_edges(graph):
     Also deletes all self-loops.
 
     """
+    # TODO: Generalize such that ALL higher order connections are removed
+
     simplified_graph = graph.copy()
-    weight_dict = nx.get_edge_attributes(simplified_graph, 'weight')
+#    weight_dict = nx.get_edge_attributes(simplified_graph, 'weight')
 
     removed_edges = []
     for node in simplified_graph.nodes_iter():
