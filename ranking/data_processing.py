@@ -13,12 +13,39 @@ import sklearn.preprocessing
 import os
 import matplotlib.pyplot as plt
 import json
-import logging
+#import logging
 
 import config_setup
 
 # Own libraries
 import transentropy
+
+
+def result_reconstruction(result, weightcalcdata):
+    """Reconstructs the weight_array, delay_array and datastore from the
+    results returned from pool.map multiprocessing function.
+    """
+    # The results is a list of tuples with a length equal to causevars
+    # Each tuple has a partial weight_array, delay_array and datastore
+    # containing only results related to its specific causevar
+
+    vardims = len(weightcalcdata.variables)
+    # Initialise final storage containers
+    weight_array = np.empty((vardims, vardims))
+    delay_array = np.empty((vardims, vardims))
+    weight_array[:] = np.NAN
+    delay_array[:] = np.NAN
+    datastore = []
+
+    for causevarindex, causevar_result in enumerate(result):
+        weight_array[:, causevarindex] = causevar_result[0][:, causevarindex]
+        delay_array[:, causevarindex] = causevar_result[1][:, causevarindex]
+
+        for affectedvarindex in weightcalcdata.affectedvarindexes:
+            datastore.append(
+                causevar_result[2][affectedvarindex])
+
+    return weight_array, delay_array, datastore
 
 
 def csv_to_h5(saveloc, raw_tsdata, scenario, case):
