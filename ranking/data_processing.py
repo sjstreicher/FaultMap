@@ -13,11 +13,9 @@ import sklearn.preprocessing
 import os
 import matplotlib.pyplot as plt
 import json
-#import logging
-
-import config_setup
 
 # Own libraries
+import config_setup
 import transentropy
 
 
@@ -37,13 +35,23 @@ def result_reconstruction(result, weightcalcdata):
     delay_array[:] = np.NAN
     datastore = []
 
+#    affectedlength = len(weightcalcdata.affectedvarindexes)
+
     for causevarindex, causevar_result in enumerate(result):
         weight_array[:, causevarindex] = causevar_result[0][:, causevarindex]
         delay_array[:, causevarindex] = causevar_result[1][:, causevarindex]
 
-        for affectedvarindex in weightcalcdata.affectedvarindexes:
-            datastore.append(
-                causevar_result[2][affectedvarindex])
+#        if causevarindex % 2 == 0:
+#            # If even causevarindex, append the first part
+#            for affectedvarindex in range(0, affectedlength):
+#                datastore.append(causevar_result[2][affectedvarindex])
+#        else:
+#            # If uneven causevarindex, append last part
+#            for affectedvarindex in range(affectedlength, affectedlength*2):
+#                datastore.append(causevar_result[2][affectedvarindex])
+
+    # TODO: Find out why two variables are calculated at each instance
+    # It appears to be dependent on the number of processes run simultaneously
 
     return weight_array, delay_array, datastore
 
