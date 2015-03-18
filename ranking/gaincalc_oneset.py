@@ -15,6 +15,8 @@ from pathos.multiprocessing import ProcessingPool as Pool
 
 from data_processing import result_reconstruction
 
+#import pickle
+
 do_multiprocessing = True
 
 
