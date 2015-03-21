@@ -9,7 +9,7 @@ import json
 import os
 
 
-def ensure_existance(location, make=False):
+def ensure_existance(location, make=True):
     if not os.path.exists(location):
         if make:
             os.makedirs(location)
