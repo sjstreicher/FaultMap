@@ -11,7 +11,7 @@ before_install:
   - sudo apt-get install libfreetype6-dev libxft-dev libpng-dev libxext-dev
   - sudo apt-get install gfortran libopenblas-dev liblapack-dev libhdf5-serial-dev
   - sudo apt-get install python-numpy python-scipy python-matplotlib
-  - sudo apt-get install python-cairo python-igraph
+  - sudo apt-get install python-cairo
   
 
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
