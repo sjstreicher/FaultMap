@@ -13,9 +13,6 @@ before_install:
   - sudo apt-get install python-numpy python-scipy python-matplotlib
   - sudo apt-get install python-cairo python-igraph
   
-#  - sudo apt-get install python-jpype
-#  - sudo apt-get install -qq python-numpy python-scipy python-h5py
-#  - sudo apt-get install python-matplotlib
 
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install:
@@ -25,21 +22,21 @@ install:
   
   # Install pathos
   - sudo mkdir repos && cd repos && \
-  git clone --progress -v "https://github.com/uqfoundation/pathos.git" && \
-  cd pathos &&  wget http://dev.danse.us/packages/pathos-0.1a1.tgz && \
-  tar -xvzf pathos-0.1a1.tgz && \
-  easy_install -f . pathos-0.1a1 && \
-  python setup.py install
+    git clone --progress -v "https://github.com/uqfoundation/pathos.git" && \
+    cd pathos &&  wget http://dev.danse.us/packages/pathos-0.1a1.tgz && \
+    tar -xvzf pathos-0.1a1.tgz && \
+    easy_install -f . pathos-0.1a1 && \
+    python setup.py install
   
-    # Install pyunicorn
-    - sudo cd repos && mkdir pyunicorn && \
+  # Install pyunicorn
+  - sudo cd repos && mkdir pyunicorn && \
     wget https://www.dropbox.com/s/s5giot81t87h8h4/pyunicorn-0.3.2.tar.gz && \
     tar -xvzf pyunicorn-0.3.2.tar.gz && \
     cd pyunicorn-0.3.2 && \
     python setup.py install
     
-    # Install JPype1
-    - sudo cd repos && \
+  # Install JPype1
+  - sudo cd repos && \
     git clone --progress -v "https://github.com/originell/jpype.git" && \
     cd jpype && git reset --hard 50cfd194bb20631feda50fedae41ed18eeca1668 && \
     python setup.py install
