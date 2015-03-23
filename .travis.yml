@@ -7,7 +7,7 @@ virtualenv:
 before_install:
   - sudo apt-get update
   - sudo apt-get install pkg-config
-  - sudo apt-get install git default-jdk wget
+  - sudo apt-get install default-jdk wget
   - sudo apt-get install python python-dev python-pip cython
   - sudo apt-get install libfreetype6-dev libxft-dev libpng-dev libxext-dev
   - sudo apt-get install gfortran libopenblas-dev liblapack-dev libhdf5-serial-dev
@@ -21,14 +21,17 @@ install:
   - pip install numexpr
   - pip install -r requirements.txt
   
-before_install:
+before_script:
   # Install pathos
-  - sudo mkdir repos && cd repos && \
-    git clone --progress -v https://github.com/uqfoundation/pathos.git && \
-    cd pathos &&  wget http://dev.danse.us/packages/pathos-0.1a1.tgz && \
-    tar -xvzf pathos-0.1a1.tgz && \
-    easy_install -f . pathos-0.1a1 && \
-    python setup.py install
+  - cd ..
+  - sudo mkdir repos
+  - cd repos
+  - git clone --progress -v git://github.com/uqfoundation/pathos.git
+  - cd pathos
+  - wget http://dev.danse.us/packages/pathos-0.1a1.tgz
+  - tar -xvzf pathos-0.1a1.tgz
+  - easy_install -f . pathos-0.1a1
+  - python setup.py install
   
   # Install pyunicorn
   - sudo cd repos && mkdir pyunicorn && \
