@@ -23,7 +23,7 @@ install:
   
 before_script:
   # Install pathos
-  - cd ..
+  - cd ~
   - sudo mkdir repos
   - cd repos
   - sudo git clone git://github.com/uqfoundation/pathos.git
@@ -34,7 +34,7 @@ before_script:
   - sudo python setup.py install
   
   # Install pyunicorn
-  - cd ..
+  - cd ~
   - cd repos
   - sudo mkdir pyunicorn
   - sudo wget https://www.dropbox.com/s/s5giot81t87h8h4/pyunicorn-0.3.2.tar.gz
@@ -43,7 +43,7 @@ before_script:
   - sudo python setup.py install
     
   # Install JPype1
-  - cd ..
+  - cd ~
   - cd repos
   - sudo git clone git://github.com/originell/jpype.git
   - cd jpype
