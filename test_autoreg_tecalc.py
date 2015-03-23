@@ -58,9 +58,11 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
             # Calculate transfer entropy according to infodynamics method:
 
             # Get teCalc object
-            teCalc = te_info_setup(True, 'kraskov')
+            teCalc = te_info_setup('infodynamics.jar', True, 'kraskov')
 
-            result_infodyn = te_info(teCalc, x_hist_norm[0], y_hist_norm[0])
+            result_infodyn = te_info('infodynamics.jar',
+                                     True, 'kernel',
+                                     x_hist_norm[0], y_hist_norm[0])
             self.entropies_infodyn.append(result_infodyn)
             print("Infodynamics TE result: %.4f bits" % (result_infodyn))
 
