@@ -53,4 +53,4 @@ before_script:
 
 # command to run tests, e.g. python setup.py test
 script:
-  - nosetests --exclude-dir=repos/jpype --exlude-dir=repos/pathos --exclude-dir=repos/pyunicorn
+  - nosetests --exclude-dir=repos
