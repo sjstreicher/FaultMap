@@ -57,9 +57,6 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
 
             # Calculate transfer entropy according to infodynamics method:
 
-            # Get teCalc object
-            teCalc = te_info_setup('infodynamics.jar', True, 'kraskov')
-
             result_infodyn = te_info('infodynamics.jar',
                                      True, 'kernel',
                                      x_hist_norm[0], y_hist_norm[0])
