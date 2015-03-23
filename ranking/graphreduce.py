@@ -90,7 +90,7 @@ def reducegraph(mode, case, writeoutput):
             # Open the original graph
             original_graph = nx.readwrite.read_gml(graph_filename.format(
                 graphreducedata.graph))
-            # Reverse graph to make follow conventional nomenclature
+            # Reverse graph to follow conventional nomenclature
             original_graph = original_graph.reverse()
             # Get appropriate weight threshold for deleting edges from graph
             threshold = compute_edge_threshold(original_graph,
