@@ -1,6 +1,10 @@
 FaultMap
 ========
 
+.. image:: https://travis-ci.org/SimonStreicher/FaultMap.png?branch=master
+   :target: https://travis-ci.org/SimonStreicher/FaultMap
+   
+
 FaultMap is a process fault detection/diagnosis as well as root cause analysis tool.
 Causal links between processes elements are identified using information theory measures.
 These links are then used to create a visual representation of the mayor flows of information (disturbances, etc.) among the process elements as a directed graph.
@@ -14,8 +18,7 @@ Use the demo_all.py script to run all code actively used.
 Installation
 ============
 Since the required setup is not trivial, a Docker image is made available with all necessary packages and dependencies installed.
-
-You can get the Docker images by
+You can get the Docker image by
 
 docker pull simonstreicher/faultmap
 
