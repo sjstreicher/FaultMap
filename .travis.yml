@@ -53,4 +53,4 @@ before_script:
 
 # command to run tests, e.g. python setup.py test
 script:
-  - nosetests --exclude-dir=home/travis/repos
+  - nosetests --exclude-dir=/repos/
