@@ -114,7 +114,7 @@ def reducegraph(mode, case, writeoutput):
                     lowedge_graph,
                     lowedge_graph_filename.format(graphreducedata.graph))
         else:
-            logging.info("The requested output is in existance")
+            logging.info("The requested output is in existence")
 
 
 def compute_edge_threshold(graph, percentile):
@@ -158,7 +158,7 @@ def delete_lowval_edges(graph, weight_threshold):
     lowedge_graph.remove_edges_from(edge_dellist)
 
     logging.info("Deleted " + str(len(edge_dellist)) + "/" +
-                 str(graph.number_of_edges()) + " edges")
+                 str(graph.number_of_edges()) + " low valued edges")
 
     return lowedge_graph
 
@@ -182,11 +182,11 @@ def remove_duplicates(intersection_list, node,
     return simplified_graph, removed_edges
 
 
-def dec(input_, output_):
+def decompose(input_, output_):
     """Decomposes (flattens) a list of lists into a simple list."""
     if type(input_) is list:
         for subitem in input_:
-            dec(subitem, output_)
+            decompose(subitem, output_)
     else:
         output_.append(input_)
 
@@ -206,39 +206,46 @@ def delete_loworder_edges(graph):
 #    weight_dict = nx.get_edge_attributes(simplified_graph, 'weight')
 
     removed_edges = []
-    children_lists = []
-    for node in simplified_graph.nodes_iter():
+
+    for node, index in enumerate(simplified_graph.nodes_iter()):
+        children_lists = []
+        logging.info("Currently processing node: " + str(index + 1) + "/" +
+                     str(len(simplified_graph.nodes())))
         # First create a list of lists of all childs at different degrees,
         # up to the level where no childs are returned
         morechilds = True
         depth = 0
         child_list = simplified_graph.successors(node)
-        children_lists.append(child_list)
-        while morechilds:
-            depth += 1
-            children_lists.append([])
-            children_lists_decomp = []
-            dec(children_lists[depth-1], children_lists_decomp)
-            for upper_child in children_lists_decomp:
-                # Get list of childs for each child in previous layer
-                upper_child_children = \
-                    simplified_graph.successors(upper_child)
-                # Append list of childs in location [depth, upper_child_index]
-                if len(upper_child_children) != 0:
-                    children_lists[depth].append(upper_child_children)
-                    for child in child_list:
-                        intersection_list = [val for val in child_list
-                                             if val in upper_child_children]
-                        simplified_graph, removed_edges = \
-                            remove_duplicates(intersection_list, node,
-                                              simplified_graph, removed_edges)
+        if len(child_list) != 0:
+            children_lists.append(child_list)
+            while (morechilds and depth <= 10):
+                depth += 1
+    #            children_lists.append([])
+                # Flatten list of children
+                children_lists_decomp = []
+                decompose(children_lists[depth-1], children_lists_decomp)
+                for upper_child in children_lists_decomp:
+                    # Get list of childs for each child in previous layer
+                    upper_child_children = \
+                        simplified_graph.successors(upper_child)
+                    # Append list of childs in location [depth, upper_child_index]
+                    if len(upper_child_children) != 0:
+                        children_lists.append(upper_child_children)
+                        for child in child_list:
+                            intersection_list = [val for val in child_list
+                                                 if val in upper_child_children]
+                            simplified_graph, removed_edges = \
+                                remove_duplicates(intersection_list, node,
+                                                  simplified_graph, removed_edges)
 
-            # If no upper children were found, set morechilds to False
-            print len(children_lists[depth])
-            if len(children_lists[depth]) == 0:
-                morechilds = False
+                # If no upper children were found, set morechilds to False
+    #            print len(children_lists[depth])
+    #            print depth
+                if len(upper_child_children) == 0:
+                    morechilds = False
 
-    logging.info("Removed " + str(len(removed_edges)) + " edges")
+    logging.info("Removed " + str(len(removed_edges)) +
+                 " higher connection edges")
 
 #     Remove nodes without edges
 #     Get full dictionary of in- and out-degree
