@@ -15,10 +15,6 @@ from pathos.multiprocessing import ProcessingPool as Pool
 
 from data_processing import result_reconstruction
 
-#import pickle
-
-do_multiprocessing = True
-
 
 def writecsv_weightcalc(filename, datalines_basis, new_dataline, header):
     """CSV writer customized for use in weightcalc function."""
@@ -244,7 +240,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
     return weight_array, delay_array, datastore
 
 
-def run(non_iter_args):
+def run(non_iter_args, do_multiprocessing):
     [weightcalcdata, weightcalculator,
      box, startindex, size,
      newconnectionmatrix,
