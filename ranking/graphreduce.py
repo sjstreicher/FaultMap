@@ -204,18 +204,23 @@ def decompose(input_, output_):
 
 
 def delete_loworder_edges(graph, max_depth, weight_discretion):
-    """For each node in the graph, check to see if any childs of a child node
-    is also a child of the node being investigated.
-    If true, delete the edge from the parent node to the child node that
-    appears as a child of a child.
+    """Returns a simplified graph with higher order connections eliminated.
+    All self-loops are also deleted.
 
-    Also deletes all self-loops.
+    The level up to which the search for higher order connections should be
+    completed is indiciated by the 'max_depth' parameter.
+    A value of 1 means that children of children will be investigated, while a
+    value of 2 means that children of children of children will be included in
+    the search, and so on.
+    If depth is set to "full", then the search is completed until no more
+    children is found.
 
-    Depth is the level up to which the search for higher order connections
-    should be completed
+    If the 'weight_discretion' boolean is True, a higher order connection
+    between a source node and a child will not be eliminated if this connection
+    weight is higher than the weight of the connection between the last
+    higher-order child to the destination node under question.
 
     """
-    # TODO: Generalize such that ALL higher order connections are removed
 
     simplified_graph = graph.copy()
     weight_dict = nx.get_edge_attributes(simplified_graph, 'weight')
@@ -233,7 +238,7 @@ def delete_loworder_edges(graph, max_depth, weight_discretion):
         child_list = simplified_graph.successors(node)
         if len(child_list) != 0:
             children_lists.append(child_list)
-            while (morechilds and depth <= (max_depth - 1)):
+            while morechilds:
                 depth += 1
                 # Flatten list of children
                 children_lists_decomp = []
@@ -257,12 +262,17 @@ def delete_loworder_edges(graph, max_depth, weight_discretion):
                 # If no upper children were found, set morechilds to False
                 if len(upper_child_children) == 0:
                     morechilds = False
+                # If the max_depth is not "full" and is greater than the
+                # maximum depth, set morechilds to False
+                if max_depth != "full":
+                    if depth > (max_depth - 1):
+                        morechilds = False
 
     logging.info("Removed " + str(len(removed_edges)) +
                  " higher connection edges")
 
-#     Remove nodes without edges
-#     Get full dictionary of in- and out-degree
+    # Remove nodes without edges
+    # Get full dictionary of in- and out-degree
     out_deg_dict = simplified_graph.out_degree()
     in_deg_dict = simplified_graph.in_degree()
     # Remove nodes with sum(out+in) degree of zero
@@ -278,17 +288,5 @@ def delete_loworder_edges(graph, max_depth, weight_discretion):
                  str(simplified_graph.number_of_nodes()) +
                  " nodes and " + str(simplified_graph.number_of_edges()) +
                  " edges")
-
-    # Get dictionary of node names
-#    names_dict = nx.get_node_attributes(simplified_graph, 'label')
-#    print names_dict
-
-    # This method should also work, but is slow
-#    for source_node in [0]:
-#        for destination_node in [1]:
-#            pathlist = nx.all_simple_paths(simplified_graph, source_node,
-#                                destination_node)
-#            # Get index of longest path
-#            print max(enumerate(pathlist), key = lambda tup: len(tup[1]))
 
     return simplified_graph
