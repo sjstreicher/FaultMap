@@ -81,6 +81,15 @@ class WeightcalcData:
 
         self.normalize = self.caseconfig[settings_name]['normalize']
         self.sigtest = self.caseconfig[settings_name]['sigtest']
+        if self.sigtest:
+            # The transfer entropy threshold calculation method be either
+            # 'sixsigma' or 'rankorder'
+            self.te_thresh_method = \
+                self.caseconfig[settings_name]['te_thresh_method']
+            # The transfer entropy surrogate generation method be either
+            # 'iAAFT' or 'random_shuffle'
+            self.te_surr_method = \
+                self.caseconfig[settings_name]['te_surr_method']
         self.allthresh = self.caseconfig[settings_name]['allthresh']
 
         # Get sampling rate and unit name
