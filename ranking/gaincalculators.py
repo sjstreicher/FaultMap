@@ -430,6 +430,9 @@ class TransentWeightcalc:
         surrogate transfer entropy calculations as the threshold,
         see Schreiber2000a.
 
+        Alternatively, the second highest from 38 observations can be taken,
+        etc.
+
         """
         surr_te_directional, surr_te_absolute = \
             self.calc_surr_te(affected_data, causal_data, 19)

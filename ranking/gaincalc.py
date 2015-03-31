@@ -46,7 +46,8 @@ class WeightcalcData:
     weight calculation methods.
 
     """
-    def __init__(self, mode, case, single_entropies, fftcalc):
+    def __init__(self, mode, case, single_entropies, fftcalc,
+                 do_multiprocessing):
         # Get file locations from configuration file
         self.saveloc, self.casedir, self.infodynamicsloc = \
             config_setup.runsetup(mode, case)
@@ -61,6 +62,8 @@ class WeightcalcData:
         self.methods = self.caseconfig['methods']
 
         self.casename = case
+
+        self.do_multiprocessing = do_multiprocessing
 
         # Flag for calculating single signal entropies
         self.single_entropies = single_entropies
@@ -427,7 +430,8 @@ def calc_weights(weightcalcdata, method, scenario):
 
         # Run the script that will handle multiprocessing
         weight_array, delay_array, datastore = \
-            gaincalc_oneset.run(non_iter_args)
+            gaincalc_oneset.run(non_iter_args,
+                                weightcalcdata.do_multiprocessing)
 
         ########################################################
 
@@ -439,7 +443,7 @@ def calc_weights(weightcalcdata, method, scenario):
 
 
 def weightcalc(mode, case, writeoutput=False, single_entropies=False,
-               fftcalc=False):
+               fftcalc=False, do_multiprocessing=False):
     """Reports the maximum weight as well as associated delay
     obtained by shifting the affected variable behind the causal variable a
     specified set of delays.
@@ -449,7 +453,8 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False,
 
     """
 
-    weightcalcdata = WeightcalcData(mode, case, single_entropies, fftcalc)
+    weightcalcdata = WeightcalcData(mode, case, single_entropies, fftcalc,
+                                    do_multiprocessing)
 
     # Define export directories and filenames
     weightdir = config_setup.ensure_existance(os.path.join(

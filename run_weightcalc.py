@@ -34,9 +34,10 @@ if __name__ == '__main__':
     mode = weightcalc_config['mode']
     cases = weightcalc_config['cases']
     fftcalc = weightcalc_config['fft_calc']
+    do_multiprocessing = weightcalc_config['multiprocessing']
 
     for case in cases:
         # TODO: For accurrate timing do it for the actual calculation only
         wrapped = wrapper(weightcalc, mode, case, writeoutput,
-                          single_entropies, fftcalc)
+                          single_entropies, fftcalc, do_multiprocessing)
     print timeit.timeit(wrapped, number=1)
