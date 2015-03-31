@@ -56,6 +56,8 @@ class GraphReduceData:
         "The scenario name is: " + scenario
         self.graph = self.caseconfig[scenario]['graph']
         self.percentile = self.caseconfig[scenario]['percentile']
+        self.depth = self.caseconfig[scenario]['depth']
+        self.weight_discretion = self.caseconfig[scenario]['weight_discretion']
 
 
 def reducegraph(mode, case, writeoutput):
@@ -98,7 +100,10 @@ def reducegraph(mode, case, writeoutput):
             # Delete low value edges from graph
             lowedge_graph = delete_lowval_edges(original_graph, threshold)
             # Get simplified graph
-            simplified_graph = delete_loworder_edges(lowedge_graph)
+            simplified_graph = \
+                delete_loworder_edges(lowedge_graph,
+                                      graphreducedata.depth,
+                                      graphreducedata.weight_discretion)
             # Reverse simplified and lowedge graph to conform to
             # Cytoscape styling requirements
             simplified_graph = simplified_graph.reverse()
@@ -163,21 +168,28 @@ def delete_lowval_edges(graph, weight_threshold):
     return lowedge_graph
 
 
-def remove_duplicates(intersection_list, node,
-                      simplified_graph, removed_edges):
+def remove_duplicates(intersection_list, node, upper_child,
+                      simplified_graph, weight_dict, removed_edges,
+                      weight_discretion):
+
     for duplicate in intersection_list:
         if simplified_graph.has_edge(node, duplicate):
-            # Only remove the edge if its weight is less than the
-            # direct connection
-            # Find the importance of the first order connection
-#        firstweight = weight_dict[(node, child)]
-            # Find the importance of the second order connection
-            # Find the number of the second degree node
-#        secondweight = weight_dict[(child, duplicate)]
-#        if firstweight < secondweight:
-            simplified_graph.remove_edge(node, duplicate)
-            removed_edge = [node, duplicate]
-            removed_edges.append(removed_edge)
+            if weight_discretion:
+                # Only remove the edge if its weight is less than the
+                # weight of the connection between the child
+                # and the duplicate
+                # Find the importance of the first order connection
+                firstweight = weight_dict[(node, duplicate)]
+                # Find the importance of the second order connection
+                secondweight = weight_dict[(upper_child, duplicate)]
+                if firstweight < secondweight:
+                    simplified_graph.remove_edge(node, duplicate)
+                    removed_edge = [node, duplicate]
+                    removed_edges.append(removed_edge)
+            else:
+                    simplified_graph.remove_edge(node, duplicate)
+                    removed_edge = [node, duplicate]
+                    removed_edges.append(removed_edge)
 
     return simplified_graph, removed_edges
 
@@ -191,7 +203,7 @@ def decompose(input_, output_):
         output_.append(input_)
 
 
-def delete_loworder_edges(graph):
+def delete_loworder_edges(graph, max_depth, weight_discretion):
     """For each node in the graph, check to see if any childs of a child node
     is also a child of the node being investigated.
     If true, delete the edge from the parent node to the child node that
@@ -199,11 +211,14 @@ def delete_loworder_edges(graph):
 
     Also deletes all self-loops.
 
+    Depth is the level up to which the search for higher order connections
+    should be completed
+
     """
     # TODO: Generalize such that ALL higher order connections are removed
 
     simplified_graph = graph.copy()
-#    weight_dict = nx.get_edge_attributes(simplified_graph, 'weight')
+    weight_dict = nx.get_edge_attributes(simplified_graph, 'weight')
 
     removed_edges = []
 
@@ -218,9 +233,8 @@ def delete_loworder_edges(graph):
         child_list = simplified_graph.successors(node)
         if len(child_list) != 0:
             children_lists.append(child_list)
-            while (morechilds and depth <= 10):
+            while (morechilds and depth <= (max_depth - 1)):
                 depth += 1
-    #            children_lists.append([])
                 # Flatten list of children
                 children_lists_decomp = []
                 decompose(children_lists[depth-1], children_lists_decomp)
@@ -228,19 +242,19 @@ def delete_loworder_edges(graph):
                     # Get list of childs for each child in previous layer
                     upper_child_children = \
                         simplified_graph.successors(upper_child)
-                    # Append list of childs in location [depth, upper_child_index]
                     if len(upper_child_children) != 0:
                         children_lists.append(upper_child_children)
-                        for child in child_list:
-                            intersection_list = [val for val in child_list
-                                                 if val in upper_child_children]
-                            simplified_graph, removed_edges = \
-                                remove_duplicates(intersection_list, node,
-                                                  simplified_graph, removed_edges)
+                        intersection_list = [val for val in child_list
+                                             if val in upper_child_children]
+                        simplified_graph, removed_edges = \
+                            remove_duplicates(intersection_list, node,
+                                              upper_child,
+                                              simplified_graph,
+                                              weight_dict,
+                                              removed_edges,
+                                              weight_discretion)
 
                 # If no upper children were found, set morechilds to False
-    #            print len(children_lists[depth])
-    #            print depth
                 if len(upper_child_children) == 0:
                     morechilds = False
 
