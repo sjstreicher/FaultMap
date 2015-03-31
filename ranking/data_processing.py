@@ -19,6 +19,21 @@ import config_setup
 import transentropy
 
 
+def shuffle_data(input_data):
+    """Returns a (seeded) randomly shuffled array of data.
+    The data input needs to be a two-dimensional numpy array.
+
+    """
+    data = input_data[0]
+
+    shuffled = np.random.permutation(data)
+
+    shuffled_formatted = np.zeros((1, len(shuffled)))
+    shuffled_formatted[0, :] = shuffled
+
+    return shuffled_formatted
+
+
 def result_reconstruction(result, weightcalcdata):
     """Reconstructs the weight_array, delay_array and datastore from the
     results returned from pool.map multiprocessing function.

@@ -4,6 +4,8 @@ used by the gaincalc module.
 
 """
 # Standard libraries
+import sys
+import os
 import numpy as np
 import logging
 
@@ -13,8 +15,8 @@ import transentropy
 # Non-standard external libraries
 from contextlib import contextmanager
 
-import sys
-import os
+# Own libraries
+from data_proccessing import shuffle_data
 
 
 @contextmanager
@@ -231,6 +233,8 @@ class TransentWeightcalc:
         self.estimator = estimator
         self.normalize = weightcalcdata.normalize
         self.infodynamicsloc = weightcalcdata.infodynamicsloc
+        if weightcalcdata.sigtest:
+            self.te_thresh_method = weightcalcdata.te_thresh_method
 
     def calcweight(self, causevardata, affectedvardata, weightcalcdata,
                    causevarindex, affectedvarindex):
@@ -271,12 +275,9 @@ class TransentWeightcalc:
         return [transent_directional, transent_absolute]
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
-               weightlist, weight_array, delay_array, datastore,
-               te_thresh_method='sixsigma'):
+               weightlist, weight_array, delay_array, datastore):
         """Calculates and reports the relevant output for each combination
         of variables tested.
-
-        te_thresh_method can be either 'rankorder' or 'sixsigma'
 
         """
 
@@ -310,7 +311,10 @@ class TransentWeightcalc:
         threshpass_directional = None
         # Need placeholder in case significance is not tested
         self.threshent_directional = None
+
         if weightcalcdata.sigtest:
+            self.te_thresh_method = weightcalcdata.te_thresh_method
+            self.te_surr_method = weightcalcdata.te_surr_method
             # Calculate threshold for transfer entropy
             thresh_causevardata = \
                 inputdata[:, causevarindex][startindex:startindex+size]
@@ -318,13 +322,16 @@ class TransentWeightcalc:
                 inputdata[:, affectedvarindex][startindex + bestdelay_sample:
                                                startindex + size +
                                                bestdelay_sample]
-            if te_thresh_method == 'rankorder':
-                self.thresh_rankorder(thresh_affectedvardata.T,
-                                      thresh_causevardata.T)
 
-            elif te_thresh_method == 'sixsigma':
+            if self.te_thresh_method == 'rankorder':
+                self.thresh_rankorder(thresh_affectedvardata.T,
+                                      thresh_causevardata.T,
+                                      self.te_surr_method)
+
+            elif self.te_thresh_method == 'sixsigma':
                 self.thresh_sixsigma(thresh_affectedvardata.T,
-                                     thresh_causevardata.T)
+                                     thresh_causevardata.T,
+                                     self.te_surr_method)
 
             logging.info("The directional TE threshold is: " +
                          str(self.threshent_directional))
@@ -338,7 +345,7 @@ class TransentWeightcalc:
 
             logging.info("TE threshold passed: " + str(threshpass_directional))
         else:
-            # Still delete all negative entries
+            # Delete all negative entries
             if maxval_directional < 0:
                 maxval_directional = 0
 
@@ -361,25 +368,35 @@ class TransentWeightcalc:
         """Calculates surrogate transfer entropy values for significance
         threshold purposes.
 
-        Generates surrogate time series data by making use of the iAAFT method
-        (see Schreiber 2000a).
+        Two methods for generating surrogate data is available:
+        iAAFT (Schreiber 2000a) or random_shuffle in time.
 
         Returns list of surrogate transfer entropy values of length num.
 
         """
-        # The causal data is replaced by surrogate data, the affected data
-        # remains unchanged.
 
-        # Get the causal data in the correct format for surrogate generation
+        # The causal (or source) data is replaced by surrogate data,
+        # while the affected (or destination) data remains unchanged.
+
+        # Get the causal data in the correct format
+        # for surrogate generation
         original_causal = np.zeros((1, len(causal_data)))
         original_causal[0, :] = causal_data
-        # Create surrogate data generation object
-        surrogate_gen = pygeonetwork.surrogates.Surrogates(original_causal,
-                                                           silence_level=2)
 
-        surr_tsdata = \
-            [surrogate_gen.get_refined_AAFT_surrogates(original_causal, 10)
-             for n in range(num)]
+        if self.te_surr_method == 'iAAFT':
+            # Create surrogate data generation object
+            iaaft_surrogate_gen = \
+                pygeonetwork.surrogates.Surrogates(original_causal,
+                                                   silence_level=2)
+
+            surr_tsdata = \
+                [iaaft_surrogate_gen.get_refined_AAFT_surrogates(
+                    original_causal, 10)
+                 for n in range(num)]
+
+        elif self.te_surr_method == 'random_shuffle':
+            surr_tsdata = \
+                [shuffle_data(causal_data) for n in range(num)]
 
         surr_te_fwd = []
         surr_te_bwd = []
