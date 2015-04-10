@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-"""This script runs all tests and demo's and is used for coverage analysis
+"""[DEPRECATED]
+   Currently there is an issue - exists after first test
+   Use nosetests --with-coverage for coverage tests
+   
+   This script runs all tests and demo's and is used for coverage analysis. 
+  
 """
 
 import glob
