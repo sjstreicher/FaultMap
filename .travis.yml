@@ -58,4 +58,4 @@ before_script:
 
 # command to run tests, e.g. python setup.py test
 script:
-  - nosetests SimonStreicher/FaultMap
+  - nosetests -w /SimonStreicher/FaultMap
