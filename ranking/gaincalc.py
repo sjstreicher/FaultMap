@@ -269,7 +269,11 @@ def calc_weights(weightcalcdata, method, scenario):
     """Determines the maximum weight between two variables by searching through
     a specified set of delays.
 
-    method can be either 'cross_correlation' or 'transfer_entropy'
+    method can be one of the following:
+    'cross_correlation'
+    'partial_correlation' -- does not support time delays
+    'transfer_entropy_kernel'
+    'transfer_entropy_kraskov'
 
     """
     # Switch to calculate significance values at each data point and store in
@@ -366,7 +370,7 @@ def calc_weights(weightcalcdata, method, scenario):
     # Generate boxes to use
     boxes = data_processing.split_tsdata(
         weightcalcdata.inputdata,
-        weightcalcdata.sampling_rate*weightcalcdata.sub_sampling_interval,
+        weightcalcdata.sampling_rate * weightcalcdata.sub_sampling_interval,
         weightcalcdata.boxsize,
         weightcalcdata.boxnum)
 

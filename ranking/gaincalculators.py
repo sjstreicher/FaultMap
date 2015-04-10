@@ -281,6 +281,8 @@ class TransentWeightcalc:
 
         """
 
+        report_basis = 'directional'
+
         variables = weightcalcdata.variables
         causevar = variables[causevarindex]
         affectedvar = variables[affectedvarindex]
@@ -289,28 +291,46 @@ class TransentWeightcalc:
         # We already know that when dealing with transfer entropy
         # the weightlist will consist of a list of lists
         weightlist_directional = weightlist[0]
-#        weightlist_absolute = weightlist[1]
+        weightlist_absolute = weightlist[1]
 
         size = weightcalcdata.testsize
         startindex = weightcalcdata.startindex
 
-        # Do everything for the directional case
-        maxval_directional = max(weightlist_directional)
-        delay_index_directional = \
-            weightlist_directional.index(maxval_directional)
-        bestdelay_directional = \
-            weightcalcdata.actual_delays[delay_index_directional]
-        bestdelay_sample = \
-            weightcalcdata.sample_delays[delay_index_directional]
-        delay_array[affectedvarindex, causevarindex] = \
-            bestdelay_directional
-
-        logging.info("The maximum directional TE between " + causevar +
-                     " and " + affectedvar + " is: " + str(maxval_directional))
-
         threshpass_directional = None
         # Need placeholder in case significance is not tested
         self.threshent_directional = None
+
+        if report_basis == 'directional':
+            # Do everything for the directional case
+            delay_array_directional = delay_array
+            maxval_directional = max(weightlist_directional)
+            delay_index_directional = \
+                weightlist_directional.index(maxval_directional)
+            bestdelay_directional = \
+                weightcalcdata.actual_delays[delay_index_directional]
+            bestdelay_sample_directional = \
+                weightcalcdata.sample_delays[delay_index_directional]
+            delay_array_directional[affectedvarindex, causevarindex] = \
+                bestdelay_directional
+            bestdelay_sample = bestdelay_sample_directional
+            delay_array = delay_array_directional
+            logging.info("The maximum directional TE between " + causevar +
+                         " and " + affectedvar + " is: " +
+                         str(maxval_directional))
+        elif report_basis == 'absolute':
+            # Repeat for absolute case
+            delay_array_absolute = delay_array
+            maxval_absolute = max(weightlist_absolute)
+            delay_index_absolute = \
+                weightlist_absolute.index(maxval_absolute)
+            bestdelay_absolute = \
+                weightcalcdata.actual_delays[delay_index_absolute]
+            bestdelay_sample_absolute = \
+                weightcalcdata.sample_delays[delay_index_absolute]
+            delay_array_absolute[affectedvarindex, causevarindex] = \
+                bestdelay_absolute
+            bestdelay_sample = bestdelay_sample_absolute
+            delay_array = delay_array_absolute
 
         if weightcalcdata.sigtest:
             self.te_thresh_method = weightcalcdata.te_thresh_method
