@@ -22,10 +22,11 @@ install:
   - pip install -r requirements.txt
   
 before_script:
-  # Install pathos
+  # Make directory for custom installs 
   - cd ~
   - sudo mkdir repos
   - cd repos
+  # Install pathos
   - sudo git clone git://github.com/uqfoundation/pathos.git
   - cd pathos
   - sudo wget http://dev.danse.us/packages/pathos-0.1a1.tgz
@@ -49,9 +50,12 @@ before_script:
   - cd jpype
   - sudo git reset --hard 50cfd194bb20631feda50fedae41ed18eeca1668
   - sudo python setup.py install
+  
+  # Return to home directory - not sure if necessary for correct
+  # script execution
   - cd ~
   
 
 # command to run tests, e.g. python setup.py test
 script:
-  - nosetests
+  - nosetests /home/travis/FaultMap
