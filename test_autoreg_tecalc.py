@@ -12,7 +12,6 @@ import unittest
 import jpype
 from sklearn import preprocessing
 
-from transentropy import setup_infodynamics_te as te_info_setup
 from transentropy import calc_infodynamics_te as te_info
 from datagen import autoreg_datagen
 
