@@ -49,8 +49,9 @@ before_script:
   - cd jpype
   - sudo git reset --hard 50cfd194bb20631feda50fedae41ed18eeca1668
   - sudo python setup.py install
+  - cd ~
   
 
 # command to run tests, e.g. python setup.py test
 script:
-  - nosetests --exclude-dir=/home/travis/repos/jpype
+  - nosetests .
