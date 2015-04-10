@@ -54,4 +54,4 @@ before_script:
 
 # command to run tests, e.g. python setup.py test
 script:
-  - nosetests .
+  - nosetests
