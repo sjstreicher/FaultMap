@@ -304,9 +304,8 @@ def calc_weights(weightcalcdata, method, scenario):
         newconnectionmatrix[affected_dellist, :] = np.zeros(vardims)
 
     # Initiate headerline for weightstore file
-    headerline = []
     # Create "Delay" as header for first row
-    headerline.append('Delay')
+    headerline = ['Delay']
 
     for affectedvarindex in weightcalcdata.affectedvarindexes:
             affectedvarname = weightcalcdata.variables[affectedvarindex]

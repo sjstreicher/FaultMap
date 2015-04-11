@@ -233,7 +233,7 @@ def delete_loworder_edges(graph, max_depth, weight_discretion):
         child_list = simplified_graph.successors(node)
         if len(child_list) != 0:
             children_lists.append(child_list)
-            while (morechilds and depth <= (max_depth - 1)):
+            while morechilds and depth <= (max_depth - 1):
                 depth += 1
                 # Flatten list of children
                 children_lists_decomp = []
