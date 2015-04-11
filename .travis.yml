@@ -5,10 +5,9 @@ virtualenv:
     system_site_packages: true
 
 before_install:
-  - pwd
+  - pwd # Show current directory
   - sudo apt-get update
   - sudo apt-get install pkg-config default-jdk wget python python-{dev,pip,numpy,scipy,matplotlib,cairo} cython lib{freetype6,xft,png,xext,openblas,lapack,hdf5-serial}-dev gfortran
-  - false # hopefully exit the build process
  
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install:
@@ -50,8 +49,5 @@ before_script:
 
 # command to run tests, e.g. python setup.py test
 script:
-  # Show current directory
-  - ls
-  - ls repos
   # run tests
-  - nosetests -w FaultMap
+  - nosetests -w ~/build/SimonStreicher/FaultMap
