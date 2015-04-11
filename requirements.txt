@@ -12,5 +12,4 @@ h5py
 numexpr
 tables
 python-igraph
-progressbar
 control
