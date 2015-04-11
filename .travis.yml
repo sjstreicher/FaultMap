@@ -35,17 +35,14 @@ before_script:
   - sudo python setup.py install
   
   # Install pyunicorn
-  - cd ~
-  - cd repos
-  - sudo mkdir pyunicorn
+  - cd ~/repos
   - sudo wget https://www.dropbox.com/s/s5giot81t87h8h4/pyunicorn-0.3.2.tar.gz
   - sudo tar -xvzf pyunicorn-0.3.2.tar.gz
   - cd pyunicorn-0.3.2
   - sudo python setup.py install
     
   # Install JPype1
-  - cd ~
-  - cd repos
+  - cd ~/repos
   - sudo git clone git://github.com/originell/jpype.git
   - cd jpype
   - sudo git reset --hard 50cfd194bb20631feda50fedae41ed18eeca1668
@@ -58,4 +55,8 @@ before_script:
 
 # command to run tests, e.g. python setup.py test
 script:
-  - nosetests -w /SimonStreicher/FaultMap
+  # Show current directory
+  - ls
+  - ls repos
+  # run tests
+  - nosetests -w FaultMap
