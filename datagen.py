@@ -234,8 +234,7 @@ def firstorder_gen(samples, delay, period=0.01, noiseamp=1.0):
     return tspan, cause, affected
 
 
-def oscillating_feedback_5x5(samples, delays=[3, 2, 5, 4], period=0.01,
-                             noiseamp=1.0):
+def oscillating_feedback_5x5(samples, delays=None, period=0.01, noiseamp=1.0):
     """Passes sine source signal through a number of transfer functions
     before connecting back on itself.
 
@@ -244,6 +243,8 @@ def oscillating_feedback_5x5(samples, delays=[3, 2, 5, 4], period=0.01,
     transfer functions.
 
     """
+    if not delays:
+        delays = [3, 2, 5, 4]
 
     # TODO: Make use of previously defined functions to build this one
 

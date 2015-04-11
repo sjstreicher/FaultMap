@@ -152,7 +152,7 @@ def calc_simple_rank(gainmatrix, variables, biasvector, noderankdata,
         colsum = np.sum(abs(gainmatrix[:, col]))
         if colsum == 0:
             # Option :1 do nothing
-            None
+            continue
             # Option 2: equally connect to all other nodes
     #        for row in range(n):
     #            gainmatrix[row, col] = (1. / n)
@@ -193,7 +193,7 @@ def calc_simple_rank(gainmatrix, variables, biasvector, noderankdata,
         colsum = np.sum(abs(gainmatrix[:, col]))
         if colsum == 0:
             # Option :1 do nothing
-            None
+            continue
             # Option 2: equally connect to all other nodes
     #        for row in range(n):
     #            gainmatrix[row, col] = (1. / n)
@@ -214,7 +214,7 @@ def calc_simple_rank(gainmatrix, variables, biasvector, noderankdata,
                 # Create sparsely connected graph based on
                 # significant edge weights
                 # only for use with Katz centrality analysis
-                if (gainmatrix[row, col] != 0.):
+                if gainmatrix[row, col] != 0.:
                     # The node order is source, sink according to the
                     # convention that columns are sources and rows are sinks
                     sparse_gaingraph.add_edge(rowvar, colvar,
