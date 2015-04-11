@@ -50,4 +50,4 @@ before_script:
 # command to run tests, e.g. python setup.py test
 script:
   # run tests
-  - nosetests -w ~/build/SimonStreicher/FaultMap
+  - nosetests -w $TRAVIS_BUILD_DIR
