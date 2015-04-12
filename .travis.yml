@@ -5,15 +5,23 @@ virtualenv:
     system_site_packages: true
 
 before_install:
-  - pwd # Show current directory
+  # 
   - sudo apt-get update
-  - sudo apt-get install pkg-config default-jdk wget python python-{dev,pip,numpy,scipy,matplotlib,cairo} cython lib{freetype6,xft,png,xext,openblas,lapack,hdf5-serial}-dev gfortran
- 
-# command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
+  - sudo apt-get install pkg-config default-jdk wget python python-{dev,pip} cython lib{freetype6,xft,png,xext,openblas,lapack,hdf5-serial}-dev gfortran
+  # Install miniconda
+  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b
+  - export PATH=/home/travis/miniconda/bin:$PATH
+  - conda update --yes conda
+  # The next couple lines fix a crash with multiprocessing on Travis and are not specific to using Miniconda
+  - sudo rm -rf /dev/shm
+  - sudo ln -s /run/shm /dev/shm
+
+# Install packages
 install:
-  # - pip install numpy # already installed above via apt-get
-  - pip install numexpr
-  - pip install -r requirements.txt
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib `cat requirements.txt`
+  #- pip install -r requirements.txt
   
 before_script:
   # Make directory for custom installs 
@@ -42,11 +50,6 @@ before_script:
   - sudo git reset --hard 50cfd194bb20631feda50fedae41ed18eeca1668
   - sudo python setup.py install
   
-  # Return to home directory - not sure if necessary for correct
-  # script execution
-  - cd ~
-  
-
 # command to run tests, e.g. python setup.py test
 script:
   # run tests
