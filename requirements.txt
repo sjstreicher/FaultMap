@@ -1,5 +1,4 @@
 nose
-nose-exclude
 six
 python-dateutil
 pytz
