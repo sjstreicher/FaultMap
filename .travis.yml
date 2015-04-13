@@ -23,7 +23,7 @@ install:
   # install what we can from condas
   - conda install --yes python=$TRAVIS_PYTHON_VERSION `cat conda_requirements.txt`
   # install the rest using pip
-  - pip install -r `grep -v -f conda_requirements.txt requirements.txt`
+  - pip install -r <( grep -v -f conda_requirements.txt requirements.txt )
   
 before_script:
   # Make directory for custom installs 
