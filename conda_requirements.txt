@@ -1,3 +1,7 @@
+atlas 
+numpy 
+scipy 
+matplotlib
 nose
 six
 python-dateutil
@@ -10,6 +14,4 @@ networkx
 h5py
 numexpr
 pytables
-python-igraph
 progressbar
-control

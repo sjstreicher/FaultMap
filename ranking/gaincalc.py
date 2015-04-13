@@ -79,6 +79,9 @@ class WeightcalcData:
         settings_name = self.caseconfig[scenario]['settings']
         self.connections_used = (self.caseconfig[settings_name]
                                  ['use_connections'])
+
+        self.do_multiprocessing = (self.caseconfig[settings_name]
+                                   ['do_multiprocessing'])
         bandgap_filtering = self.caseconfig[scenario]['bandgap_filtering']
         self.transient = self.caseconfig[settings_name]['transient']
 
@@ -320,9 +323,8 @@ def calc_weights(weightcalcdata, method, scenario):
         newconnectionmatrix[affected_dellist, :] = np.zeros(vardims)
 
     # Initiate headerline for weightstore file
-    headerline = []
     # Create "Delay" as header for first row
-    headerline.append('Delay')
+    headerline = ['Delay']
 
     for affectedvarindex in weightcalcdata.affectedvarindexes:
             affectedvarname = weightcalcdata.variables[affectedvarindex]
