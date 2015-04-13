@@ -16,7 +16,7 @@ import transentropy
 from contextlib import contextmanager
 
 # Own libraries
-from data_proccessing import shuffle_data
+from data_processing import shuffle_data
 
 
 @contextmanager
