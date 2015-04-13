@@ -76,6 +76,9 @@ class WeightcalcData:
         settings_name = self.caseconfig[scenario]['settings']
         self.connections_used = (self.caseconfig[settings_name]
                                  ['use_connections'])
+
+        self.do_multiprocessing = (self.caseconfig[settings_name]
+                                   ['do_multiprocessing'])
         bandgap_filtering = self.caseconfig[scenario]['bandgap_filtering']
         self.transient = self.caseconfig[settings_name]['transient']
 
@@ -417,7 +420,8 @@ def calc_weights(weightcalcdata, method, scenario):
 
         # Run the script that will handle multiprocessing
         weight_array, delay_array, datastore = \
-            gaincalc_oneset.run(non_iter_args)
+            gaincalc_oneset.run(non_iter_args,
+                                weightcalcdata.do_multiprocessing)
 
         ########################################################
 
