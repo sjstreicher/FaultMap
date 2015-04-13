@@ -6,8 +6,8 @@ virtualenv:
 
 before_install:
   # 
-  - sudo apt-get update
-  - sudo apt-get install pkg-config default-jdk wget python python-{dev,pip} cython lib{freetype6,xft,png,xext,openblas,lapack,hdf5-serial}-dev gfortran
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq pkg-config default-jdk wget python python-{dev,pip} cython lib{freetype6,xft,png,xext,openblas,lapack,hdf5-serial}-dev gfortran
   # Install miniconda
   - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
@@ -20,8 +20,10 @@ before_install:
 
 # Install packages
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib `cat requirements.txt`
-  #- pip install -r requirements.txt
+  # install what we can from condas
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION `cat conda_requirements.txt`
+  # install the rest using pip
+  - pip install -r `grep -v -f conda_requirements.txt requirements.txt`
   
 before_script:
   # Make directory for custom installs 
