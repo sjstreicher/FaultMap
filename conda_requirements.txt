@@ -15,4 +15,3 @@ h5py
 numexpr
 pytables
 progressbar
-control
