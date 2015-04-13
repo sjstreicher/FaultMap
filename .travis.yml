@@ -32,7 +32,8 @@ before_script:
   - cd repos
   # Install pathos
   - wget http://dev.danse.us/packages/pathos-0.1a1.tgz
-  - pip install pathos-0.1a1.tgz
+  - tar -xzf pathos-0.1a1.tgz
+  - pip install pathos-0.1a1/
   - git clone git://github.com/uqfoundation/pathos.git
   - pip install --upgrade pathos/
   
