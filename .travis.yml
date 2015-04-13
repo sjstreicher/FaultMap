@@ -31,11 +31,12 @@ before_script:
   - mkdir repos
   - cd repos
   # Install pathos
-  - wget http://dev.danse.us/packages/pathos-0.1a1.tgz
-  - tar -xzf pathos-0.1a1.tgz
-  - pip install pathos-0.1a1/
-  - git clone git://github.com/uqfoundation/pathos.git
-  - pip install --upgrade pathos/
+  - sudo git clone git://github.com/uqfoundation/pathos.git
+  - cd pathos
+  - sudo wget http://dev.danse.us/packages/pathos-0.1a1.tgz
+  - sudo tar -xvzf pathos-0.1a1.tgz
+  - sudo easy_install -f . pathos-0.1a1
+  - sudo python setup.py install
   
   # Install pyunicorn
   - cd ~/repos
