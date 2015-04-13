@@ -61,9 +61,9 @@ class WeightcalcData:
         # Get methods
         self.methods = self.caseconfig['methods']
 
-        self.casename = case
-
         self.do_multiprocessing = do_multiprocessing
+
+        self.casename = case
 
         # Flag for calculating single signal entropies
         self.single_entropies = single_entropies
@@ -80,8 +80,6 @@ class WeightcalcData:
         self.connections_used = (self.caseconfig[settings_name]
                                  ['use_connections'])
 
-        self.do_multiprocessing = (self.caseconfig[settings_name]
-                                   ['do_multiprocessing'])
         bandgap_filtering = self.caseconfig[scenario]['bandgap_filtering']
         self.transient = self.caseconfig[settings_name]['transient']
 
