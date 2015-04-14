@@ -24,9 +24,8 @@ def shuffle_data(input_data):
     The data input needs to be a two-dimensional numpy array.
 
     """
-    data = input_data[0]
 
-    shuffled = np.random.permutation(data)
+    shuffled = np.random.permutation(input_data)
 
     shuffled_formatted = np.zeros((1, len(shuffled)))
     shuffled_formatted[0, :] = shuffled

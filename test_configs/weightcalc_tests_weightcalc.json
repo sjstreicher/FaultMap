@@ -7,7 +7,7 @@
 	  "sinusoid_5x5"
   ],
   "settings_standard": {
-    "use_connections": true,
+    "use_connections": false,
 	"transient": false,
 	"normalize": true,
     "delaytype": "datapoints",
@@ -20,6 +20,8 @@
 	"allthresh": false,
 	"gensamples": 1000,
 	"delay": 0,
+	"te_thresh_method": "rankorder",
+	"te_surr_method": "random_shuffle",
 	"do_multiprocessing": false
   },
   "random_2x2": {
@@ -29,7 +31,7 @@
 	"causevarindexes": "all",
 	"affectedvarindexes": "all",
 	"bandgap_filtering": false,
-	"test_delays": 0
+	"test_delays": 10
   },
    "random_5x5": {
     "connections": "connectionmatrix_5x5",
@@ -38,7 +40,7 @@
 	"causevarindexes": "all",
 	"affectedvarindexes": "all",
 	"bandgap_filtering": false,
-	"test_delays": 0
+	"test_delays": 10
   },
   "delay_2x2": {
     "connections": "connectionmatrix_2x2",
@@ -47,7 +49,7 @@
 	"causevarindexes": "all",
 	"affectedvarindexes": "all",
 	"bandgap_filtering": false,
-	"test_delays": 0
+	"test_delays": 10
   },
   "autoreg_2x2": {
     "connections": "connectionmatrix_2x2",
@@ -56,7 +58,7 @@
 	"causevarindexes": "all",
 	"affectedvarindexes": "all",
 	"sub_sampling_interval": 1,
-	"test_delays": 0
+	"test_delays": 10
   },
     "sinusoid_5x5": {
     "connections": "connectionmatrix_5x5",
@@ -65,6 +67,6 @@
 	"causevarindexes": "all",
 	"affectedvarindexes": "all",
 	"bandgap_filtering": false,
-	"test_delays": 0
+	"test_delays": 10
   }
 }
