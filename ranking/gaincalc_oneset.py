@@ -41,6 +41,7 @@ def writecsv_weightcalc(filename, datalines_basis, new_dataline, header):
         # If file already exists, add the current dataline
         # First read all entries below headerline
         prev_datalines = np.genfromtxt(filename, delimiter=',', skip_header=1)
+
         # Add current item to colums
         datalines = np.concatenate((prev_datalines, new_dataline), axis=1)
         # Write updated set of datalines to file
@@ -141,6 +142,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                 sig_neutral_name = 'sigthresh'
 
             if len(weight) > 1:
+
                 weightlist = [directional_weightlist,
                               absolute_weightlist]
 
