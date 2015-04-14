@@ -345,13 +345,11 @@ class TransentWeightcalc:
 
             if self.te_thresh_method == 'rankorder':
                 self.thresh_rankorder(thresh_affectedvardata.T,
-                                      thresh_causevardata.T,
-                                      self.te_surr_method)
+                                      thresh_causevardata.T)
 
             elif self.te_thresh_method == 'sixsigma':
                 self.thresh_sixsigma(thresh_affectedvardata.T,
-                                     thresh_causevardata.T,
-                                     self.te_surr_method)
+                                     thresh_causevardata.T)
 
             logging.info("The directional TE threshold is: " +
                          str(self.threshent_directional))
