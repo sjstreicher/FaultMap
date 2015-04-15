@@ -5,7 +5,7 @@ virtualenv:
     system_site_packages: true
 
 before_install:
-  # 
+  # Install from repository what we can
   - sudo apt-get update -qq
   - sudo apt-get install -qq pkg-config default-jdk wget python python-{dev,pip} cython lib{freetype6,xft,png,xext,openblas,lapack,hdf5-serial}-dev gfortran
   # Install miniconda
@@ -34,7 +34,7 @@ before_script:
   - git clone git://github.com/uqfoundation/pathos.git
   - cd pathos
   - wget http://dev.danse.us/packages/pathos-0.1a1.tgz
-  - tar -xvzf pathos-0.1a1.tgz
+  - tar -xzf pathos-0.1a1.tgz
   - easy_install -f . pathos-0.1a1
   - python setup.py install
   
@@ -54,4 +54,4 @@ before_script:
 # command to run tests, e.g. python setup.py test
 script:
   # run tests
-  - nosetests -w $TRAVIS_BUILD_DIR
+  - nosetests -v -w $TRAVIS_BUILD_DIR
