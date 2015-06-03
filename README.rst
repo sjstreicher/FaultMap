@@ -12,8 +12,8 @@ The ability to visually inspect and rearrange these digraphs into a hierarchical
 
 Network centrality algorithms are applied in order to determine the most influential nodes in the network based on the strength and quantity of their influence on other nodes (and the importance of the nodes that are influenced).
  
-
-Use the demo_all.py script to run all code actively used.
+Tests and demonstrations still under development.
+The correct functioning of the weight calculation component can be tested by running test_weightcalc.py
 
 Installation
 ============
