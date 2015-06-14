@@ -111,11 +111,6 @@ def setup_infodynamics_te(infodynamicsloc,
     else:
         teCalc.setProperty("NORMALISE", "false")
 
-    # This slows it down - do not think it was responsible for the leak anyway
-#    teCalcClass = None
-#    del teCalcClass
-#    jpype.java.lang.System.gc()
-
     return teCalc
 
 
