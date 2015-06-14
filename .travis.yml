@@ -41,7 +41,7 @@ before_script:
   
   # Install pyunicorn
   - cd ~/repos
-  - wget https://www.dropbox.com/s/s5giot81t87h8h4/pyunicorn-0.3.2.tar.gz
+  - wget https://www.dropbox.com/s/a2c2o3486vb12h1/pyunicorn-0.3.2.tar.gz
   - pip install pyunicorn-0.3.2.tar.gz
     
   # Install JPype1
