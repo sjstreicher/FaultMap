@@ -286,6 +286,8 @@ def calc_weights(weightcalcdata, method, scenario):
         weightcalculator = TransentWeightcalc(weightcalcdata, 'kernel')
     elif method == 'transfer_entropy_kraskov':
         weightcalculator = TransentWeightcalc(weightcalcdata, 'kraskov')
+    elif method == 'transfer_entropy_discrete':
+        weightcalculator = TransentWeightcalc(weightcalcdata, 'discrete')
     elif method == 'partial_correlation':
         weightcalculator = PartialCorrWeightcalc(weightcalcdata)
 
