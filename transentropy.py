@@ -65,9 +65,7 @@ def setup_infodynamics_te(infodynamicsloc,
                           normalize, calcmethod, histlength=1):
     """Prepares the teCalc class of the Java Infodyamics Toolkit (JIDK)
     in order to calculate transfer entropy according to the kernel or Kraskov
-    estimator method.
-
-    Currently implemented for the case of k = 1 and l = 1 only.
+    estimator method. Also supports discrete transfer entropy calculation.
 
     The embedding dimension of the destination or target variable (k) can
     easily be set by adjusting the histlength parameter.
@@ -78,6 +76,8 @@ def setup_infodynamics_te(infodynamicsloc,
     of Kraskov MI estimators
 
     """
+
+    # TODO: Addlow for automated embedding dimension algorithms to be applied
 
     if not jpype.isJVMStarted():
         jpype.startJVM(jpype.getDefaultJVMPath(),
@@ -91,25 +91,72 @@ def setup_infodynamics_te(infodynamicsloc,
             jpype.JPackage("infodynamics.measures.continuous.kernel") \
             .TransferEntropyCalculatorKernel
         teCalc = teCalcClass()
-        # Set history length (Schreiber k=1)
-        # Set kernel width to 0.5 normalised units
-        teCalc.initialise(histlength, 0.5)
+
+        # Normalise the individual variables if required
+        if normalize:
+            teCalc.setProperty("NORMALISE", "true")
+        else:
+            teCalc.setProperty("NORMALISE", "false")
+
+        # Parameter definitions - refer to JIDT javadocs
+        # k - destination embedded history length (Schreiber k=1)
+        # kernelWidth - if NORMALISE_PROP_NAME property has been set,
+        # then this kernel width corresponds to the number of
+        # standard deviations from the mean (otherwise it is an absolute value)
+
+        k = histlength
+        kernelWidth = 0.5
+
+        teCalc.initialise(histlength, kernelWidth)
 
     elif calcmethod == 'kraskov':
         teCalcClass = \
             jpype.JPackage("infodynamics.measures.continuous.kraskov") \
             .TransferEntropyCalculatorKraskov
         teCalc = teCalcClass()
+        # Parameter definitions - refer to JIDT javadocs
         # Set history length (Schreiber k=1)
-        teCalc.initialise(histlength)
-        # Use Kraskov parameter K=4 for 4 nearest points
-        teCalc.setProperty("k", "4")
 
-    # Normalise the individual variables if required
-    if normalize:
-        teCalc.setProperty("NORMALISE", "true")
-    else:
-        teCalc.setProperty("NORMALISE", "false")
+        # k - embedding length of destination past history to consider
+        # k_tau - embedding delay for the destination variable
+        # l - embedding length of source past history to consider
+        # l_tau - embedding delay for the source variable
+        # delay - time lag between last element of source and destination
+        # next value
+
+        k = histlength
+        k_tau = None
+        l = None
+        l_tau = None
+        delay = None
+
+        teCalc.initialise(k)
+        # Use Kraskov parameter K=4 for 4 nearest points
+        # Note: Not to be confused with embedding length
+        teCalc.setProperty("k", "4")
+        # Normalise the individual variables if required
+        if normalize:
+            teCalc.setProperty("NORMALISE", "true")
+        else:
+            teCalc.setProperty("NORMALISE", "false")
+
+    elif calcmethod == 'discrete':
+        teCalcClass = \
+            jpype.JPackage("infodynamics.measures.discrete") \
+            .TransferEntropyCalculatorDiscrete
+        # Parameter definitions - refer to JIDT javadocs
+        # base - number of quantisation levels for each variable
+        # binary variables are in base-2
+        # destHistoryEmbedLength - embedded history length of the
+        # destination to condition on - this is k in Schreiber's notation
+        # sourceHistoryEmbeddingLength - embedded history length of the source
+        # to include - this is l in Schreiber's notation
+        # TODO: Allow these settings to be defined by configuration file
+
+        base = 2
+        destHistoryEmbedLength = 1
+        sourceHistoryEmbeddingLentgh = None  # not used at the moment
+        teCalc = teCalcClass(base, destHistoryEmbedLength)
 
     return teCalc
 
