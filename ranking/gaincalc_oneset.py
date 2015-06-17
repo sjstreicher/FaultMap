@@ -103,11 +103,20 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                     (box[:, affectedvarindex]
                         [startindex+delay:startindex+size+delay])
 
-                weight = weightcalculator.calcweight(causevardata,
-                                                     affectedvardata,
-                                                     weightcalcdata,
-                                                     causevarindex,
-                                                     affectedvarindex)
+                # Need to extract significance here for methods that allow it
+
+                # It is possible that I just temporarily broke the correlation
+                # weight calculators
+
+                weight, significance = \
+                    weightcalculator.calcweight(causevardata,
+                                                affectedvardata,
+                                                weightcalcdata,
+                                                causevarindex,
+                                                affectedvarindex)
+
+                # Do something with this...
+#                print significance
 
                 # Calculate significance thresholds at each data point
                 if weightcalcdata.allthresh:

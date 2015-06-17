@@ -248,14 +248,14 @@ class TransentWeightcalc:
         # Initialise for each calculation in an attempt to fix
         # Kraskov calculator execution
 
-        transent_fwd = \
+        transent_fwd, significance_fwd = \
             transentropy.calc_infodynamics_te(self.infodynamicsloc,
                                               self.normalize,
                                               self.estimator,
                                               affectedvardata.T,
                                               causevardata.T)
 
-        transent_bwd = \
+        transent_bwd, significance_bwd = \
             transentropy.calc_infodynamics_te(self.infodynamicsloc,
                                               self.normalize,
                                               self.estimator,
@@ -265,6 +265,12 @@ class TransentWeightcalc:
         transent_directional = transent_fwd - transent_bwd
         transent_absolute = transent_fwd
 
+        # TODO: Do something correct and useful with these
+        # significance calculations
+
+#        print significance_fwd
+#        print significance_bwd
+
         # Do not pass negatives on to weight array
 #        if transent_directional < 0:
 #            transent_directional = 0
@@ -272,7 +278,8 @@ class TransentWeightcalc:
 #        if transent_absolute < 0:
 #            transent_absolute = 0
 
-        return [transent_directional, transent_absolute]
+        return [transent_directional, transent_absolute], \
+            [significance_fwd, significance_bwd]
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
                weightlist, weight_array, delay_array, datastore):
@@ -317,6 +324,7 @@ class TransentWeightcalc:
             logging.info("The maximum directional TE between " + causevar +
                          " and " + affectedvar + " is: " +
                          str(maxval_directional))
+
         elif report_basis == 'absolute':
             # Repeat for absolute case
             delay_array_absolute = delay_array
@@ -426,11 +434,11 @@ class TransentWeightcalc:
 
             surr_te_fwd.append(transentropy.calc_infodynamics_te(
                 self.infodynamicsloc, self.normalize, self.estimator,
-                affected_data, surr_tsdata[n][0, :]))
+                affected_data, surr_tsdata[n][0, :])[0])
 
             surr_te_bwd.append(transentropy.calc_infodynamics_te(
                 self.infodynamicsloc, self.normalize, self.estimator,
-                surr_tsdata[n][0, :], affected_data))
+                surr_tsdata[n][0, :], affected_data)[0])
 
         surr_te_directional = \
             [surr_te_fwd[n] - surr_te_bwd[n] for n in range(num)]
