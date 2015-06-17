@@ -62,8 +62,8 @@ def vectorselection(data, timelag, sub_samples, k=1, l=1):
 
 
 def setup_infodynamics_te(infodynamicsloc,
-                          normalize, calcmethod, histlength=1):
-    """Prepares the teCalc class of the Java Infodyamics Toolkit (JIDK)
+                          normalize, calcmethod, **parameters):
+    """Prepares the teCalc class of the Java Infodyamics Toolkit (JIDT)
     in order to calculate transfer entropy according to the kernel or Kraskov
     estimator method. Also supports discrete transfer entropy calculation.
 
@@ -104,10 +104,19 @@ def setup_infodynamics_te(infodynamicsloc,
         # then this kernel width corresponds to the number of
         # standard deviations from the mean (otherwise it is an absolute value)
 
-        k = histlength
-        kernelWidth = 0.5
+        if ('k' in parameters):
+            k = parameters['k']
+        else:
+            k = 1
+            print "k default of 1 is used"
 
-        teCalc.initialise(histlength, kernelWidth)
+        if ('kernelWidth' in parameters):
+            kernelWidth = parameters['kernelWidth']
+        else:
+            kernelWidth = 0.5
+            print "kernelWidth default of 0.5 is used"
+
+        teCalc.initialise(k, kernelWidth)
 
     elif calcmethod == 'kraskov':
         teCalcClass = \
@@ -124,11 +133,33 @@ def setup_infodynamics_te(infodynamicsloc,
         # delay - time lag between last element of source and destination
         # next value
 
-        k = histlength
-        k_tau = None
-        l = None
-        l_tau = None
-        delay = None
+        # TODO: Find proper default parameters
+
+        if ('k' in parameters):
+            k = parameters['k']
+        else:
+            k = 1
+            print "k default of 1 is used"
+
+        if ('k_tau' in parameters):
+            k_tau = parameters['k_tau']
+        else:
+            k_tau = None
+
+        if ('l' in parameters):
+            l = parameters['l']
+        else:
+            l = None
+
+        if ('l_tau' in parameters):
+            l_tau = parameters['l_tau']
+        else:
+            l_tau = None
+
+        if ('delay' in parameters):
+            delay = parameters['delay']
+        else:
+            delay = None
 
         teCalc.initialise(k)
         # Use Kraskov parameter K=4 for 4 nearest points
@@ -152,6 +183,18 @@ def setup_infodynamics_te(infodynamicsloc,
         # sourceHistoryEmbeddingLength - embedded history length of the source
         # to include - this is l in Schreiber's notation
         # TODO: Allow these settings to be defined by configuration file
+
+        if ('base' in parameters):
+            base = parameters['base']
+        else:
+            base = 2
+            print "base default of 2 (binary) is used"
+
+        if ('destHistoryEmbedLength' in parameters):
+            destHistoryEmbedLength = parameters['destHistoryEmbedLength']
+        else:
+            destHistoryEmbedLength = 1
+            print "base default of 2 (binary) is used"
 
         base = 2
         destHistoryEmbedLength = 1
