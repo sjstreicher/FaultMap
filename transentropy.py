@@ -155,14 +155,15 @@ def setup_infodynamics_te(infodynamicsloc,
 
         base = 2
         destHistoryEmbedLength = 1
-        sourceHistoryEmbeddingLentgh = None  # not used at the moment
+        sourceHistoryEmbeddingLength = None  # not used at the moment
         teCalc = teCalcClass(base, destHistoryEmbedLength)
 
     return teCalc
 
 
 def calc_infodynamics_te(infodynamicsloc, normalize, calcmethod,
-                         affected_data, causal_data):
+                         affected_data, causal_data,
+                         significance_permutations=30):
     """Calculates the transfer entropy for a specific timelag (equal to
     prediction horison) between two sets of time series data.
 
@@ -188,7 +189,14 @@ def calc_infodynamics_te(infodynamicsloc, normalize, calcmethod,
 
     transentropy = teCalc.computeAverageLocalOfObservations()
 
-    return transentropy
+    test_significance = False
+
+    if test_significance:
+        significance = teCalc.computeSignificance(significance_permutations)
+    else:
+        significance = None
+
+    return transentropy, significance
 
 
 def setup_infodynamics_entropy(normalize):
