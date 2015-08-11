@@ -4,7 +4,9 @@
 	  "transfer_entropy_kernel"
   ],
   "scenarios": [
-	  "sinusoid_5x5"
+	  "sinusoid_5x5",
+	  "random_2x2",
+	  "autoreg_2x2"
   ],
   "settings_standard": {
     "use_connections": false,

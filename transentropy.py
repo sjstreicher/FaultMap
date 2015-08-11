@@ -108,13 +108,13 @@ def setup_infodynamics_te(infodynamicsloc,
             k = parameters['k']
         else:
             k = 1
-            print "k default of 1 is used"
+#            print "k default of 1 is used"
 
         if ('kernelWidth' in parameters):
             kernelWidth = parameters['kernelWidth']
         else:
             kernelWidth = 0.5
-            print "kernelWidth default of 0.5 is used"
+#            print "kernelWidth default of 0.5 is used"
 
         teCalc.initialise(k, kernelWidth)
 
@@ -139,7 +139,7 @@ def setup_infodynamics_te(infodynamicsloc,
             k = parameters['k']
         else:
             k = 1
-            print "k default of 1 is used"
+#            print "k default of 1 is used"
 
         if ('k_tau' in parameters):
             k_tau = parameters['k_tau']
