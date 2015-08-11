@@ -25,7 +25,7 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
         self.samples = 2500
         # Define number of samples to analyse
         self.sub_samples = 1000
-        # Delay in actul data
+        # Delay in actual data
         self.delay = 5
 
         # Calculate transfer entropies in range of +/- 5 from actual delay
