@@ -23,7 +23,7 @@ def connectionmatrix_maker(N):
         variables = ['X {}'.format(i) for i in range(1, N+1)]
         connectionmatrix = np.ones((N, N), dtype=int)
         return variables, connectionmatrix
-    maker.__doc__  = """ Generates a {0}x{0} connection matrix for use in tests.""".format(N)
+    maker.__doc__ = """ Generates a {0}x{0} connection matrix for use in tests.""".format(N)
     return maker
 
 connectionmatrix_2x2, connectionmatrix_4x4, connectionmatrix_5x5 = [
@@ -101,7 +101,7 @@ def delay_gen(samples, delay):
     return data.T
 
 
-def random_gen(samples, delay, N):
+def random_gen(samples, delay, N=2):
     """Generates N independent random data vectors"""
 
     assert N < len(seed_list), "Not enough seeds in seed_list"
@@ -135,7 +135,7 @@ def autoreg_datagen(delay, timelag, samples, sub_samples, k=1, l=1):
     return x_pred, x_hist, y_hist
 
 
-def sinusoid_shift_gen(samples, delay, period=100, noiseamp=0.1,
+def sinusoid_shift_gen(samples, delay, period=100, noiseamp=0.1, N=5,
                        addnoise=False):
     """Generates a sinusoid, with delayed noise companion
     and a closed loop sinusoid with delay and noise.
@@ -160,7 +160,7 @@ def sinusoid_shift_gen(samples, delay, period=100, noiseamp=0.1,
 
     vectors = []
 
-    for i in range(5):
+    for i in range(N):
         sampleshift = (period/4)*i
         vectors.append(sine[sampleshift:samples + sampleshift])
 

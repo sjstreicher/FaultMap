@@ -60,6 +60,7 @@
 	"causevarindexes": "all",
 	"affectedvarindexes": "all",
 	"sub_sampling_interval": 1,
+	"bandgap_filtering": false,
 	"test_delays": 10
   },
     "sinusoid_5x5": {
