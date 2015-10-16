@@ -75,9 +75,13 @@ def setup_infodynamics_te(infodynamicsloc,
     implementation - currently only available for the implementation making use
     of Kraskov MI estimators
 
+    # UPDATE: (Still needs to be verified) The continous Kraskov estimator
+    with the Ragwitz criterion is the basis for all results unless mentioned
+    otherwise as this is the theoretical best automated procedure that is
+    available in JIDT 1.3.
     """
 
-    # TODO: Addlow for automated embedding dimension algorithms to be applied
+    # TODO: Allow for automated embedding dimension algorithms to be applied
 
     if not jpype.isJVMStarted():
         jpype.startJVM(jpype.getDefaultJVMPath(),
@@ -119,12 +123,20 @@ def setup_infodynamics_te(infodynamicsloc,
         teCalc.initialise(k, kernelWidth)
 
     elif calcmethod == 'kraskov':
+        """The Kraskov method is the recommended method and also provides
+        methods for auto-embedding. The Ragqitz criterion auto-embedding method
+        will be enabled as the default.
+
+        Methods for returning the k, k_tau, l and l_tau used will be
+        implemented.
+
+        """
+
         teCalcClass = \
             jpype.JPackage("infodynamics.measures.continuous.kraskov") \
             .TransferEntropyCalculatorKraskov
         teCalc = teCalcClass()
         # Parameter definitions - refer to JIDT javadocs
-        # Set history length (Schreiber k=1)
 
         # k - embedding length of destination past history to consider
         # k_tau - embedding delay for the destination variable
@@ -133,43 +145,48 @@ def setup_infodynamics_te(infodynamicsloc,
         # delay - time lag between last element of source and destination
         # next value
 
-        # TODO: Find proper default parameters
-
-        if ('k' in parameters):
-            k = parameters['k']
-        else:
-            k = 1
-#            print "k default of 1 is used"
-
-        if ('k_tau' in parameters):
-            k_tau = parameters['k_tau']
-        else:
-            k_tau = None
-
-        if ('l' in parameters):
-            l = parameters['l']
-        else:
-            l = None
-
-        if ('l_tau' in parameters):
-            l_tau = parameters['l_tau']
-        else:
-            l_tau = None
-
-        if ('delay' in parameters):
-            delay = parameters['delay']
-        else:
-            delay = None
-
-        teCalc.initialise(k)
-        # Use Kraskov parameter K=4 for 4 nearest points
-        # Note: Not to be confused with embedding length
-        teCalc.setProperty("k", "4")
         # Normalise the individual variables if required
         if normalize:
             teCalc.setProperty("NORMALISE", "true")
         else:
             teCalc.setProperty("NORMALISE", "false")
+
+        if ('auto_embed' in parameters):
+            # Enable the Ragwitz criterion
+            # Enable source as well as destination embedding due to the nature
+            # of our data.
+            # Use a maximum history and tau search of 5
+            teCalc.setProperty("AUTO_EMBED_METHOD", "RAGWITZ")
+            teCalc.setProperty("AUTO_EMBED_K_SEARCH_MAX", "5")
+            teCalc.setProperty("AUTO_EMBED_TAU_SEARCH_MAX", "5")
+
+        # Note: If setting the delay is needed to be changed on each iteration,
+        # it may be best to do this outside the loop and initialise teCalc
+        # after each change.
+
+        if ('delay' in parameters):
+            delay = parameters['delay']
+            teCalc.setProperty("DELAY", str(delay))
+
+        # Allow for manual override
+
+        if ('k_history' in parameters):
+            k_history = parameters['k_history']
+            teCalc.setProperty("k_HISTORY", str(k_history))
+
+        if ('k_tau' in parameters):
+            k_tau = parameters['k_tau']
+            teCalc.setProperty("k_TAU", str(k_tau))
+
+        if ('l_history' in parameters):
+            l_history = parameters['l_history']
+            teCalc.setProperty("l_HISTORY", str(l_history))
+
+        if ('l_tau' in parameters):
+            l_tau = parameters['l_tau']
+            teCalc.setProperty("l_TAU", str(l_tau))
+
+        teCalc.initialise()
 
     elif calcmethod == 'discrete':
         teCalcClass = \
