@@ -152,13 +152,15 @@ def setup_infodynamics_te(infodynamicsloc,
             teCalc.setProperty("NORMALISE", "false")
 
         if ('auto_embed' in parameters):
-            # Enable the Ragwitz criterion
-            # Enable source as well as destination embedding due to the nature
-            # of our data.
-            # Use a maximum history and tau search of 5
-            teCalc.setProperty("AUTO_EMBED_METHOD", "RAGWITZ")
-            teCalc.setProperty("AUTO_EMBED_K_SEARCH_MAX", "5")
-            teCalc.setProperty("AUTO_EMBED_TAU_SEARCH_MAX", "5")
+            auto_embed = parameters['auto_embed']
+            if auto_embed is True:
+                # Enable the Ragwitz criterion
+                # Enable source as well as destination embedding due to the
+                # nature of our data.
+                # Use a maximum history and tau search of 5
+                teCalc.setProperty("AUTO_EMBED_METHOD", "RAGWITZ")
+                teCalc.setProperty("AUTO_EMBED_K_SEARCH_MAX", "5")
+                teCalc.setProperty("AUTO_EMBED_TAU_SEARCH_MAX", "5")
 
         # Note: If setting the delay is needed to be changed on each iteration,
         # it may be best to do this outside the loop and initialise teCalc
@@ -215,15 +217,15 @@ def setup_infodynamics_te(infodynamicsloc,
 
         base = 2
         destHistoryEmbedLength = 1
-        sourceHistoryEmbeddingLength = None  # not used at the moment
+#        sourceHistoryEmbeddingLength = None  # not used at the moment
         teCalc = teCalcClass(base, destHistoryEmbedLength)
 
     return teCalc
 
 
 def calc_infodynamics_te(infodynamicsloc, normalize, calcmethod,
-                         affected_data, causal_data,
-                         significance_permutations=30):
+                         affected_data, causal_data, test_significance=False,
+                         significance_permutations=30, **parameters):
     """Calculates the transfer entropy for a specific timelag (equal to
     prediction horison) between two sets of time series data.
 
@@ -236,7 +238,8 @@ def calc_infodynamics_te(infodynamicsloc, normalize, calcmethod,
 
     """
 
-    teCalc = setup_infodynamics_te(infodynamicsloc, normalize, calcmethod)
+    teCalc = setup_infodynamics_te(infodynamicsloc, normalize, calcmethod,
+                                   **parameters)
 
     sourceArray = causal_data.tolist()
     destArray = affected_data.tolist()
@@ -249,14 +252,21 @@ def calc_infodynamics_te(infodynamicsloc, normalize, calcmethod,
 
     transentropy = teCalc.computeAverageLocalOfObservations()
 
-    test_significance = False
-
     if test_significance:
         significance = teCalc.computeSignificance(significance_permutations)
     else:
         significance = None
 
-    return transentropy, significance
+    # Get all important properties from used teCalc
+    k_history = teCalc.getProperty("k_HISTORY")
+    k_tau = teCalc.getProperty("k_TAU")
+    l_history = teCalc.getProperty("l_HISTORY")
+    l_tau = teCalc.getProperty("l_TAU")
+    delay = teCalc.getProperty("DELAY")
+
+    properties = [k_history, k_tau, l_history, l_tau, delay]
+
+    return transentropy, significance, properties
 
 
 def setup_infodynamics_entropy(normalize):
