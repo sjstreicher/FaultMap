@@ -266,7 +266,7 @@ def calc_infodynamics_te(infodynamicsloc, normalize, calcmethod,
 
     properties = [k_history, k_tau, l_history, l_tau, delay]
 
-    return transentropy, significance, properties
+    return transentropy, [significance, properties]
 
 
 def setup_infodynamics_entropy(normalize):

@@ -248,14 +248,14 @@ class TransentWeightcalc:
         # Initialise for each calculation in an attempt to fix
         # Kraskov calculator execution
 
-        transent_fwd, significance_fwd = \
+        transent_fwd, auxdata_fwd = \
             transentropy.calc_infodynamics_te(self.infodynamicsloc,
                                               self.normalize,
                                               self.estimator,
                                               affectedvardata.T,
                                               causevardata.T)
 
-        transent_bwd, significance_bwd = \
+        transent_bwd, auxdata_bwd = \
             transentropy.calc_infodynamics_te(self.infodynamicsloc,
                                               self.normalize,
                                               self.estimator,
@@ -270,6 +270,9 @@ class TransentWeightcalc:
 
 #        print significance_fwd
 #        print significance_bwd
+
+        significance_fwd = auxdata_fwd[0]
+        significance_bwd = auxdata_bwd[0]
 
         # Do not pass negatives on to weight array
 #        if transent_directional < 0:
@@ -433,12 +436,12 @@ class TransentWeightcalc:
             # calc_infodynamics_te function
 
             surr_te_fwd.append(transentropy.calc_infodynamics_te(
-                self.infodynamicsloc, self.normalize, self.estimator,
-                affected_data, surr_tsdata[n][0, :])[0])
+                    self.infodynamicsloc, self.normalize, self.estimator,
+                    affected_data, surr_tsdata[n][0, :])[0])
 
             surr_te_bwd.append(transentropy.calc_infodynamics_te(
-                self.infodynamicsloc, self.normalize, self.estimator,
-                surr_tsdata[n][0, :], affected_data)[0])
+                    self.infodynamicsloc, self.normalize, self.estimator,
+                    surr_tsdata[n][0, :], affected_data)[0])
 
         surr_te_directional = \
             [surr_te_fwd[n] - surr_te_bwd[n] for n in range(num)]
