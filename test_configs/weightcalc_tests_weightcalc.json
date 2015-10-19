@@ -1,7 +1,8 @@
 {
   "datatype": "function",
   "methods": [
-	  "transfer_entropy_kernel"
+	  "transfer_entropy_kernel",
+	  "transfer_entropy_kraskov"
   ],
   "scenarios": [
 	  "sinusoid_5x5",
