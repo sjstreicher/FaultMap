@@ -104,6 +104,11 @@ class WeightcalcData:
         # Get starting index
         self.startindex = self.caseconfig[settings_name]['startindex']
 
+        # Get any parameters for Kraskov method
+        if 'transfer_entropy_kraskov' in self.methods:
+            self.kraskov_parameters = \
+                self.caseconfig[settings_name]['kraskov_parameters']
+
         if self.datatype == 'file':
             # Get path to time series data input file in standard format
             # described in documentation under "Input data formats"

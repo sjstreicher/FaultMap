@@ -102,7 +102,7 @@ def setup_infodynamics_te(infodynamicsloc,
         else:
             teCalc.setProperty("NORMALISE", "false")
 
-        # Parameter definitions - refer to JIDT javadocs
+        # Parameter definitions - refer to JIDT Javadocs
         # k - destination embedded history length (Schreiber k=1)
         # kernelWidth - if NORMALISE_PROP_NAME property has been set,
         # then this kernel width corresponds to the number of
@@ -114,8 +114,8 @@ def setup_infodynamics_te(infodynamicsloc,
             k = 1
 #            print "k default of 1 is used"
 
-        if ('kernelWidth' in parameters):
-            kernelWidth = parameters['kernelWidth']
+        if ('kernel_width' in parameters):
+            kernelWidth = parameters['kernel_width']
         else:
             kernelWidth = 0.5
 #            print "kernelWidth default of 0.5 is used"

@@ -236,6 +236,11 @@ class TransentWeightcalc:
         if weightcalcdata.sigtest:
             self.te_thresh_method = weightcalcdata.te_thresh_method
 
+        if self.estimator == 'kraskov':
+            self.parameters = weightcalcdata.kraskov_parameters
+        else:
+            self.parameters = None
+
     def calcweight(self, causevardata, affectedvardata, weightcalcdata,
                    causevarindex, affectedvarindex):
         """"Calculates the transfer entropy between two vectors containing
@@ -248,19 +253,23 @@ class TransentWeightcalc:
         # Initialise for each calculation in an attempt to fix
         # Kraskov calculator execution
 
+        # Pass special estimator specific parameters in here
+
         transent_fwd, auxdata_fwd = \
             transentropy.calc_infodynamics_te(self.infodynamicsloc,
                                               self.normalize,
                                               self.estimator,
                                               affectedvardata.T,
-                                              causevardata.T)
+                                              causevardata.T,
+                                              self.parameters)
 
         transent_bwd, auxdata_bwd = \
             transentropy.calc_infodynamics_te(self.infodynamicsloc,
                                               self.normalize,
                                               self.estimator,
                                               causevardata.T,
-                                              affectedvardata.T)
+                                              affectedvardata.T,
+                                              self.parameters)
 
         transent_directional = transent_fwd - transent_bwd
         transent_absolute = transent_fwd
@@ -437,11 +446,11 @@ class TransentWeightcalc:
 
             surr_te_fwd.append(transentropy.calc_infodynamics_te(
                     self.infodynamicsloc, self.normalize, self.estimator,
-                    affected_data, surr_tsdata[n][0, :])[0])
+                    affected_data, surr_tsdata[n][0, :])[0], self.parameters)
 
             surr_te_bwd.append(transentropy.calc_infodynamics_te(
                     self.infodynamicsloc, self.normalize, self.estimator,
-                    surr_tsdata[n][0, :], affected_data)[0])
+                    surr_tsdata[n][0, :], affected_data)[0], self.parameters)
 
         surr_te_directional = \
             [surr_te_fwd[n] - surr_te_bwd[n] for n in range(num)]
