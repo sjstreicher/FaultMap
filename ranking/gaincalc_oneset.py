@@ -109,7 +109,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                 # It is possible that I just temporarily broke the correlation
                 # weight calculators
 
-                weight, [significance, properties] = \
+                weight, auxdata = \
                     weightcalculator.calcweight(causevardata,
                                                 affectedvardata,
                                                 weightcalcdata,
@@ -117,8 +117,9 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                                                 affectedvarindex)
 
                 # Do something with this...
-#                print significance
-#                print properties
+#                [auxdata_fwd, auxdata_bwd] = auxdata
+#                [significance_fwd, properties_fwd] = auxdata_fwd
+#                [significance_bwd, properties_bwd] = auxdata_bwd
 
                 # Calculate significance thresholds at each data point
                 if weightcalcdata.allthresh:
