@@ -446,11 +446,11 @@ class TransentWeightcalc:
 
             surr_te_fwd.append(transentropy.calc_infodynamics_te(
                     self.infodynamicsloc, self.normalize, self.estimator,
-                    affected_data, surr_tsdata[n][0, :])[0], self.parameters)
+                    affected_data, surr_tsdata[n][0, :], self.parameters)[0])
 
             surr_te_bwd.append(transentropy.calc_infodynamics_te(
                     self.infodynamicsloc, self.normalize, self.estimator,
-                    surr_tsdata[n][0, :], affected_data)[0], self.parameters)
+                    surr_tsdata[n][0, :], affected_data, self.parameters)[0])
 
         surr_te_directional = \
             [surr_te_fwd[n] - surr_te_bwd[n] for n in range(num)]
