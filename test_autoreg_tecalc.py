@@ -68,7 +68,42 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
         delayedval = self.entropies_infodyn_kernel[self.delay-1]
         self.assertEqual(maxval, delayedval)
 
-    def test_peakentropy_infodyn_kraskov(self):
+    def test_peakentropy_infodyn_kraskov_noautoembed(self):
+        self.entropies_infodyn_kraskov = []
+        for timelag in range(self.delay-5, self.delay+6):
+            print "Results for timelag of: ", str(timelag)
+            [x_pred, x_hist, y_hist] = autoreg_datagen(self.delay, timelag,
+                                                       self.samples,
+                                                       self.sub_samples)
+            # Normalize data
+            # Not explicitly required as this is done by infodyns package if
+            # setProperty("NORMALISE", "true" is called), but good practice
+            # for general example.
+
+            x_hist_norm = preprocessing.scale(x_hist, axis=1)
+            y_hist_norm = preprocessing.scale(y_hist, axis=1)
+
+            # Calculate transfer entropy according to infodynamics method:
+
+            result_infodyn, [significance, properties] = \
+                te_info('infodynamics.jar', True, 'kraskov',
+                        x_hist_norm[0], y_hist_norm[0],
+                        test_significance=True,
+                        auto_embed=False)
+            self.entropies_infodyn_kraskov.append(result_infodyn)
+            print("Infodynamics TE result: %.4f nats" % (result_infodyn))
+
+            print properties
+            print significance
+
+        print self.entropies_infodyn_kraskov
+
+        maxval = max(self.entropies_infodyn_kraskov)
+        # The maximum lags with one sample
+        delayedval = self.entropies_infodyn_kraskov[self.delay-1]
+        self.assertEqual(maxval, delayedval)
+
+    def test_peakentropy_infodyn_kraskov_autoembed(self):
         self.entropies_infodyn_kraskov = []
         for timelag in range(self.delay-5, self.delay+6):
             print "Results for timelag of: ", str(timelag)
