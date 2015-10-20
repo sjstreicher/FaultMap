@@ -25,7 +25,8 @@
 	"delay": 0,
 	"te_thresh_method": "rankorder",
 	"te_surr_method": "random_shuffle",
-	"do_multiprocessing": false
+	"do_multiprocessing": false,
+	"kraskov_parameters": ["auto_embed=True"]
   },
   "random_2x2": {
     "connections": "connectionmatrix_2x2",
