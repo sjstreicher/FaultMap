@@ -61,7 +61,7 @@ class CorrWeightcalc(object):
         """
 
         corrval = np.corrcoef(causevardata.T, affectedvardata.T)[1, 0]
-        return [corrval]
+        return [corrval], None
 
     def calcsigthresh(self, affected_data, causal_data):
         return [self.threshcorr]
@@ -216,7 +216,7 @@ class PartialCorrWeightcalc(CorrWeightcalc):
             np.where(newconnectionmatrix,
                      -p_matrix/np.abs(np.sqrt(np.outer(d, d))), 0)
 
-        return partialcorrelationmatrix[affectedvarindex, causevarindex]
+        return partialcorrelationmatrix[affectedvarindex, causevarindex], None
 
 
 class TransentWeightcalc:
@@ -280,8 +280,8 @@ class TransentWeightcalc:
 #        print significance_fwd
 #        print significance_bwd
 
-        significance_fwd = auxdata_fwd[0]
-        significance_bwd = auxdata_bwd[0]
+#        significance_fwd = auxdata_fwd[0]
+#        significance_bwd = auxdata_bwd[0]
 
         # Do not pass negatives on to weight array
 #        if transent_directional < 0:
@@ -291,7 +291,7 @@ class TransentWeightcalc:
 #            transent_absolute = 0
 
         return [transent_directional, transent_absolute], \
-            [significance_fwd, significance_bwd]
+            [auxdata_fwd, auxdata_bwd]
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
                weightlist, weight_array, delay_array, datastore):

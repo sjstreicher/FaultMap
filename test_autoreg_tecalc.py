@@ -75,7 +75,6 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
             [x_pred, x_hist, y_hist] = autoreg_datagen(self.delay, timelag,
                                                        self.samples,
                                                        self.sub_samples)
-
             # Normalize data
             # Not explicitly required as this is done by infodyns package if
             # setProperty("NORMALISE", "true" is called), but good practice
