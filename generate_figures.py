@@ -303,19 +303,20 @@ def fig_values_vs_delays(graphname):
     valuematrix, headers = \
         data_processing.read_header_values_datafile(sourcefile)
 
-    plt.figure(1, (12, 6))
+    fig = plt.figure(1, figsize=(12, 6))
+    ax = fig.add_subplot(111)
+    ax.set_ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
+    ax.set_xlabel(r'Delay (time units)', fontsize=14)
+
     taus = graphdata.linelabels
     for i, tau in enumerate(taus):
-        plt.plot(valuematrix[:, 0], valuematrix[:, i + 1], marker="o",
-                 markersize=4,
-                 label=r'$\tau = {:1.1f}$ seconds'.format(tau))
+        ax.plot(valuematrix[:, 0], valuematrix[:, i + 1], marker="o",
+                markersize=4,
+                label=r'$\tau = {:1.1f}$ seconds'.format(tau))
 
-    plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
-    plt.xlabel(r'Delay (time units)', fontsize=14)
-    plt.legend(bbox_to_anchor=graphdata.legendbbox)
-
+    ax.legend(bbox_to_anchor=graphdata.legendbbox)
     if graphdata.axis_limits is not False:
-        plt.axis(graphdata.axis_limits)
+        ax.axis(graphdata.axis_limits)
 
     plt.savefig(graph_filename_template.format(graphname))
     plt.close()
@@ -372,6 +373,7 @@ def fig_maxval_vs_taus(graphname):
     plt.close()
 
     return None
+
 
 
 def fig_scenario_maxval_vs_taus(graphname, delays=False, drawfit=False):
@@ -828,7 +830,7 @@ graphs = [
           [fig_values_vs_delays,
            [
 #            'firstorder_noiseonly_cc_vs_delays_scen01',
-#            'firstorder_noiseonly_abs_te_kernel_vs_delays_scen01',
+            'firstorder_noiseonly_abs_te_kernel_vs_delays_scen01',
 #            'firstorder_noiseonly_dir_te_kernel_vs_delays_scen01',
 #            'firstorder_noiseonly_abs_te_kraskov_vs_delays_scen01',
 #            'firstorder_noiseonly_dir_te_kraskov_vs_delays_scen01',
@@ -1099,10 +1101,10 @@ graphs = [
 # Plot cross correlation over delay for selected variables
 #######################################################################
 
-           [lambda graphname: fig_diffvar_vs_delay(
-               graphname, ['PIC43024.PV', 'PIC43024.MV', 'FIC43006.PV', 'FIC43006.MV'], "Destination: {}"),
-            ['propylene_compressor_raw_set3_cc_PIC43024PV_selected',
-             ]],
+#           [lambda graphname: fig_diffvar_vs_delay(
+#               graphname, ['PIC43024.PV', 'PIC43024.MV', 'FIC43006.PV', 'FIC43006.MV'], "Destination: {}"),
+#            ['propylene_compressor_raw_set3_cc_PIC43024PV_selected',
+#             ]],
 
 
 #######################################################################
