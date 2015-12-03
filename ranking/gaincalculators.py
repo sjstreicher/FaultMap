@@ -278,15 +278,6 @@ class TransentWeightcalc:
         transent_directional = transent_fwd - transent_bwd
         transent_absolute = transent_fwd
 
-        # TODO: Do something correct and useful with these
-        # significance calculations
-
-#        print significance_fwd
-#        print significance_bwd
-
-#        significance_fwd = auxdata_fwd[0]
-#        significance_bwd = auxdata_bwd[0]
-
         # Do not pass negatives on to weight array
 #        if transent_directional < 0:
 #            transent_directional = 0
@@ -317,8 +308,12 @@ class TransentWeightcalc:
 
         proplist_fwd, proplist_bwd = proplist
 
-        k_hist_fwd, k_tau_fwd, l_hist_fwd, l_tau_fwd, delay_fwd = proplist_fwd
-        k_hist_bwd, k_tau_bwd, l_hist_bwd, l_tau_bwd, delay_bwd = proplist_bwd
+        # Not supposed to differ among delay tests
+        # TODO: Confirm this
+#        k_hist_fwd, k_tau_fwd, l_hist_fwd, l_tau_fwd, delay_fwd = \
+#            proplist_fwd[0]
+#        k_hist_bwd, k_tau_bwd, l_hist_bwd, l_tau_bwd, delay_bwd = \
+#            proplist_bwd[0]
 
         size = weightcalcdata.testsize
         startindex = weightcalcdata.startindex
@@ -344,6 +339,10 @@ class TransentWeightcalc:
             logging.info("The maximum directional TE between " + causevar +
                          " and " + affectedvar + " is: " +
                          str(maxval_directional))
+            k_hist_fwd, k_tau_fwd, l_hist_fwd, l_tau_fwd, delay_fwd = \
+                proplist_fwd[delay_index_directional]
+            k_hist_bwd, k_tau_bwd, l_hist_bwd, l_tau_bwd, delay_bwd = \
+                proplist_bwd[delay_index_directional]
 
         elif report_basis == 'absolute':
             # Repeat for absolute case
@@ -359,6 +358,10 @@ class TransentWeightcalc:
                 bestdelay_absolute
             bestdelay_sample = bestdelay_sample_absolute
             delay_array = delay_array_absolute
+            k_hist_fwd, k_tau_fwd, l_hist_fwd, l_tau_fwd, delay_fwd = \
+                proplist_fwd[delay_index_absolute]
+            k_hist_bwd, k_tau_bwd, l_hist_bwd, l_tau_bwd, delay_bwd = \
+                proplist_bwd[delay_index_absolute]
 
         if weightcalcdata.sigtest:
             self.te_thresh_method = weightcalcdata.te_thresh_method
