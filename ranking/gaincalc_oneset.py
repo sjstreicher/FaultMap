@@ -143,17 +143,18 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                     if weightcalcdata.allthresh:
                         sigthreshlist.append(sigthreshold[0])
 
-                if len(auxdata) > 1:
-                    # This means we have auxdata for both the forward and
-                    # backward calculation
-                    [auxdata_fwd, auxdata_bwd] = auxdata
-                    [significance_fwd, properties_fwd] = auxdata_fwd
-                    [significance_bwd, properties_bwd] = auxdata_bwd
-                    sigfwd_list.append(significance_fwd)
-                    sigbwd_list.append(significance_bwd)
-                    propfwd_list.append(properties_fwd)
-                    propbwd_list.append(properties_bwd)
-                    # TODO: Get this into the datastore eventually
+                if auxdata is not None:
+                    if len(auxdata) > 1:
+                        # This means we have auxdata for both the forward and
+                        # backward calculation
+                        [auxdata_fwd, auxdata_bwd] = auxdata
+                        [significance_fwd, properties_fwd] = auxdata_fwd
+                        [significance_bwd, properties_bwd] = auxdata_bwd
+                        sigfwd_list.append(significance_fwd)
+                        sigbwd_list.append(significance_bwd)
+                        propfwd_list.append(properties_fwd)
+                        propbwd_list.append(properties_bwd)
+                        # TODO: Get this into the datastore eventually
 
             directional_name = 'weights_directional'
             absolute_name = 'weights_absolute'
@@ -233,6 +234,8 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                     method, boxindex+1, sigstatus, causevar),
                     datalines_neutral,
                     weights_thisvar_neutral, headerline)
+
+                proplist = None
 
                 # Write the significance thresholds to file
                 if weightcalcdata.allthresh:

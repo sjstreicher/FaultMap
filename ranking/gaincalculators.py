@@ -67,7 +67,7 @@ class CorrWeightcalc(object):
         return [self.threshcorr]
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
-               weightlist, weight_array, delay_array, datastore):
+               weightlist, weight_array, delay_array, datastore, proplist):
         """Calculates and reports the relevant output for each combination
         of variables tested.
 
