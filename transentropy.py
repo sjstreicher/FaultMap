@@ -159,8 +159,16 @@ def setup_infodynamics_te(infodynamicsloc,
                 # nature of our data.
                 # Use a maximum history and tau search of 5
                 teCalc.setProperty("AUTO_EMBED_METHOD", "RAGWITZ")
-                teCalc.setProperty("AUTO_EMBED_K_SEARCH_MAX", "5")
-                teCalc.setProperty("AUTO_EMBED_TAU_SEARCH_MAX", "5")
+                if 'k_search_max' in parameters:
+                    ksearchmax = parameters['k_search_max']
+                else:
+                    ksearchmax = 5
+                teCalc.setProperty("AUTO_EMBED_K_SEARCH_MAX", ksearchmax)
+                if 'tau_search_max' in parameters:
+                    tausearchmax = parameters['tau_search_max']
+                else:
+                    tausearchmax = 5
+                teCalc.setProperty("AUTO_EMBED_TAU_SEARCH_MAX", tausearchmax)
 
         # Note: If setting the delay is needed to be changed on each iteration,
         # it may be best to do this outside the loop and initialise teCalc

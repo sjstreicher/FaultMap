@@ -228,7 +228,11 @@ class TransentWeightcalc:
     def __init__(self, weightcalcdata, estimator):
         self.data_header = ['causevar', 'affectedvar', 'base_ent',
                             'max_ent', 'max_delay', 'max_index', 'threshold',
-                            'threshpass']
+                            'threshpass',
+                            'k_hist_fwd', 'k_tau_fwd', 'l_hist_fwd',
+                            'l_tau_fwd', 'delay_fwd',
+                            'k_hist_bwd', 'k_tau_bwd', 'l_hist_bwd',
+                            'l_tau_bwd', 'delay_bwd']
 
         self.estimator = estimator
         self.normalize = weightcalcdata.normalize
@@ -294,7 +298,7 @@ class TransentWeightcalc:
             [auxdata_fwd, auxdata_bwd]
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
-               weightlist, weight_array, delay_array, datastore):
+               weightlist, weight_array, delay_array, datastore, proplist):
         """Calculates and reports the relevant output for each combination
         of variables tested.
 
@@ -309,8 +313,12 @@ class TransentWeightcalc:
 
         # We already know that when dealing with transfer entropy
         # the weightlist will consist of a list of lists
-        weightlist_directional = weightlist[0]
-        weightlist_absolute = weightlist[1]
+        weightlist_directional, weightlist_absolute = weightlist
+
+        proplist_fwd, proplist_bwd = proplist
+
+        k_hist_fwd, k_tau_fwd, l_hist_fwd, l_tau_fwd, delay_fwd = proplist_fwd
+        k_hist_bwd, k_tau_bwd, l_hist_bwd, l_tau_bwd, delay_bwd = proplist_bwd
 
         size = weightcalcdata.testsize
         startindex = weightcalcdata.startindex
@@ -394,6 +402,11 @@ class TransentWeightcalc:
                     str(delay_index_directional), self.threshent_directional,
                     threshpass_directional]
 
+        # All this unpacking is probably unnecessary
+        auxdataline = [k_hist_fwd, k_tau_fwd, l_hist_fwd, l_tau_fwd, delay_fwd,
+                       k_hist_bwd, k_tau_bwd, l_hist_bwd, l_tau_bwd, delay_bwd]
+
+        dataline = dataline + auxdataline
         datastore.append(dataline)
 
         logging.info("The corresponding delay is: " +
