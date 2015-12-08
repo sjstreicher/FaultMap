@@ -91,6 +91,10 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
             sigthreshlist = []
             directional_sigthreshlist = []
             absolute_sigthreshlist = []
+            sigfwd_list = []
+            sigbwd_list = []
+            propfwd_list = []
+            propbwd_list = []
 
             for delay in weightcalcdata.sample_delays:
                 logging.info("Now testing delay: " + str(delay))
@@ -103,23 +107,12 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                     (box[:, affectedvarindex]
                         [startindex+delay:startindex+size+delay])
 
-                # Need to extract significance here for methods that allow it
-                # Same for properties
-
-                # It is possible that I just temporarily broke the correlation
-                # weight calculators
-
                 weight, auxdata = \
                     weightcalculator.calcweight(causevardata,
                                                 affectedvardata,
                                                 weightcalcdata,
                                                 causevarindex,
                                                 affectedvarindex)
-
-                # Do something with this...
-#                [auxdata_fwd, auxdata_bwd] = auxdata
-#                [significance_fwd, properties_fwd] = auxdata_fwd
-#                [significance_bwd, properties_bwd] = auxdata_bwd
 
                 # Calculate significance thresholds at each data point
                 if weightcalcdata.allthresh:
@@ -144,6 +137,19 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                     if weightcalcdata.allthresh:
                         sigthreshlist.append(sigthreshold[0])
 
+                if auxdata is not None:
+                    if len(auxdata) > 1:
+                        # This means we have auxdata for both the forward and
+                        # backward calculation
+                        [auxdata_fwd, auxdata_bwd] = auxdata
+                        [significance_fwd, properties_fwd] = auxdata_fwd
+                        [significance_bwd, properties_bwd] = auxdata_bwd
+                        sigfwd_list.append(significance_fwd)
+                        sigbwd_list.append(significance_bwd)
+                        propfwd_list.append(properties_fwd)
+                        propbwd_list.append(properties_bwd)
+                        # TODO: Get this into the datastore eventually
+
             directional_name = 'weights_directional'
             absolute_name = 'weights_absolute'
             neutral_name = 'weights'
@@ -154,6 +160,12 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                 sig_neutral_name = 'sigthresh'
 
             if len(weight) > 1:
+
+                proplist = [propfwd_list,
+                            propbwd_list]
+
+#                siglist = [sigfwd_list,
+#                           sigbwd_list]
 
                 weightlist = [directional_weightlist,
                               absolute_weightlist]
@@ -217,6 +229,8 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                     datalines_neutral,
                     weights_thisvar_neutral, headerline)
 
+                proplist = None
+
                 # Write the significance thresholds to file
                 if weightcalcdata.allthresh:
                     sigthresh_thisvar_neutral = np.asarray(weightlist)
@@ -234,7 +248,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                 weightcalculator.report(weightcalcdata, causevarindex,
                                         affectedvarindex, weightlist,
                                         weight_array, delay_array,
-                                        datastore)
+                                        datastore, proplist)
 
         # Delete entries from weightcalc matrix not used
         # Delete all rows and columns listed in affected_dellist, cause_dellist

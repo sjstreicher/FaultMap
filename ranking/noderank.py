@@ -177,9 +177,8 @@ def calc_simple_rank(gainmatrix, variables, biasvector, noderankdata,
 
     # Normalize the weightmatrix columns
     for col in range(n):
-        weightmatrix[:, col] = (weightmatrix[:, col]
-                                / np.sum(abs(weightmatrix[:, col])))
-                                
+        weightmatrix[:, col] = (weightmatrix[:, col] /
+                                np.sum(abs(weightmatrix[:, col])))
 
     # Transpose the gainmatrix for when it is used in isolation.
     # It is important that this only happens after the weightmatrix has been
@@ -421,11 +420,11 @@ def calc_gainrank(gainmatrix, noderankdata, rank_method,
                                      noderankdata.connectionmatrix,
                                      noderankdata.biasvector,
                                      dummyweight, noderankdata.dummies)
-    
+
     connections = [backwardconnection]
     variables = [backwardvariablelist]
-    gains = [np.array(backwardgain)]   
-    
+    gains = [np.array(backwardgain)]
+
     backwardrankingdict, backwardrankinglist = \
         calc_simple_rank(backwardgain, backwardvariablelist, backwardbias,
                          noderankdata, rank_method)
