@@ -81,8 +81,6 @@ def setup_infodynamics_te(infodynamicsloc,
     available in JIDT 1.3.
     """
 
-    # TODO: Allow for automated embedding dimension algorithms to be applied
-
     if not jpype.isJVMStarted():
         jpype.startJVM(jpype.getDefaultJVMPath(),
                        "-Xms32M",
@@ -126,9 +124,6 @@ def setup_infodynamics_te(infodynamicsloc,
         """The Kraskov method is the recommended method and also provides
         methods for auto-embedding. The Ragqitz criterion auto-embedding method
         will be enabled as the default.
-
-        Methods for returning the k, k_tau, l and l_tau used will be
-        implemented.
 
         """
 
@@ -232,8 +227,7 @@ def setup_infodynamics_te(infodynamicsloc,
 
 
 def calc_infodynamics_te(infodynamicsloc, normalize, calcmethod,
-                         affected_data, causal_data, test_significance=False,
-                         significance_permutations=30, **parameters):
+                         affected_data, causal_data, **parameters):
     """Calculates the transfer entropy for a specific timelag (equal to
     prediction horison) between two sets of time series data.
 
@@ -248,6 +242,16 @@ def calc_infodynamics_te(infodynamicsloc, normalize, calcmethod,
 
     teCalc = setup_infodynamics_te(infodynamicsloc, normalize, calcmethod,
                                    **parameters)
+
+    if 'test_signifiance' in parameters:
+        test_significance = parameters['test_significance']
+    else:
+        test_significance = False
+
+    if 'significance_permutations' in parameters:
+        significance_permutations = parameters['significance_permutations']
+    else:
+        significance_permutations = 30
 
     sourceArray = causal_data.tolist()
     destArray = affected_data.tolist()
