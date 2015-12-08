@@ -142,8 +142,10 @@ class WeightcalcData:
                                                    scenario)
             else:
                 # Still norm centre the data
-                self.inputdata_normstep = data_processing.subtract_mean(
-                    self.inputdata_raw)
+                # This breaks when trying to use discrete methods
+#                self.inputdata_normstep = data_processing.subtract_mean(
+#                    self.inputdata_raw)
+                self.inputdata_normstep = self.inputdata_raw
 
         elif self.datatype == 'function':
             import datagen

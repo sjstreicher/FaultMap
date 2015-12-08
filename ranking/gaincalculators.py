@@ -339,10 +339,11 @@ class TransentWeightcalc:
             logging.info("The maximum directional TE between " + causevar +
                          " and " + affectedvar + " is: " +
                          str(maxval_directional))
-            k_hist_fwd, k_tau_fwd, l_hist_fwd, l_tau_fwd, delay_fwd = \
-                proplist_fwd[delay_index_directional]
-            k_hist_bwd, k_tau_bwd, l_hist_bwd, l_tau_bwd, delay_bwd = \
-                proplist_bwd[delay_index_directional]
+            if proplist_fwd[0] is not None:
+                k_hist_fwd, k_tau_fwd, l_hist_fwd, l_tau_fwd, delay_fwd = \
+                    proplist_fwd[delay_index_directional]
+                k_hist_bwd, k_tau_bwd, l_hist_bwd, l_tau_bwd, delay_bwd = \
+                    proplist_bwd[delay_index_directional]
 
         elif report_basis == 'absolute':
             # Repeat for absolute case
@@ -406,10 +407,12 @@ class TransentWeightcalc:
                     threshpass_directional]
 
         # All this unpacking is probably unnecessary
-        auxdataline = [k_hist_fwd, k_tau_fwd, l_hist_fwd, l_tau_fwd, delay_fwd,
-                       k_hist_bwd, k_tau_bwd, l_hist_bwd, l_tau_bwd, delay_bwd]
+        if proplist_fwd[0] is not None:
+            auxdataline = \
+                [k_hist_fwd, k_tau_fwd, l_hist_fwd, l_tau_fwd, delay_fwd,
+                 k_hist_bwd, k_tau_bwd, l_hist_bwd, l_tau_bwd, delay_bwd]
 
-        dataline = dataline + auxdataline
+            dataline = dataline + auxdataline
         datastore.append(dataline)
 
         logging.info("The corresponding delay is: " +
