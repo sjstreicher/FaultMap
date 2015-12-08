@@ -106,8 +106,8 @@ class WeightcalcData:
 
         # Get any parameters for Kraskov method
         if 'transfer_entropy_kraskov' in self.methods:
-            self.kraskov_parameters = \
-                self.caseconfig[settings_name]['kraskov_parameters']
+            self.additional_parameters = \
+                self.caseconfig[settings_name]['additional_parameters']
 
         if self.datatype == 'file':
             # Get path to time series data input file in standard format

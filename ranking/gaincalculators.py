@@ -241,7 +241,7 @@ class TransentWeightcalc:
             self.te_thresh_method = weightcalcdata.te_thresh_method
 
         if self.estimator == 'kraskov':
-            self.parameters = weightcalcdata.kraskov_parameters
+            self.parameters = weightcalcdata.additional_parameters
         else:
             self.parameters = None
 
@@ -265,7 +265,7 @@ class TransentWeightcalc:
                                               self.estimator,
                                               affectedvardata.T,
                                               causevardata.T,
-                                              self.parameters)
+                                              **self.parameters)
 
         transent_bwd, auxdata_bwd = \
             transentropy.calc_infodynamics_te(self.infodynamicsloc,
@@ -273,7 +273,7 @@ class TransentWeightcalc:
                                               self.estimator,
                                               causevardata.T,
                                               affectedvardata.T,
-                                              self.parameters)
+                                              **self.parameters)
 
         transent_directional = transent_fwd - transent_bwd
         transent_absolute = transent_fwd

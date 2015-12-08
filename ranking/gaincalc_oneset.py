@@ -107,12 +107,6 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                     (box[:, affectedvarindex]
                         [startindex+delay:startindex+size+delay])
 
-                # Need to extract significance here for methods that allow it
-                # Same for properties
-
-                # It is possible that I just temporarily broke the correlation
-                # weight calculators
-
                 weight, auxdata = \
                     weightcalculator.calcweight(causevardata,
                                                 affectedvardata,
