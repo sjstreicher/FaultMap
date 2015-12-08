@@ -4,6 +4,9 @@ FaultMap
 .. image:: https://travis-ci.org/SimonStreicher/FaultMap.png?branch=master
    :target: https://travis-ci.org/SimonStreicher/FaultMap
    
+.. image:: https://landscape.io/github/SimonStreicher/FaultMap/master/landscape.svg?style=flat
+   :target: https://landscape.io/github/SimonStreicher/FaultMap/master
+   :alt: Code Health
 
 FaultMap is a process fault detection/diagnosis tool.
 Causal links between processes elements are identified using information theory measures.
