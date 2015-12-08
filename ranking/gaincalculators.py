@@ -67,7 +67,7 @@ class CorrWeightcalc(object):
         return [self.threshcorr]
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
-               weightlist, weight_array, delay_array, datastore):
+               weightlist, weight_array, delay_array, datastore, proplist):
         """Calculates and reports the relevant output for each combination
         of variables tested.
 
@@ -228,7 +228,11 @@ class TransentWeightcalc:
     def __init__(self, weightcalcdata, estimator):
         self.data_header = ['causevar', 'affectedvar', 'base_ent',
                             'max_ent', 'max_delay', 'max_index', 'threshold',
-                            'threshpass']
+                            'threshpass',
+                            'k_hist_fwd', 'k_tau_fwd', 'l_hist_fwd',
+                            'l_tau_fwd', 'delay_fwd',
+                            'k_hist_bwd', 'k_tau_bwd', 'l_hist_bwd',
+                            'l_tau_bwd', 'delay_bwd']
 
         self.estimator = estimator
         self.normalize = weightcalcdata.normalize
@@ -237,9 +241,9 @@ class TransentWeightcalc:
             self.te_thresh_method = weightcalcdata.te_thresh_method
 
         if self.estimator == 'kraskov':
-            self.parameters = weightcalcdata.kraskov_parameters
+            self.parameters = weightcalcdata.additional_parameters
         else:
-            self.parameters = None
+            self.parameters = {}
 
     def calcweight(self, causevardata, affectedvardata, weightcalcdata,
                    causevarindex, affectedvarindex):
@@ -261,7 +265,7 @@ class TransentWeightcalc:
                                               self.estimator,
                                               affectedvardata.T,
                                               causevardata.T,
-                                              self.parameters)
+                                              **self.parameters)
 
         transent_bwd, auxdata_bwd = \
             transentropy.calc_infodynamics_te(self.infodynamicsloc,
@@ -269,19 +273,10 @@ class TransentWeightcalc:
                                               self.estimator,
                                               causevardata.T,
                                               affectedvardata.T,
-                                              self.parameters)
+                                              **self.parameters)
 
         transent_directional = transent_fwd - transent_bwd
         transent_absolute = transent_fwd
-
-        # TODO: Do something correct and useful with these
-        # significance calculations
-
-#        print significance_fwd
-#        print significance_bwd
-
-#        significance_fwd = auxdata_fwd[0]
-#        significance_bwd = auxdata_bwd[0]
 
         # Do not pass negatives on to weight array
 #        if transent_directional < 0:
@@ -294,7 +289,7 @@ class TransentWeightcalc:
             [auxdata_fwd, auxdata_bwd]
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
-               weightlist, weight_array, delay_array, datastore):
+               weightlist, weight_array, delay_array, datastore, proplist):
         """Calculates and reports the relevant output for each combination
         of variables tested.
 
@@ -309,8 +304,16 @@ class TransentWeightcalc:
 
         # We already know that when dealing with transfer entropy
         # the weightlist will consist of a list of lists
-        weightlist_directional = weightlist[0]
-        weightlist_absolute = weightlist[1]
+        weightlist_directional, weightlist_absolute = weightlist
+
+        proplist_fwd, proplist_bwd = proplist
+
+        # Not supposed to differ among delay tests
+        # TODO: Confirm this
+#        k_hist_fwd, k_tau_fwd, l_hist_fwd, l_tau_fwd, delay_fwd = \
+#            proplist_fwd[0]
+#        k_hist_bwd, k_tau_bwd, l_hist_bwd, l_tau_bwd, delay_bwd = \
+#            proplist_bwd[0]
 
         size = weightcalcdata.testsize
         startindex = weightcalcdata.startindex
@@ -336,6 +339,11 @@ class TransentWeightcalc:
             logging.info("The maximum directional TE between " + causevar +
                          " and " + affectedvar + " is: " +
                          str(maxval_directional))
+            if proplist_fwd[0] is not None:
+                k_hist_fwd, k_tau_fwd, l_hist_fwd, l_tau_fwd, delay_fwd = \
+                    proplist_fwd[delay_index_directional]
+                k_hist_bwd, k_tau_bwd, l_hist_bwd, l_tau_bwd, delay_bwd = \
+                    proplist_bwd[delay_index_directional]
 
         elif report_basis == 'absolute':
             # Repeat for absolute case
@@ -351,6 +359,10 @@ class TransentWeightcalc:
                 bestdelay_absolute
             bestdelay_sample = bestdelay_sample_absolute
             delay_array = delay_array_absolute
+            k_hist_fwd, k_tau_fwd, l_hist_fwd, l_tau_fwd, delay_fwd = \
+                proplist_fwd[delay_index_absolute]
+            k_hist_bwd, k_tau_bwd, l_hist_bwd, l_tau_bwd, delay_bwd = \
+                proplist_bwd[delay_index_absolute]
 
         if weightcalcdata.sigtest:
             self.te_thresh_method = weightcalcdata.te_thresh_method
@@ -394,6 +406,13 @@ class TransentWeightcalc:
                     str(delay_index_directional), self.threshent_directional,
                     threshpass_directional]
 
+        # All this unpacking is probably unnecessary
+        if proplist_fwd[0] is not None:
+            auxdataline = \
+                [k_hist_fwd, k_tau_fwd, l_hist_fwd, l_tau_fwd, delay_fwd,
+                 k_hist_bwd, k_tau_bwd, l_hist_bwd, l_tau_bwd, delay_bwd]
+
+            dataline = dataline + auxdataline
         datastore.append(dataline)
 
         logging.info("The corresponding delay is: " +
@@ -446,11 +465,11 @@ class TransentWeightcalc:
 
             surr_te_fwd.append(transentropy.calc_infodynamics_te(
                     self.infodynamicsloc, self.normalize, self.estimator,
-                    affected_data, surr_tsdata[n][0, :], self.parameters)[0])
+                    affected_data, surr_tsdata[n][0, :], **self.parameters)[0])
 
             surr_te_bwd.append(transentropy.calc_infodynamics_te(
                     self.infodynamicsloc, self.normalize, self.estimator,
-                    surr_tsdata[n][0, :], affected_data, self.parameters)[0])
+                    surr_tsdata[n][0, :], affected_data, **self.parameters)[0])
 
         surr_te_directional = \
             [surr_te_fwd[n] - surr_te_bwd[n] for n in range(num)]

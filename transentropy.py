@@ -81,8 +81,6 @@ def setup_infodynamics_te(infodynamicsloc,
     available in JIDT 1.3.
     """
 
-    # TODO: Allow for automated embedding dimension algorithms to be applied
-
     if not jpype.isJVMStarted():
         jpype.startJVM(jpype.getDefaultJVMPath(),
                        "-Xms32M",
@@ -127,9 +125,6 @@ def setup_infodynamics_te(infodynamicsloc,
         methods for auto-embedding. The Ragqitz criterion auto-embedding method
         will be enabled as the default.
 
-        Methods for returning the k, k_tau, l and l_tau used will be
-        implemented.
-
         """
 
         teCalcClass = \
@@ -159,8 +154,18 @@ def setup_infodynamics_te(infodynamicsloc,
                 # nature of our data.
                 # Use a maximum history and tau search of 5
                 teCalc.setProperty("AUTO_EMBED_METHOD", "RAGWITZ")
-                teCalc.setProperty("AUTO_EMBED_K_SEARCH_MAX", "5")
-                teCalc.setProperty("AUTO_EMBED_TAU_SEARCH_MAX", "5")
+                if 'k_search_max' in parameters:
+                    ksearchmax = parameters['k_search_max']
+                else:
+                    ksearchmax = 5
+                teCalc.setProperty("AUTO_EMBED_K_SEARCH_MAX",
+                                   str(ksearchmax))
+                if 'tau_search_max' in parameters:
+                    tausearchmax = parameters['tau_search_max']
+                else:
+                    tausearchmax = 5
+                teCalc.setProperty("AUTO_EMBED_TAU_SEARCH_MAX",
+                                   str(tausearchmax))
 
         # Note: If setting the delay is needed to be changed on each iteration,
         # it may be best to do this outside the loop and initialise teCalc
@@ -207,25 +212,24 @@ def setup_infodynamics_te(infodynamicsloc,
             base = parameters['base']
         else:
             base = 2
-            print "base default of 2 (binary) is used"
+#            print "base default of 2 (binary) is used"
 
         if ('destHistoryEmbedLength' in parameters):
             destHistoryEmbedLength = parameters['destHistoryEmbedLength']
         else:
             destHistoryEmbedLength = 1
-            print "base default of 2 (binary) is used"
 
         base = 2
         destHistoryEmbedLength = 1
 #        sourceHistoryEmbeddingLength = None  # not used at the moment
         teCalc = teCalcClass(base, destHistoryEmbedLength)
+        teCalc.initialise()
 
     return teCalc
 
 
 def calc_infodynamics_te(infodynamicsloc, normalize, calcmethod,
-                         affected_data, causal_data, test_significance=False,
-                         significance_permutations=30, **parameters):
+                         affected_data, causal_data, **parameters):
     """Calculates the transfer entropy for a specific timelag (equal to
     prediction horison) between two sets of time series data.
 
@@ -241,14 +245,28 @@ def calc_infodynamics_te(infodynamicsloc, normalize, calcmethod,
     teCalc = setup_infodynamics_te(infodynamicsloc, normalize, calcmethod,
                                    **parameters)
 
+    if 'test_signifiance' in parameters:
+        test_significance = parameters['test_significance']
+    else:
+        test_significance = False
+
+    if 'significance_permutations' in parameters:
+        significance_permutations = parameters['significance_permutations']
+    else:
+        significance_permutations = 30
+
     sourceArray = causal_data.tolist()
     destArray = affected_data.tolist()
 
     sourceArrayJava = jpype.JArray(jpype.JDouble, 1)(sourceArray)
     destArrayJava = jpype.JArray(jpype.JDouble, 1)(destArray)
 
-    teCalc.setObservations(sourceArrayJava,
-                           destArrayJava)
+    if calcmethod == 'discrete':
+        sourceArray = map(int, sourceArray)
+        destArray = map(int, destArray)
+        teCalc.addObservations(sourceArray, destArray)
+    else:
+        teCalc.setObservations(sourceArrayJava, destArrayJava)
 
     transentropy = teCalc.computeAverageLocalOfObservations()
 
@@ -258,13 +276,16 @@ def calc_infodynamics_te(infodynamicsloc, normalize, calcmethod,
         significance = None
 
     # Get all important properties from used teCalc
-    k_history = teCalc.getProperty("k_HISTORY")
-    k_tau = teCalc.getProperty("k_TAU")
-    l_history = teCalc.getProperty("l_HISTORY")
-    l_tau = teCalc.getProperty("l_TAU")
-    delay = teCalc.getProperty("DELAY")
+    if calcmethod != 'discrete':
+        k_history = teCalc.getProperty("k_HISTORY")
+        k_tau = teCalc.getProperty("k_TAU")
+        l_history = teCalc.getProperty("l_HISTORY")
+        l_tau = teCalc.getProperty("l_TAU")
+        delay = teCalc.getProperty("DELAY")
 
-    properties = [k_history, k_tau, l_history, l_tau, delay]
+        properties = [k_history, k_tau, l_history, l_tau, delay]
+    else:
+        properties = None
 
     return transentropy, [significance, properties]
 

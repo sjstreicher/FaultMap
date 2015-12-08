@@ -187,9 +187,9 @@ def remove_duplicates(intersection_list, node, upper_child,
                     removed_edge = [node, duplicate]
                     removed_edges.append(removed_edge)
             else:
-                    simplified_graph.remove_edge(node, duplicate)
-                    removed_edge = [node, duplicate]
-                    removed_edges.append(removed_edge)
+                simplified_graph.remove_edge(node, duplicate)
+                removed_edge = [node, duplicate]
+                removed_edges.append(removed_edge)
 
     return simplified_graph, removed_edges
 
@@ -227,7 +227,7 @@ def delete_loworder_edges(graph, max_depth, weight_discretion):
 
     removed_edges = []
 
-    for node, index in enumerate(simplified_graph.nodes_iter()):
+    for index, node in enumerate(simplified_graph.nodes_iter()):
         children_lists = []
         logging.info("Currently processing node: " + str(index + 1) + "/" +
                      str(len(simplified_graph.nodes())))
