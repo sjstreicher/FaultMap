@@ -237,10 +237,10 @@ class WeightcalcData:
             self.boxindexes = [0]
 
         if self.delaytype == 'datapoints':
-                self.actual_delays = [(delay * self.sampling_rate *
-                                       self.sub_sampling_interval)
-                                      for delay in self.delays]
-                self.sample_delays = self.delays
+            self.actual_delays = [(delay * self.sampling_rate *
+                                  self.sub_sampling_interval)
+                                  for delay in self.delays]
+            self.sample_delays = self.delays
         elif self.delaytype == 'intervals':
             self.actual_delays = [int(round(delay/self.sampling_rate)) *
                                   self.sampling_rate for delay in self.delays]
@@ -327,15 +327,15 @@ def calc_weights(weightcalcdata, method, scenario):
         newconnectionmatrix[:, cause_delindex] = np.zeros(vardims)
     # Substitute rows not used with zeros in connectionmatrix
     for affected_delindex in affected_dellist:
-        newconnectionmatrix[affected_dellist, :] = np.zeros(vardims)
+        newconnectionmatrix[affected_delindex, :] = np.zeros(vardims)
 
     # Initiate headerline for weightstore file
     # Create "Delay" as header for first row
     headerline = ['Delay']
 
     for affectedvarindex in weightcalcdata.affectedvarindexes:
-            affectedvarname = weightcalcdata.variables[affectedvarindex]
-            headerline.append(affectedvarname)
+        affectedvarname = weightcalcdata.variables[affectedvarindex]
+        headerline.append(affectedvarname)
 
     # Define filename structure for CSV file containing weights between
     # a specific causevar and all the subsequent affectedvars
@@ -406,7 +406,7 @@ def calc_weights(weightcalcdata, method, scenario):
                 # and save output in similar format to
                 # standard weight calculation results
             signalentlist = []
-            for varindex, variable in enumerate(weightcalcdata.variables):
+            for varindex, _ in enumerate(weightcalcdata.variables):
                 vardata = box[:, varindex][startindex:startindex+size]
                 entropy = data_processing.calc_signalent(vardata,
                                                          weightcalcdata)

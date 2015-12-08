@@ -97,11 +97,11 @@ def read_variables(raw_tsdata):
 
 
 def writecsv(filename, items, header=None):
-        """Write CSV directly"""
-        with open(filename, 'wb') as f:
-            if header is not None:
-                csv.writer(f).writerow(header)
-            csv.writer(f).writerows(items)
+    """Write CSV directly"""
+    with open(filename, 'wb') as f:
+        if header is not None:
+            csv.writer(f).writerow(header)
+        csv.writer(f).writerows(items)
 
 
 def fft_calculation(raw_tsdata, normalised_tsdata, variables, sampling_rate,
