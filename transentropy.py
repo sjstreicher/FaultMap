@@ -158,12 +158,14 @@ def setup_infodynamics_te(infodynamicsloc,
                     ksearchmax = parameters['k_search_max']
                 else:
                     ksearchmax = 5
-                teCalc.setProperty("AUTO_EMBED_K_SEARCH_MAX", ksearchmax)
+                teCalc.setProperty("AUTO_EMBED_K_SEARCH_MAX",
+                                   str(ksearchmax))
                 if 'tau_search_max' in parameters:
                     tausearchmax = parameters['tau_search_max']
                 else:
                     tausearchmax = 5
-                teCalc.setProperty("AUTO_EMBED_TAU_SEARCH_MAX", tausearchmax)
+                teCalc.setProperty("AUTO_EMBED_TAU_SEARCH_MAX",
+                                   str(tausearchmax))
 
         # Note: If setting the delay is needed to be changed on each iteration,
         # it may be best to do this outside the loop and initialise teCalc
