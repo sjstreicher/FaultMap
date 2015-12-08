@@ -215,18 +215,18 @@ def setup_infodynamics_te(infodynamicsloc,
             base = parameters['base']
         else:
             base = 2
-            print "base default of 2 (binary) is used"
+#            print "base default of 2 (binary) is used"
 
         if ('destHistoryEmbedLength' in parameters):
             destHistoryEmbedLength = parameters['destHistoryEmbedLength']
         else:
             destHistoryEmbedLength = 1
-            print "base default of 2 (binary) is used"
 
         base = 2
         destHistoryEmbedLength = 1
 #        sourceHistoryEmbeddingLength = None  # not used at the moment
         teCalc = teCalcClass(base, destHistoryEmbedLength)
+        teCalc.initialise()
 
     return teCalc
 
@@ -255,8 +255,12 @@ def calc_infodynamics_te(infodynamicsloc, normalize, calcmethod,
     sourceArrayJava = jpype.JArray(jpype.JDouble, 1)(sourceArray)
     destArrayJava = jpype.JArray(jpype.JDouble, 1)(destArray)
 
-    teCalc.setObservations(sourceArrayJava,
-                           destArrayJava)
+    if calcmethod == 'discrete':
+        sourceArray = map(int, sourceArray)
+        destArray = map(int, destArray)
+        teCalc.addObservations(sourceArray, destArray)
+    else:
+        teCalc.setObservations(sourceArrayJava, destArrayJava)
 
     transentropy = teCalc.computeAverageLocalOfObservations()
 
@@ -266,13 +270,16 @@ def calc_infodynamics_te(infodynamicsloc, normalize, calcmethod,
         significance = None
 
     # Get all important properties from used teCalc
-    k_history = teCalc.getProperty("k_HISTORY")
-    k_tau = teCalc.getProperty("k_TAU")
-    l_history = teCalc.getProperty("l_HISTORY")
-    l_tau = teCalc.getProperty("l_TAU")
-    delay = teCalc.getProperty("DELAY")
+    if calcmethod != 'discrete':
+        k_history = teCalc.getProperty("k_HISTORY")
+        k_tau = teCalc.getProperty("k_TAU")
+        l_history = teCalc.getProperty("l_HISTORY")
+        l_tau = teCalc.getProperty("l_TAU")
+        delay = teCalc.getProperty("DELAY")
 
-    properties = [k_history, k_tau, l_history, l_tau, delay]
+        properties = [k_history, k_tau, l_history, l_tau, delay]
+    else:
+        properties = None
 
     return transentropy, [significance, properties]
 
