@@ -187,9 +187,9 @@ def remove_duplicates(intersection_list, node, upper_child,
                     removed_edge = [node, duplicate]
                     removed_edges.append(removed_edge)
             else:
-                    simplified_graph.remove_edge(node, duplicate)
-                    removed_edge = [node, duplicate]
-                    removed_edges.append(removed_edge)
+                simplified_graph.remove_edge(node, duplicate)
+                removed_edge = [node, duplicate]
+                removed_edges.append(removed_edge)
 
     return simplified_graph, removed_edges
 
