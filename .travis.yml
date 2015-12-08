@@ -10,11 +10,14 @@ before_install:
   - sudo apt-get install -qq pkg-config default-jdk wget python python-{dev,pip} cython lib{freetype6,xft,png,xext,openblas,lapack,hdf5-serial}-dev gfortran dvipng
   - sudo apt-get --no-install-recommends install texlive-base
   # Install miniconda
+  # This comes from http://conda.pydata.org/docs/travis.html
   - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-  - chmod +x miniconda.sh
-  - ./miniconda.sh -b
-  - export PATH=$TRAVIS_BUILD_DIR/miniconda2/bin:$PATH
-  - conda update --yes conda
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda info -a
   # The next couple lines fix a crash with multiprocessing on Travis and are not specific to using Miniconda
   - sudo rm -rf /dev/shm
   - sudo ln -s /run/shm /dev/shm
