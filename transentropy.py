@@ -108,7 +108,7 @@ def setup_infodynamics_te(infodynamicsloc,
         # standard deviations from the mean (otherwise it is an absolute value)
 
         k = parameters.get('k', 1)
-        kernel_width = parameters.get('kernel_width', defalt=0.5)
+        kernel_width = parameters.get('kernel_width', 0.5)
 
         teCalc.initialise(k, kernel_width)
 
