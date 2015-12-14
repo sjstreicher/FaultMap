@@ -59,7 +59,7 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
                                         True, 'kernel',
                                         x_hist_norm[0], y_hist_norm[0])
             self.entropies_infodyn_kernel.append(result_infodyn)
-            print("Infodynamics TE result: %.4f bits" % (result_infodyn))
+            print("Infodynamics TE result: %.4f bits"%result_infodyn)
 
         print self.entropies_infodyn_kernel
 
@@ -91,7 +91,7 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
                         test_significance=True,
                         auto_embed=False)
             self.entropies_infodyn_kraskov.append(result_infodyn)
-            print("Infodynamics TE result: %.4f nats" % (result_infodyn))
+            print("Infodynamics TE result: %.4f nats"%result_infodyn)
 
             print properties
             print significance
@@ -126,7 +126,7 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
                         test_significance=True,
                         auto_embed=True)
             self.entropies_infodyn_kraskov.append(result_infodyn)
-            print("Infodynamics TE result: %.4f nats" % (result_infodyn))
+            print("Infodynamics TE result: %.4f nats"%result_infodyn)
 
             print properties
             print significance
