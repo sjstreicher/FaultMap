@@ -1,3 +1,4 @@
+
 """This module contains the methods used in the calculation of transfer
 entropy.
 
@@ -106,7 +107,7 @@ def setup_infodynamics_te(infodynamicsloc,
         # then this kernel width corresponds to the number of
         # standard deviations from the mean (otherwise it is an absolute value)
 
-        k = parameters.get('k', default=1)
+        k = parameters.get('k', 1)
         kernel_width = parameters.get('kernel_width', defalt=0.5)
 
         teCalc.initialise(k, kernel_width)
@@ -146,10 +147,10 @@ def setup_infodynamics_te(infodynamicsloc,
                 # Use a maximum history and tau search of 5
                 teCalc.setProperty("AUTO_EMBED_METHOD", "RAGWITZ")
 
-                ksearchmax = parameters.get('k_search_max', default=5)
+                ksearchmax = parameters.get('k_search_max', 5)
                 teCalc.setProperty("AUTO_EMBED_K_SEARCH_MAX",
                                    str(ksearchmax))
-                tausearchmax = parameters.get('tau_search_max', default=5)
+                tausearchmax = parameters.get('tau_search_max', 5)
                 teCalc.setProperty("AUTO_EMBED_TAU_SEARCH_MAX",
                                    str(tausearchmax))
 
@@ -194,11 +195,10 @@ def setup_infodynamics_te(infodynamicsloc,
         # to include - this is l in Schreiber's notation
         # TODO: Allow these settings to be defined by configuration file
 
-        base = parameters.get('base', default=2)
+        base = parameters.get('base', 2)
 #            print "base default of 2 (binary) is used"
 
-        destHistoryEmbedLength = parameters.get('destHistoryEmbedLength',
-                                                default=1)
+        destHistoryEmbedLength = parameters.get('destHistoryEmbedLength', 1)
 
         base = 2
         destHistoryEmbedLength = 1
@@ -226,10 +226,9 @@ def calc_infodynamics_te(infodynamicsloc, normalize, calcmethod,
     teCalc = setup_infodynamics_te(infodynamicsloc, normalize, calcmethod,
                                    **parameters)
 
-    test_significance = parameters.get('test_signifiance', default=False)
+    test_significance = parameters.get('test_signifiance', False)
 
-    significance_permutations = parameters.get('significance_permutations',
-                                               default=30)
+    significance_permutations = parameters.get('significance_permutations', 30)
 
     sourceArray = causal_data.tolist()
     destArray = affected_data.tolist()
