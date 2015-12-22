@@ -58,7 +58,6 @@ class NoderankData:
 
         """
 
-        "The scenario name is: " + scenario
         settings_name = self.caseconfig[scenario]['settings']
         self.connections_used = (self.caseconfig[settings_name]
                                  ['use_connections'])
