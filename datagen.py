@@ -23,7 +23,8 @@ def connectionmatrix_maker(N):
         variables = ['X {}'.format(i) for i in range(1, N+1)]
         connectionmatrix = np.ones((N, N), dtype=int)
         return variables, connectionmatrix
-    maker.__doc__ = """ Generates a {0}x{0} connection matrix for use in tests.""".format(N)
+    maker.__doc__ = ("Generates a {0}x{0} connection matrix"
+                     "for use in tests.".format(N))
     return maker
 
 connectionmatrix_2x2, connectionmatrix_4x4, connectionmatrix_5x5 = [
