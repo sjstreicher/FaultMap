@@ -271,7 +271,7 @@ def calc_simple_rank(gainmatrix, variables, biasvector, noderankdata,
 
 
 def normalise_rankinglist(rankingdict, originalvariables):
-    normalised_rankingdict = dict()
+    normalised_rankingdict = {}
     for variable in originalvariables:
         normalised_rankingdict[variable] = rankingdict[variable]
 
@@ -309,17 +309,14 @@ def calc_transient_importancediffs(rankingdicts, variablelist):
     for each box in a vector associated with each variable
 
     """
-    transientdict = dict()
-    basevaldict = dict()
-    boxrankdict = dict()
-    rel_boxrankdict = dict()
+    transientdict = {}
+    basevaldict = {}
+    boxrankdict = {}
+    rel_boxrankdict = {}
     for variable in variablelist:
-        diffvect = np.empty((1, len(rankingdicts)-1))[0]
-        rankvect = np.empty((1, len(rankingdicts)))[0]
-        rel_rankvect = np.empty((1, len(rankingdicts)))[0]
-        rel_rankvect[:] = np.NAN
-        rankvect[:] = np.NAN
-        diffvect[:] = np.NAN
+        diffvect = np.full((len(rankingdicts)-1,), np.NAN)
+        rankvect = np.full((len(rankingdicts),), np.NAN)
+        rel_rankvect = np.full((len(rankingdicts),), np.NAN)
         basevaldict[variable] = rankingdicts[0][variable]
         # Get initial previous importance
         prev_importance = basevaldict[variable]
@@ -348,7 +345,7 @@ def create_importance_graph(variablelist, closedconnections,
 
     opengraph = nx.DiGraph()
 
-    # Verify why these indexes are switched and correct
+    # TODO: Verify why these indexes are switched and correct
     for col, row in itertools.izip(openconnections.nonzero()[1],
                                    openconnections.nonzero()[0]):
 
