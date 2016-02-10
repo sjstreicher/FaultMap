@@ -817,31 +817,35 @@ def fig_rankings_boxes(graphname):
     plt.close()
 
     return None
+
 #######################################################################
 # Plot measure values vs. sample delay for range of first order time
 # constants.
 #######################################################################
 
-
 graphs = [
 
           [fig_values_vs_delays,
            [
-#            'firstorder_noiseonly_cc_vs_delays_scen01',
-#            'firstorder_noiseonly_abs_te_kernel_vs_delays_scen01',
-#            'firstorder_noiseonly_dir_te_kernel_vs_delays_scen01',
-#            'firstorder_noiseonly_abs_te_kraskov_vs_delays_scen01',
-#            'firstorder_noiseonly_dir_te_kraskov_vs_delays_scen01',
-#            'firstorder_sineonly_cc_vs_delays_scen01',
-#            'firstorder_sineonly_abs_te_kernel_vs_delays_scen01',
-#            'firstorder_sineonly_dir_te_kernel_vs_delays_scen01',
-#            'firstorder_sineonly_abs_te_kraskov_vs_delays_scen01',
-#            'firstorder_sineonly_dir_te_kraskov_vs_delays_scen01',
-#            'firstorder_noiseandsine_cc_vs_delays_scen01',
-#            'firstorder_noiseandsine_abs_te_kernel_vs_delays_scen01',
-#            'firstorder_noiseandsine_dir_te_kernel_vs_delays_scen01',
-#            'firstorder_noiseandsine_abs_te_kraskov_vs_delays_scen01',
-#            'firstorder_noiseandsine_dir_te_kraskov_vs_delays_scen01',
+            'firstorder_noiseonly_cc_vs_delays_scen01',
+            'firstorder_noiseonly_abs_te_kernel_vs_delays_scen01',
+            'firstorder_noiseonly_dir_te_kernel_vs_delays_scen01',
+            'firstorder_noiseonly_abs_te_kraskov_vs_delays_scen01',
+            'firstorder_noiseonly_dir_te_kraskov_vs_delays_scen01',
+            'firstorder_noiseonly_abs_te_kraskov_vs_delays_scen01_autoembed',
+            'firstorder_noiseonly_dir_te_kraskov_vs_delays_scen01_autoembed',
+            'firstorder_sineonly_cc_vs_delays_scen01',
+            'firstorder_sineonly_abs_te_kernel_vs_delays_scen01',
+            'firstorder_sineonly_dir_te_kernel_vs_delays_scen01',
+            'firstorder_sineonly_abs_te_kraskov_vs_delays_scen01',
+            'firstorder_sineonly_dir_te_kraskov_vs_delays_scen01',
+            'firstorder_sineonly_abs_te_kraskov_vs_delays_scen01_autoembed',
+            'firstorder_sineonly_dir_te_kraskov_vs_delays_scen01_autoembed',
+            'firstorder_noiseandsine_cc_vs_delays_scen01',
+            'firstorder_noiseandsine_abs_te_kernel_vs_delays_scen01',
+            'firstorder_noiseandsine_dir_te_kernel_vs_delays_scen01',
+            'firstorder_noiseandsine_abs_te_kraskov_vs_delays_scen01',
+            'firstorder_noiseandsine_dir_te_kraskov_vs_delays_scen01',
 #              'firstorder_noiseonly_abs_te_kernel_vs_delays_scen04',
 #              'firstorder_noiseonly_abs_te_kernel_vs_delays_scen05',
             ]],
@@ -1099,10 +1103,10 @@ graphs = [
 # Plot cross correlation over delay for selected variables
 #######################################################################
 
-           [lambda graphname: fig_diffvar_vs_delay(
-               graphname, ['PIC43024.PV', 'PIC43024.MV', 'FIC43006.PV', 'FIC43006.MV'], "Destination: {}"),
-            ['propylene_compressor_raw_set3_cc_PIC43024PV_selected',
-             ]],
+#           [lambda graphname: fig_diffvar_vs_delay(
+#               graphname, ['PIC43024.PV', 'PIC43024.MV', 'FIC43006.PV', 'FIC43006.MV'], "Destination: {}"),
+#            ['propylene_compressor_raw_set3_cc_PIC43024PV_selected',
+#             ]],
 
 
 #######################################################################
@@ -1132,6 +1136,7 @@ for plot_function, graphnames in graphs:
     for graphname in graphnames:
         # Test whether the figure already exists
         testlocation = graph_filename_template.format(graphname)
+        print "Now plotting " + graphname
         if not os.path.exists(testlocation):
             plot_function(graphname)
         else:
