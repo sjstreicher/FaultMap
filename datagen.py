@@ -156,7 +156,7 @@ def sinusoid_shift_gen(samples, delay, period=100, noiseamp=0.1, N=5,
     if addnoise:
         sine_noise = (seed_randn(117, len(tspan)) - 0.5) * noiseamp
 
-        sine = sine + sine_noise
+        sine += sine_noise
 
     vectors = []
 
@@ -192,7 +192,7 @@ def sinusoid_gen(samples, delay, period=0.01, noiseamp=1.0):
 
     affected_random_add = (seed_rand(117, samples + delay) - 0.5) * noiseamp
 
-    affected = affected + affected_random_add
+    affected += affected_random_add
 
     for i in range(delay, len(cause)):
         cause_closed[i] = affected[i] + cause[i]

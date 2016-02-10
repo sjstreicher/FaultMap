@@ -9,23 +9,23 @@ example, individual loop key performance indicators) as well.
 
 """
 # Standard libraries
-import os
+import csv
+import fnmatch
+import itertools
 import json
 import logging
-import csv
+import operator
+import os
+
 import networkx as nx
 import numpy as np
-import operator
-import itertools
-import fnmatch
 
 # Own libraries
 import data_processing
 import config_setup
-import ranking
+
 
 # Networks for tests
-import networkgen
 
 
 class NoderankData:
@@ -58,17 +58,16 @@ class NoderankData:
 
         """
 
-        "The scenario name is: " + scenario
-        settings_name = self.caseconfig[scenario]['settings']
-        self.connections_used = (self.caseconfig[settings_name]
-                                 ['use_connections'])
-        self.bias_used = (self.caseconfig[settings_name]
-                          ['use_bias'])
-        self.dummies = self.caseconfig[settings_name]['dummies']
+        scenario_conf = self.caseconfig[scenario]
+        settings = self.caseconfig[scenario_conf['settings']]
 
-        self.m = self.caseconfig[scenario]['m']
+        self.connections_used = settings['use_connections']
+        self.bias_used = settings['use_bias']
+        self.dummies = settings['dummies']
+
+        self.m = scenario_conf['m']
         if 'katz' in self.rank_methods:
-            self.alpha = self.caseconfig[scenario]['alpha']
+            self.alpha = scenario_conf['alpha']
 
         if self.datatype == 'file':
             # Get the gain matrices directory
@@ -78,8 +77,7 @@ class NoderankData:
             if self.connections_used:
                 # Get connection (adjacency) matrix
                 connectionloc = os.path.join(self.casedir, 'connections',
-                                             self.caseconfig[scenario]
-                                             ['connections'])
+                                             scenario_conf['connections'])
                 self.connectionmatrix, self.variablelist = \
                     data_processing.read_connectionmatrix(connectionloc)
 
@@ -87,8 +85,7 @@ class NoderankData:
                 # Read the bias vector from file
                 # Get the bias vector file location
                 biasloc = os.path.join(self.casedir, 'biasvectors',
-                                       self.caseconfig[scenario]
-                                       ['biasvector'])
+                                       scenario_conf['biasvector'])
                 self.biasvector, _ = \
                     data_processing.read_biasvector(biasloc)
 
@@ -98,7 +95,7 @@ class NoderankData:
 
         elif self.datatype == 'function':
             # Get variables, connection matrix and gainmatrix
-            network_gen = self.caseconfig[scenario]['networkgen']
+            network_gen = scenario_conf['networkgen']
             self.connectionmatrix, self.gainmatrix, \
                 self.variablelist, _ = \
                 eval('networkgen.' + network_gen)()
@@ -274,7 +271,7 @@ def calc_simple_rank(gainmatrix, variables, biasvector, noderankdata,
 
 
 def normalise_rankinglist(rankingdict, originalvariables):
-    normalised_rankingdict = dict()
+    normalised_rankingdict = {}
     for variable in originalvariables:
         normalised_rankingdict[variable] = rankingdict[variable]
 
@@ -312,17 +309,14 @@ def calc_transient_importancediffs(rankingdicts, variablelist):
     for each box in a vector associated with each variable
 
     """
-    transientdict = dict()
-    basevaldict = dict()
-    boxrankdict = dict()
-    rel_boxrankdict = dict()
+    transientdict = {}
+    basevaldict = {}
+    boxrankdict = {}
+    rel_boxrankdict = {}
     for variable in variablelist:
-        diffvect = np.empty((1, len(rankingdicts)-1))[0]
-        rankvect = np.empty((1, len(rankingdicts)))[0]
-        rel_rankvect = np.empty((1, len(rankingdicts)))[0]
-        rel_rankvect[:] = np.NAN
-        rankvect[:] = np.NAN
-        diffvect[:] = np.NAN
+        diffvect = np.full((len(rankingdicts)-1,), np.NAN)
+        rankvect = np.full((len(rankingdicts),), np.NAN)
+        rel_rankvect = np.full((len(rankingdicts),), np.NAN)
         basevaldict[variable] = rankingdicts[0][variable]
         # Get initial previous importance
         prev_importance = basevaldict[variable]
@@ -351,7 +345,7 @@ def create_importance_graph(variablelist, closedconnections,
 
     opengraph = nx.DiGraph()
 
-    # Verify why these indexes are switched and correct
+    # TODO: Verify why these indexes are switched and correct
     for col, row in itertools.izip(openconnections.nonzero()[1],
                                    openconnections.nonzero()[0]):
 
