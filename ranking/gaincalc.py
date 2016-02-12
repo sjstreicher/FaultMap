@@ -370,7 +370,7 @@ def calc_weights(weightcalcdata, method, scenario):
                 weightcalcdata.casename, scenario, name, boxindex)
 
         signalentstoredir = config_setup.ensure_existance(
-            os.path.join(weightcalcdata.saveloc, 'signal_entopries'),
+            os.path.join(weightcalcdata.saveloc, 'signal_entropies'),
             make=True)
 
         signalent_filename_template = \
@@ -442,18 +442,18 @@ def calc_weights(weightcalcdata, method, scenario):
             weight_array, delay_array, datastore]
 
         # Run the script that will handle multiprocessing
-        weight_array, delay_array, datastore = \
+        _, _, datastore = \
             gaincalc_oneset.run(non_iter_args,
                                 weightcalcdata.do_multiprocessing)
 
         ########################################################
 
-        weight_arrays.append(weight_array)
-        delay_arrays.append(delay_array)
+        # weight_arrays.append(weight_array)
+        # delay_arrays.append(delay_array)
         datastores.append(datastore)
 
-    return weight_arrays, delay_arrays, datastores, data_header
-
+    # return weight_arrays, delay_arrays, datastores, data_header
+    return datastores, data_header
 
 def weightcalc(mode, case, writeoutput=False, single_entropies=False,
                fftcalc=False, do_multiprocessing=False):
@@ -470,8 +470,9 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False,
                                     do_multiprocessing)
 
     # Define export directories and filenames
+    # This now moves to post-processing scripts
     weightdir = config_setup.ensure_existance(os.path.join(
-        weightcalcdata.saveloc, 'weightcalc'), make=True)
+        weightcalcdata.saveloc, 'weightdata'), make=True)
 
     filename_template = os.path.join(weightdir, '{}_{}_{}_{}.csv')
 
@@ -479,9 +480,9 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False,
         return filename_template.format(case, scenario,
                                         method, name)
 
-    maxweight_array_name = 'maxweight_array_box{:03d}'
-    delay_array_name = 'delay_array_box{:03d}'
-    weightcalc_data_name = 'weightcalc_data_box{:03d}'
+    # maxweight_array_name = 'maxweight_array_box{:03d}'
+    # delay_array_name = 'delay_array_box{:03d}'
+    # weightcalc_data_name = 'weightcalc_data_box{:03d}'
 
     for scenario in weightcalcdata.scenarios:
         logging.info("Running scenario {}".format(scenario))
@@ -491,38 +492,31 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False,
         for method in weightcalcdata.methods:
             logging.info("Method: " + method)
 
-            # Test whether the 'weightcalc_data_box01' file already exists
-            testlocation = filename(method, 'weightcalc_data_box001')
-            if not os.path.exists(testlocation):
-                # Continue with execution
-                [weight_arrays, delay_arrays, datastores, data_header] = \
-                    calc_weights(weightcalcdata, method, scenario)
+            [weight_arrays, delay_arrays, datastores, data_header] = \
+                calc_weights(weightcalcdata, method, scenario)
 
-                # TODO: Call this code on each weight array as soon as its
-                # calculation is finished.
-
-                for boxindex, boxnumber in \
-                        enumerate(weightcalcdata.boxindexes):
-                    if writeoutput:
-                        # Write arrays to file
-                        np.savetxt(
-                            filename(method,
-                                     maxweight_array_name.format(boxnumber+1)),
-                            weight_arrays[boxindex],
-                            delimiter=',')
-                        np.savetxt(
-                            filename(method,
-                                     delay_array_name.format(boxnumber+1)),
-                            delay_arrays[boxindex],
-                            delimiter=',')
-                        # Write datastore to file
-                        writecsv_weightcalc(
-                            filename(method,
-                                     weightcalc_data_name.format(boxnumber+1)),
-                            datastores[boxindex],
-                            data_header)
-            else:
-                logging.info("The requested results are in existence")
+            for boxindex, boxnumber in \
+                    enumerate(weightcalcdata.boxindexes):
+                if writeoutput:
+                    # Write arrays to file
+                    np.savetxt(
+                        filename(method,
+                                 maxweight_array_name.format(boxnumber+1)),
+                        weight_arrays[boxindex],
+                        delimiter=',')
+                    np.savetxt(
+                        filename(method,
+                                 delay_array_name.format(boxnumber+1)),
+                        delay_arrays[boxindex],
+                        delimiter=',')
+                    # Write datastore to file
+                    writecsv_weightcalc(
+                        filename(method,
+                                 weightcalc_data_name.format(boxnumber+1)),
+                        datastores[boxindex],
+                        data_header)
+        else:
+            logging.info("The requested results are in existence")
 
 if __name__ == '__main__':
     multiprocessing.freezeSupport()
