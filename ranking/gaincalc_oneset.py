@@ -13,15 +13,13 @@ from functools import partial
 import pathos
 from pathos.multiprocessing import ProcessingPool as Pool
 
+import config_setup
+
 from data_processing import result_reconstruction
 
 
 def writecsv_weightcalc(filename, datalines_basis, new_dataline, header):
     """CSV writer customized for use in weightcalc function."""
-
-    # TODO: This needs to make use of a dictionary of some sort in order
-    # to write results collected at different times and write them in the
-    # correct columns
 
     # Check if file is already in existence
     if not os.path.isfile(filename):
@@ -268,6 +266,9 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
     return weight_array, delay_array, datastore
 
 
+
+
+
 def run(non_iter_args, do_multiprocessing):
     [weightcalcdata, weightcalculator,
      box, startindex, size,
@@ -275,6 +276,15 @@ def run(non_iter_args, do_multiprocessing):
      filename, method, boxindex, sigstatus, headerline,
      sig_filename,
      weight_array, delay_array, datastore] = non_iter_args
+
+    def filename(method, name):
+        filename_template = os.path.join(weightstoredir,
+                                     '{}_{}_{}_{}_{}_box{:03d}_{}.csv')
+        return filename_template.format(case, scenario,
+                                    method, name)
+
+    weightstoredir = config_setup.ensure_existance(
+        os.path.join(weightcalcdata.saveloc, 'weightdata'), make=True)
 
     partial_gaincalc_oneset = partial(
         calc_weights_oneset,
@@ -298,11 +308,16 @@ def run(non_iter_args, do_multiprocessing):
         s.join()
         pathos.multiprocessing.__STATE['pool'] = None
 
-        weight_array, delay_array, datastore = \
+        _, _, datastore = \
             result_reconstruction(result, weightcalcdata)
 
     else:
         for causevarindex in weightcalcdata.causevarindexes:
+
+            # Test whether the 'weightdata_data_box01' file already exists
+            testlocation = filename(method, 'weightcalc_data_box001')
+            if not os.path.exists(testlocation):
+
             weight_array, delay_array, datastore = \
                         partial_gaincalc_oneset(causevarindex)
 
