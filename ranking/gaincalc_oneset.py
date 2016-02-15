@@ -2,7 +2,7 @@
 """
 Created on Thu Mar 12 10:56:02 2015
 
-@author: STREICSJ1
+@author: Simon Streicher
 """
 
 import os
@@ -242,10 +242,9 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                         sigthresh_thisvar_neutral, headerline)
 
             # Generate and store report files according to each method
-            [weight_array, delay_array, datastore] = \
+            datastore = \
                 weightcalculator.report(weightcalcdata, causevarindex,
                                         affectedvarindex, weightlist,
-                                        weight_array, delay_array,
                                         datastore, proplist)
 
         # Delete entries from weightcalc matrix not used
@@ -263,10 +262,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
            " [" + str(causevarindex+1) + "/" +
            str(len(weightcalcdata.causevarindexes)) + "]")
 
-    return weight_array, delay_array, datastore
-
-
-
+    return datastore
 
 
 def run(non_iter_args, do_multiprocessing):
@@ -274,17 +270,17 @@ def run(non_iter_args, do_multiprocessing):
      box, startindex, size,
      newconnectionmatrix,
      filename, method, boxindex, sigstatus, headerline,
-     sig_filename,
-     weight_array, delay_array, datastore] = non_iter_args
+     sig_filename, datastore] = non_iter_args
 
     def filename(method, name):
         filename_template = os.path.join(weightstoredir,
-                                     '{}_{}_{}_{}_{}_box{:03d}_{}.csv')
+                                         '{}_{}_{}_{}_{}_box{:03d}_{}.csv')
         return filename_template.format(case, scenario,
-                                    method, name)
+                                        method, name)
 
     weightstoredir = config_setup.ensure_existance(
-        os.path.join(weightcalcdata.saveloc, 'weightdata'), make=True)
+        os.path.join(weightcalcdata.saveloc, 'weightdata', str(case),
+                     str(scenario), str(method)), make=True)
 
     partial_gaincalc_oneset = partial(
         calc_weights_oneset,
