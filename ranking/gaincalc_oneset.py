@@ -13,10 +13,6 @@ from functools import partial
 import pathos
 from pathos.multiprocessing import ProcessingPool as Pool
 
-import config_setup
-
-from data_processing import result_reconstruction
-
 
 def writecsv_weightcalc(filename, datalines_basis, new_dataline, header):
     """CSV writer customized for use in weightcalc function."""
@@ -49,11 +45,9 @@ def writecsv_weightcalc(filename, datalines_basis, new_dataline, header):
 
 
 def calc_weights_oneset(weightcalcdata, weightcalculator,
-                        box, startindex, size,
-                        newconnectionmatrix,
-                        filename, method, boxindex, sigstatus, headerline,
-                        sig_filename,
-                        weight_array, delay_array, datastore,
+                        box, startindex, size, newconnectionmatrix,
+                        method, boxindex, sigstatus,
+                        filename, sig_filename, headerline,
                         causevarindex):
 
     causevar = weightcalcdata.variables[causevarindex]
@@ -151,6 +145,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
             directional_name = 'weights_directional'
             absolute_name = 'weights_absolute'
             neutral_name = 'weights'
+
             # Provide names for the significance threshold file types
             if weightcalcdata.allthresh:
                 sig_directional_name = 'sigthresh_directional'
@@ -242,10 +237,8 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                         sigthresh_thisvar_neutral, headerline)
 
             # Generate and store report files according to each method
-            datastore = \
                 weightcalculator.report(weightcalcdata, causevarindex,
-                                        affectedvarindex, weightlist,
-                                        datastore, proplist)
+                                        affectedvarindex, weightlist, proplist)
 
         # Delete entries from weightcalc matrix not used
         # Delete all rows and columns listed in affected_dellist, cause_dellist
@@ -262,39 +255,28 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
            " [" + str(causevarindex+1) + "/" +
            str(len(weightcalcdata.causevarindexes)) + "]")
 
-    return datastore
+    return None
 
 
 def run(non_iter_args, do_multiprocessing):
     [weightcalcdata, weightcalculator,
      box, startindex, size,
      newconnectionmatrix,
-     filename, method, boxindex, sigstatus, headerline,
-     sig_filename, datastore] = non_iter_args
-
-    def filename(method, name):
-        filename_template = os.path.join(weightstoredir,
-                                         '{}_{}_{}_{}_{}_box{:03d}_{}.csv')
-        return filename_template.format(case, scenario,
-                                        method, name)
-
-    weightstoredir = config_setup.ensure_existance(
-        os.path.join(weightcalcdata.saveloc, 'weightdata', str(case),
-                     str(scenario), str(method)), make=True)
+     method, boxindex, sigstatus,
+     filename, sig_filename, headerline] = non_iter_args
 
     partial_gaincalc_oneset = partial(
         calc_weights_oneset,
         weightcalcdata, weightcalculator,
         box, startindex, size,
         newconnectionmatrix,
-        filename, method, boxindex, sigstatus, headerline,
-        sig_filename,
-        weight_array, delay_array, datastore)
+        method, boxindex, sigstatus,
+        filename, sig_filename, headerline)
 
     if do_multiprocessing:
         pool = Pool(processes=pathos.multiprocessing.cpu_count())
-        result = pool.map(partial_gaincalc_oneset,
-                          weightcalcdata.causevarindexes)
+        pool.map(partial_gaincalc_oneset,
+                 weightcalcdata.causevarindexes)
 
         # Current solution to no close and join methods on ProcessingPool
         # https://github.com/uqfoundation/pathos/issues/46
@@ -304,17 +286,8 @@ def run(non_iter_args, do_multiprocessing):
         s.join()
         pathos.multiprocessing.__STATE['pool'] = None
 
-        _, _, datastore = \
-            result_reconstruction(result, weightcalcdata)
-
     else:
         for causevarindex in weightcalcdata.causevarindexes:
+            partial_gaincalc_oneset(causevarindex)
 
-            # Test whether the 'weightdata_data_box01' file already exists
-            testlocation = filename(method, 'weightcalc_data_box001')
-            if not os.path.exists(testlocation):
-
-            weight_array, delay_array, datastore = \
-                        partial_gaincalc_oneset(causevarindex)
-
-    return weight_array, delay_array, datastore
+    return None

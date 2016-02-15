@@ -214,6 +214,7 @@ class WeightcalcData:
             self.caseconfig[settings_name]['sub_sampling_interval']
         # TODO: Use proper pandas.tseries.resample techniques
         # if it will really add any functionality
+        # TODO: Investigate use of forward-backward Kalman filters
         self.inputdata = \
             self.inputdata_originalrate[0::self.sub_sampling_interval]
 
@@ -285,8 +286,8 @@ def calc_weights(weightcalcdata, method, scenario):
     'transfer_entropy_kraskov'
 
     """
-    # Switch to calculate significance values at each data point and store in
-    # files similar to weight calculations
+    # TODO: Allow for calculation of significance values at each data point
+    # and storing in files similar to weight calculations
 
     if method == 'cross_correlation':
         weightcalculator = CorrWeightcalc(weightcalcdata)
@@ -307,7 +308,6 @@ def calc_weights(weightcalcdata, method, scenario):
     vardims = len(weightcalcdata.variables)
     startindex = weightcalcdata.startindex
     size = weightcalcdata.testsize
-#    data_header = weightcalculator.data_header
 
     cause_dellist = []
     affected_dellist = []
@@ -332,34 +332,33 @@ def calc_weights(weightcalcdata, method, scenario):
 
     # Initiate headerline for weightstore file
     # Create "Delay" as header for first row
-#    headerline = ['Delay']
-
-#    for affectedvarindex in weightcalcdata.affectedvarindexes:
-#        affectedvarname = weightcalcdata.variables[affectedvarindex]
-#        headerline.append(affectedvarname)
+    headerline = ['Delay']
+    for affectedvarindex in weightcalcdata.affectedvarindexes:
+        affectedvarname = weightcalcdata.variables[affectedvarindex]
+        headerline.append(affectedvarname)
 
     # Define filename structure for CSV file containing weights between
     # a specific causevar and all the subsequent affectedvars
-#    def filename(name, method, boxindex, sigstatus, causevar):
-#        return filename_template.format(weightcalcdata.casename,
-#                                        scenario, name, method, sigstatus,
-#                                        boxindex, causevar)
-#
-#    def sig_filename(name, method, boxindex, causevar):
-#        return sig_filename_template.format(weightcalcdata.casename,
-#                                            scenario, name, method,
-#                                            boxindex, causevar)
+    def filename(name, method, boxindex, sigstatus, causevar):
+        return filename_template.format(weightcalcdata.casename,
+                                        scenario, name, method, sigstatus,
+                                        boxindex, causevar)
+
+    def sig_filename(name, method, boxindex, causevar):
+        return sig_filename_template.format(weightcalcdata.casename,
+                                            scenario, name, method,
+                                            boxindex, causevar)
 
     # Store the weight calculation results in similar format as original data
 
-#    weightstoredir = config_setup.ensure_existance(
-#        os.path.join(weightcalcdata.saveloc, 'weightcalcdata'), make=True)
+    weightstoredir = config_setup.ensure_existance(
+        os.path.join(weightcalcdata.saveloc, 'weightdata'), make=True)
 
-#    filename_template = os.path.join(weightstoredir,
-#                                     '{}_{}_{}_{}_{}_box{:03d}_{}.csv')
-#
-#    sig_filename_template = os.path.join(weightstoredir,
-#                                         '{}_{}_{}_{}_box{:03d}_{}.csv')
+    filename_template = os.path.join(weightstoredir,
+                                     '{}_{}_{}_{}_{}_box{:03d}_{}.csv')
+
+    sig_filename_template = os.path.join(weightstoredir,
+                                         '{}_{}_{}_{}_box{:03d}_{}.csv')
 
     if weightcalcdata.single_entropies:
         # Initiate headerline for single signal entropies storage file
@@ -425,7 +424,8 @@ def calc_weights(weightcalcdata, method, scenario):
             weightcalcdata, weightcalculator,
             box, startindex, size,
             newconnectionmatrix,
-            method, boxindex, sigstatus]
+            method, boxindex, sigstatus,
+            filename, sig_filename, headerline]
 
         # Run the script that will handle multiprocessing
         gaincalc_oneset.run(non_iter_args,
@@ -450,35 +450,6 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False,
     weightcalcdata = WeightcalcData(mode, case, single_entropies, fftcalc,
                                     do_multiprocessing)
 
-    # Define export directories and filenames
-    # This now moves to post-processing scripts
-#    weightdir = config_setup.ensure_existance(os.path.join(
-#        weightcalcdata.saveloc, 'weightdata'), make=True)
-
-#    filename_template = os.path.join(weightdir, '{}_{}_{}_{}.csv')
-#
-#    def filename(method, name):
-#        return filename_template.format(case, scenario,
-#                                        method, name)
-
-    # This can now be used for absolute, directional or significance
-    # maxweight arrays
-    # This does not solve the multiprocessing problem
-    # I want to be able to extract all these details in post-processing
-    # for a single causevar
-
-    # This will require the storing the absolute as well as directional weights
-    # per time delay tested per variable as is currently done in the weightdata
-    # directory, as well as the maximizing delay, base entropy, significance
-    # threshold and maximum value for both the directional and absolute case
-    # From this the relative significance directional and absolute weights can
-    # then be calculated as well as all types put into arrrays that can be
-    # directly used by noderank.
-
-#    maxweight_array_name = '{}_maxweight_array_box{:03d}'
-#    delay_array_name = '{}_delay_array_box{:03d}'
-#    weightcalc_data_name = '{}_weightcalc_data_box{:03d}'
-
     for scenario in weightcalcdata.scenarios:
         logging.info("Running scenario {}".format(scenario))
         # Update scenario-specific fields of weightcalcdata object
@@ -487,32 +458,7 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False,
         for method in weightcalcdata.methods:
             logging.info("Method: " + method)
 
-#            [weight_arrays, delay_arrays, datastores, data_header] = \
-#                calc_weights(weightcalcdata, method, scenario)
             calc_weights(weightcalcdata, method, scenario)
-
-#            for boxindex, boxnumber in \
-#                    enumerate(weightcalcdata.boxindexes):
-#                if writeoutput:
-#                    # Write arrays to file
-#                    np.savetxt(
-#                        filename(method,
-#                                 maxweight_array_name.format(boxnumber+1)),
-#                        weight_arrays[boxindex],
-#                        delimiter=',')
-#                    np.savetxt(
-#                        filename(method,
-#                                 delay_array_name.format(boxnumber+1)),
-#                        delay_arrays[boxindex],
-#                        delimiter=',')
-#                    # Write datastore to file
-#                    writecsv_weightcalc(
-#                        filename(method,
-#                                 weightcalc_data_name.format(boxnumber+1)),
-#                        datastores[boxindex],
-#                        data_header)
-#        else:
-#            logging.info("The requested results are in existence")
 
 if __name__ == '__main__':
     multiprocessing.freezeSupport()
