@@ -49,11 +49,13 @@ class WeightcalcData:
     def __init__(self, mode, case, single_entropies, fftcalc,
                  do_multiprocessing):
         # Get file locations from configuration file
-        self.saveloc, self.casedir, self.infodynamicsloc = \
+        self.saveloc, self.caseconfigdir, \
+            self.casedir, self.infodynamicsloc = \
             config_setup.runsetup(mode, case)
         # Load case config file
-        self.caseconfig = json.load(open(os.path.join(self.casedir, case +
-                                    '_weightcalc' + '.json')))
+        self.caseconfig = json.load(
+            open(os.path.join(self.caseconfigdir, case +
+                              '_weightcalc' + '.json')))
         # Get data type
         self.datatype = self.caseconfig['datatype']
         # Get scenarios
