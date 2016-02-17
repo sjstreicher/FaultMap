@@ -56,4 +56,4 @@ def get_locations():
     dataloc, configloc, saveloc = \
         [os.path.expanduser(dirs[location])
          for location in ['dataloc', 'configloc', 'saveloc']]
-    return dataloc, saveloc
+    return dataloc, configloc, saveloc
