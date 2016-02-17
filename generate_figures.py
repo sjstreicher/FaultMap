@@ -819,11 +819,11 @@ def fig_rankings_boxes(graphname):
     plt.close()
 
     return None
+
 #######################################################################
 # Plot measure values vs. sample delay for range of first order time
 # constants.
 #######################################################################
-
 
 graphs = [
 
@@ -1134,6 +1134,7 @@ for plot_function, graphnames in graphs:
     for graphname in graphnames:
         # Test whether the figure already exists
         testlocation = graph_filename_template.format(graphname)
+        print "Now plotting " + graphname
         if not os.path.exists(testlocation):
             plot_function(graphname)
         else:
