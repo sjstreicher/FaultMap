@@ -62,13 +62,16 @@ def writecsv_auxdata(filename, new_dataline, header):
     else:
         # If file already exists, add the current dataline
         # First read all entries below headerline
-        prev_datalines = np.genfromtxt(filename, delimiter=',', skip_header=1)
+        datalines = []
+        with open(filename, 'rU') as f:  # opens PW file
+            reader = csv.reader(f)
+            # Print every value of every row.
+            for row in reader:
+                datalines.append(row)
 
-        # Add current item to rows
-        datalines = np.concatenate((prev_datalines, new_dataline), axis=0)
+        datalines.append(new_dataline)
         # Write updated set of datalines to file
         with open(filename, 'wb') as f:
-            csv.writer(f).writerow(header)
             csv.writer(f).writerows(datalines)
 
 
@@ -100,7 +103,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
 
     # Test if the causevar has already been calculated
     if method[:16] == 'transfer_entropy':
-        testlocation = filename(directional_name, boxindex+1, causevar)
+        testlocation = filename(auxdirectional_name, boxindex+1, causevar)
         if os.path.exists(testlocation):
             print "Cause variable results in existence"
             return
