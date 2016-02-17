@@ -305,6 +305,14 @@ def calc_weights(weightcalcdata, method, scenario):
     elif not weightcalcdata.sigtest:
         sigstatus = 'nosigtest'
 
+    if method == 'transfer_entropy_kraskov':
+        if weightcalcdata.additional_parameters['auto_embed']:
+            embedstatus = 'autoembedding'
+        else:
+            embedstatus = 'naive'
+    else:
+        embedstatus = 'naive'
+
     vardims = len(weightcalcdata.variables)
     startindex = weightcalcdata.startindex
     size = weightcalcdata.testsize
@@ -339,26 +347,34 @@ def calc_weights(weightcalcdata, method, scenario):
 
     # Define filename structure for CSV file containing weights between
     # a specific causevar and all the subsequent affectedvars
-    def filename(name, method, boxindex, sigstatus, causevar):
-        return filename_template.format(weightcalcdata.casename,
-                                        scenario, name, method, sigstatus,
-                                        boxindex, causevar)
+    def filename(weightname, boxindex, causevar):
+        boxstring = 'box{:03d}'.format(boxindex)
 
-    def sig_filename(name, method, boxindex, causevar):
-        return sig_filename_template.format(weightcalcdata.casename,
-                                            scenario, name, method,
-                                            boxindex, causevar)
+        filedir = config_setup.ensure_existance(
+            os.path.join(weightstoredir, weightname, boxstring), make=True)
+
+        filename = '{}.csv'.format(causevar)
+
+        return os.path.join(filedir, filename)
+
+#    def sig_filename(name, method, boxindex, causevar):
+#        return sig_filename_template.format(weightcalcdata.casename,
+#                                            scenario, name, method,
+#                                            boxindex, causevar)
 
     # Store the weight calculation results in similar format as original data
 
+    # Define weightstoredir up to the method level
     weightstoredir = config_setup.ensure_existance(
-        os.path.join(weightcalcdata.saveloc, 'weightdata'), make=True)
+        os.path.join(weightcalcdata.saveloc, 'weightdata',
+                     weightcalcdata.casename,
+                     scenario, method, sigstatus, embedstatus), make=True)
 
-    filename_template = os.path.join(weightstoredir,
-                                     '{}_{}_{}_{}_{}_box{:03d}_{}.csv')
+#    filename_template = os.path.join(weightstoredir,
+#                                     '{}_{}_{}_{}_{}_box{:03d}_{}.csv')
 
-    sig_filename_template = os.path.join(weightstoredir,
-                                         '{}_{}_{}_{}_box{:03d}_{}.csv')
+#    sig_filename_template = os.path.join(weightstoredir,
+#                                         '{}_{}_{}_{}_box{:03d}_{}.csv')
 
     if weightcalcdata.single_entropies:
         # Initiate headerline for single signal entropies storage file
@@ -425,7 +441,7 @@ def calc_weights(weightcalcdata, method, scenario):
             box, startindex, size,
             newconnectionmatrix,
             method, boxindex, sigstatus,
-            filename, sig_filename, headerline]
+            filename, headerline]
 
         # Run the script that will handle multiprocessing
         gaincalc_oneset.run(non_iter_args,
