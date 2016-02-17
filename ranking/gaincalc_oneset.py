@@ -131,8 +131,8 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                 # Calculate significance thresholds at each data point
                 if weightcalcdata.allthresh:
                     sigthreshold = \
-                        weightcalculator.calcsigthresh(affectedvardata,
-                                                       causevardata)
+                        weightcalculator.calcsigthresh(
+                            weightcalcdata, affectedvardata, causevardata)
 
                 if len(weight) > 1:
                     # If weight contains directional as well as

@@ -63,7 +63,7 @@ class CorrWeightcalc(object):
         corrval = np.corrcoef(causevardata.T, affectedvardata.T)[1, 0]
         return [corrval], None
 
-    def calcsigthresh(self, affected_data, causal_data):
+    def calcsigthresh(self, _, affected_data, causal_data):
         return [self.threshcorr]
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
@@ -536,6 +536,7 @@ class TransentWeightcalc:
         self.threshent_absolute = (6 * surr_te_absolute_stdev) + \
             surr_te_absolute_mean
 
-    def calcsigthresh(self, affected_data, causal_data):
+    def calcsigthresh(self, weightcalcdata, affected_data, causal_data):
+        self.te_surr_method = weightcalcdata.te_surr_method
         self.thresh_rankorder(affected_data, causal_data)
         return [self.threshent_directional, self.threshent_absolute]
