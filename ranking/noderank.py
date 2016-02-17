@@ -37,11 +37,12 @@ class NoderankData:
     def __init__(self, mode, case):
 
         # Get locations from configuration file
-        self.saveloc, self.casedir, _ = \
+        self.saveloc, self.caseconfigloc, self.casedir, _ = \
             config_setup.runsetup(mode, case)
         # Load case config file
-        self.caseconfig = json.load(open(os.path.join(self.casedir, case +
-                                    '_noderank' + '.json')))
+        self.caseconfig = json.load(
+            open(os.path.join(self.caseconfigloc, case +
+                              '_noderank' + '.json')))
 
         # Get scenarios
         self.scenarios = self.caseconfig['scenarios']

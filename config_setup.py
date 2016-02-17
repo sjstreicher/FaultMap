@@ -38,19 +38,22 @@ def runsetup(mode, case):
         # Get data and preferred export directories from
         # directories config file
         locations = [ensure_existance(os.path.expanduser(dirs[location]))
-                     for location in ['dataloc', 'saveloc', 'infodynamicsloc']]
-        dataloc, saveloc, infodynamicsloc = locations
+                     for location in ['dataloc', 'configloc', 'saveloc',
+                                      'infodynamicsloc']]
+        dataloc, configloc, saveloc, infodynamicsloc = locations
 
         # Define case data directory
         casedir = ensure_existance(os.path.join(dataloc, mode, case),
                                    make=True)
+        caseconfigdir = os.path.join(configloc, mode, case)
 
-    return saveloc, casedir, infodynamicsloc
+    return saveloc, caseconfigdir, casedir, infodynamicsloc
 
 
 def get_locations():
     # Load directories config file
     dirs = json.load(open('config.json'))
-    dataloc, saveloc = [os.path.expanduser(dirs[location])
-                        for location in ['dataloc', 'saveloc']]
+    dataloc, configloc, saveloc = \
+        [os.path.expanduser(dirs[location])
+         for location in ['dataloc', 'configloc', 'saveloc']]
     return dataloc, saveloc

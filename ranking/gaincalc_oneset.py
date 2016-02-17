@@ -18,7 +18,7 @@ from pathos.multiprocessing import ProcessingPool as Pool
 
 
 def writecsv_weightcalc(filename, datalines_basis, new_dataline, header):
-    """CSV writer customized for use in weightcalc function."""
+    """CSV writer customized for writing weights."""
 
     # Check if file is already in existence
     if not os.path.isfile(filename):
@@ -47,6 +47,31 @@ def writecsv_weightcalc(filename, datalines_basis, new_dataline, header):
             csv.writer(f).writerows(datalines)
 
 
+def writecsv_auxdata(filename, new_dataline, header):
+    """CSV writer customized for writing aux data."""
+
+    # Check if file is already in existence
+    if not os.path.isfile(filename):
+        # If file does not exist, create it and write header
+        # as well as current dataline
+
+        with open(filename, 'wb') as f:
+            csv.writer(f).writerow(header)
+            csv.writer(f).writerow(new_dataline)
+
+    else:
+        # If file already exists, add the current dataline
+        # First read all entries below headerline
+        prev_datalines = np.genfromtxt(filename, delimiter=',', skip_header=1)
+
+        # Add current item to rows
+        datalines = np.concatenate((prev_datalines, new_dataline), axis=0)
+        # Write updated set of datalines to file
+        with open(filename, 'wb') as f:
+            csv.writer(f).writerow(header)
+            csv.writer(f).writerows(datalines)
+
+
 def calc_weights_oneset(weightcalcdata, weightcalculator,
                         box, startindex, size, newconnectionmatrix,
                         method, boxindex, sigstatus,
@@ -62,6 +87,10 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
     directional_name = 'weights_directional'
     absolute_name = 'weights_absolute'
     neutral_name = 'weights'
+
+    auxdirectional_name = 'auxdata_directional'
+    auxabsolute_name = 'auxdata_absolute'
+#    auxneutral_name = 'auxdata'
 
     # Provide names for the significance threshold file types
     if weightcalcdata.allthresh:
@@ -82,6 +111,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
     datalines_directional = datalines_directional[:, np.newaxis]
     datalines_absolute = datalines_directional.copy()
     datalines_neutral = datalines_directional.copy()
+
     # Datalines needed to store significance threshold values
     # for each variable combination
     datalines_sigthresh_directional = datalines_directional.copy()
@@ -94,8 +124,6 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
         logging.info("Analysing effect of: " + causevar + " on " +
                      affectedvar + " for box number: " +
                      str(boxindex + 1))
-
-        datastore = [[], []]
 
         if not(newconnectionmatrix[affectedvarindex,
                                    causevarindex] == 0):
@@ -162,7 +190,6 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                         sigbwd_list.append(significance_bwd)
                         propfwd_list.append(properties_fwd)
                         propbwd_list.append(properties_bwd)
-                        # TODO: Get this into the datastore eventually
 
             if len(weight) > 1:
 
@@ -193,6 +220,21 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                     absolute_name, boxindex+1, causevar),
                     datalines_absolute,
                     weights_thisvar_absolute, headerline)
+
+                # Write all the auxilliary weight data
+                # Generate and store report files according to each method
+                auxdata_thisvar_directional, auxdata_thisvar_absolute = \
+                    weightcalculator.report(
+                         weightcalcdata, causevarindex, affectedvarindex,
+                         weightlist, proplist)
+
+                writecsv_auxdata(filename(
+                    auxdirectional_name, boxindex+1, causevar),
+                    auxdata_thisvar_directional, weightcalculator.data_header)
+
+                writecsv_auxdata(filename(
+                    auxabsolute_name, boxindex+1, causevar),
+                    auxdata_thisvar_absolute, weightcalculator.data_header)
 
                 # Do the same for the significance threshold
                 if weightcalcdata.allthresh:
@@ -242,12 +284,6 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                         datalines_sigthresh_neutral,
                         sigthresh_thisvar_neutral, headerline)
 
-            # Generate and store report files according to each method
-            datastore = \
-                weightcalculator.report(weightcalcdata, causevarindex,
-                                        affectedvarindex, weightlist, proplist,
-                                        datastore)
-
         # Delete entries from weightcalc matrix not used
         # Delete all rows and columns listed in affected_dellist, cause_dellist
         # from weight_array
@@ -258,9 +294,6 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
         # Do the same for delay_array
 #        delay_array = np.delete(delay_array, cause_dellist, 1)
 #        delay_array = np.delete(delay_array, affected_dellist, 0)
-
-    # Write datastore to file
-    # TODO: Implement
 
     print ("Done analysing causal variable: " + causevar +
            " [" + str(causevarindex+1) + "/" +
