@@ -17,61 +17,11 @@ import pathos
 from pathos.multiprocessing import ProcessingPool as Pool
 
 
-def writecsv_weightcalc(filename, datalines_basis, new_dataline, header):
+def writecsv_weightcalc(filename, datalines, header):
     """CSV writer customized for writing weights."""
 
-    # Check if file is already in existence
-    if not os.path.isfile(filename):
-        # If file does not exist, create it and write header
-        # as well as current dataline
-        datalines = \
-             np.concatenate((datalines_basis,
-                             new_dataline),
-                            axis=1)
-        datalines = datalines
-
-        with open(filename, 'wb') as f:
+    with open(filename, 'wb') as f:
             csv.writer(f).writerow(header)
-            csv.writer(f).writerows(datalines)
-
-    else:
-        # If file already exists, add the current dataline
-        # First read all entries below headerline
-        prev_datalines = np.genfromtxt(filename, delimiter=',', skip_header=1)
-
-        # Add current item to colums
-        datalines = np.concatenate((prev_datalines, new_dataline), axis=1)
-        # Write updated set of datalines to file
-        with open(filename, 'wb') as f:
-            csv.writer(f).writerow(header)
-            csv.writer(f).writerows(datalines)
-
-
-def writecsv_auxdata(filename, new_dataline, header):
-    """CSV writer customized for writing aux data."""
-
-    # Check if file is already in existence
-    if not os.path.isfile(filename):
-        # If file does not exist, create it and write header
-        # as well as current dataline
-
-        with open(filename, 'wb') as f:
-            csv.writer(f).writerow(header)
-            csv.writer(f).writerow(new_dataline)
-
-    else:
-        # If file already exists, add the current dataline
-        # First read all entries below headerline
-        datalines = []
-        with open(filename, 'rU') as f:  # opens PW file
-            reader = csv.reader(f)
-            # Print every value of every row.
-            for row in reader:
-                datalines.append(row)
-
-        datalines.append(new_dataline)
-        # Write updated set of datalines to file
-        with open(filename, 'wb') as f:
             csv.writer(f).writerows(datalines)
 
 
@@ -120,6 +70,10 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
     datalines_sigthresh_directional = datalines_directional.copy()
     datalines_sigthresh_absolute = datalines_directional.copy()
     datalines_sigthresh_neutral = datalines_directional.copy()
+
+    # Initiate empty auxdata lists
+    auxdata_directional = []
+    auxdata_absolute = []
 
     for affectedvarindex in weightcalcdata.affectedvarindexes:
         affectedvar = weightcalcdata.variables[affectedvarindex]
@@ -210,19 +164,17 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                 weights_thisvar_directional = \
                     weights_thisvar_directional[:, np.newaxis]
 
+                datalines_directional = \
+                    np.concatenate((datalines_directional,
+                                    weights_thisvar_directional), axis=1)
+
                 weights_thisvar_absolute = np.asarray(weightlist[1])
                 weights_thisvar_absolute = \
                     weights_thisvar_absolute[:, np.newaxis]
 
-                writecsv_weightcalc(filename(
-                    directional_name, boxindex+1, causevar),
-                    datalines_directional,
-                    weights_thisvar_directional, headerline)
-
-                writecsv_weightcalc(filename(
-                    absolute_name, boxindex+1, causevar),
-                    datalines_absolute,
-                    weights_thisvar_absolute, headerline)
+                datalines_absolute = \
+                    np.concatenate((datalines_absolute,
+                                    weights_thisvar_absolute), axis=1)
 
                 # Write all the auxilliary weight data
                 # Generate and store report files according to each method
@@ -231,13 +183,8 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                          weightcalcdata, causevarindex, affectedvarindex,
                          weightlist, proplist)
 
-                writecsv_auxdata(filename(
-                    auxdirectional_name, boxindex+1, causevar),
-                    auxdata_thisvar_directional, weightcalculator.data_header)
-
-                writecsv_auxdata(filename(
-                    auxabsolute_name, boxindex+1, causevar),
-                    auxdata_thisvar_absolute, weightcalculator.data_header)
+                auxdata_directional.append(auxdata_thisvar_directional)
+                auxdata_absolute.append(auxdata_thisvar_absolute)
 
                 # Do the same for the significance threshold
                 if weightcalcdata.allthresh:
@@ -249,30 +196,27 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                     sigthresh_thisvar_directional = \
                         sigthresh_thisvar_directional[:, np.newaxis]
 
+                    datalines_sigthresh_directional = \
+                        np.concatenate((datalines_sigthresh_directional,
+                                        sigthresh_thisvar_directional), axis=1)
+
                     sigthresh_thisvar_absolute = \
                         np.asarray(sigthreshlist[1])
                     sigthresh_thisvar_absolute = \
                         sigthresh_thisvar_absolute[:, np.newaxis]
 
-                    writecsv_weightcalc(filename(
-                        sig_directional_name, boxindex+1, causevar),
-                        datalines_sigthresh_directional,
-                        sigthresh_thisvar_directional, headerline)
-
-                    writecsv_weightcalc(filename(
-                        sig_absolute_name, boxindex+1, causevar),
-                        datalines_sigthresh_absolute,
-                        sigthresh_thisvar_absolute, headerline)
+                    datalines_sigthresh_absolute = \
+                        np.concatenate((datalines_sigthresh_absolute,
+                                        sigthresh_thisvar_absolute), axis=1)
 
             else:
                 weights_thisvar_neutral = np.asarray(weightlist)
                 weights_thisvar_neutral = \
                     weights_thisvar_neutral[:, np.newaxis]
 
-                writecsv_weightcalc(filename(
-                    neutral_name, boxindex+1, causevar),
-                    datalines_neutral,
-                    weights_thisvar_neutral, headerline)
+                datalines_neutral = \
+                    np.concatenate((datalines_neutral,
+                                    weights_thisvar_neutral), axis=1)
 
                 proplist = None
 
@@ -282,21 +226,46 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                     sigthresh_thisvar_neutral = \
                         sigthresh_thisvar_neutral[:, np.newaxis]
 
-                    writecsv_weightcalc(filename(
-                        sig_neutral_name, boxindex+1, causevar),
-                        datalines_sigthresh_neutral,
-                        sigthresh_thisvar_neutral, headerline)
+                    datalines_sigthresh_neutral = \
+                        np.concatenate((datalines_sigthresh_neutral,
+                                        sigthresh_thisvar_neutral), axis=1)
 
-        # Delete entries from weightcalc matrix not used
-        # Delete all rows and columns listed in affected_dellist, cause_dellist
-        # from weight_array
-        # Axis 0 is rows, axis 1 is columns
-#        weight_array = np.delete(weight_array, cause_dellist, 1)
-#        weight_array = np.delete(weight_array, affected_dellist, 0)
+        if len(weight) > 1:
+            writecsv_weightcalc(filename(
+                directional_name, boxindex+1, causevar),
+                datalines_directional, headerline)
 
-        # Do the same for delay_array
-#        delay_array = np.delete(delay_array, cause_dellist, 1)
-#        delay_array = np.delete(delay_array, affected_dellist, 0)
+            writecsv_weightcalc(filename(
+                absolute_name, boxindex+1, causevar),
+                datalines_absolute, headerline)
+
+            writecsv_weightcalc(filename(
+                auxdirectional_name, boxindex+1, causevar),
+                auxdata_directional, weightcalculator.data_header)
+
+            writecsv_weightcalc(filename(
+                auxabsolute_name, boxindex+1, causevar),
+                auxdata_absolute, weightcalculator.data_header)
+
+            if weightcalcdata.allthresh:
+                writecsv_weightcalc(filename(
+                    sig_directional_name, boxindex+1, causevar),
+                    datalines_sigthresh_directional, headerline)
+
+                writecsv_weightcalc(filename(
+                    sig_absolute_name, boxindex+1, causevar),
+                    datalines_sigthresh_absolute, headerline)
+
+        else:
+            writecsv_weightcalc(filename(
+                neutral_name, boxindex+1, causevar),
+                datalines_neutral,
+                weights_thisvar_neutral, headerline)
+
+            if weightcalcdata.allthresh:
+                writecsv_weightcalc(filename(
+                    sig_neutral_name, boxindex+1, causevar),
+                    datalines_sigthresh_neutral, headerline)
 
     print ("Done analysing causal variable: " + causevar +
            " [" + str(causevarindex+1) + "/" +
