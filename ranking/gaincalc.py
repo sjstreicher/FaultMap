@@ -359,11 +359,6 @@ def calc_weights(weightcalcdata, method, scenario):
 
         return os.path.join(filedir, filename)
 
-#    def sig_filename(name, method, boxindex, causevar):
-#        return sig_filename_template.format(weightcalcdata.casename,
-#                                            scenario, name, method,
-#                                            boxindex, causevar)
-
     # Store the weight calculation results in similar format as original data
 
     # Define weightstoredir up to the method level
@@ -371,12 +366,6 @@ def calc_weights(weightcalcdata, method, scenario):
         os.path.join(weightcalcdata.saveloc, 'weightdata',
                      weightcalcdata.casename,
                      scenario, method, sigstatus, embedstatus), make=True)
-
-#    filename_template = os.path.join(weightstoredir,
-#                                     '{}_{}_{}_{}_{}_box{:03d}_{}.csv')
-
-#    sig_filename_template = os.path.join(weightstoredir,
-#                                         '{}_{}_{}_{}_box{:03d}_{}.csv')
 
     if weightcalcdata.single_entropies:
         # Initiate headerline for single signal entropies storage file
@@ -407,9 +396,9 @@ def calc_weights(weightcalcdata, method, scenario):
         # Calculate single signal entropies - do not worry about
         # delays, but still do it according to different boxes
         if weightcalcdata.single_entropies:
-                # Calculate single signal entropies of all variables
-                # and save output in similar format to
-                # standard weight calculation results
+            # Calculate single signal entropies of all variables
+            # and save output in similar format to
+            # standard weight calculation results
             signalentlist = []
             for varindex, _ in enumerate(weightcalcdata.variables):
                 vardata = box[:, varindex][startindex:startindex+size]
