@@ -237,6 +237,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                         sigthresh_thisvar_neutral, headerline)
 
             # Generate and store report files according to each method
+            datastore = \
                 weightcalculator.report(weightcalcdata, causevarindex,
                                         affectedvarindex, weightlist, proplist)
 
@@ -250,6 +251,9 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
         # Do the same for delay_array
 #        delay_array = np.delete(delay_array, cause_dellist, 1)
 #        delay_array = np.delete(delay_array, affected_dellist, 0)
+
+    # Write datastore to file
+    # TODO: Implement
 
     print ("Done analysing causal variable: " + causevar +
            " [" + str(causevarindex+1) + "/" +
