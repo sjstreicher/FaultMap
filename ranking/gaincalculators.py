@@ -287,13 +287,16 @@ class TransentWeightcalc:
         return [transent_directional, transent_absolute], \
             [auxdata_fwd, auxdata_bwd]
 
+
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
-               weightlist, proplist):
+               weightlist, proplist, datastore):
 
         """Calculates and reports the relevant output for each combination
         of variables tested.
 
         """
+
+
 
         variables = weightcalcdata.variables
         causevar = variables[causevarindex]
@@ -429,6 +432,8 @@ class TransentWeightcalc:
             proplist_fwd[delay_index_absolute] + \
             proplist_bwd[delay_index_absolute]
 
+        [datastore_directional, datastore_absolute] = datastore
+
         datastore_directional.append(dataline_directional)
         datastore_absolute.append(dataline_absolute)
 
@@ -436,7 +441,7 @@ class TransentWeightcalc:
                      str(bestdelay_directional))
         logging.info("The TE with no delay is: " + str(weightlist[0][0]))
 
-        return None
+        return datastore
 
     def calc_surr_te(self, affected_data, causal_data, num):
         """Calculates surrogate transfer entropy values for significance
