@@ -67,7 +67,7 @@ class CorrWeightcalc(object):
         return [self.threshcorr]
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
-               weightlist, proplist):
+               weightlist, proplist, datastore):
 
         """Calculates and reports the relevant output for each combination
         of variables tested.
@@ -287,7 +287,6 @@ class TransentWeightcalc:
         return [transent_directional, transent_absolute], \
             [auxdata_fwd, auxdata_bwd]
 
-
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
                weightlist, proplist, datastore):
 
@@ -295,8 +294,6 @@ class TransentWeightcalc:
         of variables tested.
 
         """
-
-
 
         variables = weightcalcdata.variables
         causevar = variables[causevarindex]
@@ -321,7 +318,7 @@ class TransentWeightcalc:
 
         # Need placeholder in case significance is not tested
         threshpass_directional = None
-        threshpass_directional = None
+        threshpass_absolute = None
         self.threshent_directional = None
         self.threshent_absolute = None
 

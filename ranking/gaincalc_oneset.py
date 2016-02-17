@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Mar 12 10:56:02 2015
+Calculates weight and auxilliary data for each causevar and writes to files.
+
+All weight data file output writers are now called at this level, making the
+process interruption tolerant up to a single causevar analysis.
 
 @author: Simon Streicher
 """
@@ -47,7 +50,7 @@ def writecsv_weightcalc(filename, datalines_basis, new_dataline, header):
 def calc_weights_oneset(weightcalcdata, weightcalculator,
                         box, startindex, size, newconnectionmatrix,
                         method, boxindex, sigstatus,
-                        filename, sig_filename, headerline,
+                        filename, headerline,
                         causevarindex):
 
     causevar = weightcalcdata.variables[causevarindex]
@@ -55,6 +58,23 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
     print ("Start analysing causal variable: " + causevar +
            " [" + str(causevarindex+1) + "/" +
            str(len(weightcalcdata.causevarindexes)) + "]")
+
+    directional_name = 'weights_directional'
+    absolute_name = 'weights_absolute'
+    neutral_name = 'weights'
+
+    # Provide names for the significance threshold file types
+    if weightcalcdata.allthresh:
+        sig_directional_name = 'sigthresh_directional'
+        sig_absolute_name = 'sigthresh_absolute'
+        sig_neutral_name = 'sigthresh'
+
+    # Test if the causevar has already been calculated
+    if method[:16] == 'transfer_entropy':
+        testlocation = filename(directional_name, boxindex+1, causevar)
+        if os.path.exists(testlocation):
+            print "Cause variable results in existence"
+            return
 
     # Initiate datalines with delays
     datalines_directional = \
@@ -74,6 +94,8 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
         logging.info("Analysing effect of: " + causevar + " on " +
                      affectedvar + " for box number: " +
                      str(boxindex + 1))
+
+        datastore = [[], []]
 
         if not(newconnectionmatrix[affectedvarindex,
                                    causevarindex] == 0):
@@ -142,16 +164,6 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                         propbwd_list.append(properties_bwd)
                         # TODO: Get this into the datastore eventually
 
-            directional_name = 'weights_directional'
-            absolute_name = 'weights_absolute'
-            neutral_name = 'weights'
-
-            # Provide names for the significance threshold file types
-            if weightcalcdata.allthresh:
-                sig_directional_name = 'sigthresh_directional'
-                sig_absolute_name = 'sigthresh_absolute'
-                sig_neutral_name = 'sigthresh'
-
             if len(weight) > 1:
 
                 proplist = [propfwd_list,
@@ -173,14 +185,12 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                     weights_thisvar_absolute[:, np.newaxis]
 
                 writecsv_weightcalc(filename(
-                    directional_name,
-                    method, boxindex+1, sigstatus, causevar),
+                    directional_name, boxindex+1, causevar),
                     datalines_directional,
                     weights_thisvar_directional, headerline)
 
                 writecsv_weightcalc(filename(
-                    absolute_name,
-                    method, boxindex+1, sigstatus, causevar),
+                    absolute_name, boxindex+1, causevar),
                     datalines_absolute,
                     weights_thisvar_absolute, headerline)
 
@@ -199,15 +209,13 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                     sigthresh_thisvar_absolute = \
                         sigthresh_thisvar_absolute[:, np.newaxis]
 
-                    writecsv_weightcalc(sig_filename(
-                        sig_directional_name,
-                        method, boxindex+1, causevar),
+                    writecsv_weightcalc(filename(
+                        sig_directional_name, boxindex+1, causevar),
                         datalines_sigthresh_directional,
                         sigthresh_thisvar_directional, headerline)
 
-                    writecsv_weightcalc(sig_filename(
-                        sig_absolute_name,
-                        method, boxindex+1, causevar),
+                    writecsv_weightcalc(filename(
+                        sig_absolute_name, boxindex+1, causevar),
                         datalines_sigthresh_absolute,
                         sigthresh_thisvar_absolute, headerline)
 
@@ -217,8 +225,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                     weights_thisvar_neutral[:, np.newaxis]
 
                 writecsv_weightcalc(filename(
-                    neutral_name,
-                    method, boxindex+1, sigstatus, causevar),
+                    neutral_name, boxindex+1, causevar),
                     datalines_neutral,
                     weights_thisvar_neutral, headerline)
 
@@ -230,16 +237,16 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                     sigthresh_thisvar_neutral = \
                         sigthresh_thisvar_neutral[:, np.newaxis]
 
-                    writecsv_weightcalc(sig_filename(
-                        sig_neutral_name,
-                        method, boxindex+1, causevar),
+                    writecsv_weightcalc(filename(
+                        sig_neutral_name, boxindex+1, causevar),
                         datalines_sigthresh_neutral,
                         sigthresh_thisvar_neutral, headerline)
 
             # Generate and store report files according to each method
             datastore = \
                 weightcalculator.report(weightcalcdata, causevarindex,
-                                        affectedvarindex, weightlist, proplist)
+                                        affectedvarindex, weightlist, proplist,
+                                        datastore)
 
         # Delete entries from weightcalc matrix not used
         # Delete all rows and columns listed in affected_dellist, cause_dellist
@@ -267,7 +274,7 @@ def run(non_iter_args, do_multiprocessing):
      box, startindex, size,
      newconnectionmatrix,
      method, boxindex, sigstatus,
-     filename, sig_filename, headerline] = non_iter_args
+     filename, headerline] = non_iter_args
 
     partial_gaincalc_oneset = partial(
         calc_weights_oneset,
@@ -275,7 +282,7 @@ def run(non_iter_args, do_multiprocessing):
         box, startindex, size,
         newconnectionmatrix,
         method, boxindex, sigstatus,
-        filename, sig_filename, headerline)
+        filename, headerline)
 
     if do_multiprocessing:
         pool = Pool(processes=pathos.multiprocessing.cpu_count())
