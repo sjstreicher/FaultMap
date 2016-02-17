@@ -1,3 +1,4 @@
+
 """This module contains the methods used in the calculation of transfer
 entropy.
 
@@ -106,19 +107,10 @@ def setup_infodynamics_te(infodynamicsloc,
         # then this kernel width corresponds to the number of
         # standard deviations from the mean (otherwise it is an absolute value)
 
-        if ('k' in parameters):
-            k = parameters['k']
-        else:
-            k = 1
-#            print "k default of 1 is used"
+        k = parameters.get('k', 1)
+        kernel_width = parameters.get('kernel_width', 0.5)
 
-        if ('kernel_width' in parameters):
-            kernelWidth = parameters['kernel_width']
-        else:
-            kernelWidth = 0.5
-#            print "kernelWidth default of 0.5 is used"
-
-        teCalc.initialise(k, kernelWidth)
+        teCalc.initialise(k, kernel_width)
 
     elif calcmethod == 'kraskov':
         """The Kraskov method is the recommended method and also provides
@@ -146,7 +138,7 @@ def setup_infodynamics_te(infodynamicsloc,
         else:
             teCalc.setProperty("NORMALISE", "false")
 
-        if ('auto_embed' in parameters):
+        if 'auto_embed' in parameters:
             auto_embed = parameters['auto_embed']
             if auto_embed is True:
                 # Enable the Ragwitz criterion
@@ -154,16 +146,11 @@ def setup_infodynamics_te(infodynamicsloc,
                 # nature of our data.
                 # Use a maximum history and tau search of 5
                 teCalc.setProperty("AUTO_EMBED_METHOD", "RAGWITZ")
-                if 'k_search_max' in parameters:
-                    ksearchmax = parameters['k_search_max']
-                else:
-                    ksearchmax = 5
+
+                ksearchmax = parameters.get('k_search_max', 5)
                 teCalc.setProperty("AUTO_EMBED_K_SEARCH_MAX",
                                    str(ksearchmax))
-                if 'tau_search_max' in parameters:
-                    tausearchmax = parameters['tau_search_max']
-                else:
-                    tausearchmax = 5
+                tausearchmax = parameters.get('tau_search_max', 5)
                 teCalc.setProperty("AUTO_EMBED_TAU_SEARCH_MAX",
                                    str(tausearchmax))
 
@@ -171,25 +158,25 @@ def setup_infodynamics_te(infodynamicsloc,
         # it may be best to do this outside the loop and initialise teCalc
         # after each change.
 
-        if ('delay' in parameters):
+        if 'delay' in parameters:
             delay = parameters['delay']
             teCalc.setProperty("DELAY", str(delay))
 
         # Allow for manual override
 
-        if ('k_history' in parameters):
+        if 'k_history' in parameters:
             k_history = parameters['k_history']
             teCalc.setProperty("k_HISTORY", str(k_history))
 
-        if ('k_tau' in parameters):
+        if 'k_tau' in parameters:
             k_tau = parameters['k_tau']
             teCalc.setProperty("k_TAU", str(k_tau))
 
-        if ('l_history' in parameters):
+        if 'l_history' in parameters:
             l_history = parameters['l_history']
             teCalc.setProperty("l_HISTORY", str(l_history))
 
-        if ('l_tau' in parameters):
+        if 'l_tau' in parameters:
             l_tau = parameters['l_tau']
             teCalc.setProperty("l_TAU", str(l_tau))
 
@@ -208,16 +195,10 @@ def setup_infodynamics_te(infodynamicsloc,
         # to include - this is l in Schreiber's notation
         # TODO: Allow these settings to be defined by configuration file
 
-        if ('base' in parameters):
-            base = parameters['base']
-        else:
-            base = 2
+        base = parameters.get('base', 2)
 #            print "base default of 2 (binary) is used"
 
-        if ('destHistoryEmbedLength' in parameters):
-            destHistoryEmbedLength = parameters['destHistoryEmbedLength']
-        else:
-            destHistoryEmbedLength = 1
+        destHistoryEmbedLength = parameters.get('destHistoryEmbedLength', 1)
 
         base = 2
         destHistoryEmbedLength = 1
@@ -245,15 +226,9 @@ def calc_infodynamics_te(infodynamicsloc, normalize, calcmethod,
     teCalc = setup_infodynamics_te(infodynamicsloc, normalize, calcmethod,
                                    **parameters)
 
-    if 'test_signifiance' in parameters:
-        test_significance = parameters['test_significance']
-    else:
-        test_significance = False
+    test_significance = parameters.get('test_signifiance', False)
 
-    if 'significance_permutations' in parameters:
-        significance_permutations = parameters['significance_permutations']
-    else:
-        significance_permutations = 30
+    significance_permutations = parameters.get('significance_permutations', 30)
 
     sourceArray = causal_data.tolist()
     destArray = affected_data.tolist()

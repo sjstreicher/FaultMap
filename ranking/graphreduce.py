@@ -53,7 +53,6 @@ class GraphReduceData:
 
         """
 
-        "The scenario name is: " + scenario
         self.graph = self.caseconfig[scenario]['graph']
         self.percentile = self.caseconfig[scenario]['percentile']
         self.depth = self.caseconfig[scenario]['depth']
