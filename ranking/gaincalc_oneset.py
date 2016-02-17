@@ -150,6 +150,8 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
 
             if len(weight) > 1:
 
+                twodimensions = True
+
                 proplist = [propfwd_list,
                             propbwd_list]
 
@@ -230,42 +232,43 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                         np.concatenate((datalines_sigthresh_neutral,
                                         sigthresh_thisvar_neutral), axis=1)
 
-        if len(weight) > 1:
-            writecsv_weightcalc(filename(
-                directional_name, boxindex+1, causevar),
-                datalines_directional, headerline)
-
-            writecsv_weightcalc(filename(
-                absolute_name, boxindex+1, causevar),
-                datalines_absolute, headerline)
-
-            writecsv_weightcalc(filename(
-                auxdirectional_name, boxindex+1, causevar),
-                auxdata_directional, weightcalculator.data_header)
-
-            writecsv_weightcalc(filename(
-                auxabsolute_name, boxindex+1, causevar),
-                auxdata_absolute, weightcalculator.data_header)
-
-            if weightcalcdata.allthresh:
+        if not(newconnectionmatrix[affectedvarindex,
+                                   causevarindex] == 0):
+            if twodimensions:
                 writecsv_weightcalc(filename(
-                    sig_directional_name, boxindex+1, causevar),
-                    datalines_sigthresh_directional, headerline)
+                    directional_name, boxindex+1, causevar),
+                    datalines_directional, headerline)
 
                 writecsv_weightcalc(filename(
-                    sig_absolute_name, boxindex+1, causevar),
-                    datalines_sigthresh_absolute, headerline)
+                    absolute_name, boxindex+1, causevar),
+                    datalines_absolute, headerline)
 
-        else:
-            writecsv_weightcalc(filename(
-                neutral_name, boxindex+1, causevar),
-                datalines_neutral,
-                weights_thisvar_neutral, headerline)
-
-            if weightcalcdata.allthresh:
                 writecsv_weightcalc(filename(
-                    sig_neutral_name, boxindex+1, causevar),
-                    datalines_sigthresh_neutral, headerline)
+                    auxdirectional_name, boxindex+1, causevar),
+                    auxdata_directional, weightcalculator.data_header)
+
+                writecsv_weightcalc(filename(
+                    auxabsolute_name, boxindex+1, causevar),
+                    auxdata_absolute, weightcalculator.data_header)
+
+                if weightcalcdata.allthresh:
+                    writecsv_weightcalc(filename(
+                        sig_directional_name, boxindex+1, causevar),
+                        datalines_sigthresh_directional, headerline)
+
+                    writecsv_weightcalc(filename(
+                        sig_absolute_name, boxindex+1, causevar),
+                        datalines_sigthresh_absolute, headerline)
+
+            else:
+                writecsv_weightcalc(filename(
+                    neutral_name, boxindex+1, causevar),
+                    datalines_neutral, headerline)
+
+                if weightcalcdata.allthresh:
+                    writecsv_weightcalc(filename(
+                        sig_neutral_name, boxindex+1, causevar),
+                        datalines_sigthresh_neutral, headerline)
 
     print ("Done analysing causal variable: " + causevar +
            " [" + str(causevarindex+1) + "/" +
