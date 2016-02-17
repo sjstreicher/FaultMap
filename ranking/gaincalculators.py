@@ -255,9 +255,6 @@ class TransentWeightcalc:
         # Calculate transfer entropy as the difference
         # between the forward and backwards entropy
 
-        # Initialise for each calculation in an attempt to fix
-        # Kraskov calculator execution
-
         # Pass special estimator specific parameters in here
 
         transent_fwd, auxdata_fwd = \
@@ -280,6 +277,7 @@ class TransentWeightcalc:
         transent_absolute = transent_fwd
 
         # Do not pass negatives on to weight array
+        # TODO: Do this check later instead
 #        if transent_directional < 0:
 #            transent_directional = 0
 #
@@ -291,12 +289,11 @@ class TransentWeightcalc:
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
                weightlist, proplist):
+
         """Calculates and reports the relevant output for each combination
         of variables tested.
 
         """
-
-#        report_basis = 'directional'
 
         variables = weightcalcdata.variables
         causevar = variables[causevarindex]
@@ -319,11 +316,12 @@ class TransentWeightcalc:
         size = weightcalcdata.testsize
         startindex = weightcalcdata.startindex
 
-        threshpass_directional = None
         # Need placeholder in case significance is not tested
+        threshpass_directional = None
+        threshpass_directional = None
         self.threshent_directional = None
+        self.threshent_absolute = None
 
-#        if report_basis == 'directional':
         # Do everything for the directional case
 #            delay_array_directional = delay_array
         maxval_directional = max(weightlist_directional)
@@ -333,22 +331,14 @@ class TransentWeightcalc:
             weightcalcdata.actual_delays[delay_index_directional]
         bestdelay_sample_directional = \
             weightcalcdata.sample_delays[delay_index_directional]
-#            delay_array_directional[affectedvarindex, causevarindex] = \
-#                bestdelay_directional
-#        bestdelay_sample = bestdelay_sample_directional
-#            delay_array = delay_array_directional
+#        delay_array_directional[affectedvarindex, causevarindex] = \
+#            bestdelay_directional
         logging.info("The maximum directional TE between " + causevar +
                      " and " + affectedvar + " is: " +
                      str(maxval_directional))
-#            if proplist_fwd[0] is not None:
-#                k_hist_fwd, k_tau_fwd, l_hist_fwd, l_tau_fwd, delay_fwd = \
-#                    proplist_fwd[delay_index_directional]
-#                k_hist_bwd, k_tau_bwd, l_hist_bwd, l_tau_bwd, delay_bwd = \
-#                    proplist_bwd[delay_index_directional]
 
-#        elif report_basis == 'absolute':
         # Repeat for absolute case
-#            delay_array_absolute = delay_array
+#        delay_array_absolute = delay_array
         maxval_absolute = max(weightlist_absolute)
         delay_index_absolute = \
             weightlist_absolute.index(maxval_absolute)
@@ -356,17 +346,11 @@ class TransentWeightcalc:
             weightcalcdata.actual_delays[delay_index_absolute]
         bestdelay_sample_absolute = \
             weightcalcdata.sample_delays[delay_index_absolute]
-#            delay_array_absolute[affectedvarindex, causevarindex] = \
-#                bestdelay_absolute
-#        bestdelay_sample = bestdelay_sample_absolute
-#            delay_array = delay_array_absolute
+#        delay_array_absolute[affectedvarindex, causevarindex] = \
+#            bestdelay_absolute
         logging.info("The maximum absolute TE between " + causevar +
                      " and " + affectedvar + " is: " +
                      str(maxval_absolute))
-#            k_hist_fwd, k_tau_fwd, l_hist_fwd, l_tau_fwd, delay_fwd = \
-#                proplist_fwd[delay_index_absolute]
-#            k_hist_bwd, k_tau_bwd, l_hist_bwd, l_tau_bwd, delay_bwd = \
-#                proplist_bwd[delay_index_absolute]
 
         if weightcalcdata.sigtest:
             self.te_thresh_method = weightcalcdata.te_thresh_method
