@@ -72,7 +72,7 @@ def create_arrays(datadir):
 
     directories = next(os.walk(datadir))[1]
 
-    test_strings = ['auxdata_absolute', 'auxdata_directional']
+    test_strings = ['auxdata_absolute', 'auxdata_directional', 'auxdata']
 
     for test_string in test_strings:
 
@@ -178,7 +178,10 @@ def result_reconstruction(mode, case, writeoutput):
                 for embedtype in embedtypes:
                     print embedtype
                     datadir = os.path.join(embedtypesdir, embedtype)
-                    create_arrays(datadir)
+                    try:
+                        create_arrays(datadir)
+                    except:
+                        print "Error - probably not complete result set"
 
 #    def filename(weightname, boxindex, causevar):
 #        boxstring = 'box{:03d}'.format(boxindex)

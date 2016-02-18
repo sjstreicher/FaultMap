@@ -67,7 +67,7 @@ class CorrWeightcalc(object):
         return [self.threshcorr]
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
-               weightlist, proplist, datastore):
+               weightlist, proplist):
 
         """Calculates and reports the relevant output for each combination
         of variables tested.
@@ -140,7 +140,7 @@ class CorrWeightcalc(object):
 
 #        datastore.append(dataline)
 
-        return None
+        return dataline
 
 
 class PartialCorrWeightcalc(CorrWeightcalc):

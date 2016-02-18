@@ -43,7 +43,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
 
     auxdirectional_name = 'auxdata_directional'
     auxabsolute_name = 'auxdata_absolute'
-#    auxneutral_name = 'auxdata'
+    auxneutral_name = 'auxdata'
 
     # Provide names for the significance threshold file types
     if weightcalcdata.allthresh:
@@ -74,6 +74,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
     # Initiate empty auxdata lists
     auxdata_directional = []
     auxdata_absolute = []
+    auxdata_neutral = []
 
     for affectedvarindex in weightcalcdata.affectedvarindexes:
         affectedvar = weightcalcdata.variables[affectedvarindex]
@@ -223,7 +224,16 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                     np.concatenate((datalines_neutral,
                                     weights_thisvar_neutral), axis=1)
 
+                # Write all the auxilliary weight data
+                # Generate and store report files according to each method
                 proplist = None
+
+                auxdata_thisvar_neutral = \
+                    weightcalculator.report(
+                         weightcalcdata, causevarindex, affectedvarindex,
+                         weightlist, proplist)
+
+                auxdata_neutral.append(auxdata_thisvar_neutral)
 
                 # Write the significance thresholds to file
                 if weightcalcdata.allthresh:
@@ -267,6 +277,10 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                 writecsv_weightcalc(filename(
                     neutral_name, boxindex+1, causevar),
                     datalines_neutral, headerline)
+
+                writecsv_weightcalc(filename(
+                    auxneutral_name, boxindex+1, causevar),
+                    auxdata_neutral, weightcalculator.data_header)
 
                 if weightcalcdata.allthresh:
                     writecsv_weightcalc(filename(
