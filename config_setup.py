@@ -29,6 +29,7 @@ def runsetup(mode, case):
     if mode == 'tests':
         saveloc = 'test_exports'
         casedir = 'test_configs'
+        caseconfigdir = 'test_configs'
         infodynamicsloc = 'infodynamics.jar'
 
     elif mode == 'plants':
