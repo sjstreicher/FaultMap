@@ -212,6 +212,9 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                                         sigthresh_thisvar_absolute), axis=1)
 
             else:
+
+                twodimensions = False
+
                 weights_thisvar_neutral = np.asarray(weightlist)
                 weights_thisvar_neutral = \
                     weights_thisvar_neutral[:, np.newaxis]
