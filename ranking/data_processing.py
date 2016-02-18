@@ -33,7 +33,42 @@ def shuffle_data(input_data):
     return shuffled_formatted
 
 
+def process_auxfile(filename):
+    """Processes an auxfile and returns a list of affected_vars,
+    weight_array as well as relative significance weight array.
+
+    """
+
+    affectedvars = []
+    weights = []
+    sigweights = []
+    delays = []
+
+    with open(filename, 'rb') as auxfile:
+        auxfilereader = csv.reader(auxfile, delimiter=',')
+        for rowindex, row in enumerate(auxfilereader):
+            if rowindex > 0:
+                affectedvars.append(row[1])
+                # Test if sigtest passed before assigning weight
+                if row[7] == 'True':
+                    weights.append(float(row[3]))
+                    # If the threshold is negative, take the absolute value
+                    # TODO: Need to think the implications of this through
+                    sigweight = float(row[3]) / abs(float(row[6]))
+                    sigweights.append(sigweight)
+                else:
+                    weights.append(0.)
+                    sigweights.append(0.)
+                delays.append(float(row[4]))
+
+    return affectedvars, weights, sigweights, delays
+
+
 def create_arrays(datadir):
+
+    sigweightarray_name = 'sigweight_arrays'
+    weightarray_name = 'weight_arrays'
+    delayarray_name = 'delay_arrays'
 
     directories = next(os.walk(datadir))[1]
 
@@ -49,10 +84,61 @@ def create_arrays(datadir):
                 # Get list of causevars
                 causevar_filenames = next(os.walk(boxdir))[2]
                 causevars = []
+                affectedvar_array = []
+                weight_array = []
+                sigweight_array = []
+                delay_array = []
                 for causevar_file in causevar_filenames:
                     causevars.append(str(causevar_file[:-4]))
 
-                print causevars
+                    # Open auxfile and return weight array as well as
+                    # significance relative weight arrays
+
+                    affectedvars, weights, sigweights, delays = \
+                        process_auxfile(os.path.join(boxdir, causevar_file))
+
+                    affectedvar_array.append(affectedvars)
+                    weight_array.append(weights)
+                    sigweight_array.append(sigweights)
+                    delay_array.append(delays)
+
+                # Write the arrays to file
+                weights_matrix = np.zeros((len(affectedvars), len(causevars)))
+                sigweights_matrix = np.copy(weights_matrix)
+                delay_matrix = np.copy(weights_matrix)
+
+                for causevar_index, causevar in enumerate(causevars):
+                    weights_matrix[:, causevar_index] = \
+                         weight_array[causevar_index]
+                    sigweights_matrix[:, causevar_index] = \
+                        sigweight_array[causevar_index]
+                    delay_matrix[:, causevar_index] = \
+                        delay_array[causevar_index]
+
+                # Write to CSV files
+                weightarray_dir = os.path.join(
+                     datadir, weightarray_name, box)
+                config_setup.ensure_existance(weightarray_dir)
+
+                sigweightarray_dir = os.path.join(
+                    datadir, sigweightarray_name, box)
+                config_setup.ensure_existance(sigweightarray_dir)
+
+                delayarray_dir = os.path.join(
+                     datadir, delayarray_name, box)
+                config_setup.ensure_existance(delayarray_dir)
+
+                weightfilename = \
+                    os.path.join(weightarray_dir, 'weight_array.csv')
+                np.savetxt(weightfilename, weights_matrix, delimiter=',')
+
+                sigweightfilename = \
+                    os.path.join(sigweightarray_dir, 'sigweight_array.csv')
+                np.savetxt(sigweightfilename, sigweights_matrix, delimiter=',')
+
+                delayfilename = \
+                    os.path.join(delayarray_dir, 'delay_array.csv')
+                np.savetxt(delayfilename, delay_matrix, delimiter=',')
 
     return None
 
