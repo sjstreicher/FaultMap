@@ -182,15 +182,15 @@ def create_arrays(datadir, tsfilename):
                 # Write to CSV files
                 weightarray_dir = os.path.join(
                      datadir, weightarray_name, box)
-                config_setup.ensure_existance(weightarray_dir)
+                config_setup.ensure_existence(weightarray_dir)
 
                 sigweightarray_dir = os.path.join(
                     datadir, sigweightarray_name, box)
-                config_setup.ensure_existance(sigweightarray_dir)
+                config_setup.ensure_existence(sigweightarray_dir)
 
                 delayarray_dir = os.path.join(
                      datadir, delayarray_name, box)
-                config_setup.ensure_existance(delayarray_dir)
+                config_setup.ensure_existence(delayarray_dir)
 
                 weightfilename = \
                     os.path.join(weightarray_dir, 'weight_array.csv')
@@ -260,7 +260,7 @@ def csv_to_h5(saveloc, raw_tsdata, scenario, case):
     # Name the dataset according to the scenario
     dataset = scenario
 
-    datapath = config_setup.ensure_existance(os.path.join(
+    datapath = config_setup.ensure_existence(os.path.join(
         saveloc, 'data', case), make=True)
 
     hdf5writer = tb.open_file(os.path.join(datapath, scenario + '.h5'), 'w')
@@ -331,7 +331,7 @@ def fft_calculation(raw_tsdata, normalised_tsdata, variables, sampling_rate,
             plt.ylabel('Normalised amplitude')
             plt.legend()
 
-            plotdir = config_setup.ensure_existance(
+            plotdir = config_setup.ensure_existence(
                 os.path.join(saveloc, 'fftplots'), make=True)
 
             filename_template = os.path.join(plotdir,
@@ -348,7 +348,7 @@ def fft_calculation(raw_tsdata, normalised_tsdata, variables, sampling_rate,
     datalines = np.concatenate((freqlist, fft_data), axis=1)
 
     # Define export directories and filenames
-    datadir = config_setup.ensure_existance(
+    datadir = config_setup.ensure_existence(
         os.path.join(saveloc, 'fftdata'), make=True)
 
     filename_template = os.path.join(datadir, '{}_{}_{}.csv')
@@ -413,7 +413,7 @@ def bandgapfilter_data(raw_tsdata, normalised_tsdata, variables,
         datalines = np.concatenate((time, inputdata_bandgapfiltered), axis=1)
 
     # Define export directories and filenames
-    datadir = config_setup.ensure_existance(
+    datadir = config_setup.ensure_existence(
         os.path.join(saveloc, 'bandgappeddata'), make=True)
 
     filename_template = os.path.join(datadir, '{}_{}_{}_{}_{}.csv')
@@ -451,7 +451,7 @@ def normalise_data(raw_tsdata, inputdata_raw, saveloc, case, scenario):
     datalines = np.concatenate((time, inputdata_normalised), axis=1)
 
     # Define export directories and filenames
-    datadir = config_setup.ensure_existance(
+    datadir = config_setup.ensure_existence(
         os.path.join(saveloc, 'normdata'), make=True)
 
     filename_template = os.path.join(datadir, '{}_{}_{}.csv')

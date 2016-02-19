@@ -352,7 +352,7 @@ def calc_weights(weightcalcdata, method, scenario):
     def filename(weightname, boxindex, causevar):
         boxstring = 'box{:03d}'.format(boxindex)
 
-        filedir = config_setup.ensure_existance(
+        filedir = config_setup.ensure_existence(
             os.path.join(weightstoredir, weightname, boxstring), make=True)
 
         filename = '{}.csv'.format(causevar)
@@ -362,7 +362,7 @@ def calc_weights(weightcalcdata, method, scenario):
     # Store the weight calculation results in similar format as original data
 
     # Define weightstoredir up to the method level
-    weightstoredir = config_setup.ensure_existance(
+    weightstoredir = config_setup.ensure_existence(
         os.path.join(weightcalcdata.saveloc, 'weightdata',
                      weightcalcdata.casename,
                      scenario, method, sigstatus, embedstatus), make=True)
@@ -376,7 +376,7 @@ def calc_weights(weightcalcdata, method, scenario):
             return signalent_filename_template.format(
                 weightcalcdata.casename, scenario, name, boxindex)
 
-        signalentstoredir = config_setup.ensure_existance(
+        signalentstoredir = config_setup.ensure_existence(
             os.path.join(weightcalcdata.saveloc, 'signal_entropies'),
             make=True)
 

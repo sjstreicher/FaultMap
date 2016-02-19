@@ -64,13 +64,13 @@ def reducegraph(mode, case, writeoutput):
 
     # Get the source directory
     sourcedir = \
-        config_setup.ensure_existance(
+        config_setup.ensure_existence(
             os.path.join(graphreducedata.casedir,
                          'graphs'))
 
     # Get the directory to save in
     savedir = \
-        config_setup.ensure_existance(
+        config_setup.ensure_existence(
             os.path.join(graphreducedata.saveloc,
                          'graphs'), make=True)
 
