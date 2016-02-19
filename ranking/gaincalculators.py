@@ -50,8 +50,9 @@ class CorrWeightcalc(object):
 
         self.data_header = ['causevar', 'affectedvar', 'base_corr',
                             'max_corr', 'max_delay', 'max_index',
-                            'signchange', 'corrthreshpass',
-                            'dirrthreshpass', 'dirval']
+                            'signchange', 'threshcorr', 'threshdir',
+                            'corrthreshpass', 'dirthreshpass',
+                            'threshpass', 'dirval']
 
     def calcweight(self, causevardata, affectedvardata, weightcalcdata,
                    causevarindex, affectedvarindex):
@@ -116,6 +117,7 @@ class CorrWeightcalc(object):
 
         corrthreshpass = None
         dirthreshpass = None
+        threshpass = None
         if weightcalcdata.sigtest:
             corrthreshpass = (maxcorr_abs >= self.threshcorr)
             dirthreshpass = (directionindex >= self.threshdir)
@@ -124,21 +126,16 @@ class CorrWeightcalc(object):
             logging.info("Directionality threshold passed: " +
                          str(dirthreshpass))
             if not (corrthreshpass and dirthreshpass):
+                threshpass = False
                 maxcorr = 0
-
-#        weight_array[affectedvarindex, causevarindex] = maxcorr
-
-#        # Replace all nan by zero
-#        nanlocs = np.isnan(weight_array)
-#        weight_array[nanlocs] = 0
-
-#        delay_array[affectedvarindex, causevarindex] = bestdelay
+            else:
+                threshpass = True
 
         dataline = [causevar, affectedvar, str(weightlist[0]),
                     maxcorr, str(bestdelay), str(delay_index),
-                    signchange, corrthreshpass, dirthreshpass, directionindex]
-
-#        datastore.append(dataline)
+                    signchange, self.threshcorr, self.threshdir,
+                    corrthreshpass, dirthreshpass,
+                    threshpass, directionindex]
 
         return dataline
 
