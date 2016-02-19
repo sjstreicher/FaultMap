@@ -76,6 +76,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                      affectedvar + " for box number: " +
                      str(boxindex + 1))
 
+        exists = False
         # Test if the affectedvar has already been calculated
         if method[:16] == 'transfer_entropy':
             testlocation = filename(auxdirectional_name, boxindex+1, causevar)
@@ -88,8 +89,6 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                 if affectedvar in affectedvars:
                     print "Affected variable results in existence"
                     exists = True
-                else:
-                    exists = False
 
         if (not(newconnectionmatrix[affectedvarindex,
                                     causevarindex] == 0) and (not exists)):
