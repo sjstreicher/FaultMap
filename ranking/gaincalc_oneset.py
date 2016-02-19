@@ -51,12 +51,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
         sig_absolute_name = 'sigthresh_absolute'
         sig_neutral_name = 'sigthresh'
 
-    # Test if the causevar has already been calculated
-    if method[:16] == 'transfer_entropy':
-        testlocation = filename(auxdirectional_name, boxindex+1, causevar)
-        if os.path.exists(testlocation):
-            print "Cause variable results in existence"
-            return
+
 
     # Initiate datalines with delays
     datalines_directional = \
@@ -82,6 +77,18 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
         logging.info("Analysing effect of: " + causevar + " on " +
                      affectedvar + " for box number: " +
                      str(boxindex + 1))
+
+        # Test if the affectedvar has already been calculated
+        if method[:16] == 'transfer_entropy':
+            testlocation = filename(auxdirectional_name, boxindex+1, causevar)
+            # Open CSV file and read names of second affected vars
+            auxdatafile = np.genfromtxt(testlocation, delimiter=',',
+                                        usecols=np.arange(0, 2),
+                                        dtype=str)
+            affectedvars = auxdatafile[:, 1]
+            if affectedvar in affectedvars:
+                print "Affected variable results in existence"
+                return
 
         if not(newconnectionmatrix[affectedvarindex,
                                    causevarindex] == 0):
