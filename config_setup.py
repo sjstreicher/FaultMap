@@ -9,7 +9,7 @@ import json
 import os
 
 
-def ensure_existance(location, make=True):
+def ensure_existence(location, make=True):
     if not os.path.exists(location):
         if make:
             os.makedirs(location)
@@ -38,13 +38,13 @@ def runsetup(mode, case):
         dirs = json.load(open('config.json'))
         # Get data and preferred export directories from
         # directories config file
-        locations = [ensure_existance(os.path.expanduser(dirs[location]))
+        locations = [ensure_existence(os.path.expanduser(dirs[location]))
                      for location in ['dataloc', 'configloc', 'saveloc',
                                       'infodynamicsloc']]
         dataloc, configloc, saveloc, infodynamicsloc = locations
 
         # Define case data directory
-        casedir = ensure_existance(os.path.join(dataloc, mode, case),
+        casedir = ensure_existence(os.path.join(dataloc, mode, case),
                                    make=True)
         caseconfigdir = os.path.join(configloc, mode, case)
 
