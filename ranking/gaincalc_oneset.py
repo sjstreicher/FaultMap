@@ -190,8 +190,8 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                 # Generate and store report files according to each method
                 auxdata_thisvar_directional, auxdata_thisvar_absolute = \
                     weightcalculator.report(
-                         weightcalcdata, causevarindex, affectedvarindex,
-                         weightlist, proplist)
+                        weightcalcdata, causevarindex, affectedvarindex,
+                        weightlist, proplist)
 
                 auxdata_directional.append(auxdata_thisvar_directional)
                 auxdata_absolute.append(auxdata_thisvar_absolute)
@@ -237,8 +237,8 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
 
                 auxdata_thisvar_neutral = \
                     weightcalculator.report(
-                         weightcalcdata, causevarindex, affectedvarindex,
-                         weightlist, proplist)
+                        weightcalcdata, causevarindex, affectedvarindex,
+                        weightlist, proplist)
 
                 auxdata_neutral.append(auxdata_thisvar_neutral)
 
