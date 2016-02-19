@@ -21,7 +21,7 @@ def ensure_existance(location, make=True):
 def runsetup(mode, case):
     """Gets all required parameters from the case configuration file.
 
-    Mode can be either 'tests' or 'plants' as required to get to the
+    Mode can be either 'tests' or 'cases' as required to get to the
     correct directory.
 
     """
@@ -32,7 +32,7 @@ def runsetup(mode, case):
         caseconfigdir = 'test_configs'
         infodynamicsloc = 'infodynamics.jar'
 
-    elif mode == 'plants':
+    elif mode == 'cases':
 
         # Load directories config file
         dirs = json.load(open('config.json'))
