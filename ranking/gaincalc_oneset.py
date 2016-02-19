@@ -51,8 +51,6 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
         sig_absolute_name = 'sigthresh_absolute'
         sig_neutral_name = 'sigthresh'
 
-
-
     # Initiate datalines with delays
     datalines_directional = \
         np.asarray(weightcalcdata.actual_delays)
@@ -89,10 +87,12 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                 affectedvars = auxdatafile[:, 1]
                 if affectedvar in affectedvars:
                     print "Affected variable results in existence"
-                    return
+                    exists = True
+                else:
+                    exists = False
 
-        if not(newconnectionmatrix[affectedvarindex,
-                                   causevarindex] == 0):
+        if (not(newconnectionmatrix[affectedvarindex,
+                                    causevarindex] == 0) and (not exists)):
             weightlist = []
             directional_weightlist = []
             absolute_weightlist = []
@@ -253,8 +253,8 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                         np.concatenate((datalines_sigthresh_neutral,
                                         sigthresh_thisvar_neutral), axis=1)
 
-        if not(newconnectionmatrix[affectedvarindex,
-                                   causevarindex] == 0):
+        if (not(newconnectionmatrix[affectedvarindex,
+                                    causevarindex] == 0) and (not exists)):
             if twodimensions:
                 writecsv_weightcalc(filename(
                     directional_name, boxindex+1, causevar),
