@@ -56,25 +56,27 @@ def process_auxfile(filename):
                 else:
                     maxval_index = row.index('max_corr')
 
-                thresh_index = row.index('threshold')
+                if 'threshold' in row:
+                    thresh_index = row.index('threshold')
+                else:
+                    thresh_index = row.index('threshcorr')
                 threshpass_index = row.index('threshpass')
                 maxdelay_index = row.index('max_delay')
 
             if rowindex > 0:
 
                 affectedvars.append(row[affectedvar_index])
+                weights.append(float(row[maxval_index]))
+                delays.append(float(row[maxdelay_index]))
                 # Test if sigtest passed before assigning weight
                 if row[threshpass_index] == 'True':
-                    weights.append(float(row[maxval_index]))
                     # If the threshold is negative, take the absolute value
                     # TODO: Need to think the implications of this through
                     sigweight = (float(row[maxval_index]) /
                                  abs(float(row[thresh_index])))
                     sigweights.append(sigweight)
                 else:
-                    weights.append(0.)
                     sigweights.append(0.)
-                delays.append(float(row[maxdelay_index]))
 
     return affectedvars, weights, sigweights, delays
 
