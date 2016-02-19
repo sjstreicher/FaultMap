@@ -81,14 +81,15 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
         # Test if the affectedvar has already been calculated
         if method[:16] == 'transfer_entropy':
             testlocation = filename(auxdirectional_name, boxindex+1, causevar)
-            # Open CSV file and read names of second affected vars
-            auxdatafile = np.genfromtxt(testlocation, delimiter=',',
-                                        usecols=np.arange(0, 2),
-                                        dtype=str)
-            affectedvars = auxdatafile[:, 1]
-            if affectedvar in affectedvars:
-                print "Affected variable results in existence"
-                return
+            if os.path.exists(testlocation):
+                # Open CSV file and read names of second affected vars
+                auxdatafile = np.genfromtxt(testlocation, delimiter=',',
+                                            usecols=np.arange(0, 2),
+                                            dtype=str)
+                affectedvars = auxdatafile[:, 1]
+                if affectedvar in affectedvars:
+                    print "Affected variable results in existence"
+                    return
 
         if not(newconnectionmatrix[affectedvarindex,
                                    causevarindex] == 0):
