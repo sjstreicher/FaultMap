@@ -18,7 +18,7 @@ from ranking import data_processing
 logging.basicConfig(level=logging.INFO)
 
 dataloc, saveloc = config_setup.get_locations()
-graphs_savedir = config_setup.ensure_existance(os.path.join(saveloc, 'graphs'),
+graphs_savedir = config_setup.ensure_existence(os.path.join(saveloc, 'graphs'),
                                                make=True)
 graph_filename_template = os.path.join(graphs_savedir, '{}.pdf')
 
