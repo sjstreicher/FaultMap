@@ -78,13 +78,14 @@ class WeightcalcData:
 
         """
         print "The scenario name is: " + scenario
-        settings_name = self.caseconfig[scenario]['settings']
+
+        self.settings_set = self.caseconfig[scenario]['settings']
+
+    def setsettings(self, scenario, settings_name):
+
         self.connections_used = (self.caseconfig[settings_name]
                                  ['use_connections'])
-
-        bandgap_filtering = self.caseconfig[scenario]['bandgap_filtering']
         self.transient = self.caseconfig[settings_name]['transient']
-
         self.normalize = self.caseconfig[settings_name]['normalize']
         self.sigtest = self.caseconfig[settings_name]['sigtest']
         if self.sigtest:
@@ -196,6 +197,7 @@ class WeightcalcData:
         if self.affectedvarindexes == 'all':
             self.affectedvarindexes = range(len(self.variables))
 
+        bandgap_filtering = self.caseconfig[scenario]['bandgap_filtering']
         if bandgap_filtering:
             low_freq = self.caseconfig[scenario]['low_freq']
             high_freq = self.caseconfig[scenario]['high_freq']
@@ -461,11 +463,14 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False,
         logging.info("Running scenario {}".format(scenario))
         # Update scenario-specific fields of weightcalcdata object
         weightcalcdata.scenariodata(scenario)
+        for settings_name in weightcalcdata.settings_set:
+            weightcalcdata.setsettings(scenario, settings_name)
+            logging.info("Now running settings {}".format(settings_name))
 
-        for method in weightcalcdata.methods:
-            logging.info("Method: " + method)
+            for method in weightcalcdata.methods:
+                logging.info("Method: " + method)
 
-            calc_weights(weightcalcdata, method, scenario)
+                calc_weights(weightcalcdata, method, scenario)
 
 if __name__ == '__main__':
     multiprocessing.freezeSupport()
