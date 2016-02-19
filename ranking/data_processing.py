@@ -92,14 +92,14 @@ def create_arrays(datadir, tsfilename):
 
     """
 
-    absoluteweightarray_name = 'weight_arrays_absolute'
-    directionalweightarray_name = 'weight_arrays_directional'
+    absoluteweightarray_name = 'weight_absolute_arrays'
+    directionalweightarray_name = 'weight_directional_arrays'
     neutralweightarray_name = 'weight_arrays'
-    absolutesigweightarray_name = 'sigweight_arrays_absolute'
-    directionalsigweightarray_name = 'sigweight_arrays_directional'
+    absolutesigweightarray_name = 'sigweight_absolute_arrays'
+    directionalsigweightarray_name = 'sigweight_directional_arrays'
     neutralsigweightarray_name = 'sigweight_arrays'
-    absolutedelayarray_name = 'delay_arrays_absolute'
-    directionaldelayarray_name = 'delay_arrays_directional'
+    absolutedelayarray_name = 'delay_absolute_arrays'
+    directionaldelayarray_name = 'delay_directional_arrays'
     neutraldelayarray_name = 'delay_arrays'
 
     directories = next(os.walk(datadir))[1]
