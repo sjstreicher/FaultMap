@@ -47,24 +47,39 @@ def process_auxfile(filename):
     with open(filename, 'rb') as auxfile:
         auxfilereader = csv.reader(auxfile, delimiter=',')
         for rowindex, row in enumerate(auxfilereader):
+            if rowindex == 0:
+                # Find the indices of important rows
+                affectedvar_index = row.index('affectedvar')
+
+                if 'max_ent' in row:
+                    maxval_index = row.index('max_ent')
+                else:
+                    maxval_index = row.index('max_corr')
+
+                thresh_index = row.index('threshold')
+                threshpass_index = row.index('threshpass')
+                maxdelay_index = row.index('max_delay')
+
             if rowindex > 0:
-                affectedvars.append(row[1])
+
+                affectedvars.append(row[affectedvar_index])
                 # Test if sigtest passed before assigning weight
-                if row[7] == 'True':
-                    weights.append(float(row[3]))
+                if row[threshpass_index] == 'True':
+                    weights.append(float(row[maxval_index]))
                     # If the threshold is negative, take the absolute value
                     # TODO: Need to think the implications of this through
-                    sigweight = float(row[3]) / abs(float(row[6]))
+                    sigweight = (float(row[maxval_index]) /
+                                 abs(float(row[thresh_index])))
                     sigweights.append(sigweight)
                 else:
                     weights.append(0.)
                     sigweights.append(0.)
-                delays.append(float(row[4]))
+                delays.append(float(row[maxdelay_index]))
 
     return affectedvars, weights, sigweights, delays
 
 
-def create_arrays(datadir):
+def create_arrays(datadir, tsfilename):
 
     sigweightarray_name = 'sigweight_arrays'
     weightarray_name = 'weight_arrays'
@@ -103,17 +118,35 @@ def create_arrays(datadir):
                     delay_array.append(delays)
 
                 # Write the arrays to file
-                weights_matrix = np.zeros((len(affectedvars), len(causevars)))
+                # Create a base array based on the full set of variables
+                # found in the typical weightcalcdata function
+
+                # Get variables
+                variables = read_variables(tsfilename)
+                # Initialize matrix with variables written
+                # in first row and column
+                weights_matrix = np.zeros(
+                    (len(variables)+1, len(variables)+1)).astype(object)
+
+                weights_matrix[0, 1:] = variables
+                weights_matrix[1:, 0] = variables
+
                 sigweights_matrix = np.copy(weights_matrix)
                 delay_matrix = np.copy(weights_matrix)
 
+                # Write results to appropritae entries in array
                 for causevar_index, causevar in enumerate(causevars):
-                    weights_matrix[:, causevar_index] = \
-                         weight_array[causevar_index]
-                    sigweights_matrix[:, causevar_index] = \
-                        sigweight_array[causevar_index]
-                    delay_matrix[:, causevar_index] = \
-                        delay_array[causevar_index]
+                    causevarloc = variables.index(causevar)
+                    for affectedvar_index, affectedvar in \
+                            enumerate(affectedvar_array[causevar_index]):
+                        affectedvarloc = variables.index(affectedvar)
+
+                        weights_matrix[affectedvarloc+1, causevarloc+1] = \
+                            weight_array[causevar_index][affectedvar_index]
+                        sigweights_matrix[affectedvarloc+1, causevarloc+1] = \
+                            sigweight_array[causevar_index][affectedvar_index]
+                        delay_matrix[affectedvarloc+1, causevarloc+1] = \
+                            delay_array[causevar_index][affectedvar_index]
 
                 # Write to CSV files
                 weightarray_dir = os.path.join(
@@ -130,15 +163,18 @@ def create_arrays(datadir):
 
                 weightfilename = \
                     os.path.join(weightarray_dir, 'weight_array.csv')
-                np.savetxt(weightfilename, weights_matrix, delimiter=',')
+                np.savetxt(weightfilename, weights_matrix,
+                           delimiter=',', fmt='%s')
 
                 sigweightfilename = \
                     os.path.join(sigweightarray_dir, 'sigweight_array.csv')
-                np.savetxt(sigweightfilename, sigweights_matrix, delimiter=',')
+                np.savetxt(sigweightfilename, sigweights_matrix,
+                           delimiter=',', fmt='%s')
 
                 delayfilename = \
                     os.path.join(delayarray_dir, 'delay_array.csv')
-                np.savetxt(delayfilename, delay_matrix, delimiter=',')
+                np.savetxt(delayfilename, delay_matrix,
+                           delimiter=',', fmt='%s')
 
     return None
 
@@ -155,7 +191,11 @@ def result_reconstruction(mode, case, writeoutput):
 
     """
 
-    saveloc, _, _, _ = config_setup.runsetup(mode, case)
+    saveloc, caseconfigdir, casedir, _ = config_setup.runsetup(mode, case)
+
+    caseconfig = json.load(
+        open(os.path.join(caseconfigdir, case +
+                          '_weightcalc' + '.json')))
 
     # Directory where subdirectories for scenarios will be stored
     scenariosdir = os.path.join(saveloc, 'weightdata', case)
@@ -165,6 +205,10 @@ def result_reconstruction(mode, case, writeoutput):
 
     for scenario in scenarios:
         print scenario
+
+        tsfilename = os.path.join(casedir, 'data',
+                                  caseconfig[scenario]['data'])
+
         methodsdir = os.path.join(scenariosdir, scenario)
         methods = next(os.walk(methodsdir))[1]
         for method in methods:
@@ -178,35 +222,7 @@ def result_reconstruction(mode, case, writeoutput):
                 for embedtype in embedtypes:
                     print embedtype
                     datadir = os.path.join(embedtypesdir, embedtype)
-                    try:
-                        create_arrays(datadir)
-                    except:
-                        print "Error - probably not complete result set"
-
-#    def filename(weightname, boxindex, causevar):
-#        boxstring = 'box{:03d}'.format(boxindex)
-#
-#        filedir = config_setup.ensure_existance(
-#            os.path.join(weightstoredir, weightname, boxstring), make=True)
-#
-#        filename = '{}.csv'.format(causevar)
-#
-#        return os.path.join(filedir, filename)
-
-#
-#    vardims = len(weightcalcdata.variables)
-#    # Initialise final storage containers
-#    weight_array = np.empty((vardims, vardims))
-#    delay_array = np.empty((vardims, vardims))
-#    weight_array[:] = np.NAN
-#    delay_array[:] = np.NAN
-#    datastore = []
-#
-#
-#    for causevarindex, causevar_result in enumerate(result):
-#        weight_array[:, causevarindex] = causevar_result[0][:, causevarindex]
-#        delay_array[:, causevarindex] = causevar_result[1][:, causevarindex]
-
+                    create_arrays(datadir, tsfilename)
 
     return None
 
