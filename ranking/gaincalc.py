@@ -49,11 +49,13 @@ class WeightcalcData:
     def __init__(self, mode, case, single_entropies, fftcalc,
                  do_multiprocessing):
         # Get file locations from configuration file
-        self.saveloc, self.casedir, self.infodynamicsloc = \
+        self.saveloc, self.caseconfigdir, \
+            self.casedir, self.infodynamicsloc = \
             config_setup.runsetup(mode, case)
         # Load case config file
-        self.caseconfig = json.load(open(os.path.join(self.casedir, case +
-                                    '_weightcalc' + '.json')))
+        self.caseconfig = json.load(
+            open(os.path.join(self.caseconfigdir, case +
+                              '_weightcalc' + '.json')))
         # Get data type
         self.datatype = self.caseconfig['datatype']
         # Get scenarios
@@ -76,13 +78,14 @@ class WeightcalcData:
 
         """
         print "The scenario name is: " + scenario
-        settings_name = self.caseconfig[scenario]['settings']
+
+        self.settings_set = self.caseconfig[scenario]['settings']
+
+    def setsettings(self, scenario, settings_name):
+
         self.connections_used = (self.caseconfig[settings_name]
                                  ['use_connections'])
-
-        bandgap_filtering = self.caseconfig[scenario]['bandgap_filtering']
         self.transient = self.caseconfig[settings_name]['transient']
-
         self.normalize = self.caseconfig[settings_name]['normalize']
         self.sigtest = self.caseconfig[settings_name]['sigtest']
         if self.sigtest:
@@ -194,6 +197,7 @@ class WeightcalcData:
         if self.affectedvarindexes == 'all':
             self.affectedvarindexes = range(len(self.variables))
 
+        bandgap_filtering = self.caseconfig[scenario]['bandgap_filtering']
         if bandgap_filtering:
             low_freq = self.caseconfig[scenario]['low_freq']
             high_freq = self.caseconfig[scenario]['high_freq']
@@ -214,6 +218,7 @@ class WeightcalcData:
             self.caseconfig[settings_name]['sub_sampling_interval']
         # TODO: Use proper pandas.tseries.resample techniques
         # if it will really add any functionality
+        # TODO: Investigate use of forward-backward Kalman filters
         self.inputdata = \
             self.inputdata_originalrate[0::self.sub_sampling_interval]
 
@@ -246,6 +251,7 @@ class WeightcalcData:
                                   self.sampling_rate for delay in self.delays]
             self.sample_delays = [int(round(delay/self.sampling_rate))
                                   for delay in self.delays]
+
         # Create descriptive dictionary for later use
         # This will need to be approached slightly differently to allow for
         # different formats under the same "plant"
@@ -284,8 +290,8 @@ def calc_weights(weightcalcdata, method, scenario):
     'transfer_entropy_kraskov'
 
     """
-    # Switch to calculate significance values at each data point and store in
-    # files similar to weight calculations
+    # TODO: Allow for calculation of significance values at each data point
+    # and storing in files similar to weight calculations
 
     if method == 'cross_correlation':
         weightcalculator = CorrWeightcalc(weightcalcdata)
@@ -303,10 +309,17 @@ def calc_weights(weightcalcdata, method, scenario):
     elif not weightcalcdata.sigtest:
         sigstatus = 'nosigtest'
 
+    if method == 'transfer_entropy_kraskov':
+        if weightcalcdata.additional_parameters['auto_embed']:
+            embedstatus = 'autoembedding'
+        else:
+            embedstatus = 'naive'
+    else:
+        embedstatus = 'naive'
+
     vardims = len(weightcalcdata.variables)
     startindex = weightcalcdata.startindex
     size = weightcalcdata.testsize
-    data_header = weightcalculator.data_header
 
     cause_dellist = []
     affected_dellist = []
@@ -332,33 +345,29 @@ def calc_weights(weightcalcdata, method, scenario):
     # Initiate headerline for weightstore file
     # Create "Delay" as header for first row
     headerline = ['Delay']
-
     for affectedvarindex in weightcalcdata.affectedvarindexes:
         affectedvarname = weightcalcdata.variables[affectedvarindex]
         headerline.append(affectedvarname)
 
     # Define filename structure for CSV file containing weights between
     # a specific causevar and all the subsequent affectedvars
-    def filename(name, method, boxindex, sigstatus, causevar):
-        return filename_template.format(weightcalcdata.casename,
-                                        scenario, name, method, sigstatus,
-                                        boxindex, causevar)
+    def filename(weightname, boxindex, causevar):
+        boxstring = 'box{:03d}'.format(boxindex)
 
-    def sig_filename(name, method, boxindex, causevar):
-        return sig_filename_template.format(weightcalcdata.casename,
-                                            scenario, name, method,
-                                            boxindex, causevar)
+        filedir = config_setup.ensure_existence(
+            os.path.join(weightstoredir, weightname, boxstring), make=True)
+
+        filename = '{}.csv'.format(causevar)
+
+        return os.path.join(filedir, filename)
 
     # Store the weight calculation results in similar format as original data
 
-    weightstoredir = config_setup.ensure_existance(
-        os.path.join(weightcalcdata.saveloc, 'weightdata'), make=True)
-
-    filename_template = os.path.join(weightstoredir,
-                                     '{}_{}_{}_{}_{}_box{:03d}_{}.csv')
-
-    sig_filename_template = os.path.join(weightstoredir,
-                                         '{}_{}_{}_{}_box{:03d}_{}.csv')
+    # Define weightstoredir up to the method level
+    weightstoredir = config_setup.ensure_existence(
+        os.path.join(weightcalcdata.saveloc, 'weightdata',
+                     weightcalcdata.casename,
+                     scenario, method, sigstatus, embedstatus), make=True)
 
     if weightcalcdata.single_entropies:
         # Initiate headerline for single signal entropies storage file
@@ -369,8 +378,8 @@ def calc_weights(weightcalcdata, method, scenario):
             return signalent_filename_template.format(
                 weightcalcdata.casename, scenario, name, boxindex)
 
-        signalentstoredir = config_setup.ensure_existance(
-            os.path.join(weightcalcdata.saveloc, 'signal_entopries'),
+        signalentstoredir = config_setup.ensure_existence(
+            os.path.join(weightcalcdata.saveloc, 'signal_entropies'),
             make=True)
 
         signalent_filename_template = \
@@ -383,28 +392,15 @@ def calc_weights(weightcalcdata, method, scenario):
         weightcalcdata.boxsize,
         weightcalcdata.boxnum)
 
-    # Create storage lists weight_arrays, delay_arrays and datastores
-    # that will be generated for each box
-
-    weight_arrays = []
-    delay_arrays = []
-    datastores = []
-
     for boxindex in weightcalcdata.boxindexes:
         box = boxes[boxindex]
-
-        weight_array = np.empty((vardims, vardims))
-        delay_array = np.empty((vardims, vardims))
-        weight_array[:] = np.NAN
-        delay_array[:] = np.NAN
-        datastore = []
 
         # Calculate single signal entropies - do not worry about
         # delays, but still do it according to different boxes
         if weightcalcdata.single_entropies:
-                # Calculate single signal entropies of all variables
-                # and save output in similar format to
-                # standard weight calculation results
+            # Calculate single signal entropies of all variables
+            # and save output in similar format to
+            # standard weight calculation results
             signalentlist = []
             for varindex, _ in enumerate(weightcalcdata.variables):
                 vardata = box[:, varindex][startindex:startindex+size]
@@ -437,22 +433,16 @@ def calc_weights(weightcalcdata, method, scenario):
             weightcalcdata, weightcalculator,
             box, startindex, size,
             newconnectionmatrix,
-            filename, method, boxindex, sigstatus, headerline,
-            sig_filename,
-            weight_array, delay_array, datastore]
+            method, boxindex, sigstatus,
+            filename, headerline]
 
         # Run the script that will handle multiprocessing
-        weight_array, delay_array, datastore = \
-            gaincalc_oneset.run(non_iter_args,
-                                weightcalcdata.do_multiprocessing)
+        gaincalc_oneset.run(non_iter_args,
+                            weightcalcdata.do_multiprocessing)
 
         ########################################################
 
-        weight_arrays.append(weight_array)
-        delay_arrays.append(delay_array)
-        datastores.append(datastore)
-
-    return weight_arrays, delay_arrays, datastores, data_header
+    return None
 
 
 def weightcalc(mode, case, writeoutput=False, single_entropies=False,
@@ -469,60 +459,18 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False,
     weightcalcdata = WeightcalcData(mode, case, single_entropies, fftcalc,
                                     do_multiprocessing)
 
-    # Define export directories and filenames
-    weightdir = config_setup.ensure_existance(os.path.join(
-        weightcalcdata.saveloc, 'weightcalc'), make=True)
-
-    filename_template = os.path.join(weightdir, '{}_{}_{}_{}.csv')
-
-    def filename(method, name):
-        return filename_template.format(case, scenario,
-                                        method, name)
-
-    maxweight_array_name = 'maxweight_array_box{:03d}'
-    delay_array_name = 'delay_array_box{:03d}'
-    weightcalc_data_name = 'weightcalc_data_box{:03d}'
-
     for scenario in weightcalcdata.scenarios:
         logging.info("Running scenario {}".format(scenario))
         # Update scenario-specific fields of weightcalcdata object
         weightcalcdata.scenariodata(scenario)
+        for settings_name in weightcalcdata.settings_set:
+            weightcalcdata.setsettings(scenario, settings_name)
+            logging.info("Now running settings {}".format(settings_name))
 
-        for method in weightcalcdata.methods:
-            logging.info("Method: " + method)
+            for method in weightcalcdata.methods:
+                logging.info("Method: " + method)
 
-            # Test whether the 'weightcalc_data_box01' file already exists
-            testlocation = filename(method, 'weightcalc_data_box001')
-            if not os.path.exists(testlocation):
-                # Continue with execution
-                [weight_arrays, delay_arrays, datastores, data_header] = \
-                    calc_weights(weightcalcdata, method, scenario)
-
-                # TODO: Call this code on each weight array as soon as its
-                # calculation is finished.
-
-                for boxindex, boxnumber in \
-                        enumerate(weightcalcdata.boxindexes):
-                    if writeoutput:
-                        # Write arrays to file
-                        np.savetxt(
-                            filename(method,
-                                     maxweight_array_name.format(boxnumber+1)),
-                            weight_arrays[boxindex],
-                            delimiter=',')
-                        np.savetxt(
-                            filename(method,
-                                     delay_array_name.format(boxnumber+1)),
-                            delay_arrays[boxindex],
-                            delimiter=',')
-                        # Write datastore to file
-                        writecsv_weightcalc(
-                            filename(method,
-                                     weightcalc_data_name.format(boxnumber+1)),
-                            datastores[boxindex],
-                            data_header)
-            else:
-                logging.info("The requested results are in existence")
+                calc_weights(weightcalcdata, method, scenario)
 
 if __name__ == '__main__':
     multiprocessing.freezeSupport()

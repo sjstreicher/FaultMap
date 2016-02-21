@@ -21,8 +21,8 @@ def wrapper(func, *args, **kwargs):
 if __name__ == '__main__':
     multiprocessing.freeze_support()
     logging.basicConfig(level=logging.INFO)
-    dataloc, _ = config_setup.get_locations()
-    weightcalc_config = json.load(open(os.path.join(dataloc, 'config'
+    dataloc, configloc, _ = config_setup.get_locations()
+    weightcalc_config = json.load(open(os.path.join(configloc, 'config'
                                                     '_weightcalc' + '.json')))
 
     # Flag indicating whether calculated results should be written to disk
