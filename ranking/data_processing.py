@@ -33,41 +33,226 @@ def shuffle_data(input_data):
     return shuffled_formatted
 
 
-def result_reconstruction(result, weightcalcdata):
-    """Reconstructs the weight_array, delay_array and datastore from the
-    results returned from pool.map multiprocessing function.
+def process_auxfile(filename):
+    """Processes an auxfile and returns a list of affected_vars,
+    weight_array as well as relative significance weight array.
+
     """
-    # The results is a list of tuples with a length equal to causevars
-    # Each tuple has a partial weight_array, delay_array and datastore
-    # containing only results related to its specific causevar
 
-    vardims = len(weightcalcdata.variables)
-    # Initialise final storage containers
-    weight_array = np.empty((vardims, vardims))
-    delay_array = np.empty((vardims, vardims))
-    weight_array[:] = np.NAN
-    delay_array[:] = np.NAN
-    datastore = []
+    affectedvars = []
+    weights = []
+    sigweights = []
+    delays = []
 
-#    affectedlength = len(weightcalcdata.affectedvarindexes)
+    with open(filename, 'rb') as auxfile:
+        auxfilereader = csv.reader(auxfile, delimiter=',')
+        for rowindex, row in enumerate(auxfilereader):
+            if rowindex == 0:
+                # Find the indices of important rows
+                affectedvar_index = row.index('affectedvar')
 
-    for causevarindex, causevar_result in enumerate(result):
-        weight_array[:, causevarindex] = causevar_result[0][:, causevarindex]
-        delay_array[:, causevarindex] = causevar_result[1][:, causevarindex]
+                if 'max_ent' in row:
+                    maxval_index = row.index('max_ent')
+                else:
+                    maxval_index = row.index('max_corr')
 
-#        if causevarindex % 2 == 0:
-#            # If even causevarindex, append the first part
-#            for affectedvarindex in range(0, affectedlength):
-#                datastore.append(causevar_result[2][affectedvarindex])
-#        else:
-#            # If uneven causevarindex, append last part
-#            for affectedvarindex in range(affectedlength, affectedlength*2):
-#                datastore.append(causevar_result[2][affectedvarindex])
+                if 'threshold' in row:
+                    thresh_index = row.index('threshold')
+                else:
+                    thresh_index = row.index('threshcorr')
+                threshpass_index = row.index('threshpass')
+                maxdelay_index = row.index('max_delay')
 
-    # TODO: Find out why two variables are calculated at each instance
-    # It appears to be dependent on the number of processes run simultaneously
+            if rowindex > 0:
 
-    return weight_array, delay_array, datastore
+                affectedvars.append(row[affectedvar_index])
+                weights.append(float(row[maxval_index]))
+                delays.append(float(row[maxdelay_index]))
+                # Test if sigtest passed before assigning weight
+                if row[threshpass_index] == 'True':
+                    # If the threshold is negative, take the absolute value
+                    # TODO: Need to think the implications of this through
+                    sigweight = (float(row[maxval_index]) /
+                                 abs(float(row[thresh_index])))
+                    sigweights.append(sigweight)
+                else:
+                    sigweights.append(0.)
+
+    return affectedvars, weights, sigweights, delays
+
+
+def create_arrays(datadir, tsfilename):
+    """
+    datadir is the location of the auxdata and weights folders for the
+    specific case that is under investigation
+
+    tsfilename is the file name of the original time series data file
+    used to generate each case and is only used for generating a list of
+    variables
+
+    """
+
+    absoluteweightarray_name = 'weight_absolute_arrays'
+    directionalweightarray_name = 'weight_directional_arrays'
+    neutralweightarray_name = 'weight_arrays'
+    absolutesigweightarray_name = 'sigweight_absolute_arrays'
+    directionalsigweightarray_name = 'sigweight_directional_arrays'
+    neutralsigweightarray_name = 'sigweight_arrays'
+    absolutedelayarray_name = 'delay_absolute_arrays'
+    directionaldelayarray_name = 'delay_directional_arrays'
+    neutraldelayarray_name = 'delay_arrays'
+
+    directories = next(os.walk(datadir))[1]
+
+    test_strings = ['auxdata_absolute', 'auxdata_directional', 'auxdata']
+
+    for test_string in test_strings:
+
+        if test_string in directories:
+
+            if test_string == 'auxdata_absolute':
+                weightarray_name = absoluteweightarray_name
+                sigweightarray_name = absolutesigweightarray_name
+                delayarray_name = absolutedelayarray_name
+            elif test_string == 'auxdata_directional':
+                weightarray_name = directionalweightarray_name
+                sigweightarray_name = directionalsigweightarray_name
+                delayarray_name = directionaldelayarray_name
+            elif test_string == 'auxdata':
+                weightarray_name = neutralweightarray_name
+                sigweightarray_name = neutralsigweightarray_name
+                delayarray_name = neutraldelayarray_name
+
+            # Calculate absolute weight arrays
+            boxes = next(os.walk(os.path.join(datadir, test_string)))[1]
+            for box in boxes:
+                boxdir = os.path.join(datadir, test_string, box)
+                # Get list of causevars
+                causevar_filenames = next(os.walk(boxdir))[2]
+                causevars = []
+                affectedvar_array = []
+                weight_array = []
+                sigweight_array = []
+                delay_array = []
+                for causevar_file in causevar_filenames:
+                    causevars.append(str(causevar_file[:-4]))
+
+                    # Open auxfile and return weight array as well as
+                    # significance relative weight arrays
+
+                    affectedvars, weights, sigweights, delays = \
+                        process_auxfile(os.path.join(boxdir, causevar_file))
+
+                    affectedvar_array.append(affectedvars)
+                    weight_array.append(weights)
+                    sigweight_array.append(sigweights)
+                    delay_array.append(delays)
+
+                # Write the arrays to file
+                # Create a base array based on the full set of variables
+                # found in the typical weightcalcdata function
+
+                # Get variables
+                variables = read_variables(tsfilename)
+                # Initialize matrix with variables written
+                # in first row and column
+                weights_matrix = np.zeros(
+                    (len(variables)+1, len(variables)+1)).astype(object)
+
+                weights_matrix[0, 1:] = variables
+                weights_matrix[1:, 0] = variables
+
+                sigweights_matrix = np.copy(weights_matrix)
+                delay_matrix = np.copy(weights_matrix)
+
+                # Write results to appropritae entries in array
+                for causevar_index, causevar in enumerate(causevars):
+                    causevarloc = variables.index(causevar)
+                    for affectedvar_index, affectedvar in \
+                            enumerate(affectedvar_array[causevar_index]):
+                        affectedvarloc = variables.index(affectedvar)
+
+                        weights_matrix[affectedvarloc+1, causevarloc+1] = \
+                            weight_array[causevar_index][affectedvar_index]
+                        sigweights_matrix[affectedvarloc+1, causevarloc+1] = \
+                            sigweight_array[causevar_index][affectedvar_index]
+                        delay_matrix[affectedvarloc+1, causevarloc+1] = \
+                            delay_array[causevar_index][affectedvar_index]
+
+                # Write to CSV files
+                weightarray_dir = os.path.join(
+                     datadir, weightarray_name, box)
+                config_setup.ensure_existence(weightarray_dir)
+
+                sigweightarray_dir = os.path.join(
+                    datadir, sigweightarray_name, box)
+                config_setup.ensure_existence(sigweightarray_dir)
+
+                delayarray_dir = os.path.join(
+                     datadir, delayarray_name, box)
+                config_setup.ensure_existence(delayarray_dir)
+
+                weightfilename = \
+                    os.path.join(weightarray_dir, 'weight_array.csv')
+                np.savetxt(weightfilename, weights_matrix,
+                           delimiter=',', fmt='%s')
+
+                sigweightfilename = \
+                    os.path.join(sigweightarray_dir, 'sigweight_array.csv')
+                np.savetxt(sigweightfilename, sigweights_matrix,
+                           delimiter=',', fmt='%s')
+
+                delayfilename = \
+                    os.path.join(delayarray_dir, 'delay_array.csv')
+                np.savetxt(delayfilename, delay_matrix,
+                           delimiter=',', fmt='%s')
+
+    return None
+
+
+def result_reconstruction(mode, case, writeoutput):
+    """Reconstructs the weight_array and delay_array for different weight types
+    from data generated by run_weightcalc process.
+
+    The results are written to the same folders where the files are found.
+
+
+    """
+
+    saveloc, caseconfigdir, casedir, _ = config_setup.runsetup(mode, case)
+
+    caseconfig = json.load(
+        open(os.path.join(caseconfigdir, case +
+                          '_weightcalc' + '.json')))
+
+    # Directory where subdirectories for scenarios will be stored
+    scenariosdir = os.path.join(saveloc, 'weightdata', case)
+
+    # Get list of all scenarios
+    scenarios = next(os.walk(scenariosdir))[1]
+
+    for scenario in scenarios:
+        print scenario
+
+        tsfilename = os.path.join(casedir, 'data',
+                                  caseconfig[scenario]['data'])
+
+        methodsdir = os.path.join(scenariosdir, scenario)
+        methods = next(os.walk(methodsdir))[1]
+        for method in methods:
+            print method
+            sigtypesdir = os.path.join(methodsdir, method)
+            sigtypes = next(os.walk(sigtypesdir))[1]
+            for sigtype in sigtypes:
+                print sigtype
+                embedtypesdir = os.path.join(sigtypesdir, sigtype)
+                embedtypes = next(os.walk(embedtypesdir))[1]
+                for embedtype in embedtypes:
+                    print embedtype
+                    datadir = os.path.join(embedtypesdir, embedtype)
+                    create_arrays(datadir, tsfilename)
+
+    return None
 
 
 def csv_to_h5(saveloc, raw_tsdata, scenario, case):
@@ -75,7 +260,7 @@ def csv_to_h5(saveloc, raw_tsdata, scenario, case):
     # Name the dataset according to the scenario
     dataset = scenario
 
-    datapath = config_setup.ensure_existance(os.path.join(
+    datapath = config_setup.ensure_existence(os.path.join(
         saveloc, 'data', case), make=True)
 
     hdf5writer = tb.open_file(os.path.join(datapath, scenario + '.h5'), 'w')
@@ -146,7 +331,7 @@ def fft_calculation(raw_tsdata, normalised_tsdata, variables, sampling_rate,
             plt.ylabel('Normalised amplitude')
             plt.legend()
 
-            plotdir = config_setup.ensure_existance(
+            plotdir = config_setup.ensure_existence(
                 os.path.join(saveloc, 'fftplots'), make=True)
 
             filename_template = os.path.join(plotdir,
@@ -163,7 +348,7 @@ def fft_calculation(raw_tsdata, normalised_tsdata, variables, sampling_rate,
     datalines = np.concatenate((freqlist, fft_data), axis=1)
 
     # Define export directories and filenames
-    datadir = config_setup.ensure_existance(
+    datadir = config_setup.ensure_existence(
         os.path.join(saveloc, 'fftdata'), make=True)
 
     filename_template = os.path.join(datadir, '{}_{}_{}.csv')
@@ -228,7 +413,7 @@ def bandgapfilter_data(raw_tsdata, normalised_tsdata, variables,
         datalines = np.concatenate((time, inputdata_bandgapfiltered), axis=1)
 
     # Define export directories and filenames
-    datadir = config_setup.ensure_existance(
+    datadir = config_setup.ensure_existence(
         os.path.join(saveloc, 'bandgappeddata'), make=True)
 
     filename_template = os.path.join(datadir, '{}_{}_{}_{}_{}.csv')
@@ -266,7 +451,7 @@ def normalise_data(raw_tsdata, inputdata_raw, saveloc, case, scenario):
     datalines = np.concatenate((time, inputdata_normalised), axis=1)
 
     # Define export directories and filenames
-    datadir = config_setup.ensure_existance(
+    datadir = config_setup.ensure_existence(
         os.path.join(saveloc, 'normdata'), make=True)
 
     filename_template = os.path.join(datadir, '{}_{}_{}.csv')

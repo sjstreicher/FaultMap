@@ -13,8 +13,8 @@ from ranking.noderank import noderankcalc
 
 logging.basicConfig(level=logging.INFO)
 
-dataloc, _ = config_setup.get_locations()
-noderank_config = json.load(open(os.path.join(dataloc, 'config'
+dataloc, configloc, saveloc = config_setup.get_locations()
+noderank_config = json.load(open(os.path.join(configloc, 'config'
                                               '_noderank' + '.json')))
 
 writeoutput = noderank_config['writeoutput']

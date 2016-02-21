@@ -9,7 +9,7 @@ import json
 import os
 
 
-def ensure_existance(location, make=True):
+def ensure_existence(location, make=True):
     if not os.path.exists(location):
         if make:
             os.makedirs(location)
@@ -21,7 +21,7 @@ def ensure_existance(location, make=True):
 def runsetup(mode, case):
     """Gets all required parameters from the case configuration file.
 
-    Mode can be either 'tests' or 'plants' as required to get to the
+    Mode can be either 'tests' or 'cases' as required to get to the
     correct directory.
 
     """
@@ -29,28 +29,32 @@ def runsetup(mode, case):
     if mode == 'tests':
         saveloc = 'test_exports'
         casedir = 'test_configs'
+        caseconfigdir = 'test_configs'
         infodynamicsloc = 'infodynamics.jar'
 
-    elif mode == 'plants':
+    elif mode == 'cases':
 
         # Load directories config file
         dirs = json.load(open('config.json'))
         # Get data and preferred export directories from
         # directories config file
-        locations = [ensure_existance(os.path.expanduser(dirs[location]))
-                     for location in ['dataloc', 'saveloc', 'infodynamicsloc']]
-        dataloc, saveloc, infodynamicsloc = locations
+        locations = [ensure_existence(os.path.expanduser(dirs[location]))
+                     for location in ['dataloc', 'configloc', 'saveloc',
+                                      'infodynamicsloc']]
+        dataloc, configloc, saveloc, infodynamicsloc = locations
 
         # Define case data directory
-        casedir = ensure_existance(os.path.join(dataloc, mode, case),
+        casedir = ensure_existence(os.path.join(dataloc, mode, case),
                                    make=True)
+        caseconfigdir = os.path.join(configloc, mode, case)
 
-    return saveloc, casedir, infodynamicsloc
+    return saveloc, caseconfigdir, casedir, infodynamicsloc
 
 
 def get_locations():
     # Load directories config file
     dirs = json.load(open('config.json'))
-    dataloc, saveloc = [os.path.expanduser(dirs[location])
-                        for location in ['dataloc', 'saveloc']]
-    return dataloc, saveloc
+    dataloc, configloc, saveloc = \
+        [os.path.expanduser(dirs[location])
+         for location in ['dataloc', 'configloc', 'saveloc']]
+    return dataloc, configloc, saveloc

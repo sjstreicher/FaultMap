@@ -50,8 +50,9 @@ class CorrWeightcalc(object):
 
         self.data_header = ['causevar', 'affectedvar', 'base_corr',
                             'max_corr', 'max_delay', 'max_index',
-                            'signchange', 'corrthreshpass',
-                            'dirrthreshpass', 'dirval']
+                            'signchange', 'threshcorr', 'threshdir',
+                            'corrthreshpass', 'dirthreshpass',
+                            'threshpass', 'dirval']
 
     def calcweight(self, causevardata, affectedvardata, weightcalcdata,
                    causevarindex, affectedvarindex):
@@ -63,11 +64,12 @@ class CorrWeightcalc(object):
         corrval = np.corrcoef(causevardata.T, affectedvardata.T)[1, 0]
         return [corrval], None
 
-    def calcsigthresh(self, affected_data, causal_data):
+    def calcsigthresh(self, _, affected_data, causal_data):
         return [self.threshcorr]
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
-               weightlist, weight_array, delay_array, datastore, proplist):
+               weightlist, proplist):
+
         """Calculates and reports the relevant output for each combination
         of variables tested.
 
@@ -115,6 +117,7 @@ class CorrWeightcalc(object):
 
         corrthreshpass = None
         dirthreshpass = None
+        threshpass = None
         if weightcalcdata.sigtest:
             corrthreshpass = (maxcorr_abs >= self.threshcorr)
             dirthreshpass = (directionindex >= self.threshdir)
@@ -123,23 +126,18 @@ class CorrWeightcalc(object):
             logging.info("Directionality threshold passed: " +
                          str(dirthreshpass))
             if not (corrthreshpass and dirthreshpass):
+                threshpass = False
                 maxcorr = 0
-
-        weight_array[affectedvarindex, causevarindex] = maxcorr
-
-#        # Replace all nan by zero
-#        nanlocs = np.isnan(weight_array)
-#        weight_array[nanlocs] = 0
-
-        delay_array[affectedvarindex, causevarindex] = bestdelay
+            else:
+                threshpass = True
 
         dataline = [causevar, affectedvar, str(weightlist[0]),
                     maxcorr, str(bestdelay), str(delay_index),
-                    signchange, corrthreshpass, dirthreshpass, directionindex]
+                    signchange, self.threshcorr, self.threshdir,
+                    corrthreshpass, dirthreshpass,
+                    threshpass, directionindex]
 
-        datastore.append(dataline)
-
-        return weight_array, delay_array, datastore
+        return dataline
 
 
 class PartialCorrWeightcalc(CorrWeightcalc):
@@ -254,9 +252,6 @@ class TransentWeightcalc:
         # Calculate transfer entropy as the difference
         # between the forward and backwards entropy
 
-        # Initialise for each calculation in an attempt to fix
-        # Kraskov calculator execution
-
         # Pass special estimator specific parameters in here
 
         transent_fwd, auxdata_fwd = \
@@ -279,6 +274,7 @@ class TransentWeightcalc:
         transent_absolute = transent_fwd
 
         # Do not pass negatives on to weight array
+        # TODO: Do this check later instead
 #        if transent_directional < 0:
 #            transent_directional = 0
 #
@@ -289,13 +285,12 @@ class TransentWeightcalc:
             [auxdata_fwd, auxdata_bwd]
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
-               weightlist, weight_array, delay_array, datastore, proplist):
+               weightlist, proplist):
+
         """Calculates and reports the relevant output for each combination
         of variables tested.
 
         """
-
-        report_basis = 'directional'
 
         variables = weightcalcdata.variables
         causevar = variables[causevarindex]
@@ -318,51 +313,41 @@ class TransentWeightcalc:
         size = weightcalcdata.testsize
         startindex = weightcalcdata.startindex
 
-        threshpass_directional = None
         # Need placeholder in case significance is not tested
+        threshpass_directional = None
+        threshpass_absolute = None
         self.threshent_directional = None
+        self.threshent_absolute = None
 
-        if report_basis == 'directional':
-            # Do everything for the directional case
-            delay_array_directional = delay_array
-            maxval_directional = max(weightlist_directional)
-            delay_index_directional = \
-                weightlist_directional.index(maxval_directional)
-            bestdelay_directional = \
-                weightcalcdata.actual_delays[delay_index_directional]
-            bestdelay_sample_directional = \
-                weightcalcdata.sample_delays[delay_index_directional]
-            delay_array_directional[affectedvarindex, causevarindex] = \
-                bestdelay_directional
-            bestdelay_sample = bestdelay_sample_directional
-            delay_array = delay_array_directional
-            logging.info("The maximum directional TE between " + causevar +
-                         " and " + affectedvar + " is: " +
-                         str(maxval_directional))
-            if proplist_fwd[0] is not None:
-                k_hist_fwd, k_tau_fwd, l_hist_fwd, l_tau_fwd, delay_fwd = \
-                    proplist_fwd[delay_index_directional]
-                k_hist_bwd, k_tau_bwd, l_hist_bwd, l_tau_bwd, delay_bwd = \
-                    proplist_bwd[delay_index_directional]
+        # Do everything for the directional case
+#            delay_array_directional = delay_array
+        maxval_directional = max(weightlist_directional)
+        delay_index_directional = \
+            weightlist_directional.index(maxval_directional)
+        bestdelay_directional = \
+            weightcalcdata.actual_delays[delay_index_directional]
+        bestdelay_sample_directional = \
+            weightcalcdata.sample_delays[delay_index_directional]
+#        delay_array_directional[affectedvarindex, causevarindex] = \
+#            bestdelay_directional
+        logging.info("The maximum directional TE between " + causevar +
+                     " and " + affectedvar + " is: " +
+                     str(maxval_directional))
 
-        elif report_basis == 'absolute':
-            # Repeat for absolute case
-            delay_array_absolute = delay_array
-            maxval_absolute = max(weightlist_absolute)
-            delay_index_absolute = \
-                weightlist_absolute.index(maxval_absolute)
-            bestdelay_absolute = \
-                weightcalcdata.actual_delays[delay_index_absolute]
-            bestdelay_sample_absolute = \
-                weightcalcdata.sample_delays[delay_index_absolute]
-            delay_array_absolute[affectedvarindex, causevarindex] = \
-                bestdelay_absolute
-            bestdelay_sample = bestdelay_sample_absolute
-            delay_array = delay_array_absolute
-            k_hist_fwd, k_tau_fwd, l_hist_fwd, l_tau_fwd, delay_fwd = \
-                proplist_fwd[delay_index_absolute]
-            k_hist_bwd, k_tau_bwd, l_hist_bwd, l_tau_bwd, delay_bwd = \
-                proplist_bwd[delay_index_absolute]
+        # Repeat for absolute case
+#        delay_array_absolute = delay_array
+        maxval_absolute = max(weightlist_absolute)
+        delay_index_absolute = \
+            weightlist_absolute.index(maxval_absolute)
+        bestdelay_absolute = \
+            weightcalcdata.actual_delays[delay_index_absolute]
+        bestdelay_sample_absolute = \
+            weightcalcdata.sample_delays[delay_index_absolute]
+#        delay_array_absolute[affectedvarindex, causevarindex] = \
+#            bestdelay_absolute
+        logging.info("The maximum absolute TE between " + causevar +
+                     " and " + affectedvar + " is: " +
+                     str(maxval_absolute))
 
         if weightcalcdata.sigtest:
             self.te_thresh_method = weightcalcdata.te_thresh_method
@@ -370,17 +355,24 @@ class TransentWeightcalc:
             # Calculate threshold for transfer entropy
             thresh_causevardata = \
                 inputdata[:, causevarindex][startindex:startindex+size]
-            thresh_affectedvardata = \
-                inputdata[:, affectedvarindex][startindex + bestdelay_sample:
+            thresh_affectedvardata_directional = \
+                inputdata[:, affectedvarindex][startindex +
+                                               bestdelay_sample_directional:
                                                startindex + size +
-                                               bestdelay_sample]
+                                               bestdelay_sample_directional]
 
+            thresh_affectedvardata_absolute = \
+                inputdata[:, affectedvarindex][startindex +
+                                               bestdelay_sample_absolute:
+                                               startindex + size +
+                                               bestdelay_sample_absolute]
+
+            # Do significance calculations for directional case
             if self.te_thresh_method == 'rankorder':
-                self.thresh_rankorder(thresh_affectedvardata.T,
+                self.thresh_rankorder(thresh_affectedvardata_directional.T,
                                       thresh_causevardata.T)
-
             elif self.te_thresh_method == 'sixsigma':
-                self.thresh_sixsigma(thresh_affectedvardata.T,
+                self.thresh_sixsigma(thresh_affectedvardata_directional.T,
                                      thresh_causevardata.T)
 
             logging.info("The directional TE threshold is: " +
@@ -393,33 +385,54 @@ class TransentWeightcalc:
                 threshpass_directional = False
                 maxval_directional = 0
 
-            logging.info("TE threshold passed: " + str(threshpass_directional))
-        else:
-            # Delete all negative entries
-            if maxval_directional < 0:
-                maxval_directional = 0
+            if not delay_index_directional == delay_index_absolute:
+                # Need to do own calculation of absolute significance
+                if self.te_thresh_method == 'rankorder':
+                    self.thresh_rankorder(thresh_affectedvardata_absolute.T,
+                                          thresh_causevardata.T)
+                elif self.te_thresh_method == 'sixsigma':
+                    self.thresh_sixsigma(thresh_affectedvardata_absolute.T,
+                                         thresh_causevardata.T)
 
-        weight_array[affectedvarindex, causevarindex] = maxval_directional
+            logging.info("The absolute TE threshold is: " +
+                         str(self.threshent_absolute))
 
-        dataline = [causevar, affectedvar, str(weightlist_directional[0]),
-                    maxval_directional, str(bestdelay_directional),
-                    str(delay_index_directional), self.threshent_directional,
-                    threshpass_directional]
+            if maxval_absolute >= self.threshent_absolute \
+                    and maxval_absolute >= 0:
+                threshpass_absolute = True
+            else:
+                threshpass_absolute = False
+                maxval_absolute = 0
 
-        # All this unpacking is probably unnecessary
-        if proplist_fwd[0] is not None:
-            auxdataline = \
-                [k_hist_fwd, k_tau_fwd, l_hist_fwd, l_tau_fwd, delay_fwd,
-                 k_hist_bwd, k_tau_bwd, l_hist_bwd, l_tau_bwd, delay_bwd]
+#        weight_array[affectedvarindex, causevarindex] = maxval_directional
 
-            dataline = dataline + auxdataline
-        datastore.append(dataline)
+        dataline_directional = \
+            [causevar, affectedvar, str(weightlist_directional[0]),
+             maxval_directional, str(bestdelay_directional),
+             str(delay_index_directional), self.threshent_directional,
+             threshpass_directional]
+
+        dataline_absolute = \
+            [causevar, affectedvar, str(weightlist_absolute[0]),
+             maxval_absolute, str(bestdelay_absolute),
+             str(delay_index_absolute), self.threshent_absolute,
+             threshpass_absolute]
+
+        dataline_directional = dataline_directional + \
+            proplist_fwd[delay_index_directional] + \
+            proplist_bwd[delay_index_directional]
+
+        dataline_absolute = dataline_absolute + \
+            proplist_fwd[delay_index_absolute] + \
+            proplist_bwd[delay_index_absolute]
+
+        datalines = [dataline_directional, dataline_absolute]
 
         logging.info("The corresponding delay is: " +
                      str(bestdelay_directional))
         logging.info("The TE with no delay is: " + str(weightlist[0][0]))
 
-        return weight_array, delay_array, datastore
+        return datalines
 
     def calc_surr_te(self, affected_data, causal_data, num):
         """Calculates surrogate transfer entropy values for significance
@@ -458,10 +471,6 @@ class TransentWeightcalc:
         surr_te_fwd = []
         surr_te_bwd = []
         for n in range(num):
-            # Necessary to reinitialize class on each execution for Kraskov
-            # methods to work
-            # This now happens automatically as part of the
-            # calc_infodynamics_te function
 
             surr_te_fwd.append(transentropy.calc_infodynamics_te(
                     self.infodynamicsloc, self.normalize, self.estimator,
@@ -469,7 +478,8 @@ class TransentWeightcalc:
 
             surr_te_bwd.append(transentropy.calc_infodynamics_te(
                     self.infodynamicsloc, self.normalize, self.estimator,
-                    surr_tsdata[n][0, :], affected_data, **self.parameters)[0])
+                    surr_tsdata[n][0, :], affected_data,
+                    **self.parameters)[0])
 
         surr_te_directional = \
             [surr_te_fwd[n] - surr_te_bwd[n] for n in range(num)]
@@ -520,6 +530,7 @@ class TransentWeightcalc:
         self.threshent_absolute = (6 * surr_te_absolute_stdev) + \
             surr_te_absolute_mean
 
-    def calcsigthresh(self, affected_data, causal_data):
+    def calcsigthresh(self, weightcalcdata, affected_data, causal_data):
+        self.te_surr_method = weightcalcdata.te_surr_method
         self.thresh_rankorder(affected_data, causal_data)
         return [self.threshent_directional, self.threshent_absolute]
