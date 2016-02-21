@@ -263,14 +263,18 @@ def csv_to_h5(saveloc, raw_tsdata, scenario, case):
     datapath = config_setup.ensure_existence(os.path.join(
         saveloc, 'data', case), make=True)
 
-    hdf5writer = tb.open_file(os.path.join(datapath, scenario + '.h5'), 'w')
-    data = np.genfromtxt(raw_tsdata, delimiter=',')
-    # Strip time column and labels first row
-    data = data[1:, 1:]
-    array = hdf5writer.create_array(hdf5writer.root, dataset, data)
+    filename = os.path.join(datapath, scenario + '.h5')
 
-    array.flush()
-    hdf5writer.close()
+    if not os.path.exists(filename):
+
+        hdf5writer = tb.open_file(filename, 'w')
+        data = np.genfromtxt(raw_tsdata, delimiter=',')
+        # Strip time column and labels first row
+        data = data[1:, 1:]
+        array = hdf5writer.create_array(hdf5writer.root, dataset, data)
+
+        array.flush()
+        hdf5writer.close()
 
     return datapath
 
