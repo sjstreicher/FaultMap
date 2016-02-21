@@ -66,8 +66,16 @@ def process_auxfile(filename):
             if rowindex > 0:
 
                 affectedvars.append(row[affectedvar_index])
-                weights.append(float(row[maxval_index]))
+
+                # Test if weight failed threshpass test and writre as zero
+                # if true
+                if row[threshpass_index] == 'False':
+                    weights.append(0.)
+                else:
+                    weights.append(float(row[maxval_index]))
+
                 delays.append(float(row[maxdelay_index]))
+
                 # Test if sigtest passed before assigning weight
                 if row[threshpass_index] == 'True':
                     # If the threshold is negative, take the absolute value
