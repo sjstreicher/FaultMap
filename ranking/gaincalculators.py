@@ -318,7 +318,6 @@ class TransentWeightcalc:
         threshpass_absolute = None
 
         # Do everything for the directional case
-#            delay_array_directional = delay_array
         maxval_directional = max(weightlist_directional)
         delay_index_directional = \
             weightlist_directional.index(maxval_directional)
@@ -326,14 +325,11 @@ class TransentWeightcalc:
             weightcalcdata.actual_delays[delay_index_directional]
         bestdelay_sample_directional = \
             weightcalcdata.sample_delays[delay_index_directional]
-#        delay_array_directional[affectedvarindex, causevarindex] = \
-#            bestdelay_directional
         logging.info("The maximum directional TE between " + causevar +
                      " and " + affectedvar + " is: " +
                      str(maxval_directional))
 
         # Repeat for absolute case
-#        delay_array_absolute = delay_array
         maxval_absolute = max(weightlist_absolute)
         delay_index_absolute = \
             weightlist_absolute.index(maxval_absolute)
@@ -341,8 +337,6 @@ class TransentWeightcalc:
             weightcalcdata.actual_delays[delay_index_absolute]
         bestdelay_sample_absolute = \
             weightcalcdata.sample_delays[delay_index_absolute]
-#        delay_array_absolute[affectedvarindex, causevarindex] = \
-#            bestdelay_absolute
         logging.info("The maximum absolute TE between " + causevar +
                      " and " + affectedvar + " is: " +
                      str(maxval_absolute))
@@ -390,12 +384,12 @@ class TransentWeightcalc:
             if not delay_index_directional == delay_index_absolute:
                 # Need to do own calculation of absolute significance
                 if self.te_thresh_method == 'rankorder':
-                    threshent_directional, threshent_absolute = \
+                    _, threshent_absolute = \
                         self.thresh_rankorder(
                             thresh_affectedvardata_absolute.T,
                             thresh_causevardata.T)
                 elif self.te_thresh_method == 'sixsigma':
-                    threshent_directional, threshent_absolute = \
+                    _, threshent_absolute = \
                         self.thresh_sixsigma(
                             thresh_affectedvardata_absolute.T,
                             thresh_causevardata.T)
