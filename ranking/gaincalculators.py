@@ -316,8 +316,6 @@ class TransentWeightcalc:
         # Need placeholder in case significance is not tested
         threshpass_directional = None
         threshpass_absolute = None
-        self.threshent_directional = None
-        self.threshent_absolute = None
 
         # Do everything for the directional case
 #            delay_array_directional = delay_array
@@ -369,53 +367,61 @@ class TransentWeightcalc:
 
             # Do significance calculations for directional case
             if self.te_thresh_method == 'rankorder':
-                self.thresh_rankorder(thresh_affectedvardata_directional.T,
-                                      thresh_causevardata.T)
+                threshent_directional, threshent_absolute = \
+                    self.thresh_rankorder(
+                        thresh_affectedvardata_directional.T,
+                        thresh_causevardata.T)
             elif self.te_thresh_method == 'sixsigma':
-                self.thresh_sixsigma(thresh_affectedvardata_directional.T,
-                                     thresh_causevardata.T)
+                threshent_directional, threshent_absolute = \
+                    self.thresh_sixsigma(
+                        thresh_affectedvardata_directional.T,
+                        thresh_causevardata.T)
 
             logging.info("The directional TE threshold is: " +
-                         str(self.threshent_directional))
+                         str(threshent_directional))
 
-            if maxval_directional >= self.threshent_directional \
+            if maxval_directional >= threshent_directional \
                     and maxval_directional >= 0:
                 threshpass_directional = True
             else:
                 threshpass_directional = False
-                maxval_directional = 0
+#                maxval_directional = 0
 
             if not delay_index_directional == delay_index_absolute:
                 # Need to do own calculation of absolute significance
                 if self.te_thresh_method == 'rankorder':
-                    self.thresh_rankorder(thresh_affectedvardata_absolute.T,
-                                          thresh_causevardata.T)
+                    threshent_directional, threshent_absolute = \
+                        self.thresh_rankorder(
+                            thresh_affectedvardata_absolute.T,
+                            thresh_causevardata.T)
                 elif self.te_thresh_method == 'sixsigma':
-                    self.thresh_sixsigma(thresh_affectedvardata_absolute.T,
-                                         thresh_causevardata.T)
+                    threshent_directional, threshent_absolute = \
+                        self.thresh_sixsigma(
+                            thresh_affectedvardata_absolute.T,
+                            thresh_causevardata.T)
 
             logging.info("The absolute TE threshold is: " +
-                         str(self.threshent_absolute))
+                         str(threshent_absolute))
 
-            if maxval_absolute >= self.threshent_absolute \
+            if maxval_absolute >= threshent_absolute \
                     and maxval_absolute >= 0:
                 threshpass_absolute = True
             else:
                 threshpass_absolute = False
-                maxval_absolute = 0
+#                maxval_absolute = 0
 
 #        weight_array[affectedvarindex, causevarindex] = maxval_directional
 
         dataline_directional = \
             [causevar, affectedvar, str(weightlist_directional[0]),
              maxval_directional, str(bestdelay_directional),
-             str(delay_index_directional), self.threshent_directional,
+             str(delay_index_directional), threshent_directional,
              threshpass_directional]
 
         dataline_absolute = \
             [causevar, affectedvar, str(weightlist_absolute[0]),
              maxval_absolute, str(bestdelay_absolute),
-             str(delay_index_absolute), self.threshent_absolute,
+             str(delay_index_absolute), threshent_absolute,
              threshpass_absolute]
 
         dataline_directional = dataline_directional + \
@@ -473,13 +479,13 @@ class TransentWeightcalc:
         for n in range(num):
 
             surr_te_fwd.append(transentropy.calc_infodynamics_te(
-                    self.infodynamicsloc, self.normalize, self.estimator,
-                    affected_data, surr_tsdata[n][0, :], **self.parameters)[0])
+                self.infodynamicsloc, self.normalize, self.estimator,
+                affected_data, surr_tsdata[n][0, :], **self.parameters)[0])
 
             surr_te_bwd.append(transentropy.calc_infodynamics_te(
-                    self.infodynamicsloc, self.normalize, self.estimator,
-                    surr_tsdata[n][0, :], affected_data,
-                    **self.parameters)[0])
+                self.infodynamicsloc, self.normalize, self.estimator,
+                surr_tsdata[n][0, :], affected_data,
+                **self.parameters)[0])
 
         surr_te_directional = \
             [surr_te_fwd[n] - surr_te_bwd[n] for n in range(num)]
@@ -504,8 +510,10 @@ class TransentWeightcalc:
         surr_te_directional, surr_te_absolute = \
             self.calc_surr_te(affected_data, causal_data, 19)
 
-        self.threshent_directional = max(surr_te_directional)
-        self.threshent_absolute = max(surr_te_absolute)
+        threshent_directional = max(surr_te_directional)
+        threshent_absolute = max(surr_te_absolute)
+
+        return threshent_directional, threshent_absolute
 
     def thresh_sixsigma(self, affected_data, causal_data):
         """Calculates the minimum threshold required for a transfer entropy
@@ -524,11 +532,13 @@ class TransentWeightcalc:
         surr_te_absolute_mean = np.mean(surr_te_absolute)
         surr_te_absolute_stdev = np.std(surr_te_absolute)
 
-        self.threshent_directional = (6 * surr_te_directional_stdev) + \
+        threshent_directional = (6 * surr_te_directional_stdev) + \
             surr_te_directional_mean
 
-        self.threshent_absolute = (6 * surr_te_absolute_stdev) + \
+        threshent_absolute = (6 * surr_te_absolute_stdev) + \
             surr_te_absolute_mean
+
+        return threshent_directional, threshent_absolute
 
     def calcsigthresh(self, weightcalcdata, affected_data, causal_data):
         self.te_surr_method = weightcalcdata.te_surr_method
