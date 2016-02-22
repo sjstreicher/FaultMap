@@ -80,9 +80,14 @@ def process_auxfile(filename):
                 if row[threshpass_index] == 'True':
                     # If the threshold is negative, take the absolute value
                     # TODO: Need to think the implications of this through
-                    sigweight = (float(row[maxval_index]) /
-                                 abs(float(row[thresh_index])))
-                    sigweights.append(sigweight)
+                    threshold = float(row[thresh_index])
+                    if threshold != 0:
+                        sigweight = (float(row[maxval_index]) /
+                                     abs(threshold))
+                        sigweights.append(sigweight)
+                    else:
+                        sigweights.append(0.)
+
                 else:
                     sigweights.append(0.)
 
