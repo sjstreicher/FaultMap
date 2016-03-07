@@ -37,7 +37,7 @@ before_script:
   # Install pathos
   - git clone git://github.com/uqfoundation/pathos.git
   - cd pathos
-  - wget http://dev.danse.us/packages/pathos-0.1a1.tgz
+  - wget https://www.dropbox.com/s/h08pdqk2n6i2m50/pathos-0.1a1.tgz
   - tar -xzf pathos-0.1a1.tgz
   - easy_install -f . pathos-0.1a1
   - python setup.py install
