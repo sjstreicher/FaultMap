@@ -427,7 +427,8 @@ def calc_gainrank(gainmatrix, noderankdata, rank_method,
     rankingdicts = [backwardrankingdict]
     rankinglists = [backwardrankinglist]
 
-    return rankingdicts, rankinglists, connections, variables, gains
+    return rankingdicts[0], rankinglists[0], connections[0], \
+        variables[0], gains[0]
 
 
 def get_gainmatrices(noderankdata, datadir, typename):
@@ -442,15 +443,15 @@ def get_gainmatrices(noderankdata, datadir, typename):
     # Store all relevant gainmatrices in a list
     gainmatrices = []
 
-    if typename[:16] == 'sigweight_arrays':
+    if typename[:9] == 'sigweight':
         fname = 'sigweight_array.csv'
-    elif typename[:13] == 'weight_arrays':
+    elif typename[:6] == 'weight':
         fname = 'weight_array.csv'
 
     for boxindex in noderankdata.boxes:
         gainmatrix = data_processing.read_gainmatrix(
-           os.path.join(datadir, typename, 'box{:03d}'.format(boxindex+1),
-                        fname))
+            os.path.join(datadir, typename, 'box{:03d}'.format(boxindex+1),
+                         fname))
 
         gainmatrices.append(gainmatrix)
 
@@ -474,6 +475,7 @@ def getfolders(path):
 
     return folders
 
+
 def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
                writeoutput, preprocessing):
 
@@ -481,9 +483,9 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
     modgainmatrix_name = 'modgainmatrix.csv'
     originalgainmatrix_name = 'originalgainmatrix.csv'
     graphfile_name = 'graph_{}.gml'
-    importances_name = 'importances_{}.csv'
-    transientdict_name = 'transientdict_{}.json'
-    basevaldict_name = 'basevaldict_{}.json'
+#    importances_name = 'importances_{}.csv'
+#    transientdict_name = 'transientdict_{}.json'
+#    basevaldict_name = 'basevaldict_{}.json'
     boxrankdict_name = 'boxrankdict_{}.json'
     rel_boxrankdict_name = 'rel_boxrankdict_{}.json'
 
@@ -495,132 +497,83 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
     backward_rankinglists = []
     backward_rankingdicts = []
 
-    for index, gainmatrix in enumerate(gainmatrices):
+    for boxindex, gainmatrix in enumerate(gainmatrices):
         if preprocessing:
             modgainmatrix, _ = \
                 gainmatrix_preprocessing(gainmatrix)
         else:
             modgainmatrix = gainmatrix
 
-#    _, dummyweight = \
-#        gainmatrix_preprocessing(gainmatrix)
-    # Set dummyweight to 10
-    dummyweight = 10
+#       _, dummyweight = gainmatrix_preprocessing(gainmatrix)
+        # Set dummyweight to 10
+        dummyweight = 10
 
-    # This is where the actual ranking calculation happens
-    rankingdicts, rankinglists, connections, \
-        variables, gains = \
-        calc_gainrank(modgainmatrix, noderankdata,
-                      rank_method, dummyweight)
+        # This is where the actual ranking calculation happens
+        rankingdict, rankinglist, connections, \
+            variables, gains = \
+            calc_gainrank(modgainmatrix, noderankdata,
+                          rank_method, dummyweight)
 
-    # The rest of the function deals with storing the
-    # results in the desired formats
+        # The rest of the function deals with storing the
+        # results in the desired formats
 
-    backward_rankinglists.append(rankinglists[0])
-    backward_rankingdicts.append(rankingdicts[0])
+        backward_rankinglists.append(rankinglist)
+        backward_rankingdicts.append(rankingdict)
 
-    if writeoutput:
-        # Make sure the correct directory exists
-        # Take datadir and swop out 'weightdata' for 'noderank'
+        if writeoutput:
+            # Make sure the correct directory exists
+            # Take datadir and swop out 'weightdata' for 'noderank'
 
-        dirparts = getfolders(datadir)
-        dirparts[dirparts.index('weightdata')] = 'noderank'
-        savedir = os.path.join(dirparts)
-        config_setup.ensure_existence(savedir)
+            dirparts = getfolders(datadir)
+            dirparts[dirparts.index('weightdata')] = 'noderank'
+            savedir = dirparts[0]
+            for pathpart in dirparts[1:]:
+                savedir = os.path.join(savedir, pathpart)
+            config_setup.ensure_existence(os.path.join(savedir, typename[:-7]))
 
-        # Save the ranking list for each box
-        writecsv_looprank(
-            os.path.join(savedir, typename[:-7],
-                         rankinglist_name.format(rank_method)),
-            rankinglists[0])
+            if preprocessing:
 
-        if preprocessing:
+                # Save the modified gainmatrix
+                writecsv_looprank(
+                    os.path.join(savedir, typename[:-7],
+                                 modgainmatrix_name),
+                    modgainmatrix)
 
-            # Save the modified gainmatrix
-            writecsv_looprank(
-                os.path.join(savedir, typename[:-7],
-                             modgainmatrix_name),
-                modgainmatrix)
-
-            # Save the original gainmatrix
-            writecsv_looprank(
-                os.path.join(savedir, typename[:-7],
-                             originalgainmatrix_name),
-                gainmatrix)
+                # Save the original gainmatrix
+                writecsv_looprank(
+                    os.path.join(savedir, typename[:-7],
+                                 originalgainmatrix_name),
+                    gainmatrix)
 
         # Export graph files with dummy variables included
         # in backward rankings if available
-        directions = ['backward']
+#        directions = ['backward']
 
         if noderankdata.dummies:
             dummystatus = 'withdummies'
         else:
             dummystatus = 'nodummies'
 
-        for direction, rankinglist, rankingdict, \
-            connection, variable, gain in zip(
-                directions, rankinglists, rankingdicts,
-                connections, variables, gains):
+        # Save the ranking list for each box
+        savepath = config_setup.ensure_existence(
+            os.path.join(savedir, typename[:-7],
+                         'box{:03d}'.format(boxindex+1), dummystatus))
 
-            idtuple = (case, scenario, weight_method,
-                       direction, rank_method,
-                       dummystatus,
-                       noderankdata.boxes[index]+1)
+        writecsv_looprank(
+            os.path.join(savepath,
+                         rankinglist_name.format(rank_method)),
+            rankinglist)
 
-            # Save the ranking list to file
-            savename = importances_template.format(
-                *idtuple)
-            writecsv_looprank(savename, rankinglist)
-
-            # Save the graphs to file
-            graph, _ = \
-                create_importance_graph(
-                    variable, connection, connection, gain,
-                    rankingdict)
-            graph_filename = \
-                graphfile_template.format(*idtuple)
-            nx.readwrite.write_gml(graph.reverse(),
-                                   graph_filename)
-
-        if noderankdata.dummies:
-            # Export backward ranking graphs
-            # without dummy variables visible
-
-            # Backward ranking graph
-            direction = directions[0]
-            rankingdict = rankingdicts[0]
-            connectionmatrix = \
-                noderankdata.connectionmatrix.T
-            gainmatrix = gainmatrix.T
-            graph, _ = \
-                create_importance_graph(
-                    noderankdata.variablelist,
-                    connectionmatrix,
-                    connectionmatrix,
-                    gainmatrix,
-                    rankingdict)
-
-            graph_filename = \
-                graphfile_template.format(
-                    case, scenario, weight_method,
-                    direction, rank_method, 'dumsup',
-                    noderankdata.boxes[index]+1)
-            nx.readwrite.write_gml(
-                graph.reverse(), graph_filename)
-
-            # Calculate and export normalised ranking lists
-            # with dummy variables exluded from results
-
-            normalised_rankinglist = \
-                normalise_rankinglist(
-                    rankingdict,
-                    noderankdata.variablelist)
-            writecsv_looprank(
-                importances_template.format(
-                    case, scenario, weight_method,
-                    direction, rank_method, 'dumsup',
-                    noderankdata.boxes[index]+1),
-                normalised_rankinglist)
+        # Save the graphs to file
+        graph, _ = \
+            create_importance_graph(
+                variables, connections, connections, gains,
+                rankingdict)
+        graph_filename = \
+            os.path.join(savepath,
+                         graphfile_name.format(rank_method))
+        nx.readwrite.write_gml(graph.reverse(),
+                               graph_filename)
 
         # Get the transient and base value dictionaries
         _, _, boxrankdict, rel_boxrankdict = \
@@ -630,28 +583,12 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
 
         # Store dictonaries using JSON
 
-#                            data_processing.write_dictionary(
-#                                transientdict_name.format(case, scenario,
-#                                                          weight_method,
-#                                                          direction),
-#                                transientdict)
-#
-#                            data_processing.write_dictionary(
-#                                basevaldict_name.format(case, scenario,
-#                                                        weight_method,
-#                                                        direction),
-#                                basevaldict)
-#
         data_processing.write_dictionary(
-            boxrankdict_name.format(case, scenario,
-                                    weight_method,
-                                    direction),
+            os.path.join(savepath, boxrankdict_name.format(rank_method)),
             boxrankdict)
 
         data_processing.write_dictionary(
-            rel_boxrankdict_name.format(case, scenario,
-                                        weight_method,
-                                        direction),
+            os.path.join(savepath, rel_boxrankdict_name.format(rank_method)),
             rel_boxrankdict)
 
     return None
@@ -672,8 +609,8 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
 
     # Create base directory
     config_setup.ensure_existence(
-            os.path.join(noderankdata.saveloc,
-                         'noderank'), make=True)
+        os.path.join(noderankdata.saveloc,
+                     'noderank'), make=True)
 
     for scenario in noderankdata.scenarios:
 
@@ -701,8 +638,7 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                             typenames = ['weight_absolute_arrays',
                                          'weight_directional_arrays']
                             if sigtype == 'sigtest':
-                                typenames.append(
-                                   'sigweight_absolute_arrays')
+                                typenames.append('sigweight_absolute_arrays')
                                 typenames.append(
                                     'sigweight_directional_arrays')
                         else:
