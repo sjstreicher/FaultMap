@@ -8,6 +8,7 @@ module.
 import numpy as np
 import tables as tb
 import networkx as nx
+import pandas as pd
 import csv
 import sklearn.preprocessing
 import os
@@ -31,6 +32,24 @@ def shuffle_data(input_data):
     shuffled_formatted[0, :] = shuffled
 
     return shuffled_formatted
+
+
+def getfolders(path):
+    folders = []
+    while 1:
+        path, folder = os.path.split(path)
+
+        if folder != "":
+            folders.append(folder)
+        else:
+            if path != "":
+                folders.append(path)
+
+            break
+
+    folders.reverse()
+
+    return folders
 
 
 def process_auxfile(filename):
@@ -67,7 +86,7 @@ def process_auxfile(filename):
 
                 affectedvars.append(row[affectedvar_index])
 
-                # Test if weight failed threshpass test and writre as zero
+                # Test if weight failed threshpass test and write as zero
                 # if true
                 if row[threshpass_index] == 'False':
                     weights.append(0.)
@@ -172,13 +191,14 @@ def create_arrays(datadir, tsfilename):
                 weights_matrix = np.zeros(
                     (len(variables)+1, len(variables)+1)).astype(object)
 
+                weights_matrix[0, 0] = ''
                 weights_matrix[0, 1:] = variables
                 weights_matrix[1:, 0] = variables
 
                 sigweights_matrix = np.copy(weights_matrix)
                 delay_matrix = np.copy(weights_matrix)
 
-                # Write results to appropritae entries in array
+                # Write results to appropriate entries in array
                 for causevar_index, causevar in enumerate(causevars):
                     causevarloc = variables.index(causevar)
                     for affectedvar_index, affectedvar in \
@@ -194,7 +214,7 @@ def create_arrays(datadir, tsfilename):
 
                 # Write to CSV files
                 weightarray_dir = os.path.join(
-                     datadir, weightarray_name, box)
+                    datadir, weightarray_name, box)
                 config_setup.ensure_existence(weightarray_dir)
 
                 sigweightarray_dir = os.path.join(
@@ -202,7 +222,7 @@ def create_arrays(datadir, tsfilename):
                 config_setup.ensure_existence(sigweightarray_dir)
 
                 delayarray_dir = os.path.join(
-                     datadir, delayarray_name, box)
+                    datadir, delayarray_name, box)
                 config_setup.ensure_existence(delayarray_dir)
 
                 weightfilename = \
@@ -218,6 +238,109 @@ def create_arrays(datadir, tsfilename):
                 delayfilename = \
                     os.path.join(delayarray_dir, 'delay_array.csv')
                 np.savetxt(delayfilename, delay_matrix,
+                           delimiter=',', fmt='%s')
+
+    return None
+
+
+def extract_trends(datadir, tsfilename):
+    """
+    datadir is the location of the weight_array and delay_array folders for the
+    specific case that is under investigation
+
+    tsfilename is the file name of the original time series data file
+    used to generate each case and is only used for generating a list of
+    variables
+
+    """
+
+    # Create array to trend name dictionary
+    namesdict = {'weight_absolute_arrays': 'weight_absolute_trend',
+                 'weight_directional_arrays': 'weight_directional_trend',
+                 'weight_arrays': 'weight_trend',
+                 'sigweight_absolute_arrays': 'sigweight_absolute_trend',
+                 'sigweight_directional_arrays': 'sigweight_directional_trend',
+                 'sigweight_arrays': 'sigweight_trend',
+                 'delay_absolute_arrays': 'delay_absolute_trend',
+                 'delay_directional_arrays': 'delay_directional_trend',
+                 'delay_arrays': 'delay_trend'}
+
+    boxfilenames = {'weight_absolute_arrays': 'weight_array',
+                    'weight_directional_arrays': 'weight_array',
+                    'weight_arrays': 'weight_array',
+                    'sigweight_absolute_arrays': 'sigweight_array',
+                    'sigweight_directional_arrays': 'sigweight_array',
+                    'sigweight_arrays': 'sigweight_array',
+                    'delay_absolute_arrays': 'delay_array',
+                    'delay_directional_arrays': 'delay_array',
+                    'delay_arrays': 'delay_array'}
+
+    directories = next(os.walk(datadir))[1]
+
+    test_strings = namesdict.keys()
+
+    dirparts = getfolders(datadir)
+    dirparts[dirparts.index('weightdata')] = 'trends'
+    savedir = dirparts[0]
+    for pathpart in dirparts[1:]:
+        savedir = os.path.join(savedir, pathpart)
+
+    for test_string in test_strings:
+
+        if test_string in directories:
+
+            trendname = namesdict[test_string]
+
+            arraydataframes = []
+
+            boxes = next(os.walk(os.path.join(datadir, test_string)))[1]
+            for box in boxes:
+                boxdir = os.path.join(datadir, test_string, box)
+#                sourceboxdir = os.path.join(datadir,
+#                                            reversenamesdict[test_string],
+#                                            box)
+
+                # Get list of causevars
+#                causevar_filenames = next(os.walk(sourceboxdir))[2]
+
+                # Read the contents of the test_string array
+                arraydf = pd.read_csv(
+                    os.path.join(boxdir, boxfilenames[test_string] + '.csv'))
+
+                arraydataframes.append(arraydf)
+
+            # Causevars is the first line of the array being read
+            # Affectedvars is the first column of the array being read
+
+            arraydf = arraydataframes[0]
+
+            causevars = [arraydf.columns[1:][i]
+                         for i in range(0, len(arraydf.columns[1:]))]
+            affectedvars = \
+                [arraydf[arraydf.columns[0]][i]
+                 for i in range(0, len(arraydf[arraydf.columns[0]]))]
+
+            for causevar in causevars:
+                # Create array with trends for specific causevar
+                trend_array = np.zeros((len(affectedvars), len(boxes)+1),
+                                       dtype=object)
+                # Initialize array with affectedvar labels in first row
+                trend_array[:, 0] = affectedvars
+
+                for affectedvarindex, affectedvar in enumerate(affectedvars):
+                    trendvalues = []
+                    for arraydf in arraydataframes:
+                        trendvalues.append(arraydf[causevar][affectedvarindex])
+                    trend_array[affectedvarindex:, 1:] = trendvalues
+
+                # Write to CSV file
+                trend_dir = os.path.join(
+                    savedir, causevar)
+                config_setup.ensure_existence(trend_dir)
+
+                trendfilename = \
+                    os.path.join(trend_dir, trendname + '.csv')
+                np.savetxt(trendfilename, trend_array.T,
                            delimiter=',', fmt='%s')
 
     return None
@@ -264,6 +387,51 @@ def result_reconstruction(mode, case, writeoutput):
                     print embedtype
                     datadir = os.path.join(embedtypesdir, embedtype)
                     create_arrays(datadir, tsfilename)
+
+    return None
+
+
+def trend_extraction(mode, case, writeoutput):
+    """Extracts dynamic trend of weights and delays out of weight_array
+    and delay_array results between multiple boxes generated by the
+    run_createarrays process for transient cases.
+
+    The results are written to the trends results directory.
+
+    """
+
+    saveloc, caseconfigdir, casedir, _ = config_setup.runsetup(mode, case)
+
+    caseconfig = json.load(
+        open(os.path.join(caseconfigdir, case +
+                          '_weightcalc' + '.json')))
+
+    # Directory where subdirectories for scenarios will be stored
+    scenariosdir = os.path.join(saveloc, 'weightdata', case)
+
+    # Get list of all scenarios
+    scenarios = next(os.walk(scenariosdir))[1]
+
+    for scenario in scenarios:
+        print scenario
+
+        tsfilename = os.path.join(casedir, 'data',
+                                  caseconfig[scenario]['data'])
+
+        methodsdir = os.path.join(scenariosdir, scenario)
+        methods = next(os.walk(methodsdir))[1]
+        for method in methods:
+            print method
+            sigtypesdir = os.path.join(methodsdir, method)
+            sigtypes = next(os.walk(sigtypesdir))[1]
+            for sigtype in sigtypes:
+                print sigtype
+                embedtypesdir = os.path.join(sigtypesdir, sigtype)
+                embedtypes = next(os.walk(embedtypesdir))[1]
+                for embedtype in embedtypes:
+                    print embedtype
+                    datadir = os.path.join(embedtypesdir, embedtype)
+                    extract_trends(datadir, tsfilename)
 
     return None
 
