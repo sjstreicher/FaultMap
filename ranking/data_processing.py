@@ -296,12 +296,6 @@ def extract_trends(datadir, tsfilename):
             boxes = next(os.walk(os.path.join(datadir, test_string)))[1]
             for box in boxes:
                 boxdir = os.path.join(datadir, test_string, box)
-#                sourceboxdir = os.path.join(datadir,
-#                                            reversenamesdict[test_string],
-#                                            box)
-
-                # Get list of causevars
-#                causevar_filenames = next(os.walk(sourceboxdir))[2]
 
                 # Read the contents of the test_string array
                 arraydf = pd.read_csv(
