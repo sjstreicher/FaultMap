@@ -404,6 +404,10 @@ class TransentWeightcalc:
                 threshpass_absolute = False
 #                maxval_absolute = 0
 
+        elif not weightcalcdata.sigtest:
+            threshent_directional = None
+            threshent_absolute = None
+
 #        weight_array[affectedvarindex, causevarindex] = maxval_directional
 
         dataline_directional = \
