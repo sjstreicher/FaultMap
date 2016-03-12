@@ -653,7 +653,7 @@ def split_tsdata(inputdata, samplerate, boxsize, boxnum):
         boxstartindex[:] = np.NAN
         boxstartindex[0] = 0
         boxstartindex[-1] = samples - boxsizesamples
-        samplesbetween = int(round(samples/boxnum))
+        samplesbetween = int(round((samples - boxsizesamples) / boxnum))
         boxstartindex[1:-1] = [(samplesbetween * index)
                                for index in range(1, boxnum-1)]
         boxes = [inputdata[int(boxstartindex[i]):int(boxstartindex[i]) +
