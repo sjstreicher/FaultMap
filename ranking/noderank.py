@@ -458,24 +458,6 @@ def get_gainmatrices(noderankdata, datadir, typename):
     return gainmatrices
 
 
-def getfolders(path):
-    folders = []
-    while 1:
-        path, folder = os.path.split(path)
-
-        if folder != "":
-            folders.append(folder)
-        else:
-            if path != "":
-                folders.append(path)
-
-            break
-
-    folders.reverse()
-
-    return folders
-
-
 def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
                writeoutput, preprocessing):
 
@@ -524,7 +506,7 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
             # Make sure the correct directory exists
             # Take datadir and swop out 'weightdata' for 'noderank'
 
-            dirparts = getfolders(datadir)
+            dirparts = data_processing.getfolders(datadir)
             dirparts[dirparts.index('weightdata')] = 'noderank'
             savedir = dirparts[0]
             for pathpart in dirparts[1:]:
