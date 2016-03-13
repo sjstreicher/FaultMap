@@ -367,9 +367,13 @@ def extract_trends(datadir, tsfilename):
     # Create array to trend name dictionary
     namesdict = {'weight_absolute_arrays': 'weight_absolute_trend',
                  'weight_directional_arrays': 'weight_directional_trend',
+                 'signtested_weight_directional_arrays':
+                     'signtested_weight_directional_trend',
                  'weight_arrays': 'weight_trend',
                  'sigweight_absolute_arrays': 'sigweight_absolute_trend',
                  'sigweight_directional_arrays': 'sigweight_directional_trend',
+                 'signtested_sigweight_directional_arrays':
+                     'signtested_sigweight_directional_trend',
                  'sigweight_arrays': 'sigweight_trend',
                  'delay_absolute_arrays': 'delay_absolute_trend',
                  'delay_directional_arrays': 'delay_directional_trend',
@@ -377,9 +381,12 @@ def extract_trends(datadir, tsfilename):
 
     boxfilenames = {'weight_absolute_arrays': 'weight_array',
                     'weight_directional_arrays': 'weight_array',
+                    'signtested_weight_directional_arrays': 'weight_array',
                     'weight_arrays': 'weight_array',
                     'sigweight_absolute_arrays': 'sigweight_array',
                     'sigweight_directional_arrays': 'sigweight_array',
+                    'signtested_sigweight_directional_arrays':
+                        'sigweight_array',
                     'sigweight_arrays': 'sigweight_array',
                     'delay_absolute_arrays': 'delay_array',
                     'delay_directional_arrays': 'delay_array',
