@@ -54,24 +54,20 @@ class CorrWeightcalc(object):
                             'corrthreshpass', 'dirthreshpass',
                             'threshpass', 'dirval']
 
-    def calcweight(self, causevardata, affectedvardata, weightcalcdata,
-                   causevarindex, affectedvarindex):
+    def calcweight(self, causevardata, affectedvardata, *args):
         """Calculates the correlation between two vectors containing
         timer series data.
 
         """
 
-        try:
-            corrval = np.corrcoef(causevardata.T, affectedvardata.T)[1, 0]
-        except:
-            print "Debug here"
+        corrval = np.corrcoef(causevardata.T, affectedvardata.T)[1, 0]
         return [corrval], None
 
-    def calcsigthresh(self, _, affected_data, causal_data):
+    def calcsigthresh(self, *args):
         return [self.threshcorr]
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
-               weightlist, proplist):
+               weightlist, _):
 
         """Calculates and reports the relevant output for each combination
         of variables tested.

@@ -9,7 +9,6 @@ import networkx as nx
 import numpy as np
 import json
 import os
-from config_setup import ensure_existence
 
 filesloc = json.load(open('config.json'))
 saveloc = os.path.expanduser(filesloc['saveloc'])

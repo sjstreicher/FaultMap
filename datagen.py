@@ -56,7 +56,7 @@ def autoreg_gen(samples, delay):
     # This is not expected to be a problem on any "real" data
 
     # Define seed for noise data
-    affected_random_add = seed_rand(seeds.next(), samples + delay)
+#    affected_random_add = seed_rand(seeds.next(), samples + delay)
 
     for i in range(delay, len(cause)):
         affected[i] = affected[i - 1] + cause[i - delay]

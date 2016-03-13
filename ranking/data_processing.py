@@ -243,7 +243,7 @@ def create_arrays(datadir, tsfilename):
     return None
 
 
-def create_signtested_directionalarrays(datadir, tsfilename):
+def create_signtested_directionalarrays(datadir, writeoutput):
     """
     Checks whether the directional weight arrays have corresponding
     absolute positive entries, writes another version with zeros if
@@ -321,9 +321,8 @@ def create_signtested_directionalarrays(datadir, tsfilename):
                 signtested_dir_array[0, 1:] = causevars
                 signtested_dir_array[1:, 0] = affectedvars
 
-                for causevarindex, causevar in enumerate(causevars):
-                    for affectedvarindex, affectedvar in \
-                            enumerate(affectedvars):
+                for causevarindex in range(len(causevars)):
+                    for affectedvarindex in range(len(affectedvars)):
                         # Check the sign of the abs_arraydf for this entry
                         abs_value = (
                             abs_arraydf[abs_arraydf.columns[causevarindex+1]]
@@ -340,20 +339,21 @@ def create_signtested_directionalarrays(datadir, tsfilename):
                                                  causevarindex+1] = 0
 
                 # Write to CSV file
-                signtested_weightarray_dir = os.path.join(
-                    datadir, signtested_directionalweightarrayname, box)
-                config_setup.ensure_existence(signtested_weightarray_dir)
+                if writeoutput:
+                    signtested_weightarray_dir = os.path.join(
+                        datadir, signtested_directionalweightarrayname, box)
+                    config_setup.ensure_existence(signtested_weightarray_dir)
 
-                signtested_weightfilename = \
-                    os.path.join(signtested_weightarray_dir,
-                                 boxfilenames[test_string] + '.csv')
-                np.savetxt(signtested_weightfilename, signtested_dir_array,
-                           delimiter=',', fmt='%s')
+                    signtested_weightfilename = \
+                        os.path.join(signtested_weightarray_dir,
+                                     boxfilenames[test_string] + '.csv')
+                    np.savetxt(signtested_weightfilename, signtested_dir_array,
+                               delimiter=',', fmt='%s')
 
     return None
 
 
-def extract_trends(datadir, tsfilename):
+def extract_trends(datadir, writeoutput):
     """
     datadir is the location of the weight_array and delay_array folders for the
     specific case that is under investigation
@@ -438,21 +438,22 @@ def extract_trends(datadir, tsfilename):
                 # Initialize array with affectedvar labels in first row
                 trend_array[:, 0] = affectedvars
 
-                for affectedvarindex, affectedvar in enumerate(affectedvars):
+                for affectedvarindex in range(len(affectedvars)):
                     trendvalues = []
                     for arraydf in arraydataframes:
                         trendvalues.append(arraydf[causevar][affectedvarindex])
                     trend_array[affectedvarindex:, 1:] = trendvalues
 
                 # Write to CSV file
-                trend_dir = os.path.join(
-                    savedir, causevar)
-                config_setup.ensure_existence(trend_dir)
+                if writeoutput:
+                    trend_dir = os.path.join(
+                        savedir, causevar)
+                    config_setup.ensure_existence(trend_dir)
 
-                trendfilename = \
-                    os.path.join(trend_dir, trendname + '.csv')
-                np.savetxt(trendfilename, trend_array.T,
-                           delimiter=',', fmt='%s')
+                    trendfilename = \
+                        os.path.join(trend_dir, trendname + '.csv')
+                    np.savetxt(trendfilename, trend_array.T,
+                               delimiter=',', fmt='%s')
 
     return None
 
@@ -500,7 +501,7 @@ def result_reconstruction(mode, case, writeoutput):
                     create_arrays(datadir, tsfilename)
                     # Provide directional array version tested with absolute
                     # weight sign
-                    create_signtested_directionalarrays(datadir, tsfilename)
+                    create_signtested_directionalarrays(datadir, writeoutput)
 
     return None
 
@@ -545,7 +546,7 @@ def trend_extraction(mode, case, writeoutput):
                 for embedtype in embedtypes:
                     print embedtype
                     datadir = os.path.join(embedtypesdir, embedtype)
-                    extract_trends(datadir, tsfilename)
+                    extract_trends(datadir, writeoutput)
 
     return None
 
@@ -959,7 +960,7 @@ def ewma_weights_benchmark(weights, alpha_rate):
         else:
             benchmark_weights[index] = \
                 (alpha_rate * benchmark_weights[index-1]) + \
-                ((1-alpha_rate) * weights[index])
+                ((1-alpha_rate) * weight)
 
     return benchmark_weights
 
