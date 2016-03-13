@@ -13,3 +13,4 @@ pytables
 python-igraph
 progressbar
 control
+pandas
