@@ -63,7 +63,7 @@ class CorrWeightcalc(object):
         corrval = np.corrcoef(causevardata.T, affectedvardata.T)[1, 0]
         return [corrval], None
 
-    def calcsigthresh(self, *args):
+    def calcsigthresh(self, *_):
         return [self.threshcorr]
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,

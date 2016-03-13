@@ -515,11 +515,7 @@ def trend_extraction(mode, case, writeoutput):
 
     """
 
-    saveloc, caseconfigdir, casedir, _ = config_setup.runsetup(mode, case)
-
-    caseconfig = json.load(
-        open(os.path.join(caseconfigdir, case +
-                          '_weightcalc' + '.json')))
+    saveloc, _, _, _ = config_setup.runsetup(mode, case)
 
     # Directory where subdirectories for scenarios will be stored
     scenariosdir = os.path.join(saveloc, 'weightdata', case)
@@ -529,9 +525,6 @@ def trend_extraction(mode, case, writeoutput):
 
     for scenario in scenarios:
         print scenario
-
-        tsfilename = os.path.join(casedir, 'data',
-                                  caseconfig[scenario]['data'])
 
         methodsdir = os.path.join(scenariosdir, scenario)
         methods = next(os.walk(methodsdir))[1]
