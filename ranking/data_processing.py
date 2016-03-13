@@ -79,6 +79,7 @@ def process_auxfile(filename):
                     thresh_index = row.index('threshold')
                 else:
                     thresh_index = row.index('threshcorr')
+
                 threshpass_index = row.index('threshpass')
                 maxdelay_index = row.index('max_delay')
 
@@ -155,7 +156,6 @@ def create_arrays(datadir, tsfilename):
                 sigweightarray_name = neutralsigweightarray_name
                 delayarray_name = neutraldelayarray_name
 
-            # Calculate absolute weight arrays
             boxes = next(os.walk(os.path.join(datadir, test_string)))[1]
             for box in boxes:
                 boxdir = os.path.join(datadir, test_string, box)
@@ -238,6 +238,116 @@ def create_arrays(datadir, tsfilename):
                 delayfilename = \
                     os.path.join(delayarray_dir, 'delay_array.csv')
                 np.savetxt(delayfilename, delay_matrix,
+                           delimiter=',', fmt='%s')
+
+    return None
+
+
+def create_signtested_directionalarrays(datadir, tsfilename):
+    """
+    Checks whether the directional weight arrays have corresponding
+    absolute positive entries, writes another version with zeros if
+    absolutes are negative.
+
+    datadir is the location of the auxdata and weights folders for the
+    specific case that is under investigation
+
+    tsfilename is the file name of the original time series data file
+    used to generate each case and is only used for generating a list of
+    variables
+
+    """
+
+    signtested_weightarrayname = 'signtested_weight_directional_arrays'
+    signtested_sigweightarrayname = 'signtested_sigweight_directional_arrays'
+
+    directories = next(os.walk(datadir))[1]
+
+    test_strings = ['weight_directional_arrays',
+                    'sigweight_directional_arrays']
+
+    lookup_strings = ['weight_absolute_arrays',
+                      'sigweight_absolute_arrays']
+
+    boxfilenames = {'weight_absolute_arrays': 'weight_array',
+                    'weight_directional_arrays': 'weight_array',
+                    'sigweight_absolute_arrays': 'sigweight_array',
+                    'sigweight_directional_arrays': 'sigweight_array'}
+
+    for test_index, test_string in enumerate(test_strings):
+        if test_string in directories:
+
+            if test_string == 'weight_directional_arrays':
+                signtested_directionalweightarrayname = \
+                    signtested_weightarrayname
+            if test_string == 'sigweight_directional_arrays':
+                signtested_directionalweightarrayname = \
+                    signtested_sigweightarrayname
+
+            boxes = next(os.walk(os.path.join(datadir, test_string)))[1]
+            for box in boxes:
+                dirboxdir = os.path.join(datadir, test_string, box)
+                absboxdir = os.path.join(datadir, lookup_strings[test_index],
+                                         box)
+
+                # Read the contents of the test_string array
+                dir_arraydf = pd.read_csv(
+                    os.path.join(dirboxdir,
+                                 boxfilenames[test_string] + '.csv'))
+                # Read the contents of the comparative lookup_string array
+                abs_arraydf = pd.read_csv(os.path.join(
+                    absboxdir,
+                    boxfilenames[lookup_strings[test_index]] + '.csv'))
+
+                # Causevars is the first line of the array being read
+                # Affectedvars is the first column of the array being read
+
+                causevars = \
+                    [dir_arraydf.columns[1:][i]
+                     for i in range(0, len(dir_arraydf.columns[1:]))]
+
+                affectedvars = \
+                    [dir_arraydf[dir_arraydf.columns[0]][i]
+                     for i in range(
+                     0, len(dir_arraydf[dir_arraydf.columns[0]]))]
+
+                # Create directional signtested array
+                signtested_dir_array = np.zeros(
+                    (len(affectedvars)+1, len(causevars)+1)).astype(object)
+
+                # Initialize array with causevar labels in first column
+                # and affectedvar labels in first row
+                signtested_dir_array[0, 0] = ''
+                signtested_dir_array[0, 1:] = causevars
+                signtested_dir_array[1:, 0] = affectedvars
+
+                for causevarindex, causevar in enumerate(causevars):
+                    for affectedvarindex, affectedvar in \
+                            enumerate(affectedvars):
+                        # Check the sign of the abs_arraydf for this entry
+                        abs_value = (
+                            abs_arraydf[abs_arraydf.columns[causevarindex+1]]
+                            [affectedvarindex])
+
+                        if abs_value > 0:
+                            signtested_dir_array[affectedvarindex+1,
+                                                 causevarindex+1] = \
+                                (dir_arraydf[
+                                    dir_arraydf.columns[causevarindex+1]]
+                                 [affectedvarindex])
+                        else:
+                            signtested_dir_array[affectedvarindex+1,
+                                                 causevarindex+1] = 0
+
+                # Write to CSV file
+                signtested_weightarray_dir = os.path.join(
+                    datadir, signtested_directionalweightarrayname, box)
+                config_setup.ensure_existence(signtested_weightarray_dir)
+
+                signtested_weightfilename = \
+                    os.path.join(signtested_weightarray_dir,
+                                 boxfilenames[test_string] + '.csv')
+                np.savetxt(signtested_weightfilename, signtested_dir_array,
                            delimiter=',', fmt='%s')
 
     return None
@@ -381,6 +491,9 @@ def result_reconstruction(mode, case, writeoutput):
                     print embedtype
                     datadir = os.path.join(embedtypesdir, embedtype)
                     create_arrays(datadir, tsfilename)
+                    # Provide directional array version tested with absolute
+                    # weight sign
+                    create_signtested_directionalarrays(datadir, tsfilename)
 
     return None
 
