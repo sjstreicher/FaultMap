@@ -443,9 +443,9 @@ def get_gainmatrices(noderankdata, datadir, typename):
     # Store all relevant gainmatrices in a list
     gainmatrices = []
 
-    if typename[:9] == 'sigweight':
+    if typename[:9] == 'sigweight' or typename[:20] == 'signtested_sigweight':
         fname = 'sigweight_array.csv'
-    elif typename[:6] == 'weight':
+    elif typename[:6] == 'weight' or typename[:17] == 'signtested_weight':
         fname = 'weight_array.csv'
 
     for boxindex in noderankdata.boxes:
@@ -617,12 +617,16 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                         datadir = os.path.join(embedtypesdir, embedtype)
 
                         if weight_method[:16] == 'transfer_entropy':
-                            typenames = ['weight_absolute_arrays',
-                                         'weight_directional_arrays']
+                            typenames = [
+                                'weight_absolute_arrays',
+                                'weight_directional_arrays',
+                                'signtested_weight_directional_arrays']
                             if sigtype == 'sigtest':
                                 typenames.append('sigweight_absolute_arrays')
                                 typenames.append(
                                     'sigweight_directional_arrays')
+                                typenames.append(
+                                    'signtested_sigweight_directional_arrays')
                         else:
                             typenames = ['weight_arrays']
                             if sigtype == 'sigtest':
