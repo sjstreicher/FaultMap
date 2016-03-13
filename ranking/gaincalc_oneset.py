@@ -27,7 +27,7 @@ def writecsv_weightcalc(filename, datalines, header):
 
 def calc_weights_oneset(weightcalcdata, weightcalculator,
                         box, startindex, size, newconnectionmatrix,
-                        method, boxindex, sigstatus,
+                        method, boxindex,
                         filename, headerline,
                         causevarindex):
 
@@ -305,7 +305,7 @@ def run(non_iter_args, do_multiprocessing):
     [weightcalcdata, weightcalculator,
      box, startindex, size,
      newconnectionmatrix,
-     method, boxindex, sigstatus,
+     method, boxindex,
      filename, headerline] = non_iter_args
 
     partial_gaincalc_oneset = partial(
@@ -313,7 +313,7 @@ def run(non_iter_args, do_multiprocessing):
         weightcalcdata, weightcalculator,
         box, startindex, size,
         newconnectionmatrix,
-        method, boxindex, sigstatus,
+        method, boxindex,
         filename, headerline)
 
     if do_multiprocessing:

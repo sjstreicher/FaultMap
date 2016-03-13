@@ -433,7 +433,7 @@ def calc_weights(weightcalcdata, method, scenario):
             weightcalcdata, weightcalculator,
             box, startindex, size,
             newconnectionmatrix,
-            method, boxindex, sigstatus,
+            method, boxindex,
             filename, headerline]
 
         # Run the script that will handle multiprocessing
