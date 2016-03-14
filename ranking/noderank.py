@@ -346,7 +346,6 @@ def create_importance_graph(variablelist, closedconnections,
 
     opengraph = nx.DiGraph()
 
-    # TODO: Verify why these indexes are switched and correct
     for col, row in itertools.izip(openconnections.nonzero()[1],
                                    openconnections.nonzero()[0]):
 
@@ -354,17 +353,28 @@ def create_importance_graph(variablelist, closedconnections,
                            weight=gainmatrix[row, col])
     openedgelist = opengraph.edges()
 
-    closedgraph = nx.DiGraph()
+#    closedgraph = nx.DiGraph()
+    relative_closedgraph = nx.DiGraph()
+
+    # Maximum edge weight
+    max_weight = np.max(gainmatrix)
+    max_nodeimportance = max(ranks.iteritems(), key=operator.itemgetter(1))[1]
+
     for col, row in itertools.izip(closedconnections.nonzero()[1],
                                    closedconnections.nonzero()[0]):
         newedge = (variablelist[col], variablelist[row])
-        closedgraph.add_edge(*newedge, weight=gainmatrix[row, col],
-                             controlloop=int(newedge not in openedgelist))
+#        closedgraph.add_edge(*newedge, weight=gainmatrix[row, col],
+#                             controlloop=int(newedge not in openedgelist))
+        relative_closedgraph.add_edge(
+            *newedge, weight=(gainmatrix[row, col] / max_weight),
+            controlloop=int(newedge not in openedgelist))
 
-    for node in closedgraph.nodes():
-        closedgraph.add_node(node, importance=ranks[node])
+    for node in relative_closedgraph.nodes():
+        relative_closedgraph.add_node(
+            node, importance=(ranks[node] / max_nodeimportance))
+#        closedgraph.add_node(node, importance=ranks[node])
 
-    return closedgraph, opengraph
+    return relative_closedgraph, opengraph
 
 
 def gainmatrix_preprocessing(gainmatrix):
@@ -554,8 +564,9 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
         graph_filename = \
             os.path.join(savepath,
                          graphfile_name.format(rank_method))
-        nx.readwrite.write_gml(graph.reverse(),
-                               graph_filename)
+        # Decided to keep connections natural, will rotate hierarchical layout
+        # in post-processing
+        nx.readwrite.write_gml(graph, graph_filename)
 
         # Get the transient and base value dictionaries
         _, _, boxrankdict, rel_boxrankdict = \
