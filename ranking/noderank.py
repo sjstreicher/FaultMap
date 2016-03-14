@@ -365,9 +365,12 @@ def create_importance_graph(variablelist, closedconnections,
         newedge = (variablelist[col], variablelist[row])
 #        closedgraph.add_edge(*newedge, weight=gainmatrix[row, col],
 #                             controlloop=int(newedge not in openedgelist))
-        relative_closedgraph.add_edge(
-            *newedge, weight=(gainmatrix[row, col] / max_weight),
-            controlloop=int(newedge not in openedgelist))
+        edge_weight = gainmatrix[row, col]
+        # Do not include edges with zero weight
+        if edge_weight != 0:
+            relative_closedgraph.add_edge(
+                *newedge, weight=(edge_weight / max_weight),
+                controlloop=int(newedge not in openedgelist))
 
     for node in relative_closedgraph.nodes():
         relative_closedgraph.add_node(
