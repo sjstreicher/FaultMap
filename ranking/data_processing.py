@@ -825,6 +825,9 @@ def read_gainmatrix(gainmatrix_loc):
     with open(gainmatrix_loc) as f:
         gainmatrix = np.genfromtxt(f, delimiter=',')
 
+    # Remove labels
+    gainmatrix = gainmatrix[1:, 1:]
+
     return gainmatrix
 
 
