@@ -92,7 +92,11 @@ def process_auxfile(filename):
                 if row[threshpass_index] == 'False':
                     weights.append(0.)
                 else:
-                    weights.append(float(row[maxval_index]))
+                    weight_candidate = float(row[maxval_index])
+                    if weight_candidate > 0.:
+                        weights.append(weight_candidate)
+                    else:
+                        weights.append(0.)
 
                 delays.append(float(row[maxdelay_index]))
 
@@ -104,7 +108,10 @@ def process_auxfile(filename):
                     if threshold != 0:
                         sigweight = (float(row[maxval_index]) /
                                      abs(threshold))
-                        sigweights.append(sigweight)
+                        if sigweight > 0.:
+                            sigweights.append(sigweight)
+                        else:
+                            sigweights.append(0.)
                     else:
                         sigweights.append(0.)
 
