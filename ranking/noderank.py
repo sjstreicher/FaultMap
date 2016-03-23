@@ -603,7 +603,7 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
     """
     noderankdata = NoderankData(mode, case)
 
-    # Create base directory
+    # Create output directory
     config_setup.ensure_existence(
         os.path.join(noderankdata.saveloc,
                      'noderank'), make=True)
