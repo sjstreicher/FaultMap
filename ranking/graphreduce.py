@@ -316,14 +316,14 @@ def delete_loworder_edges(graph, max_depth, weight_discretion):
                                               removed_edges,
                                               weight_discretion)
 
-                # If no upper children were found, set morechilds to False
-                if len(upper_child_children) == 0:
-                    morechilds = False
-                # If the max_depth is not "full" and is greater than the
-                # maximum depth, set morechilds to False
-                if max_depth != "full":
-                    if depth > (max_depth - 1):
+                    # If no upper children were found, set morechilds to False
+                    if len(upper_child_children) == 0:
                         morechilds = False
+                    # If the max_depth is not "full" and is greater than the
+                    # maximum depth, set morechilds to False
+                    if max_depth != "full":
+                        if depth > (max_depth - 1):
+                            morechilds = False
 
     logging.info("Removed " + str(len(removed_edges)) +
                  " higher connection edges")
