@@ -601,16 +601,16 @@ def csv_to_h5(saveloc, raw_tsdata, scenario, case):
 
     filename = os.path.join(datapath, scenario + '.h5')
 
-    if not os.path.exists(filename):
+#    if not os.path.exists(filename):
 
-        hdf5writer = tb.open_file(filename, 'w')
-        data = np.genfromtxt(raw_tsdata, delimiter=',')
-        # Strip time column and labels first row
-        data = data[1:, 1:]
-        array = hdf5writer.create_array(hdf5writer.root, dataset, data)
+    hdf5writer = tb.open_file(filename, 'w')
+    data = np.genfromtxt(raw_tsdata, delimiter=',')
+    # Strip time column and labels first row
+    data = data[1:, 1:]
+    array = hdf5writer.create_array(hdf5writer.root, dataset, data)
 
-        array.flush()
-        hdf5writer.close()
+    array.flush()
+    hdf5writer.close()
 
     return datapath
 
