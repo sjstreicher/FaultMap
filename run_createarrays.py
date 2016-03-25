@@ -13,7 +13,7 @@ from ranking.data_processing import result_reconstruction
 
 logging.basicConfig(level=logging.INFO)
 
-dataloc, configloc, saveloc = config_setup.get_locations()
+dataloc, configloc, _ = config_setup.get_locations()
 createarrays_config = json.load(open(os.path.join(configloc, 'config'
                                                   '_createarrays' + '.json')))
 
