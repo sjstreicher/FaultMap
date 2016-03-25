@@ -27,7 +27,7 @@ import logging
 import config_setup
 
 
-class GraphReduceData:
+class GraphReduceData(object):
     """Creates a data object from file and or function definitions for use in
     graph reduce method.
 
@@ -36,11 +36,11 @@ class GraphReduceData:
     def __init__(self, mode, case):
 
         # Get locations from configuration file
-        self.saveloc, self.casedir, _ = \
+        self.saveloc, self.caseconfigloc, self.casedir, _ = \
             config_setup.runsetup(mode, case)
         # Load case config file
-        self.caseconfig = json.load(open(os.path.join(self.casedir, case +
-                                    '_graphreduce' + '.json')))
+        self.caseconfig = json.load(open(os.path.join(
+            self.caseconfigloc, case + '_graphreduce' + '.json')))
 
         # Get scenarios
         self.scenarios = self.caseconfig['scenarios']
@@ -58,41 +58,34 @@ class GraphReduceData:
         self.depth = self.caseconfig[scenario]['depth']
         self.weight_discretion = self.caseconfig[scenario]['weight_discretion']
 
+    def get_boxes(self, scenario, datadir, typename):
+        boxindexes = self.caseconfig[scenario]['boxindexes']
+        if boxindexes == "all":
+            boxesdir = os.path.join(datadir, typename)
+            boxes = next(os.walk(boxesdir))[1]
+            self.boxes = range(len(boxes))
+        else:
+            self.boxes = boxindexes
 
-def reducegraph(mode, case, writeoutput):
-    graphreducedata = GraphReduceData(mode, case)
 
-    # Get the source directory
-    sourcedir = \
-        config_setup.ensure_existence(
-            os.path.join(graphreducedata.casedir,
-                         'graphs'))
+def dographreduce(graphreducedata, scenario, datadir,
+                  typename, writeoutput):
 
-    # Get the directory to save in
-    savedir = \
-        config_setup.ensure_existence(
-            os.path.join(graphreducedata.saveloc,
-                         'graphs'), make=True)
+    graph_filename = '{}.gml'
+    simplified_graph_filename = '{}_simplified.gml'
+    lowedge_graph_filename = '{}_lowedge.gml'
 
-    graph_filename = os.path.join(sourcedir, '{}.gml')
-    simplified_graph_filename = os.path.join(savedir, '{}_simplified.gml')
-    lowedge_graph_filename = os.path.join(savedir, '{}_lowedge.gml')
+    boxesdir = os.path.join(datadir, typename)
+    boxes = next(os.walk(boxesdir))[1]
 
-    for scenario in graphreducedata.scenarios:
-        logging.info("Running scenario {}".format(scenario))
-        # Update scenario-specific fields graphreducedata object
-        graphreducedata.scenariodata(scenario)
-
-        # Test whether the 'graph_simplified' GML file  already exists
-        testlocation = \
-            simplified_graph_filename.format(graphreducedata.graph)
-
-        if not os.path.exists(testlocation):
+    for box in boxes:
+        dummiesdir = os.path.join(boxesdir, box)
+        dummytypes = next(os.walk(dummiesdir))[1]
+        for dummytype in dummytypes:
             # Open the original graph
-            original_graph = nx.readwrite.read_gml(graph_filename.format(
-                graphreducedata.graph))
-            # Reverse graph to follow conventional nomenclature
-            original_graph = original_graph.reverse()
+            original_graph = nx.readwrite.read_gml(
+                os.path.join(dummiesdir, dummytype, graph_filename.format(
+                    graphreducedata.graph)))
             # Get appropriate weight threshold for deleting edges from graph
             threshold = compute_edge_threshold(original_graph,
                                                graphreducedata.percentile)
@@ -103,22 +96,87 @@ def reducegraph(mode, case, writeoutput):
                 delete_loworder_edges(lowedge_graph,
                                       graphreducedata.depth,
                                       graphreducedata.weight_discretion)
-            # Reverse simplified and lowedge graph to conform to
-            # Cytoscape styling requirements
-            simplified_graph = simplified_graph.reverse()
-            lowedge_graph = lowedge_graph.reverse()
+
             # Write simplified graph to file
             if writeoutput:
                 # Write simplified graph
                 nx.readwrite.write_gml(
                     simplified_graph,
-                    simplified_graph_filename.format(graphreducedata.graph))
+                    os.path.join(
+                        dummiesdir, dummytype,
+                        simplified_graph_filename.format(
+                             graphreducedata.graph)))
                 # Write lowedge graph
                 nx.readwrite.write_gml(
                     lowedge_graph,
-                    lowedge_graph_filename.format(graphreducedata.graph))
-        else:
-            logging.info("The requested output is in existence")
+                    os.path.join(
+                        dummiesdir, dummytype,
+                        lowedge_graph_filename.format(
+                             graphreducedata.graph)))
+    return None
+
+
+def reducegraph(mode, case, writeoutput):
+    graphreducedata = GraphReduceData(mode, case)
+
+    saveloc, caseconfigdir, casedir, _ = config_setup.runsetup(mode, case)
+
+    # Create output directory
+#    savedir = \
+#        config_setup.ensure_existence(
+#            os.path.join(graphreducedata.saveloc,
+#                         'graphs'), make=True)
+
+    # Directory where subdirectories for scenarios will be found
+    scenariosdir = os.path.join(saveloc, 'noderank', case)
+
+    # Get list of all scenarios
+    scenarios = next(os.walk(scenariosdir))[1]
+
+    for scenario in scenarios:
+        logging.info("Running scenario {}".format(scenario))
+        # Update scenario-specific fields graphreducedata object
+        graphreducedata.scenariodata(scenario)
+
+        # Iterate through every source graph that is found inside
+        # the scenario's subdirectories
+
+        methodsdir = os.path.join(scenariosdir, scenario)
+        methods = next(os.walk(methodsdir))[1]
+        for method in methods:
+            print method
+            sigtypesdir = os.path.join(methodsdir, method)
+            sigtypes = next(os.walk(sigtypesdir))[1]
+            for sigtype in sigtypes:
+                print sigtype
+                embedtypesdir = os.path.join(sigtypesdir, sigtype)
+                embedtypes = next(os.walk(embedtypesdir))[1]
+                for embedtype in embedtypes:
+                    print embedtype
+                    datadir = os.path.join(embedtypesdir, embedtype)
+
+                    if method[:16] == 'transfer_entropy':
+                            typenames = [
+                                'weight_absolute',
+                                'weight_directional',
+                                'signtested_weight_directional']
+                            if sigtype == 'sigtest':
+                                typenames.append('sigweight_absolute')
+                                typenames.append(
+                                    'sigweight_directional')
+                                typenames.append(
+                                    'signtested_sigweight_directional')
+                    else:
+                        typenames = ['weight']
+                        if sigtype == 'sigtest':
+                            typenames.append('sigweight')
+
+                    for typename in typenames:
+                        # Start the methods here
+                        dographreduce(graphreducedata, scenario, datadir,
+                                      typename, writeoutput)
+
+    return None
 
 
 def compute_edge_threshold(graph, percentile):
@@ -258,14 +316,14 @@ def delete_loworder_edges(graph, max_depth, weight_discretion):
                                               removed_edges,
                                               weight_discretion)
 
-                # If no upper children were found, set morechilds to False
-                if len(upper_child_children) == 0:
-                    morechilds = False
-                # If the max_depth is not "full" and is greater than the
-                # maximum depth, set morechilds to False
-                if max_depth != "full":
-                    if depth > (max_depth - 1):
+                    # If no upper children were found, set morechilds to False
+                    if len(upper_child_children) == 0:
                         morechilds = False
+                    # If the max_depth is not "full" and is greater than the
+                    # maximum depth, set morechilds to False
+                    if max_depth != "full":
+                        if depth > (max_depth - 1):
+                            morechilds = False
 
     logging.info("Removed " + str(len(removed_edges)) +
                  " higher connection edges")
