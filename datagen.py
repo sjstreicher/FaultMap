@@ -40,7 +40,7 @@ seed_randn = partial(seed_random, np.random.randn)
 seed_rand = partial(seed_random, np.random.rand)
 
 
-def autoreg_gen(samples, delay):
+def autoreg_gen(samples, delay, alpha=None):
     """Generates an autoregressive set of vectors.
 
     A constant seed is used for testing comparison purposes.
@@ -59,7 +59,11 @@ def autoreg_gen(samples, delay):
 #    affected_random_add = seed_rand(seeds.next(), samples + delay)
 
     for i in range(delay, len(cause)):
-        affected[i] = affected[i - 1] + cause[i - delay]
+        if alpha is None:
+            affected[i] = affected[i - 1] + cause[i - delay]
+        else:
+            affected[i] = alpha * affected[i - 1] + \
+                (1 - alpha) * cause[i - delay]
 
     affected = affected[delay:]
     cause = cause[delay:]
