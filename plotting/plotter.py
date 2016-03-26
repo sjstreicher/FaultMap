@@ -8,7 +8,11 @@ This module executes all functions needed to draw desired plots.
 """
 import os
 import json
-import data_processing
+import logging
+
+import figtypes
+from ranking import data_processing
+from ranking.gaincalc import WeightcalcData
 
 import config_setup
 
@@ -19,46 +23,72 @@ class GraphData(object):
 
     """
 
-    def __init__(self, mode, case, graphname):
-        # Get file locations from configuration file
-        self.graphconfig = json.load(open(os.path.join(
-            dataloc, 'config_graphgen' + '.json')))
+    def __init__(self, mode, case):
 
-        self.case, self.method, self.scenario, \
-            self.axis_limits = \
-            [self.graphconfig[graphname][item] for item in
-                ['case', 'method', 'scenario', 'axis_limits']]
+        # Get locations from configuration file
+        self.saveloc, self.caseconfigloc, self.casedir, _ = \
+            config_setup.runsetup(mode, case)
+        self.mode = mode
+        self.case = case
 
-        if not self.method[0] in ['tsdata', 'fft']:
-            self.boxindex, self.sourcevar, self.sigtest = \
-                [self.graphconfig[graphname][item] for item in
-                    ['boxindex', 'sourcevar', 'sigtest']]
-            if self.sigtest:
-                self.sigstatus = 'sigtested'
-            else:
-                self.sigstatus = 'nosigtest'
+        # Load case config file
+        self.caseconfig = json.load(
+            open(os.path.join(self.caseconfigloc, case +
+                              '_plotting' + '.json')))
 
-    def get_xvalues(self, graphname):
-        self.xvals = self.graphconfig[graphname]['xvals']
+        # Load weight case config file
+        # This is used in plots that make use of original time series data
+        self.weight_caseconfig = json.load(
+            open(os.path.join(self.caseconfigloc, case +
+                              '_weightcalc' + '.json')))
 
-    def get_legendbbox(self, graphname):
-        self.legendbbox = self.graphconfig[graphname]['legendbbox']
+        # Get graphs
+        self.graphs = self.caseconfig['graphs']
+        # Get weight_methods
+        self.weight_methods = self.caseconfig['weight_methods']
+        # Get data type
+        self.datatype = self.caseconfig['datatype']
 
-    def get_linelabels(self, graphname):
-        self.linelabels = self.graphconfig[graphname]['linelabels']
+    def graphdetails(self, graph):
+        """Retrieves data particular for each graph that is to be drawn.
 
-    def get_plotvars(self, graphname):
-        self.plotvars = self.graphconfig[graphname]['plotvarnames']
+        """
+        self.plot_type = self.caseconfig[graph]['plot_type']
+        self.scenarios = self.caseconfig[graph]['scenarios']
+        self.settings = self.caseconfig[graph]['settings']
+        self.axis_limits = self.caseconfig[graph]['axis_limits']
+        self.weight_methods = self.caseconfig[graph]['weight_methods']
 
-    def get_starttime(self, graphname):
-        self.starttime = self.graphconfig[graphname]['starttime']
+    def graphscenariodetails(self, scenario):
 
-    def get_frequencyunit(self, graphname):
-        self.frequencyunit = self.graphconfig[graphname]['frequency_unit']
+        # Read weightcalc scenariodata in order to determine appropriate
+        # location to save in
+        weightcalcdata = WeightcalcData(self.mode, self.case,
+                                        False, False, False)
+        self.weightcalc_scenariodata = \
+            weightcalcdata.setsettings(scenario, self.settings)
 
-    def get_varindexes(self, graphname):
+    def get_plotvars(self, graph):
+        self.plotvars = self.caseconfig[graph]['plotvars']
+
+    def get_xvalues(self, graph):
+        self.xvals = self.caseconfig[graph][graph]['xvals']
+
+    def get_legendbbox(self, graph):
+        self.legendbbox = self.caseconfig[graph]['legendbbox']
+
+    def get_linelabels(self, graph):
+        self.linelabels = self.caseconfig[graph]['linelabels']
+
+    def get_starttime(self, graph):
+        self.starttime = self.caseconfig[graph]['starttime']
+
+    def get_frequencyunit(self, graph):
+        self.frequencyunit = self.caseconfig[graph]['frequency_unit']
+
+    def get_varindexes(self, graph):
         self.varindexes = [x+1 for x in
-                           self.graphconfig[graphname]['varindexes']]
+                           self.caseconfig[graph]['varindexes']]
 
 
 def get_scenario_data_vectors(graphdata):
@@ -152,7 +182,6 @@ def get_box_threshold_vectors(graphdata):
 
     return valuematrices
 
-
  # Label dictionaries
 yaxislabel = \
     {u'cross_correlation': r'Cross correlation',
@@ -167,7 +196,7 @@ yaxislabel = \
 
 
 linelabels = \
-    {'cross_correlation': r'Correllation',
+    {'cross_correlation': r'Correlation',
      'absolute_transfer_entropy_kernel': r'Absolute TE (Kernel)',
      'directional_transfer_entropy_kernel': r'Directional TE (Kernel)',
      'absolute_transfer_entropy_kraskov': r'Absolute TE (Kraskov)',
@@ -181,25 +210,52 @@ fitlinelabels = \
      'directional_transfer_entropy_kraskov': r'Directional TE (Kraskov) fit'}
 
 
-def plotdraw(mode, case, writeoutput):
-    graphdata = GraphData(mode, case, graphname)
+def drawplot(graphdata, scenario, datadir, graph, writeoutput):
 
-    dataloc, saveloc = config_setup.get_locations()
-    graphs_savedir = config_setup.ensure_existence(
-        os.path.join(saveloc, 'graphs'), make=True)
-    graph_filename_template = os.path.join(graphs_savedir, '{}.pdf')
+    dirparts = data_processing.getfolders(datadir)
+    dirparts[dirparts.index('weightdata')] = 'graphs'
+    savedir = dirparts[0]
+    for pathpart in dirparts[1:]:
+        savedir = os.path.join(savedir, pathpart)
 
-
-    for plot_function, graphnames in graphs:
-        for graphname in graphnames:
-            # Test whether the figure already exists
-            testlocation = graph_filename_template.format(graphname)
-            print "Now plotting " + graphname
-            if not os.path.exists(testlocation):
-                plot_function(graphname)
-            else:
-                logging.info("The requested graph has already been drawn")
-
+    if os.path.exists(os.path.join(savedir, '{}.pdf'.format(graph))):
+        logging.info("The requested graph has already been drawn")
+    elif writeoutput:
+        config_setup.ensure_existence(os.path.join(savedir))
+        eval('figtypes.' + graphdata.plot_type)(
+            graphdata, graph, scenario, savedir)
 
     return None
 
+
+def plotdraw(mode, case, writeoutput):
+
+    graphdata = GraphData(mode, case)
+
+    # Create output directory
+    config_setup.ensure_existence(
+        os.path.join(graphdata.saveloc,
+                     'graphs'), make=True)
+
+    for graph in graphdata.graphs:
+        graphdata.graphdetails(graph)
+        for weight_method in graphdata.weight_methods:
+            for scenario in graphdata.scenarios:
+                graphdata.graphscenariodetails(scenario)
+                basedir = os.path.join(graphdata.saveloc, 'weightdata',
+                                       case, scenario, weight_method)
+
+                sigtypes = next(os.walk(basedir))[1]
+
+                for sigtype in sigtypes:
+                    print sigtype
+                    embedtypesdir = os.path.join(basedir, sigtype)
+                    embedtypes = next(os.walk(embedtypesdir))[1]
+                    for embedtype in embedtypes:
+                        print embedtype
+                        datadir = os.path.join(embedtypesdir, embedtype)
+                        # Actual plot drawing execution starts here
+                        drawplot(graphdata, scenario, datadir,
+                                 graph, writeoutput)
+
+    return None
