@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 dataloc, configloc, _ = config_setup.get_locations()
 
 plotting_config = json.load(open(
-    os.path.join(configloc, 'config', '_plotting' + '.json')))
+    os.path.join(configloc, 'config_plotting' + '.json')))
 
 # Flag indicating whether generated plots should be written to disk
 writeoutput = plotting_config['writeoutput']
