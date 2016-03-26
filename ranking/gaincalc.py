@@ -169,6 +169,8 @@ class WeightcalcData:
             if self.normalize:
                 self.inputdata_normstep = \
                     sklearn.preprocessing.scale(self.inputdata_raw, axis=0)
+            else:
+                self.inputdata_normstep = self.inputdata_raw
 
         # Get delay type
         self.delaytype = self.caseconfig[settings_name]['delaytype']
