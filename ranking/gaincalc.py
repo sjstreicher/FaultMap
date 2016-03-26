@@ -157,11 +157,10 @@ class WeightcalcData:
             if self.connections_used:
                 connectionloc = self.caseconfig[scenario]['connections']
             # TODO: Store function arguments in scenario config file
-            samples = self.caseconfig[settings_name]['gensamples']
-            func_delay = self.caseconfig[settings_name]['gendelay']
+            params = self.caseconfig[settings_name]['datagen_params']
             # Get inputdata
             self.inputdata_raw = \
-                eval('datagen.' + raw_tsdata_gen)(samples, func_delay)
+                eval('datagen.' + raw_tsdata_gen)(params)
             self.inputdata_raw = np.asarray(self.inputdata_raw)
             # Get the variables and connection matrix
             self.variables, self.connectionmatrix = \
