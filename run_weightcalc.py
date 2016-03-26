@@ -22,7 +22,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     dataloc, configloc, _ = config_setup.get_locations()
     weightcalc_config = json.load(open(
-        os.path.join(configloc, 'config', '_weightcalc' + '.json')))
+        os.path.join(configloc, 'config_weightcalc' + '.json')))
 
     # Flag indicating whether calculated results should be written to disk
     writeoutput = weightcalc_config['writeoutput']

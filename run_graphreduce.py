@@ -14,8 +14,8 @@ from ranking.graphreduce import reducegraph
 logging.basicConfig(level=logging.INFO)
 
 dataloc, configloc, _ = config_setup.get_locations()
-graphreduce_config = json.load(open(os.path.join(configloc, 'config'
-                                                 '_graphreduce' + '.json')))
+graphreduce_config = json.load(open(
+    os.path.join(configloc, 'config_graphreduce' + '.json')))
 
 writeoutput = graphreduce_config['writeoutput']
 mode = graphreduce_config['mode']

@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 
 dataloc, configloc, saveloc = config_setup.get_locations()
 noderank_config = json.load(open(
-    os.path.join(configloc, 'config', '_noderank' + '.json')))
+    os.path.join(configloc, 'config_noderank' + '.json')))
 
 writeoutput = noderank_config['writeoutput']
 mode = noderank_config['mode']
