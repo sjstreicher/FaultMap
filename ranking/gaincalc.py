@@ -27,6 +27,7 @@ import numpy as np
 import h5py
 import logging
 import json
+import time
 import sklearn.preprocessing
 
 # Own libraries
@@ -153,13 +154,14 @@ class WeightcalcData:
         elif self.datatype == 'function':
             import datagen
             raw_tsdata_gen = self.caseconfig[scenario]['datagen']
-            connectionloc = self.caseconfig[scenario]['connections']
+            if self.connections_used:
+                connectionloc = self.caseconfig[scenario]['connections']
             # TODO: Store function arguments in scenario config file
             samples = self.caseconfig[settings_name]['gensamples']
-            func_delay = self.caseconfig[settings_name]['delay']
+            func_delay = self.caseconfig[settings_name]['gendelay']
             # Get inputdata
-            self.inputdata_raw = eval('datagen.' + raw_tsdata_gen)(samples,
-                                                                   func_delay)
+            self.inputdata_raw = \
+                eval('datagen.' + raw_tsdata_gen)(samples, func_delay)
             self.inputdata_raw = np.asarray(self.inputdata_raw)
             # Get the variables and connection matrix
             self.variables, self.connectionmatrix = \
@@ -470,7 +472,10 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False,
             for method in weightcalcdata.methods:
                 logging.info("Method: " + method)
 
+                start_time = time.clock()
                 calc_weights(weightcalcdata, method, scenario)
+                end_time= time.clock()
+                print end_time - start_time
 
 if __name__ == '__main__':
     multiprocessing.freezeSupport()
