@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-"""This module is used to rank nodes in a digraph.
+"""
+@author Simon Streicher, St. Elmo Wilken
+
+This module is used to rank nodes in a digraph.
 It requires a connection as well as a gain matrix as inputs.
 
-Future versions will make use of an intrinsic node importance score vector (for
-example, individual loop key performance indicators) as well.
-
-@author Simon Streicher, St. Elmo Wilken
+Future versions will make use of an intrinsic node importance score vector
+(for example, individual loop key performance indicators).
 
 """
 # Standard libraries
