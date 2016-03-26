@@ -37,9 +37,13 @@ Graph types supported include:
 
 """
 
+import os
+import numpy as np
 import matplotlib.pyplot as plt
-import figdatafuncs
 
+
+from ranking import data_processing
+from ranking.gaincalc import WeightcalcData
 
 # Preamble
 
@@ -47,53 +51,48 @@ plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
 
 
-
-sourcedir = os.path.join(saveloc, 'weightdata')
-importancedir = os.path.join(saveloc, 'noderank')
-sourcedir_normts = os.path.join(saveloc, 'normdata')
-sourcedir_fft = os.path.join(saveloc, 'fftdata')
-
-filename_template = os.path.join(sourcedir,
-                                 '{}_{}_weights_{}_{}_box{:03d}_{}.csv')
-
-filename_sig_template = os.path.join(sourcedir,
-                                     '{}_{}_sigthresh_{}_box{:03d}_{}.csv')
-
-filename_normts_template = os.path.join(sourcedir_normts,
-                                        '{}_{}_normalised_data.csv')
-
-filename_fft_template = os.path.join(sourcedir_fft,
-                                     '{}_{}_fft.csv')
-
-importancedict_filename_template = os.path.join(
-    importancedir,
-    '{}_{}_{}_backward_rel_boxrankdict.json')
+#sourcedir = os.path.join(saveloc, 'weightdata')
+#importancedir = os.path.join(saveloc, 'noderank')
+#sourcedir_normts = os.path.join(saveloc, 'normdata')
+#sourcedir_fft = os.path.join(saveloc, 'fftdata')
+#
+#filename_template = os.path.join(sourcedir,
+#                                 '{}_{}_weights_{}_{}_box{:03d}_{}.csv')
+#
+#filename_sig_template = os.path.join(sourcedir,
+#                                     '{}_{}_sigthresh_{}_box{:03d}_{}.csv')
+#
+#
+#filename_fft_template = os.path.join(sourcedir_fft,
+#                                     '{}_{}_fft.csv')
+#
+#importancedict_filename_template = os.path.join(
+#    importancedir,
+#    '{}_{}_{}_backward_rel_boxrankdict.json')
 
 
-
-
-def fig_timeseries(graphname):
+def fig_timeseries(graphdata, graph, scenario, savedir):
     """Plots time series data over time."""
 
-    graphdata = figdatafuncs.GraphData(graphname)
-    graphdata.get_legendbbox(graphname)
-    graphdata.get_plotvars(graphname)
-    graphdata.get_starttime(graphname)
+    graphdata.get_legendbbox(graph)
+    graphdata.get_plotvars(graph)
+    graphdata.get_starttime(graph)
 
-    sourcefile = filename_normts_template.format(graphdata.case,
-                                                 graphdata.scenario)
+    weightcalcdata = WeightcalcData(graphdata.mode, graphdata.case,
+                                    False, False, False)
+    weightcalcdata.setsettings(scenario, graphdata.settings)
 
-    valuematrix, headers = \
-        data_processing.read_header_values_datafile(sourcefile)
+    valuematrix = weightcalcdata.inputdata_normstep
+    variables = weightcalcdata.variables
 
     plt.figure(1, (12, 6))
 
     for varname in graphdata.plotvars:
-        varindex = headers.index(varname)
+        varindex = variables.index(varname)
         plt.plot(valuematrix[:, 0] - graphdata.starttime,
                  valuematrix[:, varindex],
                  "-",
-                 label=r'{}'.format(headers[varindex]))
+                 label=r'{}'.format(variables[varindex]))
 
     plt.ylabel('Normalised value', fontsize=14)
     plt.xlabel(r'Time (seconds)', fontsize=14)
@@ -102,7 +101,7 @@ def fig_timeseries(graphname):
     if graphdata.axis_limits is not False:
         plt.axis(graphdata.axis_limits)
 
-    plt.savefig(graph_filename_template.format(graphname))
+    plt.savefig(os.path.join(savedir, '{}.pdf'.format(graph)))
     plt.close()
 
     return None
