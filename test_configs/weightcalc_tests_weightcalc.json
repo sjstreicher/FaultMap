@@ -1,6 +1,7 @@
 {
   "datatype": "function",
   "methods": [
+      "cross_correlation",
       "transfer_entropy_kernel",
 	  "transfer_entropy_kraskov"
   ],
@@ -58,7 +59,6 @@
 	"test_delays": 10
   },
   "autoreg_2x2": {
-    "connections": "connectionmatrix_2x2",
 	"settings": ["settings_standard"],
 	"datagen": "autoreg_gen",
 	"causevarindexes": "all",
