@@ -40,12 +40,19 @@ seed_randn = partial(seed_random, np.random.randn)
 seed_rand = partial(seed_random, np.random.rand)
 
 
-def autoreg_gen(samples, delay, alpha=None):
+def autoreg_gen(params):
     """Generates an autoregressive set of vectors.
 
     A constant seed is used for testing comparison purposes.
 
     """
+
+    samples = params[0]
+    delay = params[1]
+    if len(params) == 3:
+        alpha = params[2]
+    else:
+        alpha = None
 
     # Define seed for initial source data
     seeds = iter(seed_list)

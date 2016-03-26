@@ -59,16 +59,16 @@ class NoderankData:
 
         """
 
-        scenario_conf = self.caseconfig[scenario]
-        settings = self.caseconfig[scenario_conf['settings']]
+        scenario_config = self.caseconfig[scenario]
+        settings = self.caseconfig[scenario_config['settings']]
 
         self.connections_used = settings['use_connections']
         self.bias_used = settings['use_bias']
         self.dummies = settings['dummies']
 
-        self.m = scenario_conf['m']
+        self.m = scenario_config['m']
         if 'katz' in self.rank_methods:
-            self.alpha = scenario_conf['alpha']
+            self.alpha = scenario_config['alpha']
 
         if self.datatype == 'file':
             # Retrieve list of variables
@@ -81,7 +81,7 @@ class NoderankData:
             if self.connections_used:
                 # Get connection (adjacency) matrix
                 connectionloc = os.path.join(self.casedir, 'connections',
-                                             scenario_conf['connections'])
+                                             scenario_config['connections'])
                 self.connectionmatrix, _ = \
                     data_processing.read_connectionmatrix(connectionloc)
             else:
@@ -95,7 +95,7 @@ class NoderankData:
                 # Read the bias vector from file
                 # Get the bias vector file location
                 biasloc = os.path.join(self.casedir, 'biasvectors',
-                                       scenario_conf['biasvector'])
+                                       scenario_config['biasvector'])
                 self.biasvector, _ = \
                     data_processing.read_biasvector(biasloc)
 
@@ -105,7 +105,7 @@ class NoderankData:
 
         elif self.datatype == 'function':
             # Get variables, connection matrix and gainmatrix
-            network_gen = scenario_conf['networkgen']
+            network_gen = scenario_config['networkgen']
             self.connectionmatrix, self.gainmatrix, \
                 self.variablelist, _ = \
                 eval('networkgen.' + network_gen)()
