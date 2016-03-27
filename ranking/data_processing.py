@@ -638,6 +638,16 @@ def writecsv(filename, items, header=None):
         csv.writer(f).writerows(items)
 
 
+def change_dirtype(datadir, oldtype, newtype):
+    dirparts = getfolders(datadir)
+    dirparts[dirparts.index(oldtype)] = newtype
+    datadir = dirparts[0]
+    for pathpart in dirparts[1:]:
+        datadir = os.path.join(datadir, pathpart)
+
+    return datadir
+
+
 def fft_calculation(headerline, normalised_tsdata, variables, sampling_rate,
                     sampling_unit, saveloc, case, scenario,
                     plotting=False, plotting_endsample=500):

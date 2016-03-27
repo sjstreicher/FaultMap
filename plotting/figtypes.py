@@ -50,25 +50,32 @@ from ranking.gaincalc import WeightcalcData
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
 
-
-#sourcedir = os.path.join(saveloc, 'weightdata')
-#importancedir = os.path.join(saveloc, 'noderank')
-#sourcedir_normts = os.path.join(saveloc, 'normdata')
-
-#
-#filename_template = os.path.join(sourcedir,
-#                                 '{}_{}_weights_{}_{}_box{:03d}_{}.csv')
-#
-#filename_sig_template = os.path.join(sourcedir,
-#                                     '{}_{}_sigthresh_{}_box{:03d}_{}.csv')
-#
-#
+ # Label dictionaries
+yaxislabel = \
+    {u'cross_correlation': r'Cross correlation',
+     u'absolute_transfer_entropy_kernel':
+         r'Absolute transfer entropy (Kernel) (bits)',
+     u'directional_transfer_entropy_kernel':
+         r'Directional transfer entropy (Kernel) (bits)',
+     u'absolute_transfer_entropy_kraskov':
+         r'Absolute transfer entropy (Kraskov) (nats)',
+     u'directional_transfer_entropy_kraskov':
+         r'Directional transfer entropy (Kraskov) (nats)'}
 
 
-#
-#importancedict_filename_template = os.path.join(
-#    importancedir,
-#    '{}_{}_{}_backward_rel_boxrankdict.json')
+linelabels = \
+    {'cross_correlation': r'Correlation',
+     'absolute_transfer_entropy_kernel': r'Absolute TE (Kernel)',
+     'directional_transfer_entropy_kernel': r'Directional TE (Kernel)',
+     'absolute_transfer_entropy_kraskov': r'Absolute TE (Kraskov)',
+     'directional_transfer_entropy_kraskov': r'Directional TE (Kraskov)'}
+
+fitlinelabels = \
+    {'cross_correlation': r'Correlation fit',
+     'absolute_transfer_entropy_kernel': r'Absolute TE (Kernel) fit',
+     'directional_transfer_entropy_kernel': r'Directional TE (Kernel) fit',
+     'absolute_transfer_entropy_kraskov': r'Absolute TE (Kraskov) fit',
+     'directional_transfer_entropy_kraskov': r'Directional TE (Kraskov) fit'}
 
 
 def fig_timeseries(graphdata, graph, scenario, savedir):
@@ -142,40 +149,80 @@ def fig_fft(graphdata, graph, scenario, savedir):
     return None
 
 
-def fig_values_vs_delays(graphname):
+def fig_values_vs_delays(graphdata, graph, scenario, savedir):
     """Generates a figure that shows dependence of method values on delays.
+
+    Constrained to a single scenario, box and source variable.
+
+    Automatically iterates through absolute and directional weights.
+    Able to iteratre through multiple box indexes and source variables.
+
     """
 
-    graphdata = GraphData(graphname)
-    graphdata.get_legendbbox(graphname)
-    graphdata.get_linelabels(graphname)
+    graphdata.get_legendbbox(graph)
+    graphdata.get_linelabels(graph)
+    graphdata.get_timeunit(graph)
+    graphdata.get_linelabels(graph)
+    graphdata.get_boxindexes(graph)
+    graphdata.get_sourcevars(graph)
+    graphdata.get_destvars(graph)
+#    graphdata.get_labelformat(graph)
 
-    sourcefile = filename_template.format(graphdata.case, graphdata.scenario,
-                                          graphdata.method[0],
-                                          graphdata.sigstatus,
-                                          graphdata.boxindex,
-                                          graphdata.sourcevar)
+    # Get back from savedir to weightdata source
+    # This is up to the embed type level
+    weightdir = data_processing.change_dirtype(savedir, 'graphs', 'weightdata')
 
-    valuematrix, headers = \
-        data_processing.read_header_values_datafile(sourcefile)
+    # Extract current method from weightdir
+    dirparts = data_processing.getfolders(weightdir)
+    # The method is two folders up from the embed level
+    method = dirparts[-3]
 
-    fig = plt.figure(1, figsize=(12, 6))
-    ax = fig.add_subplot(111)
-    ax.set_ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
-    ax.set_xlabel(r'Delay (time units)', fontsize=14)
+    # Select typenames based on method
+    if method[:16] == 'transfer_entropy':
+        typenames = [
+            'weights_absolute',
+            'weights_directional']
+    else:
+        typenames = ['weights']
 
-    taus = graphdata.linelabels
-    for i, tau in enumerate(taus):
-        ax.plot(valuematrix[:, 0], valuematrix[:, i + 1], marker="o",
-                markersize=4,
-                label=r'$\tau = {:1.1f}$ seconds'.format(tau))
+    for typename in typenames:
+        for boxindex in graphdata.boxindexes:
+            for sourcevar in graphdata.sourcevars:
 
-    ax.legend(bbox_to_anchor=graphdata.legendbbox)
-    if graphdata.axis_limits is not False:
-        ax.axis(graphdata.axis_limits)
+                fig = plt.figure(1, figsize=(12, 6))
+                ax = fig.add_subplot(111)
+                if len(typename) > 8:
+                    yaxislabelstring = typename[8:] + '_' + method
+                else:
+                    yaxislabelstring = method
+                ax.set_ylabel(yaxislabel[yaxislabelstring], fontsize=14)
+                ax.set_xlabel(r'Delay ({})'.format(graphdata.timeunit),
+                              fontsize=14)
 
-    plt.savefig(graph_filename_template.format(graphname))
-    plt.close()
+                # Open data file and plot graph
+                sourcefile = os.path.join(
+                    weightdir, typename, 'box{:03d}'.format(boxindex),
+                    '{}.csv'.format(sourcevar))
+
+                valuematrix, headers = \
+                    data_processing.read_header_values_datafile(sourcefile)
+
+                for destvar in graphdata.destvars:
+                    destvarindex = graphdata.destvars.index(destvar)
+                    ax.plot(valuematrix[:, 0],
+                            valuematrix[:, destvarindex + 1],
+                            marker="o", markersize=4,
+                            label=destvar)
+
+                ax.legend(bbox_to_anchor=graphdata.legendbbox)
+                if graphdata.axis_limits is not False:
+                    ax.axis(graphdata.axis_limits)
+
+                plt.savefig(os.path.join(
+                    savedir,
+                    '{}_{}_box{:03d}_{}.pdf'.format(
+                        graph, typename, boxindex, sourcevar)))
+                plt.close()
 
     return None
 
@@ -293,56 +340,7 @@ def fig_scenario_maxval_vs_taus(graphname, delays=False, drawfit=False):
     return None
 
 
-def fig_diffvar_vs_delay(graphname, difvals, linetitle):
-    """Plot many variables from a single scenario.
 
-    Assumes only a single scenario is defined.
-
-    """
-
-    graphdata = GraphData(graphname)
-    graphdata.get_legendbbox(graphname)
-    graphdata.get_varindexes(graphname)
-
-    # Get x-axis values
-#    graphdata.get_xvalues(graphname)
-
-    plt.figure(1, (12, 6))
-
-    # Get valuematrices
-    valuematrices = get_scenario_data_vectors(graphdata)
-
-    xaxis_intervals = []
-    relevant_values = []
-    for valuematrix in valuematrices:
-        # Get the maximum from each valuematrix in the entry
-        # which corresponds to the common element of interest.
-
-        # TODO: Fix this old hardcoded remnant
-        # 3 referred to the index of tau=1 for many cases involved
-#        values = valuematrix[:, 3]
-        values = valuematrix[:, graphdata.varindexes]
-        xaxis_intervals.append(valuematrix[:, 0])
-        relevant_values.append(values)
-
-#    print xaxis_intervals[0]
-#    print relevant_values[0][:, 0]
-    for i, val in enumerate(difvals):
-        plt.plot(xaxis_intervals[0], relevant_values[0][:, i], marker="o",
-                 markersize=4,
-                 label=linetitle.format(val))
-
-    plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
-    plt.xlabel(r'Delay (seconds)', fontsize=14)
-    plt.legend(bbox_to_anchor=graphdata.legendbbox)
-
-    if graphdata.axis_limits is not False:
-        plt.axis(graphdata.axis_limits)
-
-    plt.savefig(graph_filename_template.format(graphname))
-    plt.close()
-
-    return None
 
 
 def fig_diffscen_vs_delay(graphname, difvals, linetitle):

@@ -71,6 +71,15 @@ class GraphData(object):
     def get_plotvars(self, graph):
         self.plotvars = self.caseconfig[graph]['plotvars']
 
+    def get_sourcevars(self, graph):
+        self.sourcevars = self.caseconfig[graph]['sourcevars']
+
+    def get_destvars(self, graph):
+        self.destvars = self.caseconfig[graph]['destvars']
+
+    def get_boxindexes(self, graph):
+        self.boxindexes = self.caseconfig[graph]['boxindexes']
+
     def get_xvalues(self, graph):
         self.xvals = self.caseconfig[graph][graph]['xvals']
 
@@ -80,11 +89,17 @@ class GraphData(object):
     def get_linelabels(self, graph):
         self.linelabels = self.caseconfig[graph]['linelabels']
 
+    def get_labelformat(self, graph):
+        self.labelformat = self.caseconfig[graph]['labelformat']
+
     def get_starttime(self, graph):
         self.starttime = self.caseconfig[graph]['starttime']
 
     def get_frequencyunit(self, graph):
         self.frequencyunit = self.caseconfig[graph]['frequency_unit']
+
+    def get_timeunit(self, graph):
+        self.timeunit = self.caseconfig[graph]['time_unit']
 
     def get_varindexes(self, graph):
         self.varindexes = [x+1 for x in
@@ -181,33 +196,6 @@ def get_box_threshold_vectors(graphdata):
         valuematrices.append(sourcevalues)
 
     return valuematrices
-
- # Label dictionaries
-yaxislabel = \
-    {u'cross_correlation': r'Cross correlation',
-     u'absolute_transfer_entropy_kernel':
-         r'Absolute transfer entropy (Kernel) (bits)',
-     u'directional_transfer_entropy_kernel':
-         r'Directional transfer entropy (Kernel) (bits)',
-     u'absolute_transfer_entropy_kraskov':
-         r'Absolute transfer entropy (Kraskov) (nats)',
-     u'directional_transfer_entropy_kraskov':
-         r'Directional transfer entropy (Kraskov) (nats)'}
-
-
-linelabels = \
-    {'cross_correlation': r'Correlation',
-     'absolute_transfer_entropy_kernel': r'Absolute TE (Kernel)',
-     'directional_transfer_entropy_kernel': r'Directional TE (Kernel)',
-     'absolute_transfer_entropy_kraskov': r'Absolute TE (Kraskov)',
-     'directional_transfer_entropy_kraskov': r'Directional TE (Kraskov)'}
-
-fitlinelabels = \
-    {'cross_correlation': r'Correlation fit',
-     'absolute_transfer_entropy_kernel': r'Absolute TE (Kernel) fit',
-     'directional_transfer_entropy_kernel': r'Directional TE (Kernel) fit',
-     'absolute_transfer_entropy_kraskov': r'Absolute TE (Kraskov) fit',
-     'directional_transfer_entropy_kraskov': r'Directional TE (Kraskov) fit'}
 
 
 def drawplot(graphdata, scenario, datadir, graph, writeoutput):
