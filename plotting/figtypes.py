@@ -157,6 +157,8 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
     Automatically iterates through absolute and directional weights.
     Able to iteratre through multiple box indexes and source variables.
 
+    Provides the option to plot weight significance threshold values.
+
     """
 
     graphdata.get_legendbbox(graph)
@@ -166,6 +168,7 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
     graphdata.get_boxindexes(graph)
     graphdata.get_sourcevars(graph)
     graphdata.get_destvars(graph)
+    graphdata.get_sigthresholdplotting(graph)
 #    graphdata.get_labelformat(graph)
 
     # Get back from savedir to weightdata source
@@ -182,10 +185,14 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
         typenames = [
             'weights_absolute',
             'weights_directional']
+        thresh_typenames = [
+            'sigthresh_absolute',
+            'sigthresh_directional']
     else:
         typenames = ['weights']
+        thresh_typenames = ['sigthresh']
 
-    for typename in typenames:
+    for typeindex, typename in enumerate(typenames):
         for boxindex in graphdata.boxindexes:
             for sourcevar in graphdata.sourcevars:
 
@@ -207,12 +214,28 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
                 valuematrix, headers = \
                     data_processing.read_header_values_datafile(sourcefile)
 
+                if graphdata.thresholdplotting:
+                    threshold_sourcefile = os.path.join(
+                        weightdir, thresh_typenames[typeindex],
+                        'box{:03d}'.format(boxindex),
+                        '{}.csv'.format(sourcevar))
+
+                    threshmatrix, headers = \
+                        data_processing.read_header_values_datafile(
+                            threshold_sourcefile)
+
                 for destvar in graphdata.destvars:
                     destvarindex = graphdata.destvars.index(destvar)
                     ax.plot(valuematrix[:, 0],
                             valuematrix[:, destvarindex + 1],
                             marker="o", markersize=4,
                             label=destvar)
+
+                    if graphdata.thresholdplotting:
+                        ax.plot(threshmatrix[:, 0],
+                                threshmatrix[:, destvarindex + 1],
+                                marker="x", markersize=4,
+                                label=destvar + ' threshold')
 
                 ax.legend(bbox_to_anchor=graphdata.legendbbox)
                 if graphdata.axis_limits is not False:
