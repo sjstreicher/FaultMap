@@ -1,6 +1,7 @@
 {
   "datatype": "function",
   "methods": [
+      "cross_correlation",
       "transfer_entropy_kernel",
 	  "transfer_entropy_kraskov"
   ],
@@ -10,7 +11,7 @@
 	  "autoreg_2x2"
   ],
   "settings_standard": {
-    "use_connections": false,
+    "use_connections": true,
 	"transient": false,
 	"normalize": true,
     "delaytype": "datapoints",
@@ -21,8 +22,10 @@
 	"startindex": 0,
 	"sigtest": true,
 	"allthresh": false,
-	"gensamples": 1000,
-	"delay": 0,
+	"datagen_params": [
+	  1000,
+	  0
+	],
 	"te_thresh_method": "rankorder",
 	"te_surr_method": "random_shuffle",
 	"do_multiprocessing": false,
@@ -65,6 +68,7 @@
 	"affectedvarindexes": "all",
 	"sub_sampling_interval": 1,
 	"bandgap_filtering": false,
+	"boxindexes": "all",
 	"test_delays": 10
   },
     "sinusoid_5x5": {

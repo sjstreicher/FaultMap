@@ -27,6 +27,7 @@ import numpy as np
 import h5py
 import logging
 import json
+import time
 import sklearn.preprocessing
 
 # Own libraries
@@ -39,6 +40,7 @@ from gaincalculators import (PartialCorrWeightcalc, CorrWeightcalc,
 
 import gaincalc_oneset
 import multiprocessing
+import datagen
 
 
 class WeightcalcData:
@@ -132,6 +134,7 @@ class WeightcalcData:
                                                  scenario, self.casename)
             # Read variables from orignal CSV file
             self.variables = data_processing.read_variables(raw_tsdata)
+            self.timestamps = data_processing.read_timestamps(raw_tsdata)
             # Get inputdata from H5 table created
             self.inputdata_raw = np.array(h5py.File(os.path.join(
                 datapath, scenario + '.h5'), 'r')[scenario])
@@ -150,16 +153,19 @@ class WeightcalcData:
 #                    self.inputdata_raw)
                 self.inputdata_normstep = self.inputdata_raw
 
+            self.headerline = np.genfromtxt(raw_tsdata, delimiter=',',
+                                            dtype='string')[0, :]
+
         elif self.datatype == 'function':
-            import datagen
+
             raw_tsdata_gen = self.caseconfig[scenario]['datagen']
-            connectionloc = self.caseconfig[scenario]['connections']
+            if self.connections_used:
+                connectionloc = self.caseconfig[scenario]['connections']
             # TODO: Store function arguments in scenario config file
-            samples = self.caseconfig[settings_name]['gensamples']
-            func_delay = self.caseconfig[settings_name]['delay']
+            params = self.caseconfig[settings_name]['datagen_params']
             # Get inputdata
-            self.inputdata_raw = eval('datagen.' + raw_tsdata_gen)(samples,
-                                                                   func_delay)
+            self.inputdata_raw = \
+                eval('datagen.' + raw_tsdata_gen)(params)
             self.inputdata_raw = np.asarray(self.inputdata_raw)
             # Get the variables and connection matrix
             self.variables, self.connectionmatrix = \
@@ -168,6 +174,15 @@ class WeightcalcData:
             if self.normalize:
                 self.inputdata_normstep = \
                     sklearn.preprocessing.scale(self.inputdata_raw, axis=0)
+            else:
+                self.inputdata_normstep = self.inputdata_raw
+
+            self.timestamps = np.arange(0, len(
+                self.inputdata_normstep[:, 0]) * self.sampling_rate,
+                self.sampling_rate)
+
+            self.headerline = ['Time']
+            [self.headerline.append(variable) for variable in self.variables]
 
         # Get delay type
         self.delaytype = self.caseconfig[settings_name]['delaytype']
@@ -260,8 +275,9 @@ class WeightcalcData:
 
         # FFT the data and write back in format that can be analysed in
         # TOPCAT in a plane plot
+
         if self.fftcalc:
-            data_processing.fft_calculation(raw_tsdata,
+            data_processing.fft_calculation(self.headerline,
                                             self.inputdata_originalrate,
                                             self.variables,
                                             self.sampling_rate,
@@ -373,7 +389,6 @@ def calc_weights(weightcalcdata, method, scenario):
         # Initiate headerline for single signal entropies storage file
         signalent_headerline = weightcalcdata.variables
         # Define filename structure for CSV file
-
         def signalent_filename(name, boxindex):
             return signalent_filename_template.format(
                 weightcalcdata.casename, scenario, name, boxindex)
@@ -470,7 +485,10 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False,
             for method in weightcalcdata.methods:
                 logging.info("Method: " + method)
 
+                start_time = time.clock()
                 calc_weights(weightcalcdata, method, scenario)
+                end_time= time.clock()
+                print end_time - start_time
 
 if __name__ == '__main__':
     multiprocessing.freezeSupport()

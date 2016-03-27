@@ -14,8 +14,8 @@ from ranking.data_processing import trend_extraction
 logging.basicConfig(level=logging.INFO)
 
 dataloc, configloc, saveloc = config_setup.get_locations()
-trendextraction_config = json.load(open(os.path.join(configloc, 'config'
-                                        '_trendextraction' + '.json')))
+trendextraction_config = json.load(open(
+    os.path.join(configloc, 'config_trendextraction' + '.json')))
 
 writeoutput = trendextraction_config['writeoutput']
 mode = trendextraction_config['mode']

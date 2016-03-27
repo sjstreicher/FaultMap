@@ -16,7 +16,7 @@ import transentropy
 from contextlib import contextmanager
 
 # Own libraries
-from data_processing import shuffle_data
+import data_processing
 
 
 @contextmanager
@@ -469,7 +469,7 @@ class TransentWeightcalc:
 
         elif self.te_surr_method == 'random_shuffle':
             surr_tsdata = \
-                [shuffle_data(causal_data) for n in range(num)]
+                [data_processing.shuffle_data(causal_data) for n in range(num)]
 
         surr_te_fwd = []
         surr_te_bwd = []
@@ -538,6 +538,12 @@ class TransentWeightcalc:
         return threshent_directional, threshent_absolute
 
     def calcsigthresh(self, weightcalcdata, affected_data, causal_data):
+        self.te_thresh_method = weightcalcdata.te_thresh_method
         self.te_surr_method = weightcalcdata.te_surr_method
-        self.thresh_rankorder(affected_data, causal_data)
-        return [self.threshent_directional, self.threshent_absolute]
+        if self.te_thresh_method == 'rankorder':
+            threshent_directional, threshent_absolute = \
+                self.thresh_rankorder(affected_data, causal_data)
+        elif self.te_thresh_method == 'sixsigma':
+            threshent_directional, threshent_absolute = \
+                self.thresh_sixsigma(affected_data, causal_data)
+        return [threshent_directional, threshent_absolute]

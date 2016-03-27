@@ -59,13 +59,13 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
                                         True, 'kernel',
                                         x_hist_norm[0], y_hist_norm[0])
             self.entropies_infodyn_kernel.append(result_infodyn)
-            print("Infodynamics TE result: %.4f bits"%result_infodyn)
+            print("Infodynamics TE result: %.4f bits" % result_infodyn)
 
         print self.entropies_infodyn_kernel
 
         maxval = max(self.entropies_infodyn_kernel)
         # The maximum lags with one sample
-        delayedval = self.entropies_infodyn_kernel[self.delay-1]
+        delayedval = self.entropies_infodyn_kernel[self.delay]
         self.assertEqual(maxval, delayedval)
 
     def test_peakentropy_infodyn_kraskov_noautoembed(self):
@@ -91,7 +91,7 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
                         test_significance=True,
                         auto_embed=False)
             self.entropies_infodyn_kraskov.append(result_infodyn)
-            print("Infodynamics TE result: %.4f nats"%result_infodyn)
+            print("Infodynamics TE result: %.4f nats" % result_infodyn)
 
             print properties
             print significance
@@ -100,7 +100,7 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
 
         maxval = max(self.entropies_infodyn_kraskov)
         # The maximum lags with one sample
-        delayedval = self.entropies_infodyn_kraskov[self.delay-1]
+        delayedval = self.entropies_infodyn_kraskov[self.delay]
         self.assertEqual(maxval, delayedval)
 
     def test_peakentropy_infodyn_kraskov_autoembed(self):
@@ -126,7 +126,7 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
                         test_significance=True,
                         auto_embed=True)
             self.entropies_infodyn_kraskov.append(result_infodyn)
-            print("Infodynamics TE result: %.4f nats"%result_infodyn)
+            print("Infodynamics TE result: %.4f nats" % result_infodyn)
 
             print properties
             print significance
@@ -135,7 +135,7 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
 
         maxval = max(self.entropies_infodyn_kraskov)
         # The maximum lags with one sample
-        delayedval = self.entropies_infodyn_kraskov[self.delay-1]
+        delayedval = self.entropies_infodyn_kraskov[self.delay]
         self.assertEqual(maxval, delayedval)
 
 if __name__ == '__main__':
