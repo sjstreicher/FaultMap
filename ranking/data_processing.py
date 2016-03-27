@@ -19,6 +19,8 @@ import json
 import config_setup
 import transentropy
 
+from ranking.gaincalc import WeightcalcData
+
 
 def shuffle_data(input_data):
     """Returns a (seeded) randomly shuffled array of data.
@@ -126,7 +128,7 @@ def process_auxfile(filename):
     return affectedvars, weights, nosigtest_weights, sigweights, delays
 
 
-def create_arrays(datadir, tsfilename):
+def create_arrays(datadir, variables):
     """
     datadir is the location of the auxdata and weights folders for the
     specific case that is under investigation
@@ -199,8 +201,6 @@ def create_arrays(datadir, tsfilename):
                 # Create a base array based on the full set of variables
                 # found in the typical weightcalcdata function
 
-                # Get variables
-                variables = read_variables(tsfilename)
                 # Initialize matrix with variables written
                 # in first row and column
                 weights_matrix = np.zeros(
@@ -513,8 +513,7 @@ def result_reconstruction(mode, case, writeoutput):
     saveloc, caseconfigdir, casedir, _ = config_setup.runsetup(mode, case)
 
     caseconfig = json.load(
-        open(os.path.join(caseconfigdir, case +
-                          '_weightcalc' + '.json')))
+        open(os.path.join(caseconfigdir, case + '_weightcalc' + '.json')))
 
     # Directory where subdirectories for scenarios will be stored
     scenariosdir = os.path.join(saveloc, 'weightdata', case)
@@ -525,8 +524,9 @@ def result_reconstruction(mode, case, writeoutput):
     for scenario in scenarios:
         print scenario
 
-        tsfilename = os.path.join(casedir, 'data',
-                                  caseconfig[scenario]['data'])
+        weightcalcdata = WeightcalcData(mode, case, False, False, False)
+        weightcalcdata.setsettings(scenario,
+                                   caseconfig[scenario]['settings'][0])
 
         methodsdir = os.path.join(scenariosdir, scenario)
         methods = next(os.walk(methodsdir))[1]
@@ -541,7 +541,7 @@ def result_reconstruction(mode, case, writeoutput):
                 for embedtype in embedtypes:
                     print embedtype
                     datadir = os.path.join(embedtypesdir, embedtype)
-                    create_arrays(datadir, tsfilename)
+                    create_arrays(datadir, weightcalcdata.variables)
                     # Provide directional array version tested with absolute
                     # weight sign
                     create_signtested_directionalarrays(datadir, writeoutput)

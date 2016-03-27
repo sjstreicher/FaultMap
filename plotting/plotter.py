@@ -12,7 +12,6 @@ import logging
 
 import figtypes
 from ranking import data_processing
-from ranking.gaincalc import WeightcalcData
 
 import config_setup
 
@@ -221,7 +220,9 @@ def plotdraw(mode, case, writeoutput):
     for graph in graphdata.graphs:
         graphdata.graphdetails(graph)
         for weight_method in graphdata.weight_methods:
+            print weight_method
             for scenario in graphdata.scenarios:
+                print scenario
                 basedir = os.path.join(graphdata.saveloc, 'weightdata',
                                        case, scenario, weight_method)
 
