@@ -244,7 +244,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
 
                 # Write the significance thresholds to file
                 if weightcalcdata.allthresh:
-                    sigthresh_thisvar_neutral = np.asarray(weightlist)
+                    sigthresh_thisvar_neutral = np.asarray(sigthreshlist)
                     sigthresh_thisvar_neutral = \
                         sigthresh_thisvar_neutral[:, np.newaxis]
 
