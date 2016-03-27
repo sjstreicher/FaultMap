@@ -67,7 +67,7 @@ def autoreg_gen(params):
 
     for i in range(delay, len(cause)):
         if alpha is None:
-            affected[i] = affected[i - 1] + cause[i - delay]
+            affected[i] = affected[i - 1] + cause[i - (delay + 1)]
         else:
             affected[i] = alpha * affected[i - 1] + \
                 (1 - alpha) * cause[i - delay]
