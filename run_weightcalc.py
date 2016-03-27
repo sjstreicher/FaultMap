@@ -2,7 +2,7 @@
 """
 @author: Simon Streicher
 
-Perorms weight calculation for all cases specified in the configuration file.
+Performs weight calculation for all cases specified in the configuration file.
 
 """
 # Standard modules
