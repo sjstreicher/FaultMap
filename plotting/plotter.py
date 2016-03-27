@@ -101,6 +101,9 @@ class GraphData(object):
     def get_timeunit(self, graph):
         self.timeunit = self.caseconfig[graph]['time_unit']
 
+    def get_sigthresholdplotting(self, graph):
+        self.thresholdplotting = self.caseconfig[graph]['threshold_plotting']
+
     def get_varindexes(self, graph):
         self.varindexes = [x+1 for x in
                            self.caseconfig[graph]['varindexes']]
