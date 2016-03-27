@@ -153,6 +153,9 @@ class WeightcalcData:
 #                    self.inputdata_raw)
                 self.inputdata_normstep = self.inputdata_raw
 
+            self.headerline = np.genfromtxt(raw_tsdata, delimiter=',',
+                                            dtype='string')[0, :]
+
         elif self.datatype == 'function':
 
             raw_tsdata_gen = self.caseconfig[scenario]['datagen']
@@ -177,6 +180,9 @@ class WeightcalcData:
             self.timestamps = np.arange(0, len(
                 self.inputdata_normstep[:, 0]) * self.sampling_rate,
                 self.sampling_rate)
+
+            self.headerline = ['Time']
+            [self.headerline.append(variable) for variable in self.variables]
 
         # Get delay type
         self.delaytype = self.caseconfig[settings_name]['delaytype']
@@ -269,8 +275,9 @@ class WeightcalcData:
 
         # FFT the data and write back in format that can be analysed in
         # TOPCAT in a plane plot
+
         if self.fftcalc:
-            data_processing.fft_calculation(raw_tsdata,
+            data_processing.fft_calculation(self.headerline,
                                             self.inputdata_originalrate,
                                             self.variables,
                                             self.sampling_rate,
