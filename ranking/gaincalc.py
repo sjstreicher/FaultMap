@@ -40,6 +40,7 @@ from gaincalculators import (PartialCorrWeightcalc, CorrWeightcalc,
 
 import gaincalc_oneset
 import multiprocessing
+import datagen
 
 
 class WeightcalcData:
@@ -133,6 +134,7 @@ class WeightcalcData:
                                                  scenario, self.casename)
             # Read variables from orignal CSV file
             self.variables = data_processing.read_variables(raw_tsdata)
+            self.timestamps = data_processing.read_timestamps(raw_tsdata)
             # Get inputdata from H5 table created
             self.inputdata_raw = np.array(h5py.File(os.path.join(
                 datapath, scenario + '.h5'), 'r')[scenario])
@@ -152,7 +154,7 @@ class WeightcalcData:
                 self.inputdata_normstep = self.inputdata_raw
 
         elif self.datatype == 'function':
-            import datagen
+
             raw_tsdata_gen = self.caseconfig[scenario]['datagen']
             if self.connections_used:
                 connectionloc = self.caseconfig[scenario]['connections']
@@ -171,6 +173,10 @@ class WeightcalcData:
                     sklearn.preprocessing.scale(self.inputdata_raw, axis=0)
             else:
                 self.inputdata_normstep = self.inputdata_raw
+
+            self.timestamps = np.arange(0, len(
+                self.inputdata_normstep[:, 0]) * self.sampling_rate,
+                self.sampling_rate)
 
         # Get delay type
         self.delaytype = self.caseconfig[settings_name]['delaytype']
@@ -376,7 +382,6 @@ def calc_weights(weightcalcdata, method, scenario):
         # Initiate headerline for single signal entropies storage file
         signalent_headerline = weightcalcdata.variables
         # Define filename structure for CSV file
-
         def signalent_filename(name, boxindex):
             return signalent_filename_template.format(
                 weightcalcdata.casename, scenario, name, boxindex)
