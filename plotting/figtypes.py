@@ -54,7 +54,7 @@ plt.rc('font', family='serif')
 #sourcedir = os.path.join(saveloc, 'weightdata')
 #importancedir = os.path.join(saveloc, 'noderank')
 #sourcedir_normts = os.path.join(saveloc, 'normdata')
-#sourcedir_fft = os.path.join(saveloc, 'fftdata')
+
 #
 #filename_template = os.path.join(sourcedir,
 #                                 '{}_{}_weights_{}_{}_box{:03d}_{}.csv')
@@ -63,8 +63,8 @@ plt.rc('font', family='serif')
 #                                     '{}_{}_sigthresh_{}_box{:03d}_{}.csv')
 #
 #
-#filename_fft_template = os.path.join(sourcedir_fft,
-#                                     '{}_{}_fft.csv')
+
+
 #
 #importancedict_filename_template = os.path.join(
 #    importancedir,
@@ -107,16 +107,16 @@ def fig_timeseries(graphdata, graph, scenario, savedir):
     return None
 
 
-def fig_fft(graphname):
+def fig_fft(graphdata, graph, scenario, savedir):
     """Plots FFT over frequency range."""
 
-    graphdata = GraphData(graphname)
-    graphdata.get_legendbbox(graphname)
-    graphdata.get_frequencyunit(graphname)
-    graphdata.get_plotvars(graphname)
+    graphdata.get_legendbbox(graph)
+    graphdata.get_frequencyunit(graph)
+    graphdata.get_plotvars(graph)
 
-    sourcefile = filename_fft_template.format(graphdata.case,
-                                              graphdata.scenario)
+    sourcefile = os.path.join(
+        graphdata.saveloc, 'fftdata',
+        '{}_{}_fft.csv'.format(graphdata.case, scenario))
 
     valuematrix, headers = \
         data_processing.read_header_values_datafile(sourcefile)
@@ -136,17 +136,14 @@ def fig_fft(graphname):
     if graphdata.axis_limits is not False:
         plt.axis(graphdata.axis_limits)
 
-    plt.savefig(graph_filename_template.format(graphname))
+    plt.savefig(os.path.join(savedir, '{}.pdf'.format(graph)))
     plt.close()
 
     return None
 
 
 def fig_values_vs_delays(graphname):
-    """Generates a figure that shows dependence of method values on
-    time constant and delay for signal passed through
-    first order transfer functions.
-
+    """Generates a figure that shows dependence of method values on delays.
     """
 
     graphdata = GraphData(graphname)

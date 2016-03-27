@@ -638,15 +638,13 @@ def writecsv(filename, items, header=None):
         csv.writer(f).writerows(items)
 
 
-def fft_calculation(raw_tsdata, normalised_tsdata, variables, sampling_rate,
+def fft_calculation(headerline, normalised_tsdata, variables, sampling_rate,
                     sampling_unit, saveloc, case, scenario,
                     plotting=False, plotting_endsample=500):
 
     # logging.info("Starting FFT calculations")
     # Using a print command instead as logging is late
     print "Starting FFT calculations"
-
-    headerline = np.genfromtxt(raw_tsdata, delimiter=',', dtype='string')[0, :]
 
     # Change first entry of headerline from "Time" to "Frequency"
     headerline[0] = 'Frequency'
