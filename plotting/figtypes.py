@@ -89,7 +89,7 @@ def fig_timeseries(graphdata, graph, scenario, savedir):
 
     for varname in graphdata.plotvars:
         varindex = variables.index(varname)
-        plt.plot(valuematrix[:, 0] - graphdata.starttime,
+        plt.plot(weightcalcdata.timestamps - graphdata.starttime,
                  valuematrix[:, varindex],
                  "-",
                  label=r'{}'.format(variables[varindex]))

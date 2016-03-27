@@ -615,6 +615,15 @@ def csv_to_h5(saveloc, raw_tsdata, scenario, case):
     return datapath
 
 
+def read_timestamps(raw_tsdata):
+    timestamps = []
+    with open(raw_tsdata) as f:
+        datareader = csv.reader(f)
+        for row in datareader[1:]:
+            timestamps.append[row[0]]
+    return timestamps
+
+
 def read_variables(raw_tsdata):
     with open(raw_tsdata) as f:
         variables = csv.reader(f).next()[1:]
