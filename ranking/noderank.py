@@ -519,12 +519,9 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
         if writeoutput:
             # Make sure the correct directory exists
             # Take datadir and swop out 'weightdata' for 'noderank'
+            savedir = data_processing.change_dirtype(
+                datadir, 'weightdata', 'noderank')
 
-            dirparts = data_processing.getfolders(datadir)
-            dirparts[dirparts.index('weightdata')] = 'noderank'
-            savedir = dirparts[0]
-            for pathpart in dirparts[1:]:
-                savedir = os.path.join(savedir, pathpart)
             config_setup.ensure_existence(os.path.join(savedir, typename[:-7]))
 
             if preprocessing:
