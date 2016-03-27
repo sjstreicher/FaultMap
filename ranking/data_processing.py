@@ -19,6 +19,8 @@ import json
 import config_setup
 import transentropy
 
+from ranking.gaincalc import WeightcalcData
+
 
 def shuffle_data(input_data):
     """Returns a (seeded) randomly shuffled array of data.
@@ -60,6 +62,7 @@ def process_auxfile(filename):
 
     affectedvars = []
     weights = []
+    nosigtest_weights = []
     sigweights = []
     delays = []
 
@@ -89,14 +92,18 @@ def process_auxfile(filename):
 
                 # Test if weight failed threshpass test and write as zero
                 # if true
-                if row[threshpass_index] == 'False':
-                    weights.append(0.)
-                else:
-                    weight_candidate = float(row[maxval_index])
-                    if weight_candidate > 0.:
-                        weights.append(weight_candidate)
-                    else:
+                weight_candidate = float(row[maxval_index])
+                if weight_candidate > 0.:
+                    # Attach to no significance test result
+                    nosigtest_weights.append(weight_candidate)
+                    if row[threshpass_index] == 'False':
                         weights.append(0.)
+                    else:
+                        # threshpass is either None or True
+                        weights.append(weight_candidate)
+                else:
+                    weights.append(0.)
+                    nosigtest_weights.append(0.)
 
                 delays.append(float(row[maxdelay_index]))
 
@@ -118,10 +125,10 @@ def process_auxfile(filename):
                 else:
                     sigweights.append(0.)
 
-    return affectedvars, weights, sigweights, delays
+    return affectedvars, weights, nosigtest_weights, sigweights, delays
 
 
-def create_arrays(datadir, tsfilename):
+def create_arrays(datadir, variables):
     """
     datadir is the location of the auxdata and weights folders for the
     specific case that is under investigation
@@ -171,6 +178,7 @@ def create_arrays(datadir, tsfilename):
                 causevars = []
                 affectedvar_array = []
                 weight_array = []
+                nosigtest_weight_array = []
                 sigweight_array = []
                 delay_array = []
                 for causevar_file in causevar_filenames:
@@ -179,11 +187,13 @@ def create_arrays(datadir, tsfilename):
                     # Open auxfile and return weight array as well as
                     # significance relative weight arrays
 
-                    affectedvars, weights, sigweights, delays = \
+                    (affectedvars, weights, nosigtest_weights,
+                     sigweights, delays) = \
                         process_auxfile(os.path.join(boxdir, causevar_file))
 
                     affectedvar_array.append(affectedvars)
                     weight_array.append(weights)
+                    nosigtest_weight_array.append(nosigtest_weights)
                     sigweight_array.append(sigweights)
                     delay_array.append(delays)
 
@@ -191,8 +201,6 @@ def create_arrays(datadir, tsfilename):
                 # Create a base array based on the full set of variables
                 # found in the typical weightcalcdata function
 
-                # Get variables
-                variables = read_variables(tsfilename)
                 # Initialize matrix with variables written
                 # in first row and column
                 weights_matrix = np.zeros(
@@ -202,6 +210,7 @@ def create_arrays(datadir, tsfilename):
                 weights_matrix[0, 1:] = variables
                 weights_matrix[1:, 0] = variables
 
+                nosigtest_weights_matrix = np.copy(weights_matrix)
                 sigweights_matrix = np.copy(weights_matrix)
                 delay_matrix = np.copy(weights_matrix)
 
@@ -214,6 +223,10 @@ def create_arrays(datadir, tsfilename):
 
                         weights_matrix[affectedvarloc+1, causevarloc+1] = \
                             weight_array[causevar_index][affectedvar_index]
+                        nosigtest_weights_matrix[affectedvarloc+1,
+                                                 causevarloc+1] = \
+                            nosigtest_weight_array[
+                                causevar_index][affectedvar_index]
                         sigweights_matrix[affectedvarloc+1, causevarloc+1] = \
                             sigweight_array[causevar_index][affectedvar_index]
                         delay_matrix[affectedvarloc+1, causevarloc+1] = \
@@ -223,29 +236,56 @@ def create_arrays(datadir, tsfilename):
                 weightarray_dir = os.path.join(
                     datadir, weightarray_name, box)
                 config_setup.ensure_existence(weightarray_dir)
-
-                sigweightarray_dir = os.path.join(
-                    datadir, sigweightarray_name, box)
-                config_setup.ensure_existence(sigweightarray_dir)
-
-                delayarray_dir = os.path.join(
-                    datadir, delayarray_name, box)
-                config_setup.ensure_existence(delayarray_dir)
-
                 weightfilename = \
                     os.path.join(weightarray_dir, 'weight_array.csv')
                 np.savetxt(weightfilename, weights_matrix,
                            delimiter=',', fmt='%s')
 
-                sigweightfilename = \
-                    os.path.join(sigweightarray_dir, 'sigweight_array.csv')
-                np.savetxt(sigweightfilename, sigweights_matrix,
-                           delimiter=',', fmt='%s')
-
+                delayarray_dir = os.path.join(
+                    datadir, delayarray_name, box)
+                config_setup.ensure_existence(delayarray_dir)
                 delayfilename = \
                     os.path.join(delayarray_dir, 'delay_array.csv')
                 np.savetxt(delayfilename, delay_matrix,
                            delimiter=',', fmt='%s')
+
+                nosigtest_dirparts = getfolders(datadir)
+                if 'sigtested' in nosigtest_dirparts:
+
+                    nosigtest_dirparts[
+                        nosigtest_dirparts.index('sigtested')] = 'nosigtest'
+                    nosigtest_savedir = nosigtest_dirparts[0]
+                    for pathpart in nosigtest_dirparts[1:]:
+                        nosigtest_savedir = os.path.join(
+                            nosigtest_savedir, pathpart)
+
+                    nosigtest_weightarray_dir = os.path.join(
+                        nosigtest_savedir, weightarray_name, box)
+                    config_setup.ensure_existence(nosigtest_weightarray_dir)
+
+                    nosigtest_delayarray_dir = os.path.join(
+                        nosigtest_savedir, delayarray_name, box)
+                    config_setup.ensure_existence(nosigtest_delayarray_dir)
+
+                    delayfilename = \
+                        os.path.join(nosigtest_delayarray_dir,
+                                     'delay_array.csv')
+                    np.savetxt(delayfilename, delay_matrix,
+                               delimiter=',', fmt='%s')
+
+                    weightfilename = \
+                        os.path.join(nosigtest_weightarray_dir,
+                                     'weight_array.csv')
+                    np.savetxt(weightfilename, nosigtest_weights_matrix,
+                               delimiter=',', fmt='%s')
+
+                    sigweightarray_dir = os.path.join(
+                        datadir, sigweightarray_name, box)
+                    config_setup.ensure_existence(sigweightarray_dir)
+                    sigweightfilename = \
+                        os.path.join(sigweightarray_dir, 'sigweight_array.csv')
+                    np.savetxt(sigweightfilename, sigweights_matrix,
+                               delimiter=',', fmt='%s')
 
     return None
 
@@ -403,11 +443,7 @@ def extract_trends(datadir, writeoutput):
 
     test_strings = namesdict.keys()
 
-    dirparts = getfolders(datadir)
-    dirparts[dirparts.index('weightdata')] = 'trends'
-    savedir = dirparts[0]
-    for pathpart in dirparts[1:]:
-        savedir = os.path.join(savedir, pathpart)
+    savedir = change_dirtype(datadir, 'weightdata', 'trends')
 
     for test_string in test_strings:
 
@@ -477,8 +513,7 @@ def result_reconstruction(mode, case, writeoutput):
     saveloc, caseconfigdir, casedir, _ = config_setup.runsetup(mode, case)
 
     caseconfig = json.load(
-        open(os.path.join(caseconfigdir, case +
-                          '_weightcalc' + '.json')))
+        open(os.path.join(caseconfigdir, case + '_weightcalc' + '.json')))
 
     # Directory where subdirectories for scenarios will be stored
     scenariosdir = os.path.join(saveloc, 'weightdata', case)
@@ -489,8 +524,9 @@ def result_reconstruction(mode, case, writeoutput):
     for scenario in scenarios:
         print scenario
 
-        tsfilename = os.path.join(casedir, 'data',
-                                  caseconfig[scenario]['data'])
+        weightcalcdata = WeightcalcData(mode, case, False, False, False)
+        weightcalcdata.setsettings(scenario,
+                                   caseconfig[scenario]['settings'][0])
 
         methodsdir = os.path.join(scenariosdir, scenario)
         methods = next(os.walk(methodsdir))[1]
@@ -505,7 +541,7 @@ def result_reconstruction(mode, case, writeoutput):
                 for embedtype in embedtypes:
                     print embedtype
                     datadir = os.path.join(embedtypesdir, embedtype)
-                    create_arrays(datadir, tsfilename)
+                    create_arrays(datadir, weightcalcdata.variables)
                     # Provide directional array version tested with absolute
                     # weight sign
                     create_signtested_directionalarrays(datadir, writeoutput)
@@ -561,18 +597,27 @@ def csv_to_h5(saveloc, raw_tsdata, scenario, case):
 
     filename = os.path.join(datapath, scenario + '.h5')
 
-    if not os.path.exists(filename):
+#    if not os.path.exists(filename):
 
-        hdf5writer = tb.open_file(filename, 'w')
-        data = np.genfromtxt(raw_tsdata, delimiter=',')
-        # Strip time column and labels first row
-        data = data[1:, 1:]
-        array = hdf5writer.create_array(hdf5writer.root, dataset, data)
+    hdf5writer = tb.open_file(filename, 'w')
+    data = np.genfromtxt(raw_tsdata, delimiter=',')
+    # Strip time column and labels first row
+    data = data[1:, 1:]
+    array = hdf5writer.create_array(hdf5writer.root, dataset, data)
 
-        array.flush()
-        hdf5writer.close()
+    array.flush()
+    hdf5writer.close()
 
     return datapath
+
+
+def read_timestamps(raw_tsdata):
+    timestamps = []
+    with open(raw_tsdata) as f:
+        datareader = csv.reader(f)
+        for row in datareader[1:]:
+            timestamps.append[row[0]]
+    return timestamps
 
 
 def read_variables(raw_tsdata):
@@ -589,15 +634,23 @@ def writecsv(filename, items, header=None):
         csv.writer(f).writerows(items)
 
 
-def fft_calculation(raw_tsdata, normalised_tsdata, variables, sampling_rate,
+def change_dirtype(datadir, oldtype, newtype):
+    dirparts = getfolders(datadir)
+    dirparts[dirparts.index(oldtype)] = newtype
+    datadir = dirparts[0]
+    for pathpart in dirparts[1:]:
+        datadir = os.path.join(datadir, pathpart)
+
+    return datadir
+
+
+def fft_calculation(headerline, normalised_tsdata, variables, sampling_rate,
                     sampling_unit, saveloc, case, scenario,
                     plotting=False, plotting_endsample=500):
 
     # logging.info("Starting FFT calculations")
     # Using a print command instead as logging is late
     print "Starting FFT calculations"
-
-    headerline = np.genfromtxt(raw_tsdata, delimiter=',', dtype='string')[0, :]
 
     # Change first entry of headerline from "Time" to "Frequency"
     headerline[0] = 'Frequency'

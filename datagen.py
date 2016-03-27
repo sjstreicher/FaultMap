@@ -40,12 +40,19 @@ seed_randn = partial(seed_random, np.random.randn)
 seed_rand = partial(seed_random, np.random.rand)
 
 
-def autoreg_gen(samples, delay):
+def autoreg_gen(params):
     """Generates an autoregressive set of vectors.
 
     A constant seed is used for testing comparison purposes.
 
     """
+
+    samples = params[0]
+    delay = params[1]
+    if len(params) == 3:
+        alpha = params[2]
+    else:
+        alpha = None
 
     # Define seed for initial source data
     seeds = iter(seed_list)
@@ -59,7 +66,11 @@ def autoreg_gen(samples, delay):
 #    affected_random_add = seed_rand(seeds.next(), samples + delay)
 
     for i in range(delay, len(cause)):
-        affected[i] = affected[i - 1] + cause[i - delay]
+        if alpha is None:
+            affected[i] = affected[i - 1] + cause[i - (delay + 1)]
+        else:
+            affected[i] = alpha * affected[i - 1] + \
+                (1 - alpha) * cause[i - delay]
 
     affected = affected[delay:]
     cause = cause[delay:]
@@ -71,12 +82,15 @@ def autoreg_gen(samples, delay):
     return data.T
 
 
-def delay_gen(samples, delay):
+def delay_gen(params):
     """Generates a random data vector and a pure delay companion.
 
     A constant seed is used for testing comparison purposes.
 
     """
+
+    samples = params[0]
+    delay = params[1]
 
     # Define seed for initial source data
     seeds = iter(seed_list)
@@ -102,8 +116,10 @@ def delay_gen(samples, delay):
     return data.T
 
 
-def random_gen(samples, delay, N=2):
+def random_gen(params, N=2):
     """Generates N independent random data vectors"""
+
+    samples = params[0]
 
     assert N < len(seed_list), "Not enough seeds in seed_list"
     data = vstack([seed_randn(seed, samples) for seed in seed_list[:N]])
@@ -128,7 +144,9 @@ def autoreg_datagen(delay, timelag, samples, sub_samples, k=1, l=1):
 
     """
 
-    data = autoreg_gen(samples, delay).T
+    params = [samples, delay]
+
+    data = autoreg_gen(params).T
 
     [x_pred, x_hist, y_hist] = vectorselection(data, timelag,
                                                sub_samples, k, l)
@@ -136,7 +154,7 @@ def autoreg_datagen(delay, timelag, samples, sub_samples, k=1, l=1):
     return x_pred, x_hist, y_hist
 
 
-def sinusoid_shift_gen(samples, delay, period=100, noiseamp=0.1, N=5,
+def sinusoid_shift_gen(params, period=100, noiseamp=0.1, N=5,
                        addnoise=False):
     """Generates a sinusoid, with delayed noise companion
     and a closed loop sinusoid with delay and noise.
@@ -146,6 +164,8 @@ def sinusoid_shift_gen(samples, delay, period=100, noiseamp=0.1, N=5,
     noiseamp is the maximum amplitude of the noise added to the signal
 
     """
+
+    samples = params[0]
 
     frequency = 1./period
 
@@ -170,7 +190,7 @@ def sinusoid_shift_gen(samples, delay, period=100, noiseamp=0.1, N=5,
     return data.T
 
 
-def sinusoid_gen(samples, delay, period=0.01, noiseamp=1.0):
+def sinusoid_gen(params, period=0.01, noiseamp=1.0):
     """Generates four sinusoids, each based on the same frequency but differing
     in phase by 90 degrees.
 
@@ -179,6 +199,9 @@ def sinusoid_gen(samples, delay, period=0.01, noiseamp=1.0):
     noiseamp is the standard deviation of the noise added to the signal
 
     """
+
+    samples = params[0]
+    delay = params[1]
 
     tspan = range(samples + delay)
 
@@ -205,11 +228,14 @@ def sinusoid_gen(samples, delay, period=0.01, noiseamp=1.0):
     return tspan[:-delay], cause, affected, cause_closed
 
 
-def firstorder_gen(samples, delay, period=0.01, noiseamp=1.0):
+def firstorder_gen(params, period=0.01, noiseamp=1.0):
     """Simple first order transfer function affected variable
     with sinusoid cause.
 
     """
+
+    samples = params[0]
+    delay = params[1]
 
     P1 = control.matlab.tf([10], [100, 1])
 
@@ -235,7 +261,7 @@ def firstorder_gen(samples, delay, period=0.01, noiseamp=1.0):
     return tspan, cause, affected
 
 
-def oscillating_feedback_5x5(samples, delays=None, period=0.01, noiseamp=1.0):
+def oscillating_feedback_5x5(params, delays=None, period=0.01, noiseamp=1.0):
     """Passes sine source signal through a number of transfer functions
     before connecting back on itself.
 
@@ -244,6 +270,9 @@ def oscillating_feedback_5x5(samples, delays=None, period=0.01, noiseamp=1.0):
     transfer functions.
 
     """
+
+    samples = params[0]
+
     if not delays:
         delays = [3, 2, 5, 4]
 
