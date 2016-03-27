@@ -144,7 +144,9 @@ def autoreg_datagen(delay, timelag, samples, sub_samples, k=1, l=1):
 
     """
 
-    data = autoreg_gen(samples, delay).T
+    params = [samples, delay]
+
+    data = autoreg_gen(params).T
 
     [x_pred, x_hist, y_hist] = vectorselection(data, timelag,
                                                sub_samples, k, l)
@@ -164,7 +166,6 @@ def sinusoid_shift_gen(params, period=100, noiseamp=0.1, N=5,
     """
 
     samples = params[0]
-    delay = params[1]
 
     frequency = 1./period
 
