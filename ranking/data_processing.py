@@ -443,11 +443,7 @@ def extract_trends(datadir, writeoutput):
 
     test_strings = namesdict.keys()
 
-    dirparts = getfolders(datadir)
-    dirparts[dirparts.index('weightdata')] = 'trends'
-    savedir = dirparts[0]
-    for pathpart in dirparts[1:]:
-        savedir = os.path.join(savedir, pathpart)
+    savedir = change_dirtype(datadir, 'weightdata', 'trends')
 
     for test_string in test_strings:
 
