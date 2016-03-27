@@ -55,18 +55,8 @@ class GraphData(object):
         """
         self.plot_type = self.caseconfig[graph]['plot_type']
         self.scenarios = self.caseconfig[graph]['scenarios']
-        self.settings = self.caseconfig[graph]['settings']
         self.axis_limits = self.caseconfig[graph]['axis_limits']
         self.weight_methods = self.caseconfig[graph]['weight_methods']
-
-    def graphscenariodetails(self, scenario):
-
-        # Read weightcalc scenariodata in order to determine appropriate
-        # location to save in
-        weightcalcdata = WeightcalcData(self.mode, self.case,
-                                        False, False, False)
-        self.weightcalc_scenariodata = \
-            weightcalcdata.setsettings(scenario, self.settings)
 
     def get_plotvars(self, graph):
         self.plotvars = self.caseconfig[graph]['plotvars']
@@ -232,7 +222,6 @@ def plotdraw(mode, case, writeoutput):
         graphdata.graphdetails(graph)
         for weight_method in graphdata.weight_methods:
             for scenario in graphdata.scenarios:
-                graphdata.graphscenariodetails(scenario)
                 basedir = os.path.join(graphdata.saveloc, 'weightdata',
                                        case, scenario, weight_method)
 

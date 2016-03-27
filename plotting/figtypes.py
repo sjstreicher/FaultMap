@@ -108,7 +108,7 @@ def fig_timeseries(graphdata, graph, scenario, savedir):
     if graphdata.axis_limits is not False:
         plt.axis(graphdata.axis_limits)
 
-    plt.savefig(os.path.join(savedir, '{}.pdf'.format(graph)))
+    plt.savefig(os.path.join(savedir, '{}_timeseries.pdf'.format(scenario)))
     plt.close()
 
     return None
@@ -143,7 +143,7 @@ def fig_fft(graphdata, graph, scenario, savedir):
     if graphdata.axis_limits is not False:
         plt.axis(graphdata.axis_limits)
 
-    plt.savefig(os.path.join(savedir, '{}.pdf'.format(graph)))
+    plt.savefig(os.path.join(savedir, '{}_fft.pdf'.format(scenario)))
     plt.close()
 
     return None
@@ -235,16 +235,25 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
                         ax.plot(threshmatrix[:, 0],
                                 threshmatrix[:, destvarindex + 1],
                                 marker="x", markersize=4,
+                                linestyle=':',
                                 label=destvar + ' threshold')
 
-                ax.legend(bbox_to_anchor=graphdata.legendbbox)
+                # Shrink current axis by 20%
+                box = ax.get_position()
+                ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+
+                ax.legend(loc='center left',
+                          bbox_to_anchor=graphdata.legendbbox)
+
                 if graphdata.axis_limits is not False:
                     ax.axis(graphdata.axis_limits)
+
+                plt.gca().set_ylim(bottom=-0.05)
 
                 plt.savefig(os.path.join(
                     savedir,
                     '{}_{}_box{:03d}_{}.pdf'.format(
-                        graph, typename, boxindex, sourcevar)))
+                        scenario, typename, boxindex, sourcevar)))
                 plt.close()
 
     return None
