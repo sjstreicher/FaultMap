@@ -81,6 +81,7 @@ fitlinelabels = \
 def fig_timeseries(graphdata, graph, scenario, savedir):
     """Plots time series data over time."""
 
+    graphdata.get_settings(graph)
     graphdata.get_legendbbox(graph)
     graphdata.get_plotvars(graph)
     graphdata.get_starttime(graph)
@@ -96,7 +97,7 @@ def fig_timeseries(graphdata, graph, scenario, savedir):
 
     for varname in graphdata.plotvars:
         varindex = variables.index(varname)
-        plt.plot(weightcalcdata.timestamps - graphdata.starttime,
+        plt.plot(np.asarray(weightcalcdata.timestamps),
                  valuematrix[:, varindex],
                  "-",
                  label=r'{}'.format(variables[varindex]))
@@ -397,7 +398,7 @@ def fig_values_vs_boxes(graphdata, graph, scenario, savedir):
             plt.savefig(os.path.join(
                 savedir,
                 '{}_{}_{}.pdf'.format(
-                    scenario, typename, sourcevar)))
+                    scenario, delay_typename, sourcevar)))
             plt.close()
 
     return None
