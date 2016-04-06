@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Mar 16 21:00:03 2014
+Setup functions used to read configuration files.
 
-@author: Simon
+@author: Simon Streicher
 """
 
 import json
