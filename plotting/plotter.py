@@ -60,6 +60,9 @@ class GraphData(object):
     def get_plotvars(self, graph):
         self.plotvars = self.caseconfig[graph]['plotvars']
 
+    def get_settings(self, graph):
+        self.settings = self.caseconfig[graph]['settings']
+
     def get_sourcevars(self, graph):
         self.sourcevars = self.caseconfig[graph]['sourcevars']
 
@@ -198,12 +201,9 @@ def drawplot(graphdata, scenario, datadir, graph, writeoutput):
     for pathpart in dirparts[1:]:
         savedir = os.path.join(savedir, pathpart)
 
-    if os.path.exists(os.path.join(savedir, '{}.pdf'.format(graph))):
-        logging.info("The requested graph has already been drawn")
-    elif writeoutput:
-        config_setup.ensure_existence(os.path.join(savedir))
-        eval('figtypes.' + graphdata.plot_type)(
-            graphdata, graph, scenario, savedir)
+    config_setup.ensure_existence(os.path.join(savedir))
+    eval('figtypes.' + graphdata.plot_type)(
+        graphdata, graph, scenario, savedir)
 
     return None
 
