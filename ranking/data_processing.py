@@ -19,8 +19,7 @@ import json
 import config_setup
 import transentropy
 
-from ranking.gaincalc import WeightcalcData
-
+import gaincalc
 
 def shuffle_data(input_data):
     """Returns a (seeded) randomly shuffled array of data.
@@ -524,7 +523,8 @@ def result_reconstruction(mode, case, writeoutput):
     for scenario in scenarios:
         print scenario
 
-        weightcalcdata = WeightcalcData(mode, case, False, False, False)
+        weightcalcdata = \
+            gaincalc.WeightcalcData(mode, case, False, False, False)
         weightcalcdata.setsettings(scenario,
                                    caseconfig[scenario]['settings'][0])
 
@@ -597,16 +597,16 @@ def csv_to_h5(saveloc, raw_tsdata, scenario, case):
 
     filename = os.path.join(datapath, scenario + '.h5')
 
-#    if not os.path.exists(filename):
+    if not os.path.exists(filename):
 
-    hdf5writer = tb.open_file(filename, 'w')
-    data = np.genfromtxt(raw_tsdata, delimiter=',')
-    # Strip time column and labels first row
-    data = data[1:, 1:]
-    array = hdf5writer.create_array(hdf5writer.root, dataset, data)
+        hdf5writer = tb.open_file(filename, 'w')
+        data = np.genfromtxt(raw_tsdata, delimiter=',')
+        # Strip time column and labels first row
+        data = data[1:, 1:]
+        array = hdf5writer.create_array(hdf5writer.root, dataset, data)
 
-    array.flush()
-    hdf5writer.close()
+        array.flush()
+        hdf5writer.close()
 
     return datapath
 
@@ -615,8 +615,9 @@ def read_timestamps(raw_tsdata):
     timestamps = []
     with open(raw_tsdata) as f:
         datareader = csv.reader(f)
-        for row in datareader[1:]:
-            timestamps.append[row[0]]
+        for rowindex, row in enumerate(datareader):
+            if rowindex > 0:
+                timestamps.append(row[0])
     return timestamps
 
 
