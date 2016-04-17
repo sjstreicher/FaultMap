@@ -87,8 +87,13 @@ def dographreduce(graphreducedata, scenario, datadir,
                 os.path.join(dummiesdir, dummytype, graph_filename.format(
                     graphreducedata.graph)))
             # Get appropriate weight threshold for deleting edges from graph
-            threshold = compute_edge_threshold(original_graph,
-                                               graphreducedata.percentile)
+            # TODO: Implement elegant way of dealing with empty graphs
+            try:
+                threshold = compute_edge_threshold(original_graph,
+                                                   graphreducedata.percentile)
+            except:
+                print "Empty graph"
+                break
             # Delete low value edges from graph
             lowedge_graph = delete_lowval_edges(original_graph, threshold)
             # Get simplified graph
@@ -134,9 +139,13 @@ def reducegraph(mode, case, writeoutput):
     scenarios = next(os.walk(scenariosdir))[1]
 
     for scenario in scenarios:
-        logging.info("Running scenario {}".format(scenario))
-        # Update scenario-specific fields graphreducedata object
-        graphreducedata.scenariodata(scenario)
+        if scenario in graphreducedata.scenarios:
+            logging.info("Running scenario {}".format(scenario))
+            # Update scenario-specific fields graphreducedata object
+            graphreducedata.scenariodata(scenario)
+            print scenario
+        else:
+            continue
 
         # Iterate through every source graph that is found inside
         # the scenario's subdirectories
@@ -172,6 +181,7 @@ def reducegraph(mode, case, writeoutput):
                             typenames.append('sigweight')
 
                     for typename in typenames:
+                        print typename
                         # Start the methods here
                         dographreduce(graphreducedata, scenario, datadir,
                                       typename, writeoutput)
@@ -286,8 +296,9 @@ def delete_loworder_edges(graph, max_depth, weight_discretion):
 
     for index, node in enumerate(simplified_graph.nodes_iter()):
         children_lists = []
-        logging.info("Currently processing node: " + str(index + 1) + "/" +
-                     str(len(simplified_graph.nodes())))
+        logging.info("Currently processing node: " + str(node) + " (" +
+                     str(index + 1) + "/" +
+                     str(len(simplified_graph.nodes())) + ")")
         # First create a list of lists of all childs at different degrees,
         # up to the level where no childs are returned
         morechilds = True
