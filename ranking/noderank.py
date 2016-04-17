@@ -116,6 +116,7 @@ class NoderankData:
         boxindexes = self.caseconfig[scenario]['boxindexes']
         if boxindexes == "all":
             boxesdir = os.path.join(datadir, typename)
+            print boxesdir
             boxes = next(os.walk(boxesdir))[1]
             self.boxes = range(len(boxes))
         else:
@@ -337,7 +338,8 @@ def calc_transient_importancediffs(rankingdicts, variablelist):
 
 
 def create_importance_graph(variablelist, closedconnections,
-                            openconnections, gainmatrix, ranks):
+                            openconnections, gainmatrix, delaymatrix,
+                            ranks):
     """Generates a graph containing the
     connectivity and importance of the system being displayed.
     Edge Attribute: color for control connection
@@ -351,7 +353,8 @@ def create_importance_graph(variablelist, closedconnections,
                                    openconnections.nonzero()[0]):
 
         opengraph.add_edge(variablelist[col], variablelist[row],
-                           weight=gainmatrix[row, col])
+                           weight=gainmatrix[row, col],
+                           delay=delaymatrix[row, col])
     openedgelist = opengraph.edges()
 
 #    closedgraph = nx.DiGraph()
@@ -367,10 +370,11 @@ def create_importance_graph(variablelist, closedconnections,
 #        closedgraph.add_edge(*newedge, weight=gainmatrix[row, col],
 #                             controlloop=int(newedge not in openedgelist))
         edge_weight = gainmatrix[row, col]
+        edge_delay = delaymatrix[row, col]
         # Do not include edges with zero weight
         if edge_weight != 0:
             relative_closedgraph.add_edge(
-                *newedge, weight=(edge_weight / max_weight),
+                *newedge, weight=(edge_weight / max_weight), delay=edge_delay,
                 controlloop=int(newedge not in openedgelist))
 
     for node in relative_closedgraph.nodes():
@@ -451,8 +455,6 @@ def get_gainmatrices(noderankdata, datadir, typename):
     then returns all relevant gainmatrices in a list which can be used to
     calculate the change of importances over time (transient importances).
 
-    typename is either weight_arrays or
-
     """
     # Store all relevant gainmatrices in a list
     gainmatrices = []
@@ -463,13 +465,41 @@ def get_gainmatrices(noderankdata, datadir, typename):
         fname = 'weight_array.csv'
 
     for boxindex in noderankdata.boxes:
-        gainmatrix = data_processing.read_gainmatrix(
+        gainmatrix = data_processing.read_matrix(
             os.path.join(datadir, typename, 'box{:03d}'.format(boxindex+1),
                          fname))
 
         gainmatrices.append(gainmatrix)
 
     return gainmatrices
+
+
+def get_delaymatrices(noderankdata, datadir, typename):
+    """Searches in countlocation for all delaymatrices CSV files
+    associated with the specific case, scenario and method at hand and
+    then returns all relevant delaymatrices in a list which can be used to
+    calculate the change of importances over time (transient importances).
+
+    """
+    # Store all relevant gainmatrices in a list
+    delaymatrices = []
+
+    if typename == 'weight_arrays':
+        delaytypename = 'delay_arrays'
+    elif 'directional' in typename:
+        delaytypename = 'delay_directional_arrays'
+    else:
+        delaytypename = 'delay_absolute_arrays'
+
+    for boxindex in noderankdata.boxes:
+        delaymatrix = data_processing.read_matrix(
+            os.path.join(datadir, delaytypename,
+                         'box{:03d}'.format(boxindex+1),
+                         'delay_array.csv'))
+
+        delaymatrices.append(delaymatrix)
+
+    return delaymatrices
 
 
 def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
@@ -487,6 +517,7 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
 
     noderankdata.get_boxes(scenario, datadir, typename)
     gainmatrices = get_gainmatrices(noderankdata, datadir, typename)
+    delaymatrices = get_delaymatrices(noderankdata, datadir, typename)
 
     # Create lists to store the backward ranking list
     # for each box and associated gainmatrix ranking result
@@ -499,6 +530,8 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
                 gainmatrix_preprocessing(gainmatrix)
         else:
             modgainmatrix = gainmatrix
+
+        delays = delaymatrices[boxindex]
 
 #       _, dummyweight = gainmatrix_preprocessing(gainmatrix)
         # Set dummyweight to 10
@@ -560,11 +593,12 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
         # Save the graphs to file
         graph, _ = \
             create_importance_graph(
-                variables, connections, connections, gains,
+                variables, connections, connections, gains, delays,
                 rankingdict)
         graph_filename = \
             os.path.join(savepath,
                          graphfile_name.format(rank_method))
+
         # Decided to keep connections natural, will rotate hierarchical layout
         # in post-processing
         nx.readwrite.write_gml(graph, graph_filename)

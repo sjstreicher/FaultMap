@@ -878,18 +878,18 @@ def read_header_values_datafile(location):
     return values, header
 
 
-def read_gainmatrix(gainmatrix_loc):
-    """This method a gainmatrix scheme for a specific scenario.
+def read_matrix(matrix_loc):
+    """This method a matrix scheme for a specific scenario.
 
-    Might need to pad gainmatrix with zeros if it is non-square
+    Might need to pad matrix with zeros if it is non-square
     """
-    with open(gainmatrix_loc) as f:
-        gainmatrix = np.genfromtxt(f, delimiter=',')
+    with open(matrix_loc) as f:
+        matrix = np.genfromtxt(f, delimiter=',')
 
     # Remove labels
-    gainmatrix = gainmatrix[1:, 1:]
+    matrix = matrix[1:, 1:]
 
-    return gainmatrix
+    return matrix
 
 
 def buildcase(dummyweight, digraph, name, dummycreation):
