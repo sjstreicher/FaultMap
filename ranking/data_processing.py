@@ -21,6 +21,7 @@ import transentropy
 
 import gaincalc
 
+
 def shuffle_data(input_data):
     """Returns a (seeded) randomly shuffled array of data.
     The data input needs to be a two-dimensional numpy array.
@@ -95,24 +96,12 @@ def process_auxfile(filename, allow_neg=True):
                 # In rare cases it might be desired to allow negative values
                 # (e.g. correlation tests)
                 # TODO: Put the allow_neg parameter in a configuration file
+                # NOTE: allow_neg also removes significance testing
                 weight_candidate = float(row[maxval_index])
-
-                # The allow_neg only applies to the no significance test
-                # cases
 
                 if allow_neg:
                     nosigtest_weights.append(weight_candidate)
-                    if weight_candidate > 0.:
-                        # Attach to no significance test result
-#                        nosigtest_weights.append(weight_candidate)
-                        if row[threshpass_index] == 'False':
-                            weights.append(0.)
-                        else:
-                            # threshpass is either None or True
-                            weights.append(weight_candidate)
-                    else:
-                        weights.append(0.)
-#                        nosigtest_weights.append(0.)
+                    weights.append(weight_candidate)
                 else:
                     if weight_candidate > 0.:
                         # Attach to no significance test result
