@@ -53,7 +53,7 @@ def getfolders(path):
     return folders
 
 
-def process_auxfile(filename):
+def process_auxfile(filename, allow_neg=True):
     """Processes an auxfile and returns a list of affected_vars,
     weight_array as well as relative significance weight array.
 
@@ -91,18 +91,40 @@ def process_auxfile(filename):
 
                 # Test if weight failed threshpass test and write as zero
                 # if true
+
+                # In rare cases it might be desired to allow negative values
+                # (e.g. correlation tests)
+                # TODO: Put the allow_neg parameter in a configuration file
                 weight_candidate = float(row[maxval_index])
-                if weight_candidate > 0.:
-                    # Attach to no significance test result
+
+                # The allow_neg only applies to the no significance test
+                # cases
+
+                if allow_neg:
                     nosigtest_weights.append(weight_candidate)
-                    if row[threshpass_index] == 'False':
-                        weights.append(0.)
+                    if weight_candidate > 0.:
+                        # Attach to no significance test result
+#                        nosigtest_weights.append(weight_candidate)
+                        if row[threshpass_index] == 'False':
+                            weights.append(0.)
+                        else:
+                            # threshpass is either None or True
+                            weights.append(weight_candidate)
                     else:
-                        # threshpass is either None or True
-                        weights.append(weight_candidate)
+                        weights.append(0.)
+#                        nosigtest_weights.append(0.)
                 else:
-                    weights.append(0.)
-                    nosigtest_weights.append(0.)
+                    if weight_candidate > 0.:
+                        # Attach to no significance test result
+                        nosigtest_weights.append(weight_candidate)
+                        if row[threshpass_index] == 'False':
+                            weights.append(0.)
+                        else:
+                            # threshpass is either None or True
+                            weights.append(weight_candidate)
+                    else:
+                        weights.append(0.)
+                        nosigtest_weights.append(0.)
 
                 delays.append(float(row[maxdelay_index]))
 
