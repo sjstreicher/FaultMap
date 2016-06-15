@@ -53,7 +53,7 @@ def getfolders(path):
     return folders
 
 
-def process_auxfile(filename, allow_neg=True):
+def process_auxfile(filename, allow_neg=False):
     """Processes an auxfile and returns a list of affected_vars,
     weight_array as well as relative significance weight array.
 
