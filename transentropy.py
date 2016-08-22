@@ -114,7 +114,7 @@ def setup_infodynamics_te(infodynamicsloc,
 
     elif calcmethod == 'kraskov':
         """The Kraskov method is the recommended method and also provides
-        methods for auto-embedding. The Ragqitz criterion auto-embedding method
+        methods for auto-embedding. The Ragwitz criterion auto-embedding method
         will be enabled as the default.
 
         """

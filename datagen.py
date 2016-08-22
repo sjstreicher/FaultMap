@@ -49,10 +49,14 @@ def autoreg_gen(params):
 
     samples = params[0]
     delay = params[1]
-    if len(params) == 3:
+    if len(params) >= 3:
         alpha = params[2]
     else:
         alpha = None
+    if len(params) == 4:
+        noise_ratio = params[3]
+    else:
+        noise_ratio = None
 
     # Define seed for initial source data
     seeds = iter(seed_list)
@@ -63,7 +67,7 @@ def autoreg_gen(params):
     # This is not expected to be a problem on any "real" data
 
     # Define seed for noise data
-#    affected_random_add = seed_rand(seeds.next(), samples + delay)
+    affected_random_add = seed_rand(seeds.next(), samples + delay)
 
     for i in range(delay, len(cause)):
         if alpha is None:
@@ -75,7 +79,9 @@ def autoreg_gen(params):
     affected = affected[delay:]
     cause = cause[delay:]
 
-#    affected = affected + affected_random_add[delay:]
+    if noise_ratio is not None:
+
+        affected = affected + (affected_random_add[delay:] * noise_ratio)
 
     data = vstack([cause, affected])
 

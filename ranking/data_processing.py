@@ -984,7 +984,7 @@ def split_tsdata(inputdata, samplerate, boxsize, boxnum):
 
     Boxes are evenly distributed over the provided dataset.
     The boxes will overlap if boxsize*boxnum is more than the simulated time,
-    and will have spaced between them if it is less.
+    and will have spaces between them if it is less.
 
 
     """
