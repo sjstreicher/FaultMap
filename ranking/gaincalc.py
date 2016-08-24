@@ -192,17 +192,26 @@ class WeightcalcData:
         self.testsize = self.caseconfig[settings_name]['testsize']
         # Get number of delays to test
         test_delays = self.caseconfig[scenario]['test_delays']
+        if 'bidirectional_delays' in self.caseconfig[scenario].keys():
+            self.bidirectional_delays = \
+                self.caseconfig[scenario]['bidirectional_delays']
+        else:
+            self.bidirectional_delays = False
+        if self.bidirectional_delays is True:
+            delay_range = range(-test_delays, test_delays + 1)
+        else:
+            delay_range = range(test_delays + 1)
         # Define intervals of delays
         if self.delaytype == 'datapoints':
-            # Include first n sampling intervals
-            self.delays = range(test_delays + 1)
+                self.delays = delay_range
+
         elif self.delaytype == 'intervals':
             # Test delays at specified intervals
             self.delayinterval = \
                 self.caseconfig[settings_name]['delay_interval']
 
             self.delays = [(val * self.delayinterval)
-                           for val in range(test_delays + 1)]
+                           for val in delay_range]
 
         self.causevarindexes = self.caseconfig[scenario]['causevarindexes']
         if self.causevarindexes == 'all':
@@ -389,6 +398,7 @@ def calc_weights(weightcalcdata, method, scenario):
         # Initiate headerline for single signal entropies storage file
         signalent_headerline = weightcalcdata.variables
         # Define filename structure for CSV file
+
         def signalent_filename(name, boxindex):
             return signalent_filename_template.format(
                 weightcalcdata.casename, scenario, name, boxindex)
