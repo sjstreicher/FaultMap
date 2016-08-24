@@ -9,7 +9,7 @@ decorator
 networkx
 h5py
 numexpr
-pytables
+tables
 python-igraph
 progressbar
 control
