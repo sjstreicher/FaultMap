@@ -487,7 +487,7 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False,
 
                 start_time = time.clock()
                 calc_weights(weightcalcdata, method, scenario)
-                end_time= time.clock()
+                end_time = time.clock()
                 print end_time - start_time
 
 if __name__ == '__main__':
