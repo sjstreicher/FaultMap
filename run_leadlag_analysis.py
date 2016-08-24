@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from transentropy import calc_infodynamics_te
 
 
-infodynamics_loc = "C:/Repos/FaultMap/infodynamics.jar"
+infodynamics_loc = "infodynamics.jar"
 normalize = False
 estimator = 'kraskov'
 
