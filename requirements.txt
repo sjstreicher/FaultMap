@@ -10,7 +10,9 @@ networkx
 h5py
 numexpr
 tables
-python-igraph
+igraph
 progressbar
 control
 pandas
+pyunicorn
+pathos
