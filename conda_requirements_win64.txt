@@ -1,3 +1,6 @@
+numpy 
+scipy 
+matplotlib
 nose
 six
 python-dateutil
@@ -9,12 +12,6 @@ decorator
 networkx
 h5py
 numexpr
-tables
-igraph
+pytables
 progressbar
-control
 pandas
-pyunicorn
-pathos
-jpype1
-weave
