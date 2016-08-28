@@ -10,7 +10,6 @@ pyparsing
 setuptools
 scikit-learn
 decorator
-networkx
 h5py
 numexpr
 pytables

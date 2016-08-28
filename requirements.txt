@@ -9,8 +9,8 @@ decorator
 networkx
 h5py
 numexpr
-pytables
 python-igraph
 progressbar
 control
 pandas
+jpype1
