@@ -47,6 +47,8 @@ class GraphData(object):
         self.weight_methods = self.caseconfig['weight_methods']
         # Get data type
         self.datatype = self.caseconfig['datatype']
+        # Get significanca test cases
+        self.significance_cases = self.caseconfig['sigtest_cases']
 
     def graphdetails(self, graph):
         """Retrieves data particular for each graph that is to be drawn.
@@ -229,14 +231,15 @@ def plotdraw(mode, case, writeoutput):
                 sigtypes = next(os.walk(basedir))[1]
 
                 for sigtype in sigtypes:
-                    print sigtype
-                    embedtypesdir = os.path.join(basedir, sigtype)
-                    embedtypes = next(os.walk(embedtypesdir))[1]
-                    for embedtype in embedtypes:
-                        print embedtype
-                        datadir = os.path.join(embedtypesdir, embedtype)
-                        # Actual plot drawing execution starts here
-                        drawplot(graphdata, scenario, datadir,
-                                 graph, writeoutput)
+                    if sigtype in graphdata.significance_cases:
+                        print sigtype
+                        embedtypesdir = os.path.join(basedir, sigtype)
+                        embedtypes = next(os.walk(embedtypesdir))[1]
+                        for embedtype in embedtypes:
+                            print embedtype
+                            datadir = os.path.join(embedtypesdir, embedtype)
+                            # Actual plot drawing execution starts here
+                            drawplot(graphdata, scenario, datadir,
+                                     graph, writeoutput)
 
     return None

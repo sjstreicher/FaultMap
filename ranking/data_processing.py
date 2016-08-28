@@ -21,6 +21,7 @@ import transentropy
 
 import gaincalc
 
+
 def shuffle_data(input_data):
     """Returns a (seeded) randomly shuffled array of data.
     The data input needs to be a two-dimensional numpy array.
@@ -53,7 +54,28 @@ def getfolders(path):
     return folders
 
 
-def process_auxfile(filename, allow_neg=True):
+def UnivariateSurrogates(data_f, MaxIter):
+    """Generates iAAFT surrogates
+    
+    """
+    
+    xs=data_f.copy()
+    xs.sort() #sorted amplitude stored
+    pwx=np.abs(np.fft.fft(data_f)) # amplitude of fourier transform of orig
+    
+    data_f.shape = (-1,1)
+    xsur = np.random.permutation(data_f) #random permutation as starting point
+    xsur.shape = (1,-1)
+    
+    for i in range(MaxIter):
+        fftsurx = pwx*np.exp(1j*np.angle(np.fft.fft(xsur)))
+        xoutb = np.real(np.fft.ifft(fftsurx))
+        ranks = xoutb.argsort(axis=1)
+        xsur[:,ranks] = xs
+        
+    return(xsur) 
+
+def process_auxfile(filename, allow_neg=False):
     """Processes an auxfile and returns a list of affected_vars,
     weight_array as well as relative significance weight array.
 
@@ -95,24 +117,12 @@ def process_auxfile(filename, allow_neg=True):
                 # In rare cases it might be desired to allow negative values
                 # (e.g. correlation tests)
                 # TODO: Put the allow_neg parameter in a configuration file
+                # NOTE: allow_neg also removes significance testing
                 weight_candidate = float(row[maxval_index])
-
-                # The allow_neg only applies to the no significance test
-                # cases
 
                 if allow_neg:
                     nosigtest_weights.append(weight_candidate)
-                    if weight_candidate > 0.:
-                        # Attach to no significance test result
-#                        nosigtest_weights.append(weight_candidate)
-                        if row[threshpass_index] == 'False':
-                            weights.append(0.)
-                        else:
-                            # threshpass is either None or True
-                            weights.append(weight_candidate)
-                    else:
-                        weights.append(0.)
-#                        nosigtest_weights.append(0.)
+                    weights.append(weight_candidate)
                 else:
                     if weight_candidate > 0.:
                         # Attach to no significance test result
@@ -995,7 +1005,7 @@ def split_tsdata(inputdata, samplerate, boxsize, boxnum):
 
     Boxes are evenly distributed over the provided dataset.
     The boxes will overlap if boxsize*boxnum is more than the simulated time,
-    and will have spaced between them if it is less.
+    and will have spaces between them if it is less.
 
 
     """

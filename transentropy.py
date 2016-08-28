@@ -114,7 +114,7 @@ def setup_infodynamics_te(infodynamicsloc,
 
     elif calcmethod == 'kraskov':
         """The Kraskov method is the recommended method and also provides
-        methods for auto-embedding. The Ragqitz criterion auto-embedding method
+        methods for auto-embedding. The Ragwitz criterion auto-embedding method
         will be enabled as the default.
 
         """
@@ -232,6 +232,12 @@ def calc_infodynamics_te(infodynamicsloc, normalize, calcmethod,
 
     sourceArray = causal_data.tolist()
     destArray = affected_data.tolist()
+
+    if (len(sourceArray) != len(destArray)):
+        print "Source length: " + str(len(sourceArray))
+        print "Destination length: " + str(len(destArray))
+        raise ValueError(
+            "The source and destination arrays are of different lengths")
 
     sourceArrayJava = jpype.JArray(jpype.JDouble, 1)(sourceArray)
     destArrayJava = jpype.JArray(jpype.JDouble, 1)(destArray)
