@@ -29,32 +29,6 @@ install:
   # install the rest using pip
   - pip install -r <( grep -v -f conda_requirements.txt requirements.txt )
   
-before_script:
-  # Make directory for custom installs 
-  - cd ~
-  - mkdir repos
-  - cd repos
-  # Install pathos
-  - git clone git://github.com/uqfoundation/pathos.git
-  - cd pathos
-  #- wget https://www.dropbox.com/s/h08pdqk2n6i2m50/pathos-0.1a1.tgz
-  #- tar -xzf pathos-0.1a1.tgz
-  #- easy_install -f . pathos-0.1a1
-  - python setup.py install
-  
-  # Install pyunicorn
-  - cd ~/repos
-  - wget https://www.dropbox.com/s/a2c2o3486vb12h1/pyunicorn-0.3.2.tar.gz
-  - pip install pyunicorn-0.3.2.tar.gz
-    
-  # Install JPype1
-  - cd ~/repos
-  - git clone git://github.com/originell/jpype.git
-  - cd jpype
-  - git reset --hard 50cfd194bb20631feda50fedae41ed18eeca1668
-  - cd ..
-  - pip install jpype/
-  
 # command to run tests, e.g. python setup.py test
 script:
   # run tests
