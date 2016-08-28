@@ -14,3 +14,6 @@ progressbar
 control
 pandas
 jpype1
+pyunicorn
+pathos
+weave
