@@ -8,6 +8,7 @@ import sys
 import os
 import numpy as np
 import logging
+#import pyunicorn
 
 # Own libraries
 import transentropy
@@ -30,7 +31,7 @@ def suppress_stdout():
             sys.stdout = old_stdout
 
 with suppress_stdout():
-    import pygeonetwork
+    import pyunicorn
 
 
 class CorrWeightcalc(object):
@@ -459,8 +460,8 @@ class TransentWeightcalc:
         if self.te_surr_method == 'iAAFT':
             # Create surrogate data generation object
             iaaft_surrogate_gen = \
-                pygeonetwork.surrogates.Surrogates(original_causal,
-                                                   silence_level=2)
+                pyunicorn.timeseries.surrogates.Surrogates(
+                    original_causal, silence_level=2)
 
             surr_tsdata = \
                 [iaaft_surrogate_gen.get_refined_AAFT_surrogates(

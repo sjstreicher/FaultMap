@@ -1,14 +1,10 @@
 {
   "datatype": "function",
   "methods": [
-      "cross_correlation",
-      "transfer_entropy_kernel",
-	  "transfer_entropy_kraskov"
+      "cross_correlation"
   ],
   "scenarios": [
-	  "sinusoid_5x5",
-	  "random_2x2",
-	  "autoreg_2x2"
+	  "sinusoid_5x5"
   ],
   "settings_standard": {
     "use_connections": true,
