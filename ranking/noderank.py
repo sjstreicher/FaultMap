@@ -26,6 +26,7 @@ import config_setup
 
 
 # Networks for tests
+import networkgen
 
 
 class NoderankData:
@@ -629,8 +630,10 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
     The results are stored in the noderank directory but retains the structure
     of the weightdata directory
 
-    Preprocessing is experimental and should always be set to False at this
-    stage.
+    Notes
+    -----
+        Preprocessing is experimental and should always be set to False at this
+        stage.
 
     """
     noderankdata = NoderankData(mode, case)

@@ -1,9 +1,11 @@
 {
   "datatype": "function",
   "sampling_rate": 1,
-  "methods": [
-	  "transfer_entropy",
-	  "cross_correlation"
+  "weight_methods": [
+    "transfer_entropy_kraskov"
+  ],
+  "rank_methods": [
+      "eigenvector"
   ],
   "scenarios": [
       "fullconn_equal",
@@ -20,15 +22,20 @@
   ],
   "settings_standard": {
     "use_connections": true,
-	"transient": false
+	"transient": false,
+    "use_bias": false,
+	"dummies": false
   },
   "settings_standard_transient": {
     "use_connections": true,
-	"transient": true
+	"transient": true,
+    "use_bias": false,
+	"dummies": false
   },
   "fullconn_equal": {
     "networkgen": "fullconn_equal",
-	"settings": "settings_standard"
+	"settings": "settings_standard",
+    "m": 0.999
   },
   "series_equal_five": {
     "networkgen": "series_equal_five",

@@ -5,15 +5,13 @@ Created on Mon Feb 24 15:27:21 2014
 @author: Simon Streicher
 """
 
-from numpy import vstack
-import numpy as np
-
-import control
-
-from transentropy import vectorselection
-
 from functools import partial
 
+import control
+import numpy as np
+from numpy import vstack
+
+from transentropy import vectorselection
 
 seed_list = [35, 88, 107, 52, 98]
 

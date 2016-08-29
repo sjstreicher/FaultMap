@@ -19,10 +19,25 @@ def ensure_existence(location, make=True):
 
 
 def runsetup(mode, case):
-    """Gets all required parameters from the case configuration file.
+    """Gets all required directories from the case configuration file.
 
-    Mode can be either 'tests' or 'cases' as required to get to the
-    correct directory.
+    Parameters
+    ----------
+        mode : string
+            Either 'tests' or 'cases'. Tests data are generated dynamically and
+            stored in specified folders. Case data are read from file and stored
+            under organized headings in the saveloc directory specified
+            in config.json.
+        case : string
+            The name of the case that is to be run. Points to dictionary in either
+            test or case config files.
+
+    Returns
+    -------
+        saveloc : path
+        caseconfigloc : path
+        casedir : path
+        infodynamicsloc : path
 
     """
 
