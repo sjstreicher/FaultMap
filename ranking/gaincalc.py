@@ -149,9 +149,11 @@ class WeightcalcData:
             else:
                 # Still norm centre the data
                 # This breaks when trying to use discrete methods
-#                self.inputdata_normstep = data_processing.subtract_mean(
-#                    self.inputdata_raw)
-                self.inputdata_normstep = self.inputdata_raw
+                if 'discrete' not in self.methods:
+                    self.inputdata_normstep = data_processing.subtract_mean(
+                        self.inputdata_raw)
+                else:
+                    self.inputdata_normstep = self.inputdata_raw
 
             self.headerline = np.genfromtxt(raw_tsdata, delimiter=',',
                                             dtype='string')[0, :]
@@ -475,6 +477,10 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False,
     """Reports the maximum weight as well as associated delay
     obtained by shifting the affected variable behind the causal variable a
     specified set of delays.
+
+    Parameters
+    ----------
+
 
     Supports calculating weights according to either correlation or transfer
     entropy metrics.
