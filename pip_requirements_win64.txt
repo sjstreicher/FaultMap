@@ -1,0 +1,6 @@
+python-igraph
+control
+jpype1
+pyunicorn
+pathos
+weave
