@@ -1,4 +1,3 @@
-python-igraph
 control
 jpype1
 pyunicorn
