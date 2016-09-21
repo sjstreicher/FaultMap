@@ -217,7 +217,7 @@ class PartialCorrWeightcalc(CorrWeightcalc):
         return partialcorrelationmatrix[affectedvarindex, causevarindex], None
 
 
-class TransentWeightcalc:
+class TransentWeightcalc(object):
     """This class provides methods for calculating the weights according to
     the transfer entropy method.
 
