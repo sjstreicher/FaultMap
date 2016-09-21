@@ -304,7 +304,7 @@ def writecsv_weightcalc(filename, items, header):
         csv.writer(f).writerows(items)
 
 
-def calc_weights(weightcalcdata, method, scenario):
+def calc_weights(weightcalcdata, method, scenario, writeoutput):
     """Determines the maximum weight between two variables by searching through
     a specified set of delays.
 
@@ -459,7 +459,7 @@ def calc_weights(weightcalcdata, method, scenario):
             box, startindex, size,
             newconnectionmatrix,
             method, boxindex,
-            filename, headerline]
+            filename, headerline, writeoutput]
 
         # Run the script that will handle multiprocessing
         gaincalc_oneset.run(non_iter_args,
@@ -496,7 +496,7 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False,
                 logging.info("Method: " + method)
 
                 start_time = time.clock()
-                calc_weights(weightcalcdata, method, scenario)
+                calc_weights(weightcalcdata, method, scenario, writeoutput)
                 end_time = time.clock()
                 print end_time - start_time
 
