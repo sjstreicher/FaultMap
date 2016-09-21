@@ -196,7 +196,7 @@ def sinusoid_shift_gen(params, period=100, noiseamp=0.1, N=5,
     return data.T
 
 
-def sinusoid_gen(params, period=0.01, noiseamp=1.0):
+def sinusoid_gen(params, period=100, noiseamp=1.0):
     """Generates four sinusoids, each based on the same frequency but differing
     in phase by 90 degrees.
 
@@ -211,7 +211,9 @@ def sinusoid_gen(params, period=0.01, noiseamp=1.0):
 
     tspan = range(samples + delay)
 
-    cause = [np.sin(period * t*2*np.pi) for t in tspan]
+    frequency = 1. / period
+
+    cause = [np.sin(frequency * t*2*np.pi) for t in tspan]
 
     affected = np.zeros_like(cause)
 
@@ -234,7 +236,7 @@ def sinusoid_gen(params, period=0.01, noiseamp=1.0):
     return tspan[:-delay], cause, affected, cause_closed
 
 
-def firstorder_gen(params, period=0.01, noiseamp=1.0):
+def firstorder_gen(params, noiseamp=1.0):
     """Simple first order transfer function affected variable
     with sinusoid cause.
 
@@ -242,12 +244,16 @@ def firstorder_gen(params, period=0.01, noiseamp=1.0):
 
     samples = params[0]
     delay = params[1]
+    # sourcetype can be 'white_noise' or 'sine'
+    period = params[2]
 
-    P1 = control.matlab.tf([10], [100, 1])
+    P1 = control.matlab.tf([1], [1, 1])
 
     timepoints = np.array(range(samples + delay))
 
-    sine_input = np.array([np.sin(period * t*2*np.pi) for t in timepoints])
+    frequency = 1. / period
+
+    sine_input = np.array([np.sin(frequency * t*2*np.pi) for t in timepoints])
 
     P1_response = control.matlab.lsim(P1, sine_input, timepoints)
 
