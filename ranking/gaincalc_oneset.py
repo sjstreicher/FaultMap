@@ -28,7 +28,7 @@ def writecsv_weightcalc(filename, datalines, header):
 def calc_weights_oneset(weightcalcdata, weightcalculator,
                         box, startindex, size, newconnectionmatrix,
                         method, boxindex,
-                        filename, headerline,
+                        filename, headerline, writeoutput,
                         causevarindex):
 
     causevar = weightcalcdata.variables[causevarindex]
@@ -91,7 +91,8 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                     exists = True
 
         if (not(newconnectionmatrix[affectedvarindex,
-                                    causevarindex] == 0) and (not exists)):
+                                    causevarindex] == 0) and
+                (exists is False)):
             weightlist = []
             directional_weightlist = []
             absolute_weightlist = []
@@ -253,7 +254,9 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                                         sigthresh_thisvar_neutral), axis=1)
 
         if (not(newconnectionmatrix[affectedvarindex,
-                                    causevarindex] == 0) and (not exists)):
+                                    causevarindex] == 0) and
+                (exists is False) and (writeoutput is True)):
+
             if twodimensions:
                 writecsv_weightcalc(filename(
                     directional_name, boxindex+1, causevar),
@@ -306,7 +309,7 @@ def run(non_iter_args, do_multiprocessing):
      box, startindex, size,
      newconnectionmatrix,
      method, boxindex,
-     filename, headerline] = non_iter_args
+     filename, headerline, writeoutput] = non_iter_args
 
     partial_gaincalc_oneset = partial(
         calc_weights_oneset,
@@ -314,7 +317,7 @@ def run(non_iter_args, do_multiprocessing):
         box, startindex, size,
         newconnectionmatrix,
         method, boxindex,
-        filename, headerline)
+        filename, headerline, writeoutput)
 
     if do_multiprocessing:
         pool = Pool(processes=pathos.multiprocessing.cpu_count())
