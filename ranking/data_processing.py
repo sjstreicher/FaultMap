@@ -1060,6 +1060,58 @@ def ewma_weights_benchmark(weights, alpha_rate):
     return benchmark_weights
 
 
+def vectorselection(data, timelag, sub_samples, k=1, l=1):
+    """Generates sets of vectors from tags time series data
+    for calculating transfer entropy.
+
+    For notation references see Shu2013.
+
+    Takes into account the time lag (number of samples between vectors of the
+    same variable).
+
+    In this application the prediction horizon (h) is set to equal
+    to the time lag.
+
+    The first vector in the data array should be the samples of the variable
+    to be predicted (x) while the second vector should be sampled of the vector
+    used to make the prediction (y).
+
+    sub_samples is the amount of samples in the dataset used to calculate the
+    transfer entropy between two vectors and must satisfy
+    sub_samples <= samples
+
+    The required number of samples is extracted from the end of the vector.
+    If the vector is longer than the number of samples specified plus the
+    desired time lag then the remained of the data will be discarded.
+
+    k refers to the dimension of the historical data to be predicted (x)
+
+    l refers to the dimension of the historical data used
+    to do the prediction (y)
+
+    """
+    _, sample_n = data.shape
+    x_pred = data[0, sample_n-sub_samples:]
+    x_pred = x_pred[np.newaxis, :]
+
+    x_hist = np.zeros((k, sub_samples))
+    y_hist = np.zeros((l, sub_samples))
+
+    for n in range(1, k+1):
+        # Original form according to Bauer (2007)
+        # TODO: Provide for comparison
+        # Modified form according to Shu & Zhao (2013)
+        startindex = (sample_n - sub_samples) - timelag*(n - 1) - 1
+        endindex = sample_n - timelag*(n - 1) - 1
+        x_hist[n-1, :] = data[1, startindex:endindex]
+    for m in range(1, l+1):
+        startindex = (sample_n - sub_samples) - timelag*m - 1
+        endindex = sample_n - timelag*m - 1
+        y_hist[m-1:, :] = data[0, startindex:endindex]
+
+    return x_pred, x_hist, y_hist
+
+
 def calc_signalent(vardata, weightcalcdata):
     """Calculates single signal differential entropies
     by making use of the JIDT continuous box-kernel implementation.
@@ -1068,7 +1120,8 @@ def calc_signalent(vardata, weightcalcdata):
 
     # Setup Java class for infodynamics toolkit
     entropyCalc = \
-        transentropy.setup_infodynamics_entropy(weightcalcdata.normalize)
+        transentropy.setup_infodynamics_entropy(weightcalcdata.infodynamicsloc,
+                                                weightcalcdata.normalize)
 
-    entropy = transentropy.calc_infodynamics_entropy(entropyCalc, vardata.T)
+    entropy = transentropy.calc_infodynamics_entropy(entropyCalc, vardata)
     return entropy
