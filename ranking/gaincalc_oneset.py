@@ -28,8 +28,8 @@ def writecsv_weightcalc(filename, datalines, header):
 def calc_weights_oneset(weightcalcdata, weightcalculator,
                         box, startindex, size, newconnectionmatrix,
                         method, boxindex,
-                        filename, headerline,
-                        causevarindex, writeoutput):
+                        filename, headerline, writeoutput,
+                        causevarindex):
 
     causevar = weightcalcdata.variables[causevarindex]
 
