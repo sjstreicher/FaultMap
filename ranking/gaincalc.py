@@ -37,6 +37,8 @@ import data_processing
 import gaincalc_oneset
 from gaincalculators import (PartialCorrWeightcalc, CorrWeightcalc,
                              TransentWeightcalc)
+                             
+import datagen
 
 
 class WeightcalcData:
