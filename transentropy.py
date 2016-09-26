@@ -10,8 +10,6 @@ import numpy as np
 import jpype
 
 
-
-
 def setup_infodynamics_te(infodynamicsloc,
                           normalize, calcmethod, **parameters):
     """Prepares the teCalc class of the Java Infodyamics Toolkit (JIDT)
@@ -247,6 +245,13 @@ def setup_infodynamics_entropy(infodynamicsloc, normalise,
         entropyCalc : EntropyCalculator JIDT object
 
     """
+    
+    if not jpype.isJVMStarted():
+        jpype.startJVM(jpype.getDefaultJVMPath(),
+                       "-Xms32M",
+                       "-Xmx512M",
+                       "-ea",
+                       "-Djava.class.path=" + infodynamicsloc)
 
     if estimator == 'kernel':
         entropyCalcClass = \
