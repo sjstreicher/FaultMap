@@ -11,7 +11,7 @@ The delay giving the maximum weight is returned, together with the maximum
 weights.
 
 All weights are tested for significance.
-The Pearson's correlation weights are tested for signigicance according to
+The Pearson's correlation weights are tested for significance according to
 the parameters presented by Bauer2005.
 The transfer entropy weights are tested for significance using a non-parametric
 rank-order method using surrogate data generated according to the iterative
@@ -21,35 +21,52 @@ amplitude adjusted Fourier transform method (iAAFT).
 
 """
 # Standard libraries
-import os
 import csv
-import numpy as np
-import h5py
-import logging
 import json
+import logging
+import multiprocessing
+import os
 import time
+
+import h5py
+import numpy as np
 import sklearn.preprocessing
 
-# Own libraries
 import config_setup
 import data_processing
-
-# Gain calculators
+import gaincalc_oneset
 from gaincalculators import (PartialCorrWeightcalc, CorrWeightcalc,
                              TransentWeightcalc)
 
-import gaincalc_oneset
-import multiprocessing
-import datagen
-
 
 class WeightcalcData:
-    """Creates a data object from file and or function definitions for use in
+    """Creates a data object from files or functions for use in
     weight calculation methods.
 
     """
     def __init__(self, mode, case, single_entropies, fftcalc,
                  do_multiprocessing):
+        """
+        Parameters
+        ----------
+        mode : str
+            Either 'tests' or 'cases'. Tests data are generated dynamically and
+            stored in specified folders. Case data are read from file and stored
+            under organized headings in the saveloc directory specified
+            in config.json.
+        case : str
+            The name of the case that is to be run. Points to dictionary in
+            either test or case config files.
+        single_entropies : bool
+            Flags whether the entropies of single signals should be calculated.
+        fftcalc : bool
+            Indicates whether the FFT of all individual signals should be
+            calculated.
+        do_multiprocessing : bool
+            Indicates whether the weight calculation operations should run in
+            parallel processing mode where all available CPU cores are utilized.
+
+        """
         # Get file locations from configuration file
         self.saveloc, self.caseconfigdir, \
             self.casedir, self.infodynamicsloc = \
@@ -77,6 +94,12 @@ class WeightcalcData:
     def scenariodata(self, scenario):
         """Retrieves data particular to each scenario for the case being
         investigated.
+
+        Parameters
+        ----------
+            scenario : str
+                Name of scenario to retrieve data for. Should be defined in
+                config file.
 
         """
         print "The scenario name is: " + scenario
@@ -310,11 +333,16 @@ def calc_weights(weightcalcdata, method, scenario, writeoutput):
     """Determines the maximum weight between two variables by searching through
     a specified set of delays.
 
-    method can be one of the following:
-    'cross_correlation'
-    'partial_correlation' -- does not support time delays
-    'transfer_entropy_kernel'
-    'transfer_entropy_kraskov'
+    Parameters
+    ----------
+        method : str
+        Can be one of the following:
+        'cross_correlation'
+        'partial_correlation' -- does not support time delays
+        'transfer_entropy_kernel'
+        'transfer_entropy_kraskov'
+
+    TODO: Fix partial correlation method to make use of time delays
 
     """
     # TODO: Allow for calculation of significance values at each data point
@@ -480,10 +508,28 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False,
 
     Parameters
     ----------
+        mode : str
+            Either 'tests' or 'cases'. Tests data are generated dynamically and
+            stored in specified folders. Case data are read from file and stored
+            under organized headings in the saveloc directory specified
+            in config.json.
+        case : str
+            The name of the case that is to be run. Points to dictionary in
+            either test or case config files.
+        single_entropies : bool
+            Flags whether the entropies of single signals should be calculated.
+        fftcalc : bool
+            Indicates whether the FFT of all individual signals should be
+            calculated.
+        do_multiprocessing : bool
+            Indicates whether the weight calculation operations should run in
+            parallel processing mode where all available CPU cores are utilized.
 
 
-    Supports calculating weights according to either correlation or transfer
-    entropy metrics.
+    Notes
+    -----
+        Supports calculating weights according to either correlation or transfer
+        entropy metrics.
 
     """
 
