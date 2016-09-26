@@ -12,8 +12,12 @@ import numpy as np
 
 from ranking.data_processing import buildgraph
 
+from datagen import seed_randn
+
 filesloc = json.load(open('config.json'))
 saveloc = os.path.expanduser(filesloc['saveloc'])
+
+seed_list = [35, 88, 107, 52, 98]
 
 
 def numberedvars(name, N):
@@ -25,6 +29,15 @@ def graphname(name):
 
 
 alltestfunctions = []
+
+
+def gen_random_array(dimension):
+    """Generates square normally distributed random array."""
+    seeds = iter(seed_list)
+    random_array = np.expand_dims(seed_randn(seeds.next(), dimension ** 2), axis=1).reshape((dimension, dimension))
+
+    return np.abs(random_array)
+
 
 
 # TODO: Replace this with a proper class
@@ -59,12 +72,17 @@ fullconn_equal = test_function_builder(
     filename='fullcon_equal',
     doc="Creates a fully connected 5x5 digraph with unit weights on all edges")
 
+fullconn_random = test_function_builder(
+    gen_random_array(5),
+    filename='fullconn_randn',
+    doc="""Creates a fully connected 5x5 digraph with normally distributed positive weights on all edges""")
+
 series_equal_five = test_function_builder(np.diag(np.ones(4), -1),
-                                          filename="series_equal_5")
+                                          filename='series_equal_5')
 series_equal_four = test_function_builder(np.diag(np.ones(3), -1),
-                                          filename="series_equal_4")
+                                          filename='series_equal_4')
 series_equal_three = test_function_builder(np.diag(np.ones(2), -1),
-                                          filename="series_equal_3")
+                                          filename='series_equal_3')
 
 connect_5 = np.diag([1, 1, 1, 1, 0], -1)
 connect_2nd = np.diag([0, 1], 4)
@@ -95,7 +113,7 @@ series_disjoint_equal = test_function_builder(
     np.diag([1, 1, 0, 1, 1], -1),
     variables=numberedvars('X', 3) + numberedvars('Y', 3),
     filename='series_disjoint_equal',
-    doc='Creates two sets of three tags connected in series with unit weights on edges')
+    doc="""Creates two sets of three tags connected in series with unit weights on edges""")
 
 series_disjoint_unequal = test_function_builder(
     np.diag([1, 1, 0, 1, 1], -1),
@@ -116,10 +134,10 @@ series_disjoint_unequalsource = test_function_builder(
 circle_equal = test_function_builder(
     np.diag([1, 1, 1, 1], -1) + np.diag([1], 4),
      filename='circle_equal',
-     doc='Creates five tags connected in a circle with unit weights on all edges.')
+     doc="""Creates five tags connected in a circle with unit weights on all edges.""")
 
 circle_unequalon2to3 = test_function_builder(
     np.diag([1, 1, 1, 1], -1) + np.diag([1], 4),
     np.diag([1, 2, 1, 1], -1) + np.diag([1], 4),
     filename='circle_unequalon2_to3',
-    doc='Creates five tags connected in a circle with unit weights on all edges except one.')
+    doc="""Creates five tags connected in a circle with unit weights on all edges except one.""")

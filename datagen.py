@@ -11,7 +11,7 @@ import control
 import numpy as np
 from numpy import vstack
 
-from transentropy import vectorselection
+from ranking.data_processing import vectorselection
 
 seed_list = [35, 88, 107, 52, 98]
 
@@ -34,7 +34,9 @@ def seed_random(method, seed, samples):
     np.random.seed(seed)
     return method(samples)
 
+# Normal distribution
 seed_randn = partial(seed_random, np.random.randn)
+# Uniform distribution over [0, 1)
 seed_rand = partial(seed_random, np.random.rand)
 
 
@@ -65,7 +67,7 @@ def autoreg_gen(params):
     # This is not expected to be a problem on any "real" data
 
     # Define seed for noise data
-    affected_random_add = seed_rand(seeds.next(), samples + delay)
+    affected_random_add = seed_rand(seeds.next(), samples + delay) - 0.5
 
     for i in range(delay, len(cause)):
         if alpha is None:
@@ -87,9 +89,19 @@ def autoreg_gen(params):
 
 
 def delay_gen(params):
-    """Generates a random data vector and a pure delay companion.
-
-    A constant seed is used for testing comparison purposes.
+    """Generates a normally distributed random data vector
+    and a pure delay companion.
+    
+    Parameters
+    ----------
+        params : list
+            List with the first entry being the sample length of the returned
+            signals and the second entry the delay between them.
+            
+    Returns
+    -------
+        data : numpy.ndarray
+            Array containing the generated signals arranged in columns.
 
     """
 
@@ -105,7 +117,7 @@ def delay_gen(params):
     # This is not expected to be a problem on any "real" data
 
     # Define seed for noise data
-    affected_random_add = seed_rand(seeds.next(), samples + delay)
+    affected_random_add = seed_rand(seeds.next(), samples + delay) - 0.5
 
     for i in range(delay, len(cause)):
         affected[i] = cause[i - delay]
@@ -160,13 +172,29 @@ def autoreg_datagen(delay, timelag, samples, sub_samples, k=1, l=1):
 
 def sinusoid_shift_gen(params, period=100, noiseamp=0.1, N=5,
                        addnoise=False):
-    """Generates a sinusoid, with delayed noise companion
-    and a closed loop sinusoid with delay and noise.
-
-    period is the number of samples for each cycle
-
-    noiseamp is the maximum amplitude of the noise added to the signal
-
+    """Generates sinusoid signals together with optionally uniform noise.
+    The signals are shifted by a quarter period.
+    
+    Parameters
+    ----------
+        params : list
+            List with the first (and only) entry being the sample length of
+            the returned signals.
+        period : int, default=100
+            The period of the sinusoid in terms of samples.
+        noiseamp : float, default=0.5
+           A multiplier for mean_centered unformal noise to be added to the
+           signal. The amplitude of the sine is unity.
+        N : int, default=5
+            How many signals to return.
+        addnoise : bool, default=False
+            If True, noise is added to the sinusoidal signals.
+    
+    Returns
+    -------
+        data : numpy.ndarray
+            Array containing the generated signals arranged in columns.
+            
     """
 
     samples = params[0]
@@ -179,7 +207,7 @@ def sinusoid_shift_gen(params, period=100, noiseamp=0.1, N=5,
     sine = [np.sin(frequency * t*2*np.pi) for t in tspan]
 
     if addnoise:
-        sine_noise = (seed_randn(117, len(tspan)) - 0.5) * noiseamp
+        sine_noise = (seed_rand(117, len(tspan))) - 0.5 * noiseamp
 
         sine += sine_noise
 
@@ -194,22 +222,38 @@ def sinusoid_shift_gen(params, period=100, noiseamp=0.1, N=5,
     return data.T
 
 
-def sinusoid_gen(params, period=0.01, noiseamp=1.0):
-    """Generates four sinusoids, each based on the same frequency but differing
-    in phase by 90 degrees.
-
-    period is the number of cycles for each sample
-
-    noiseamp is the standard deviation of the noise added to the signal
-
+def sinusoid_gen(params, period=100, noiseamp=1.0):
+    """Generates sinusoid signals together with optionally uniform noise.
+    The signals are shifted by a quarter period.
+    
+    Parameters
+    ----------
+        params : list
+            List with the first (and only) entry being the sample length of
+            the returned signals.
+        period : int, default=100
+            The period of the sinusoid in terms of samples.
+        noiseamp : float, default=0.5
+           A multiplier for mean_centered unformal noise to be added to the
+           signal. The amplitude of the sine is unity.
+        N : int, default=5
+            How many signals to return.
+        addnoise : bool, default=False
+            If True, noise is added to the sinusoidal signals.
+    
+    Returns
+    -------
+        data : numpy.ndarray
+            Array containing the generated signals arranged in columns.
+            
     """
 
     samples = params[0]
     delay = params[1]
 
     tspan = range(samples + delay)
-
-    cause = [np.sin(period * t*2*np.pi) for t in tspan]
+    frequency = 1./period
+    cause = [np.sin(frequency * t*2*np.pi) for t in tspan]
 
     affected = np.zeros_like(cause)
 

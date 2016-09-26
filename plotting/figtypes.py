@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-@author: Simon Streicher
-
 General graph types are defined for re-usability and consistent formatting.
 
 The style is selected to be compatible with greyscale print work as far
@@ -9,48 +7,51 @@ as reasonably possible.
 
 Graph types supported include:
 
+Time series plots
+    Plots values of variables across time for specified variables
+    of a single scenario
+    
+Scatter plot
+    General scatter plot for plotting arbitrary data with no set formats.
 
-1. Time series plots
-   Plots values of variables across time for specified variables
-   of a single scenario
+FFT plot
+    Plots FFT magnitude across frequency for specified variables
+    of a single scenario
 
-2. FFT plot
-   Plots FFT magnitude across frequency for specified variables
-   of a single scenario
+Absolute/Directional/Significance weight vs. delays for selected
+variables of single scenario
+    Includes the option to plot the significance threshold values obtained by
+    different methods
 
-3. Absolute/Directional/Significance weight vs. delays
-   for selected variables of single scenario
-   Includes the option to plot the significance threshold values obtained by
-   different methods
+Absolute/Directional/Significance weight vs. delays for specific variable
+between multiple scenarios
+    Includes the option to plot the significance threshold values obtained by
+    different methods
 
-4. Absolute/Directional/Significance weight vs. delays
-   for specific variable between multiple scenarios
-   Includes the option to plot the significance threshold values obtained by
-   different methods
+Absolute/Directional/Significance weights vs. boxes for specifc variable
+between multiple scenarios
+    Includes the option to plot the significance threshold values obtained by
+    different methods (value at optimizing delay used in actual testing
+    for each box under consideration)
 
-5. Absolute/Directional/Significance weights vs. boxes
-   for specifc variable between multiple scenarios
-   Includes the option to plot the significance threshold values obtained by
-   different methods (value at optimizing delay used in actual testing
-   for each box under consideration)
-
-
+@author: Simon Streicher
 """
 
 import os
-import numpy as np
-import matplotlib.pyplot as plt
 
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
 
 from ranking import data_processing
 from ranking.gaincalc import WeightcalcData
 
 # Preamble
-
+sns.set_style('darkgrid')
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
 
- # Label dictionaries
+# Label dictionaries
 yaxislabel = \
     {u'cross_correlation': r'Cross correlation',
      u'absolute_transfer_entropy_kernel':
@@ -61,7 +62,6 @@ yaxislabel = \
          r'Absolute transfer entropy (Kraskov) (nats)',
      u'directional_transfer_entropy_kraskov':
          r'Directional transfer entropy (Kraskov) (nats)'}
-
 
 linelabels = \
     {'cross_correlation': r'Correlation',
@@ -114,6 +114,9 @@ def fig_timeseries(graphdata, graph, scenario, savedir):
 
     return None
 
+def fig_scatter(graphdata, graph):
+#    TODO: Implement general scatter plot type
+    return None
 
 def fig_fft(graphdata, graph, scenario, savedir):
     """Plots FFT over frequency range."""
@@ -419,7 +422,6 @@ def fig_maxval_vs_taus(graphname):
     plt.figure(1, (12, 6))
 
     for method in graphdata.method:
-
         sourcefile = filename_template.format(
             graphdata.case, graphdata.scenario,
             method, graphdata.sigstatus, graphdata.boxindex,
@@ -428,10 +430,10 @@ def fig_maxval_vs_taus(graphname):
         valuematrix, headers = \
             data_processing.read_header_values_datafile(sourcefile)
 
-        max_values = [max(valuematrix[:, index+1]) for index in range(5)]
+        max_values = [max(valuematrix[:, index + 1]) for index in range(5)]
 
         fit_params = np.polyfit(np.log(graphdata.xvals), np.log(max_values), 1)
-        fit_y = [(i*fit_params[0] + fit_params[1])
+        fit_y = [(i * fit_params[0] + fit_params[1])
                  for i in np.log(graphdata.xvals)]
 
         fitted_vals = [np.exp(val) for val in fit_y]
@@ -483,8 +485,8 @@ def fig_scenario_maxval_vs_taus(graphname, delays=False, drawfit=False):
         if delays:
             valuematrix, headers = \
                 data_processing.read_header_values_datafile(sourcefile)
-            max_values = [max(valuematrix[:, index+1])
-                          for index in range(valuematrix.shape[1]-1)]
+            max_values = [max(valuematrix[:, index + 1])
+                          for index in range(valuematrix.shape[1] - 1)]
         else:
             valuematrix, headers = \
                 data_processing.read_header_values_datafile(sourcefile)
@@ -497,7 +499,7 @@ def fig_scenario_maxval_vs_taus(graphname, delays=False, drawfit=False):
             graphdata.fitlinelabels(graphname)
             fit_params = np.polyfit(np.log(graphdata.xvals),
                                     np.log(max_values), 1)
-            fit_y = [(i*fit_params[0] + fit_params[1])
+            fit_y = [(i * fit_params[0] + fit_params[1])
                      for i in np.log(graphdata.xvals)]
             fitted_vals = [np.exp(val) for val in fit_y]
 
@@ -517,7 +519,6 @@ def fig_scenario_maxval_vs_taus(graphname, delays=False, drawfit=False):
     return None
 
 
-
 def fig_diffscen_vs_delay(graphname, difvals, linetitle):
     """Plot one variable from different scenarios.
 
@@ -530,7 +531,7 @@ def fig_diffscen_vs_delay(graphname, difvals, linetitle):
     graphdata.get_varindexes(graphname)
 
     # Get x-axis values
-#    graphdata.get_xvalues(graphname)
+    #    graphdata.get_xvalues(graphname)
 
     plt.figure(1, (12, 6))
 
@@ -545,7 +546,7 @@ def fig_diffscen_vs_delay(graphname, difvals, linetitle):
 
         # TODO: Fix this old hardcoded remnant
         # 3 referred to the index of tau=1 for many cases involved
-#        values = valuematrix[:, 3]
+        #        values = valuematrix[:, 3]
         values = valuematrix[:, graphdata.varindexes]
         xaxis_intervals.append(valuematrix[:, 0])
         relevant_values.append(values)
@@ -557,7 +558,7 @@ def fig_diffscen_vs_delay(graphname, difvals, linetitle):
 
     plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
     plt.xlabel(r'Delay (seconds)', fontsize=14)
-#    plt.legend(bbox_to_anchor=graphdata.legendbbox)
+    #    plt.legend(bbox_to_anchor=graphdata.legendbbox)
 
     if graphdata.axis_limits is not False:
         plt.axis(graphdata.axis_limits)
@@ -595,7 +596,7 @@ def fig_subsampling_interval_effect(graphname, delays=False):
         if delays:
             valuematrix, headers = \
                 data_processing.read_header_values_datafile(sourcefile)
-            relevant_values = [max(valuematrix[:, index+1])
+            relevant_values = [max(valuematrix[:, index + 1])
                                for index in range(9)]
         else:
             valuematrix, headers = \
@@ -621,9 +622,6 @@ def fig_subsampling_interval_effect(graphname, delays=False):
     plt.close()
 
     return None
-
-
-
 
 
 def fig_boxvals_differentsources_threshold(graphname):
@@ -659,11 +657,11 @@ def fig_boxvals_differentsources_threshold(graphname):
 
         plt.plot(graphdata.xvals, relevant_values,
                  "--", marker="o", markersize=4,
-                 label=r'Source {}'.format(sourceindex+1))
+                 label=r'Source {}'.format(sourceindex + 1))
 
         plt.plot(graphdata.xvals, relevant_thresholds,
                  "-", markersize=4,
-                 label=r'Source {} threshold'.format(sourceindex+1))
+                 label=r'Source {} threshold'.format(sourceindex + 1))
 
     plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
     plt.xlabel(r'Box number', fontsize=14)
@@ -713,7 +711,7 @@ def fig_boxvals_differentsources_ewma(graphname):
 
         plt.plot(graphdata.xvals, adjusted_values,
                  "--", marker="o", markersize=4,
-                 label=r'Source {}'.format(sourceindex+1))
+                 label=r'Source {}'.format(sourceindex + 1))
 
     plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
     plt.xlabel(r'Box number', fontsize=14)
@@ -780,12 +778,12 @@ def fig_rankings_boxes(graphname):
 
     # TODO: Rewrite this to get the number of boxes automatically
     # Get x-axis values
-#    graphdata.get_xvalues(graphname)
+    #    graphdata.get_xvalues(graphname)
 
     # Get list of importances
 
     importancelist = get_box_ranking_scores(graphdata)
-    graphdata.xvals = range(len(importancelist[0][1])+1)[1:]
+    graphdata.xvals = range(len(importancelist[0][1]) + 1)[1:]
 
     plt.figure(1, (12, 6))
 
@@ -798,14 +796,11 @@ def fig_rankings_boxes(graphname):
     plt.ylabel(r'Relative importance', fontsize=14)
     plt.xlabel(r'Box number', fontsize=14)
     plt.legend(bbox_to_anchor=graphdata.legendbbox)
-#
-#    if graphdata.axis_limits is not False:
-#        plt.axis(graphdata.axis_limits)
-#
+    #
+    #    if graphdata.axis_limits is not False:
+    #        plt.axis(graphdata.axis_limits)
+    #
     plt.savefig(graph_filename_template.format(graphname))
     plt.close()
 
     return None
-
-
-
