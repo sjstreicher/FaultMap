@@ -7,10 +7,9 @@ plotting configuration file.
 
 """
 
-import logging
 import json
+import logging
 import os
-
 
 import config_setup
 from plotting.plotter import plotdraw

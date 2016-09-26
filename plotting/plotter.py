@@ -1,19 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-@author: Simon
-
 This module executes all functions needed to draw desired plots.
 
+@author: Simon Streicher
 
 """
-import os
 import json
-import logging
-
-import figtypes
-from ranking import data_processing
+import os
 
 import config_setup
+from ranking import data_processing
 
 
 class GraphData(object):
