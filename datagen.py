@@ -11,7 +11,7 @@ import control
 import numpy as np
 from numpy import vstack
 
-from ranking.data_processing import vectorselection
+import ranking.data_processing
 
 seed_list = [35, 88, 107, 52, 98]
 
@@ -164,8 +164,9 @@ def autoreg_datagen(delay, timelag, samples, sub_samples, k=1, l=1):
 
     data = autoreg_gen(params).T
 
-    [x_pred, x_hist, y_hist] = vectorselection(data, timelag,
-                                               sub_samples, k, l)
+    [x_pred, x_hist, y_hist] = \
+        ranking.data_processing.vectorselection(data, timelag,
+                                                sub_samples, k, l)
 
     return x_pred, x_hist, y_hist
 
