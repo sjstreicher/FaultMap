@@ -54,26 +54,30 @@ def getfolders(path):
     return folders
 
 
-def UnivariateSurrogates(data_f, MaxIter):
+def gen_iaaft_surrogates(data_f, MaxIter):
     """Generates iAAFT surrogates
-    
+
     """
-    
-    xs=data_f.copy()
-    xs.sort() #sorted amplitude stored
-    pwx=np.abs(np.fft.fft(data_f)) # amplitude of fourier transform of orig
-    
-    data_f.shape = (-1,1)
-    xsur = np.random.permutation(data_f) #random permutation as starting point
-    xsur.shape = (1,-1)
-    
+
+    xs = data_f.copy()
+    # sorted amplitude stored
+    xs.sort()
+    # amplitude of fourier transform of orig
+    pwx = np.abs(np.fft.fft(data_f))
+
+    data_f.shape = (-1, 1)
+    # random permutation as starting point
+    xsur = np.random.permutation(data_f)
+    xsur.shape = (1, -1)
+
     for i in range(MaxIter):
         fftsurx = pwx*np.exp(1j*np.angle(np.fft.fft(xsur)))
         xoutb = np.real(np.fft.ifft(fftsurx))
         ranks = xoutb.argsort(axis=1)
-        xsur[:,ranks] = xs
-        
-    return(xsur) 
+        xsur[:, ranks] = xs
+
+    return(xsur)
+
 
 def process_auxfile(filename, allow_neg=False):
     """Processes an auxfile and returns a list of affected_vars,
