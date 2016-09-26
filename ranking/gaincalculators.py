@@ -4,34 +4,13 @@ used by the gaincalc module.
 
 """
 # Standard libraries
-import sys
-import os
 import numpy as np
 import logging
-#import pyunicorn
+
 
 # Own libraries
 import transentropy
-
-# Non-standard external libraries
-from contextlib import contextmanager
-
-# Own libraries
 import data_processing
-
-
-@contextmanager
-def suppress_stdout():
-    with open(os.devnull, "w") as devnull:
-        old_stdout = sys.stdout
-        sys.stdout = devnull
-        try:
-            yield
-        finally:
-            sys.stdout = old_stdout
-
-with suppress_stdout():
-    import pyunicorn
 
 
 class CorrWeightcalc(object):
@@ -217,7 +196,7 @@ class PartialCorrWeightcalc(CorrWeightcalc):
         return partialcorrelationmatrix[affectedvarindex, causevarindex], None
 
 
-class TransentWeightcalc:
+class TransentWeightcalc(object):
     """This class provides methods for calculating the weights according to
     the transfer entropy method.
 
@@ -458,13 +437,8 @@ class TransentWeightcalc:
         original_causal[0, :] = causal_data
 
         if self.te_surr_method == 'iAAFT':
-            # Create surrogate data generation object
-            iaaft_surrogate_gen = \
-                pyunicorn.timeseries.surrogates.Surrogates(
-                    original_causal, silence_level=2)
-
             surr_tsdata = \
-                [iaaft_surrogate_gen.get_refined_AAFT_surrogates(
+                [data_processing.gen_iaaft_surrogates(
                     original_causal, 10)
                  for n in range(num)]
 

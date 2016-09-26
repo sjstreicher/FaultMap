@@ -226,7 +226,7 @@ def calc_infodynamics_te(infodynamicsloc, normalize, calcmethod,
     teCalc = setup_infodynamics_te(infodynamicsloc, normalize, calcmethod,
                                    **parameters)
 
-    test_significance = parameters.get('test_signifiance', False)
+    test_significance = parameters.get('test_significance', False)
 
     significance_permutations = parameters.get('significance_permutations', 30)
 
@@ -271,19 +271,27 @@ def calc_infodynamics_te(infodynamicsloc, normalize, calcmethod,
     return transentropy, [significance, properties]
 
 
-def setup_infodynamics_entropy(normalize):
+def setup_infodynamics_entropy(normalize, method='kernel', bandwidth=0.25):
     """Prepares the entropyCalc class of the Java Infodyamics Toolkit (JIDK)
     in order to calculate differential entropy (continuous signals) according
     to the box kernel estimation method.
 
     """
 
-    entropyCalcClass = \
-        jpype.JPackage("infodynamics.measures.continuous.kernel") \
-        .EntropyCalculatorKernel
-    entropyCalc = entropyCalcClass()
-    # Set kernel width to 0.5 normalised units
-    entropyCalc.initialise(0.5)
+    if method == 'kernel':
+        entropyCalcClass = \
+            jpype.JPackage("infodynamics.measures.continuous.kernel") \
+            .EntropyCalculatorKernel
+        entropyCalc = entropyCalcClass()
+        # Set kernel width
+        entropyCalc.initialise(bandwidth)
+    elif method == 'gaussian':
+        entropyCalcClass = \
+                jpype.JPackage("infodynamics.measures.continuous.gaussian") \
+                .EntropyCalculatorGaussian
+        entropyCalc = entropyCalcClass()
+        # No parameters to set
+        entropyCalc.initialise()
 
     # Normalise the individual variables if required
     if normalize:
@@ -300,8 +308,6 @@ def setup_infodynamics_entropy(normalize):
 
 def calc_infodynamics_entropy(entropyCalc, data):
     """Estimates the entropy of a single signal.
-
-    Makes use of the box kernel estimation method.
     """
 
     dataArray = data.tolist()
