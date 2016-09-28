@@ -6,7 +6,7 @@ used by the gaincalc module.
 # Standard libraries
 import numpy as np
 import logging
-
+import time
 
 # Own libraries
 import transentropy
@@ -323,6 +323,8 @@ class TransentWeightcalc(object):
         if weightcalcdata.sigtest:
             self.te_thresh_method = weightcalcdata.te_thresh_method
             self.te_surr_method = weightcalcdata.te_surr_method
+            # logging.info("Starting directional/absolute threshold calculation")
+            # start_time = time.clock()
             # Calculate threshold for transfer entropy
             thresh_causevardata = \
                 inputdata[:, causevarindex][startindex:startindex+size]
@@ -350,8 +352,12 @@ class TransentWeightcalc(object):
                         thresh_affectedvardata_directional.T,
                         thresh_causevardata.T)
 
+            # end_time = time.clock()
+            # logging.info("Time to calculate threshold: " +
+            #              str(end_time - start_time))
             logging.info("The directional TE threshold is: " +
                          str(threshent_directional))
+            
 
             if maxval_directional >= threshent_directional \
                     and maxval_directional >= 0:
@@ -362,6 +368,8 @@ class TransentWeightcalc(object):
 
             if not delay_index_directional == delay_index_absolute:
                 # Need to do own calculation of absolute significance
+                # logging.info("Starting absolute threshold calculation")
+                # start_time = time.clock()
                 if self.te_thresh_method == 'rankorder':
                     _, threshent_absolute = \
                         self.thresh_rankorder(
@@ -372,7 +380,11 @@ class TransentWeightcalc(object):
                         self.thresh_sixsigma(
                             thresh_affectedvardata_absolute.T,
                             thresh_causevardata.T)
-
+            
+                # end_time = time.clock()
+                # logging.info("Time to calculate absolute threshold: " +
+                #              str(end_time - start_time))
+               
             logging.info("The absolute TE threshold is: " +
                          str(threshent_absolute))
 
@@ -513,6 +525,8 @@ class TransentWeightcalc(object):
         return threshent_directional, threshent_absolute
 
     def calcsigthresh(self, weightcalcdata, affected_data, causal_data):
+        # print affected_data
+        # print causal_data
         self.te_thresh_method = weightcalcdata.te_thresh_method
         self.te_surr_method = weightcalcdata.te_surr_method
         if self.te_thresh_method == 'rankorder':

@@ -14,6 +14,8 @@ import sklearn.preprocessing
 import os
 import matplotlib.pyplot as plt
 import json
+#import time
+#import logging
 
 # Own libraries
 import config_setup
@@ -54,11 +56,13 @@ def getfolders(path):
     return folders
 
 
-def gen_iaaft_surrogates(data_f, MaxIter):
+def gen_iaaft_surrogates(data, iterations):
     """Generates iAAFT surrogates
 
     """
-
+    # Make copy to  prevent rotation of array
+    data_f = data.copy()
+#    start_time = time.clock()
     xs = data_f.copy()
     # sorted amplitude stored
     xs.sort()
@@ -70,11 +74,14 @@ def gen_iaaft_surrogates(data_f, MaxIter):
     xsur = np.random.permutation(data_f)
     xsur.shape = (1, -1)
 
-    for i in range(MaxIter):
+    for i in range(iterations):
         fftsurx = pwx*np.exp(1j*np.angle(np.fft.fft(xsur)))
         xoutb = np.real(np.fft.ifft(fftsurx))
         ranks = xoutb.argsort(axis=1)
         xsur[:, ranks] = xs
+        
+#    end_time = time.clock()
+#    logging.info("Time to generate surrogates: " + str(end_time - start_time))
 
     return(xsur)
 
