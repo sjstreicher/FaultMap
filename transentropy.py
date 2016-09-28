@@ -11,7 +11,7 @@ import jpype
 
 
 def setup_infodynamics_te(infodynamicsloc,
-                          normalize, calcmethod, **parameters):
+                          normalise, calcmethod, **parameters):
     """Prepares the teCalc class of the Java Infodyamics Toolkit (JIDT)
     in order to calculate transfer entropy according to the kernel or Kraskov
     estimator method. Also supports discrete transfer entropy calculation.
@@ -44,7 +44,7 @@ def setup_infodynamics_te(infodynamicsloc,
         teCalc = teCalcClass()
 
         # Normalise the individual variables if required
-        if normalize:
+        if normalise:
             teCalc.setProperty("NORMALISE", "true")
         else:
             teCalc.setProperty("NORMALISE", "false")
@@ -81,7 +81,7 @@ def setup_infodynamics_te(infodynamicsloc,
         # next value
 
         # Normalise the individual variables if required
-        if normalize:
+        if normalise:
             teCalc.setProperty("NORMALISE", "true")
         else:
             teCalc.setProperty("NORMALISE", "false")
@@ -157,7 +157,7 @@ def setup_infodynamics_te(infodynamicsloc,
     return teCalc
 
 
-def calc_infodynamics_te(infodynamicsloc, normalize, calcmethod,
+def calc_infodynamics_te(infodynamicsloc, normalise, calcmethod,
                          affected_data, causal_data, **parameters):
     """Calculates the transfer entropy for a specific timelag (equal to
     prediction horison) between two sets of time series data.
@@ -171,7 +171,7 @@ def calc_infodynamics_te(infodynamicsloc, normalize, calcmethod,
 
     """
 
-    teCalc = setup_infodynamics_te(infodynamicsloc, normalize, calcmethod,
+    teCalc = setup_infodynamics_te(infodynamicsloc, normalise, calcmethod,
                                    **parameters)
 
     test_significance = parameters.get('test_signifiance', False)
