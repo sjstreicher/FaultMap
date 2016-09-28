@@ -56,7 +56,7 @@ def setup_infodynamics_te(infodynamicsloc,
         # standard deviations from the mean (otherwise it is an absolute value)
 
         k = parameters.get('k', 1)
-        kernel_width = parameters.get('kernel_width', 0.5)
+        kernel_width = parameters.get('kernel_width', 0.25)
 
         teCalc.initialise(k, kernel_width)
 
@@ -274,9 +274,9 @@ def setup_infodynamics_entropy(infodynamicsloc, normalise,
         entropyCalc.initialise()
         
 
-    entropyCalcClass = None
-    del entropyCalcClass
-    jpype.java.lang.System.gc()
+#    entropyCalcClass = None
+#    del entropyCalcClass
+#    jpype.java.lang.System.gc()
 
     return entropyCalc
 
@@ -336,9 +336,9 @@ def setup_infodynamics_entropy_mult(
         entropyCalc.initialise()
         
 
-    entropyCalcClass = None
-    del entropyCalcClass
-    jpype.java.lang.System.gc()
+#    entropyCalcClass = None
+#    del entropyCalcClass
+#    jpype.java.lang.System.gc()
 
     return entropyCalc
     
