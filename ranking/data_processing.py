@@ -759,7 +759,7 @@ def fft_calculation(headerline, normalised_tsdata, variables, sampling_rate,
 
 
 def bandgap(min_freq, max_freq, vardata):
-    """Bandgap filter based on FFT"""
+    """Bandgap filter based on FFT/IFFT concatenation"""
     # TODO: Add buffer values in order to prevent ringing
     freqlist = np.fft.rfftfreq(vardata.size, 1)
     # Investigate effect of using abs()
@@ -826,6 +826,16 @@ def bandgapfilter_data(raw_tsdata, normalised_tsdata, variables,
     return inputdata_bandgapfiltered
 
 
+def skogestad_scale(data_raw, scalingvalues):
+    if scalingvalues is None:
+        raise ValueError("Scaling values not defined")
+    
+    # Calculate the limit for each variable
+    # TODO: Complete
+    data_skogestadscaled = None
+    return data_skogestadscaled
+
+
 def descriptive_dictionary(descriptive_file):
     """Converts the description CSV file to a dictionary."""
     descriptive_array = np.genfromtxt(descriptive_file, delimiter=',',
@@ -836,17 +846,8 @@ def descriptive_dictionary(descriptive_file):
     return description_dict
 
 
-def normalise_data(raw_tsdata, inputdata_raw, saveloc, case, scenario):
-    # Header and time from main source file
-    headerline = np.genfromtxt(raw_tsdata, delimiter=',', dtype='string')[0, :]
-    time = np.genfromtxt(raw_tsdata, delimiter=',')[1:, 0]
-    time = time[:, np.newaxis]
-
-    inputdata_normalised = \
-        sklearn.preprocessing.scale(inputdata_raw, axis=0)
-
-    datalines = np.concatenate((time, inputdata_normalised), axis=1)
-
+def write_normdata(saveloc, case, scenario, headerline, datalines):
+    
     # Define export directories and filenames
     datadir = config_setup.ensure_existence(
         os.path.join(saveloc, 'normdata'), make=True)
@@ -858,7 +859,50 @@ def normalise_data(raw_tsdata, inputdata_raw, saveloc, case, scenario):
 
     # Store the normalised data in similar format as original data
     writecsv(filename('normalised_data'), datalines, headerline)
+    
+    return None
 
+
+def perform_normalisation(raw_tsdata, inputdata_raw, saveloc, case,
+                                  scenario, method, scalingvalues):
+    
+    # Header and time from main source file
+    headerline = np.genfromtxt(raw_tsdata, delimiter=',', dtype='string')[0, :]
+    time = np.genfromtxt(raw_tsdata, delimiter=',')[1:, 0]
+    time = time[:, np.newaxis]
+    
+    if method == 'standardise':
+        inputdata_normalised = \
+            sklearn.preprocessing.scale(inputdata_raw, axis=0)
+    elif method == 'skogestad':
+        inputdata_normalised = \
+            skogestad_scale(inputdata_raw, scalingvalues)
+
+    datalines = np.concatenate((time, inputdata_normalised), axis=1)
+    
+    write_normdata(saveloc, case, scenario, headerline, datalines)
+    
+    return inputdata_normalised
+    
+
+def normalise_data(raw_tsdata, inputdata_raw, saveloc, case, scenario,
+                   method, weight_methods, scalingvalues):
+                       
+    if (method == 'standardise' or method == 'skogestad'):
+        inputdata_normalised = \
+            perform_normalisation(raw_tsdata, inputdata_raw, saveloc, case,
+                                  scenario, method, scalingvalues)
+    elif not method:
+        # If method is simply false
+        # Still norm centre the data
+        # This breaks when trying to use discrete methods
+        if 'discrete' not in weight_methods:
+            inputdata_normalised = subtract_mean(inputdata_raw)
+        else:
+            inputdata_normalised = inputdata_raw
+    else:
+        raise NameError("Normalisation method not recognized")
+                
     return inputdata_normalised
 
 
@@ -882,9 +926,8 @@ def read_connectionmatrix(connection_loc):
     var2, value, value, value, etc... (third row)
     etc...
 
-    Value is 1 if column variable points to row variable
-    (causal relationship)
-    Value is 0 otherwise
+    value = 1 if column variable points to row variable (causal relationship) 
+    value = 0 otherwise
 
     """
     with open(connection_loc) as f:
@@ -893,6 +936,21 @@ def read_connectionmatrix(connection_loc):
 
     return connectionmatrix, variables
 
+def read_scalelimits(scaling_loc):
+    """Imports the scale limits for the data.
+    The format of the CSV file should be:
+    variable, low_limit, nominal_val, high_limit, type (first row)
+    var1, float, float, float, ['D', 'S'] (second row)
+    var2, float, float, float, ['D, 'S'] (third row)
+    etc...
+    
+    type 'D' indicates disturbance variable and maximum deviation will be used
+    type 'S' indicates state variable and minimum deviation will be used
+    
+    """
+    scalingdf = pd.read_csv(scaling_loc)
+    
+    return scalingdf
 
 def read_biasvector(biasvector_loc):
     """Imports the bias vector for ranking purposes.

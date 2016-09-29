@@ -109,11 +109,19 @@ class WeightcalcData:
         self.settings_set = self.caseconfig[scenario]['settings']
 
     def setsettings(self, scenario, settings_name):
-
-        self.connections_used = (self.caseconfig[settings_name]
-                                 ['use_connections'])
-        self.transient = self.caseconfig[settings_name]['transient']
-        self.normalise = self.caseconfig[settings_name]['normalise']
+        if 'use_connections' in self.caseconfig[settings_name]:
+            self.connections_used = (self.caseconfig[settings_name]
+                                     ['use_connections'])
+        else:
+            self.connections_used = False
+        if 'transient' in self.caseconfig[settings_name]:
+             self.transient = self.caseconfig[settings_name]['transient']
+        else:
+            self.transient = False
+        if 'normalise' in self.caseconfig[settings_name]:
+            self.normalise = self.caseconfig[settings_name]['normalise']
+        else:
+            self.normalise = False
         self.sigtest = self.caseconfig[settings_name]['sigtest']
         if self.sigtest:
             # The transfer entropy threshold calculation method be either
@@ -124,7 +132,10 @@ class WeightcalcData:
             # 'iAAFT' or 'random_shuffle'
             self.te_surr_method = \
                 self.caseconfig[settings_name]['te_surr_method']
-        self.allthresh = self.caseconfig[settings_name]['allthresh']
+        if 'allthresh' in self.caseconfig[settings_name]:
+            self.allthresh = self.caseconfig[settings_name]['allthresh']
+        else:
+            self.allthresh = False
 
         # Get sampling rate and unit name
         self.sampling_rate = (self.caseconfig[settings_name]
@@ -132,7 +143,10 @@ class WeightcalcData:
         self.sampling_unit = (self.caseconfig[settings_name]
                               ['sampling_unit'])
         # Get starting index
-        self.startindex = self.caseconfig[settings_name]['startindex']
+        if 'startindex' in self.caseconfig[settings_name]:
+            self.startindex = self.caseconfig[settings_name]['startindex']
+        else:
+            self.startindex = 0
 
         # Get any parameters for Kraskov method
         if 'transfer_entropy_kraskov' in self.methods:
@@ -145,14 +159,30 @@ class WeightcalcData:
             raw_tsdata = os.path.join(self.casedir, 'data',
                                       self.caseconfig[scenario]['data'])
 
-            # Retrieve connection matrix criteria from settings
+            # Retrieve connection matrix
             if self.connections_used:
                 # Get connection (adjacency) matrix
-                connectionloc = os.path.join(self.casedir, 'connections',
-                                             self.caseconfig[scenario]
-                                             ['connections'])
+                connection_loc = os.path.join(self.casedir, 'connections',
+                                              self.caseconfig[scenario]
+                                              ['connections'])
                 self.connectionmatrix, _ = \
-                    data_processing.read_connectionmatrix(connectionloc)
+                    data_processing.read_connectionmatrix(connection_loc)
+            
+            # Retrieve scaling limits from file
+            if self.normalise == 'skogestad':
+                # Get scaling parameters
+                if 'scalelimits' in self.caseconfig[scenario]:
+                    scaling_loc = os.path.join(
+                        self.casedir, 'scalelimits',
+                        self.caseconfig[scenario]['scalelimits'])
+                    scalingvalues = \
+                        data_processing.read_scalelimits(scaling_loc)
+                else:
+                    raise NameError(
+                        "Scale limits reference missing from "
+                        "configuration file")
+            else:
+                scalingvalues = None
 
             # Convert timeseries data in CSV file to H5 data format
             datapath = data_processing.csv_to_h5(self.saveloc, raw_tsdata,
@@ -163,25 +193,13 @@ class WeightcalcData:
             # Get inputdata from H5 table created
             self.inputdata_raw = np.array(h5py.File(os.path.join(
                 datapath, scenario + '.h5'), 'r')[scenario])
-
-            if self.normalise:
-                # Normalise (mean centre and variance scale) the input data
-                self.inputdata_normstep = \
-                    data_processing.normalise_data(raw_tsdata,
-                                                   self.inputdata_raw,
-                                                   self.saveloc, self.casename,
-                                                   scenario)
-            else:
-                # Still norm centre the data
-                # This breaks when trying to use discrete methods
-                if 'discrete' not in self.methods:
-                    self.inputdata_normstep = data_processing.subtract_mean(
-                        self.inputdata_raw)
-                else:
-                    self.inputdata_normstep = self.inputdata_raw
-
             self.headerline = np.genfromtxt(raw_tsdata, delimiter=',',
                                             dtype='string')[0, :]
+
+            self.inputdata_normstep = data_processing.normalise_data(
+                raw_tsdata, self.inputdata_raw, self.saveloc,
+                self.casename, scenario, self.normalise, self.methods,
+                scalingvalues)
 
         elif self.datatype == 'function':
 
