@@ -212,7 +212,7 @@ class TransentWeightcalc(object):
                             'l_tau_bwd', 'delay_bwd']
 
         self.estimator = estimator
-        self.normalize = weightcalcdata.normalize
+        self.normalise = weightcalcdata.normalise
         self.infodynamicsloc = weightcalcdata.infodynamicsloc
         if weightcalcdata.sigtest:
             self.te_thresh_method = weightcalcdata.te_thresh_method
@@ -235,7 +235,7 @@ class TransentWeightcalc(object):
 
         transent_fwd, auxdata_fwd = \
             transentropy.calc_infodynamics_te(self.infodynamicsloc,
-                                              self.normalize,
+                                              self.normalise,
                                               self.estimator,
                                               affectedvardata.T,
                                               causevardata.T,
@@ -243,7 +243,7 @@ class TransentWeightcalc(object):
 
         transent_bwd, auxdata_bwd = \
             transentropy.calc_infodynamics_te(self.infodynamicsloc,
-                                              self.normalize,
+                                              self.normalise,
                                               self.estimator,
                                               causevardata.T,
                                               affectedvardata.T,
@@ -463,11 +463,11 @@ class TransentWeightcalc(object):
         for n in range(num):
 
             surr_te_fwd.append(transentropy.calc_infodynamics_te(
-                self.infodynamicsloc, self.normalize, self.estimator,
+                self.infodynamicsloc, self.normalise, self.estimator,
                 affected_data, surr_tsdata[n][0, :], **self.parameters)[0])
 
             surr_te_bwd.append(transentropy.calc_infodynamics_te(
-                self.infodynamicsloc, self.normalize, self.estimator,
+                self.infodynamicsloc, self.normalise, self.estimator,
                 surr_tsdata[n][0, :], affected_data,
                 **self.parameters)[0])
 

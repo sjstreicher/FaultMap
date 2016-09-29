@@ -9,7 +9,7 @@
   "settings_standard": {
     "use_connections": true,
 	"transient": false,
-	"normalize": true,
+	"normalise": true,
     "delaytype": "datapoints",
 	"sampling_rate": 1,
 	"sub_sampling_interval": 1,

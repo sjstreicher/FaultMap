@@ -1128,7 +1128,7 @@ def calc_signalent(vardata, weightcalcdata):
     # Setup Java class for infodynamics toolkit
     entropyCalc = \
         transentropy.setup_infodynamics_entropy(weightcalcdata.infodynamicsloc,
-                                                weightcalcdata.normalize)
+                                                weightcalcdata.normalise)
 
     entropy = transentropy.calc_infodynamics_entropy(entropyCalc, vardata)
     return entropy
