@@ -6,7 +6,6 @@ Created on Mon Feb 24 15:18:33 2014
 
 @author: Simon Streicher
 """
-import numpy as np
 import jpype
 
 

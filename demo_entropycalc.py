@@ -17,9 +17,9 @@ estimator = 'kernel'
 
 #class SpoofClass(object):
 #    
-#    def __init__(self, infodynamicsloc, normalize):
+#    def __init__(self, infodynamicsloc, normalise):
 #        self.infodynamicsloc = infodynamicsloc
-#        self.normalize = normalize
+#        self.normalise = normalise
 #        
 #weightcalcdata = SpoofClass(infodynamics_loc, True) 
 

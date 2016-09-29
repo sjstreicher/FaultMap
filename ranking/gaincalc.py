@@ -113,7 +113,7 @@ class WeightcalcData:
         self.connections_used = (self.caseconfig[settings_name]
                                  ['use_connections'])
         self.transient = self.caseconfig[settings_name]['transient']
-        self.normalize = self.caseconfig[settings_name]['normalize']
+        self.normalise = self.caseconfig[settings_name]['normalise']
         self.sigtest = self.caseconfig[settings_name]['sigtest']
         if self.sigtest:
             # The transfer entropy threshold calculation method be either
@@ -164,7 +164,7 @@ class WeightcalcData:
             self.inputdata_raw = np.array(h5py.File(os.path.join(
                 datapath, scenario + '.h5'), 'r')[scenario])
 
-            if self.normalize:
+            if self.normalise:
                 # Normalise (mean centre and variance scale) the input data
                 self.inputdata_normstep = \
                     data_processing.normalise_data(raw_tsdata,
@@ -198,7 +198,7 @@ class WeightcalcData:
             self.variables, self.connectionmatrix = \
                 eval('datagen.' + connectionloc)()
 
-            if self.normalize:
+            if self.normalise:
                 self.inputdata_normstep = \
                     sklearn.preprocessing.scale(self.inputdata_raw, axis=0)
             else:
