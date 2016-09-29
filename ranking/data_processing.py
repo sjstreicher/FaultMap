@@ -79,7 +79,7 @@ def gen_iaaft_surrogates(data, iterations):
         xoutb = np.real(np.fft.ifft(fftsurx))
         ranks = xoutb.argsort(axis=1)
         xsur[:, ranks] = xs
-        
+
 #    end_time = time.clock()
 #    logging.info("Time to generate surrogates: " + str(end_time - start_time))
 
@@ -826,13 +826,36 @@ def bandgapfilter_data(raw_tsdata, normalised_tsdata, variables,
     return inputdata_bandgapfiltered
 
 
-def skogestad_scale(data_raw, scalingvalues):
+def skogestad_scale_select(vartype, lower_limit, nominal_level, high_limit):
+    if vartype == 'D':
+        limit = max((nominal_level - lower_limit),
+                    (high_limit - nominal_level))
+    elif vartype == 'S':
+        limit = min((nominal_level - lower_limit),
+                    (high_limit - nominal_level))
+    else:
+        raise NameError("Variable type flag not recognized")
+    return limit
+
+
+def skogestad_scale(data_raw, variables, scalingvalues):
     if scalingvalues is None:
         raise ValueError("Scaling values not defined")
-    
-    # Calculate the limit for each variable
-    # TODO: Complete
-    data_skogestadscaled = None
+
+    data_skogestadscaled = np.zeros_like(data_raw)
+
+    scalingvalues['scale_factor'] = map(
+        skogestad_scale_select, scalingvalues['vartype'], scalingvalues['low'],
+        scalingvalues['nominal'], scalingvalues['high'])
+
+    # Loop through variables
+    # The variables are aligned with the columns in raw_data
+    for index, var in enumerate(variables):
+        factor = scalingvalues.loc[var]['scale_factor']
+        nominalval = scalingvalues.loc[var]['nominal']
+        data_skogestadscaled[:, index] = \
+            (data_raw[:, index] - nominalval) / factor
+
     return data_skogestadscaled
 
 
@@ -847,7 +870,7 @@ def descriptive_dictionary(descriptive_file):
 
 
 def write_normdata(saveloc, case, scenario, headerline, datalines):
-    
+
     # Define export directories and filenames
     datadir = config_setup.ensure_existence(
         os.path.join(saveloc, 'normdata'), make=True)
@@ -859,38 +882,40 @@ def write_normdata(saveloc, case, scenario, headerline, datalines):
 
     # Store the normalised data in similar format as original data
     writecsv(filename('normalised_data'), datalines, headerline)
-    
+
     return None
 
 
-def perform_normalisation(raw_tsdata, inputdata_raw, saveloc, case,
-                                  scenario, method, scalingvalues):
-    
+def perform_normalisation(raw_tsdata, inputdata_raw, variables, saveloc, case,
+                          scenario, method, scalingvalues):
+
     # Header and time from main source file
     headerline = np.genfromtxt(raw_tsdata, delimiter=',', dtype='string')[0, :]
     time = np.genfromtxt(raw_tsdata, delimiter=',')[1:, 0]
     time = time[:, np.newaxis]
-    
+
     if method == 'standardise':
         inputdata_normalised = \
             sklearn.preprocessing.scale(inputdata_raw, axis=0)
     elif method == 'skogestad':
         inputdata_normalised = \
-            skogestad_scale(inputdata_raw, scalingvalues)
+            skogestad_scale(inputdata_raw, variables, scalingvalues)
 
     datalines = np.concatenate((time, inputdata_normalised), axis=1)
-    
-    write_normdata(saveloc, case, scenario, headerline, datalines)
-    
-    return inputdata_normalised
-    
 
-def normalise_data(raw_tsdata, inputdata_raw, saveloc, case, scenario,
+    write_normdata(saveloc, case, scenario, headerline, datalines)
+
+    return inputdata_normalised
+
+
+def normalise_data(raw_tsdata, inputdata_raw, variables,
+                   saveloc, case, scenario,
                    method, weight_methods, scalingvalues):
-                       
+
     if (method == 'standardise' or method == 'skogestad'):
         inputdata_normalised = \
-            perform_normalisation(raw_tsdata, inputdata_raw, saveloc, case,
+            perform_normalisation(raw_tsdata, inputdata_raw, variables,
+                                  saveloc, case,
                                   scenario, method, scalingvalues)
     elif not method:
         # If method is simply false
@@ -902,7 +927,7 @@ def normalise_data(raw_tsdata, inputdata_raw, saveloc, case, scenario,
             inputdata_normalised = inputdata_raw
     else:
         raise NameError("Normalisation method not recognized")
-                
+
     return inputdata_normalised
 
 
@@ -926,7 +951,7 @@ def read_connectionmatrix(connection_loc):
     var2, value, value, value, etc... (third row)
     etc...
 
-    value = 1 if column variable points to row variable (causal relationship) 
+    value = 1 if column variable points to row variable (causal relationship)
     value = 0 otherwise
 
     """
@@ -936,21 +961,24 @@ def read_connectionmatrix(connection_loc):
 
     return connectionmatrix, variables
 
+
 def read_scalelimits(scaling_loc):
     """Imports the scale limits for the data.
     The format of the CSV file should be:
-    variable, low_limit, nominal_val, high_limit, type (first row)
+    var, low, nominal, high, vartype (first row)
     var1, float, float, float, ['D', 'S'] (second row)
     var2, float, float, float, ['D, 'S'] (third row)
     etc...
-    
+
     type 'D' indicates disturbance variable and maximum deviation will be used
     type 'S' indicates state variable and minimum deviation will be used
-    
+
     """
     scalingdf = pd.read_csv(scaling_loc)
-    
+    scalingdf.set_index('var', inplace=True)
+
     return scalingdf
+
 
 def read_biasvector(biasvector_loc):
     """Imports the bias vector for ranking purposes.
