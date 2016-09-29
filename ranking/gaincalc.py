@@ -37,7 +37,7 @@ import data_processing
 import gaincalc_oneset
 from gaincalculators import (PartialCorrWeightcalc, CorrWeightcalc,
                              TransentWeightcalc)
-                             
+
 import datagen
 
 
@@ -115,7 +115,7 @@ class WeightcalcData:
         else:
             self.connections_used = False
         if 'transient' in self.caseconfig[settings_name]:
-             self.transient = self.caseconfig[settings_name]['transient']
+            self.transient = self.caseconfig[settings_name]['transient']
         else:
             self.transient = False
         if 'normalise' in self.caseconfig[settings_name]:
@@ -167,7 +167,7 @@ class WeightcalcData:
                                               ['connections'])
                 self.connectionmatrix, _ = \
                     data_processing.read_connectionmatrix(connection_loc)
-            
+
             # Retrieve scaling limits from file
             if self.normalise == 'skogestad':
                 # Get scaling parameters
@@ -197,9 +197,9 @@ class WeightcalcData:
                                             dtype='string')[0, :]
 
             self.inputdata_normstep = data_processing.normalise_data(
-                raw_tsdata, self.inputdata_raw, self.saveloc,
-                self.casename, scenario, self.normalise, self.methods,
-                scalingvalues)
+                raw_tsdata, self.inputdata_raw, self.variables,
+                self.saveloc, self.casename, scenario, self.normalise,
+                self.methods, scalingvalues)
 
         elif self.datatype == 'function':
 
