@@ -9,8 +9,7 @@ Created on Mon Feb 24 15:18:33 2014
 import jpype
 
 
-def setup_infodynamics_te(infodynamicsloc,
-                          normalise, calcmethod, **parameters):
+def setup_infodynamics_te(infodynamicsloc, calcmethod, **parameters):
     """Prepares the teCalc class of the Java Infodyamics Toolkit (JIDT)
     in order to calculate transfer entropy according to the kernel or Kraskov
     estimator method. Also supports discrete transfer entropy calculation.
@@ -42,11 +41,9 @@ def setup_infodynamics_te(infodynamicsloc,
             .TransferEntropyCalculatorKernel
         teCalc = teCalcClass()
 
-        # Normalise the individual variables if required
-        if normalise:
-            teCalc.setProperty("NORMALISE", "true")
-        else:
-            teCalc.setProperty("NORMALISE", "false")
+        # Normalisation is performed before this step, set property to false to
+        # prevent accidental data standardisation
+        teCalc.setProperty("NORMALISE", "false")
 
         # Parameter definitions - refer to JIDT Javadocs
         # k - destination embedded history length (Schreiber k=1)
@@ -79,11 +76,9 @@ def setup_infodynamics_te(infodynamicsloc,
         # delay - time lag between last element of source and destination
         # next value
 
-        # Normalise the individual variables if required
-        if normalise:
-            teCalc.setProperty("NORMALISE", "true")
-        else:
-            teCalc.setProperty("NORMALISE", "false")
+        # Normalisation is performed before this step, set property to false to
+        # prevent accidental data standardisation
+        teCalc.setProperty("NORMALISE", "false")
 
         if 'auto_embed' in parameters:
             auto_embed = parameters['auto_embed']
@@ -156,7 +151,7 @@ def setup_infodynamics_te(infodynamicsloc,
     return teCalc
 
 
-def calc_infodynamics_te(infodynamicsloc, normalise, calcmethod,
+def calc_infodynamics_te(infodynamicsloc, calcmethod,
                          affected_data, causal_data, **parameters):
     """Calculates the transfer entropy for a specific timelag (equal to
     prediction horison) between two sets of time series data.
@@ -170,7 +165,7 @@ def calc_infodynamics_te(infodynamicsloc, normalise, calcmethod,
 
     """
 
-    teCalc = setup_infodynamics_te(infodynamicsloc, normalise, calcmethod,
+    teCalc = setup_infodynamics_te(infodynamicsloc, calcmethod,
                                    **parameters)
 
     test_significance = parameters.get('test_signifiance', False)
@@ -218,8 +213,8 @@ def calc_infodynamics_te(infodynamicsloc, normalise, calcmethod,
     return transentropy, [significance, properties]
 
 
-def setup_infodynamics_entropy(infodynamicsloc, normalise,
-                               estimator='kernel', kernel_bandwidth=0.25):
+def setup_infodynamics_entropy(infodynamicsloc,
+                               estimator='kernel', kernel_bandwidth=0.10):
     """Prepares the entropyCalc class of the Java Infodyamics Toolkit (JIDK)
     in order to calculate differential entropy (continuous signals) according
     to the estimation method specified.
@@ -258,12 +253,10 @@ def setup_infodynamics_entropy(infodynamicsloc, normalise,
             .EntropyCalculatorKernel
         entropyCalc = entropyCalcClass()
         entropyCalc.initialise(kernel_bandwidth)
-            # Normalise the individual variables if required
-        if normalise:
-            entropyCalc.setProperty("NORMALISE", "true")
-        else:
-            entropyCalc.setProperty("NORMALISE", "false")
-
+        
+        # Normalisation is performed before this step, set property to false to
+        # prevent accidental data standardisation
+        entropyCalc.setProperty("NORMALISE", "false")
             
     elif estimator == 'gaussian':
         entropyCalcClass = \
@@ -281,7 +274,7 @@ def setup_infodynamics_entropy(infodynamicsloc, normalise,
 
 
 def setup_infodynamics_entropy_mult(
-    infodynamicsloc, normalise, estimator='kernel', kernel_bandwidth=0.25):
+    infodynamicsloc, estimator='kernel', kernel_bandwidth=0.10):
     """Prepares the entropyCalc class of the Java Infodyamics Toolkit (JIDK)
     in order to calculate differential entropy (continuous signals) according
     to the estimation method specified.
@@ -320,11 +313,9 @@ def setup_infodynamics_entropy_mult(
             .EntropyCalculatorMultiVariateKernel
         entropyCalc = entropyCalcClass()
         entropyCalc.initialise(kernel_bandwidth)
-            # Normalise the individual variables if required
-        if normalise:
-            entropyCalc.setProperty("NORMALISE", "true")
-        else:
-            entropyCalc.setProperty("NORMALISE", "false")
+        # Normalisation is performed before this step, set property to false to
+        # prevent accidental data standardisation
+        entropyCalc.setProperty("NORMALISE", "false")
 
             
     elif estimator == 'gaussian':
