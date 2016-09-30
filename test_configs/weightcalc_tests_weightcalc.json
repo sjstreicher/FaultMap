@@ -1,15 +1,15 @@
 {
   "datatype": "function",
   "methods": [
-	  "transfer_entropy_kraskov"
+    "transfer_entropy_kraskov"
   ],
   "scenarios": [
-	  "sinusoid_5x5"
+    "sinusoid_5x5"
   ],
   "settings_standard": {
     "use_connections": true,
-	"transient": false,
-	"normalise": true,
+    "transient": false,
+	"normalise": false,
     "delaytype": "datapoints",
 	"sampling_rate": 1,
 	"sub_sampling_interval": 1,
