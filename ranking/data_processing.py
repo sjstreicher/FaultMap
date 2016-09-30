@@ -14,8 +14,9 @@ import sklearn.preprocessing
 import os
 import matplotlib.pyplot as plt
 import json
+import logging
 #import time
-#import logging
+
 
 # Own libraries
 import config_setup
@@ -752,11 +753,37 @@ def fft_calculation(headerline, normalised_tsdata, variables, sampling_rate,
 
     writecsv(filename('fft'), datalines, headerline)
 
-#    logging.info("Done with FFT calculations")
-    print "Done with FFT calculations"
+    logging.info("Done with FFT calculations")
+#    print "Done with FFT calculations"
 
     return None
 
+
+def write_boxdates(boxdates, saveloc, case, scenario):
+    
+    def filename(name):
+        return filename_template.format(case, scenario, name)
+        
+    datadir = config_setup.ensure_existence(
+        os.path.join(saveloc, 'boxdates'), make=True)
+    filename_template = os.path.join(datadir, '{}_{}_{}.csv')
+    
+    headerline = ['Box index', 'Box start', 'Box end']
+    datalines = np.array(len(boxdates), 3)
+    for index, boxdate in enumerate(boxdates):
+        box_index = index + 1
+        box_start = boxdate[0]
+        box_end = boxdate[1]
+        datalines[index, :] = [box_index, box_start, box_end]
+    
+    writecsv(filename('boxdates'), datalines, headerline)
+        
+    return None
+    
+    
+def write_boxes(boxes, saveloc, case, scenario):
+    # TODO: Complete box writing function
+    return None
 
 def bandgap(min_freq, max_freq, vardata):
     """Bandgap filter based on FFT/IFFT concatenation"""
@@ -1008,7 +1035,7 @@ def read_header_values_datafile(location):
 
 
 def read_matrix(matrix_loc):
-    """This method a matrix scheme for a specific scenario.
+    """This method reads a matrix scheme for a specific scenario.
 
     Might need to pad matrix with zeros if it is non-square
     """

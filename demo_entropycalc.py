@@ -52,7 +52,7 @@ affectedvarindex = 1
 # Setup Java class for infodynamics toolkit
 entropyCalc = \
     transentropy.setup_infodynamics_entropy(
-        infodynamicsloc, normalise, estimator=estimator,
+        infodynamicsloc, estimator=estimator,
         kernel_bandwidth=1.)
 
 def gaussian_entropy(data):

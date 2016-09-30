@@ -118,10 +118,12 @@ class WeightcalcData:
             self.transient = self.caseconfig[settings_name]['transient']
         else:
             self.transient = False
+            logging.info("Defaulting to single time region analysis")
         if 'normalise' in self.caseconfig[settings_name]:
             self.normalise = self.caseconfig[settings_name]['normalise']
         else:
             self.normalise = False
+            logging.info("Defaulting to no normalisation")
         self.sigtest = self.caseconfig[settings_name]['sigtest']
         if self.sigtest:
             # The transfer entropy threshold calculation method be either
@@ -168,7 +170,41 @@ class WeightcalcData:
                 self.connectionmatrix, _ = \
                     data_processing.read_connectionmatrix(connection_loc)
 
-            # Retrieve scaling limits from file
+            # Convert timeseries data in CSV file to H5 data format
+            datapath = data_processing.csv_to_h5(self.saveloc, raw_tsdata,
+                                                 scenario, self.casename)
+            # Read variables from orignal CSV file
+            self.variables = data_processing.read_variables(raw_tsdata)
+            self.timestamps = data_processing.read_timestamps(raw_tsdata)
+            # Get inputdata from H5 table created
+            self.inputdata_raw = np.array(h5py.File(os.path.join(
+                datapath, scenario + '.h5'), 'r')[scenario])
+            self.headerline = np.genfromtxt(raw_tsdata, delimiter=',',
+                                            dtype='string')[0, :]
+
+        elif self.datatype == 'function':
+            raw_tsdata_gen = self.caseconfig[scenario]['datagen']
+            if self.connections_used:
+                connectionloc = self.caseconfig[scenario]['connections']
+            # TODO: Store function arguments in scenario config file
+            params = self.caseconfig[settings_name]['datagen_params']
+            # Get inputdata
+            self.inputdata_raw = \
+                eval('datagen.' + raw_tsdata_gen)(params)
+            self.inputdata_raw = np.asarray(self.inputdata_raw)
+            # Get the variables and connection matrix
+            self.variables, self.connectionmatrix = \
+                eval('datagen.' + connectionloc)()
+
+            self.timestamps = np.arange(0, len(
+                self.inputdata_raw[:, 0]) * self.sampling_rate,
+                self.sampling_rate)
+
+            self.headerline = ['Time']
+            [self.headerline.append(variable) for variable in self.variables]
+        
+        # Perform normalisation
+        # Retrieve scaling limits from file
             if self.normalise == 'skogestad':
                 # Get scaling parameters
                 if 'scalelimits' in self.caseconfig[scenario]:
@@ -183,57 +219,20 @@ class WeightcalcData:
                         "configuration file")
             else:
                 scalingvalues = None
-
-            # Convert timeseries data in CSV file to H5 data format
-            datapath = data_processing.csv_to_h5(self.saveloc, raw_tsdata,
-                                                 scenario, self.casename)
-            # Read variables from orignal CSV file
-            self.variables = data_processing.read_variables(raw_tsdata)
-            self.timestamps = data_processing.read_timestamps(raw_tsdata)
-            # Get inputdata from H5 table created
-            self.inputdata_raw = np.array(h5py.File(os.path.join(
-                datapath, scenario + '.h5'), 'r')[scenario])
-            self.headerline = np.genfromtxt(raw_tsdata, delimiter=',',
-                                            dtype='string')[0, :]
-
-            self.inputdata_normstep = data_processing.normalise_data(
-                raw_tsdata, self.inputdata_raw, self.variables,
-                self.saveloc, self.casename, scenario, self.normalise,
-                self.methods, scalingvalues)
-
-        elif self.datatype == 'function':
-
-            raw_tsdata_gen = self.caseconfig[scenario]['datagen']
-            if self.connections_used:
-                connectionloc = self.caseconfig[scenario]['connections']
-            # TODO: Store function arguments in scenario config file
-            params = self.caseconfig[settings_name]['datagen_params']
-            # Get inputdata
-            self.inputdata_raw = \
-                eval('datagen.' + raw_tsdata_gen)(params)
-            self.inputdata_raw = np.asarray(self.inputdata_raw)
-            # Get the variables and connection matrix
-            self.variables, self.connectionmatrix = \
-                eval('datagen.' + connectionloc)()
-
-            if self.normalise:
-                self.inputdata_normstep = \
-                    sklearn.preprocessing.scale(self.inputdata_raw, axis=0)
-            else:
-                self.inputdata_normstep = self.inputdata_raw
-
-            self.timestamps = np.arange(0, len(
-                self.inputdata_normstep[:, 0]) * self.sampling_rate,
-                self.sampling_rate)
-
-            self.headerline = ['Time']
-            [self.headerline.append(variable) for variable in self.variables]
+                
+        self.inputdata_normstep = data_processing.normalise_data(
+            raw_tsdata, self.inputdata_raw, self.variables,
+            self.saveloc, self.casename, scenario, self.normalise,
+            self.methods, scalingvalues)
 
         # Get delay type
-        self.delaytype = self.caseconfig[settings_name]['delaytype']
+        if 'delaytype' in self.caseconfig[settings_name]:
+            self.delaytype = self.caseconfig[settings_name]['delaytype']
+        else:
+            self.delaytype = 'datapoints'
 
         # Get size of sample vectors for tests
-        # Must be smaller than number of samples generated
+        # Must be smaller than number of samples
         self.testsize = self.caseconfig[settings_name]['testsize']
         # Get number of delays to test
         test_delays = self.caseconfig[scenario]['test_delays']
@@ -301,15 +300,32 @@ class WeightcalcData:
             # This box should now return the same size
             # as the original data file - but it does not play a role at all
             # in the actual box determination for the case of boxnum = 1
-
+        
+        # Get box start and end dates
+        self.boxdates = data_processing.split_tsdata(
+            self.timestamps, self.sampling_rate * self.sub_sampling_interval,
+            self.boxsize, self.boxnum)
+        data_processing.write_boxdates(self.boxdates, self.saveloc,
+                                       self.casename, scenario)
+            
+        # Generate boxes to use
+        self.boxes = data_processing.split_tsdata(
+            self.inputdata, self.sampling_rate * self.sub_sampling_interval,
+            self.boxsize, self.boxnum)
+        data_processing.write_boxes()
+        
         # Select which of the boxes to evaluate
         if self.transient:
-            self.boxindexes = self.caseconfig[scenario]['boxindexes']
+            if 'boxindexes' in self.caseconfig[scenario]:
+                self.boxindexes = self.caseconfig[scenario]['boxindexes']
+            else:
+                self.boxindexes = 'all'
             if self.boxindexes == 'all':
                 self.boxindexes = range(self.boxnum)
         else:
             self.boxindexes = [0]
-
+        
+        # Calculate delays in indexes as well as time units
         if self.delaytype == 'datapoints':
             self.actual_delays = [(delay * self.sampling_rate *
                                   self.sub_sampling_interval)
@@ -331,14 +347,10 @@ class WeightcalcData:
         # TOPCAT in a plane plot
 
         if self.fftcalc:
-            data_processing.fft_calculation(self.headerline,
-                                            self.inputdata_originalrate,
-                                            self.variables,
-                                            self.sampling_rate,
-                                            self.sampling_unit,
-                                            self.saveloc,
-                                            self.casename,
-                                            scenario)
+            data_processing.fft_calculation(
+                self.headerline, self.inputdata_originalrate,
+                self.variables, self.sampling_rate, self.sampling_unit,
+                self.saveloc, self.casename, scenario)
 
 
 def writecsv_weightcalc(filename, items, header):
@@ -460,15 +472,8 @@ def calc_weights(weightcalcdata, method, scenario, writeoutput):
         signalent_filename_template = \
             os.path.join(signalentstoredir, '{}_{}_{}_box{:03d}.csv')
 
-    # Generate boxes to use
-    boxes = data_processing.split_tsdata(
-        weightcalcdata.inputdata,
-        weightcalcdata.sampling_rate * weightcalcdata.sub_sampling_interval,
-        weightcalcdata.boxsize,
-        weightcalcdata.boxnum)
-
     for boxindex in weightcalcdata.boxindexes:
-        box = boxes[boxindex]
+        box = weightcalcdata.boxes[boxindex]
 
         # Calculate single signal entropies - do not worry about
         # delays, but still do it according to different boxes
