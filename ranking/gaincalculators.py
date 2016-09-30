@@ -212,7 +212,6 @@ class TransentWeightcalc(object):
                             'l_tau_bwd', 'delay_bwd']
 
         self.estimator = estimator
-        self.normalise = weightcalcdata.normalise
         self.infodynamicsloc = weightcalcdata.infodynamicsloc
         if weightcalcdata.sigtest:
             self.te_thresh_method = weightcalcdata.te_thresh_method
@@ -234,20 +233,14 @@ class TransentWeightcalc(object):
         # Pass special estimator specific parameters in here
 
         transent_fwd, auxdata_fwd = \
-            transentropy.calc_infodynamics_te(self.infodynamicsloc,
-                                              self.normalise,
-                                              self.estimator,
-                                              affectedvardata.T,
-                                              causevardata.T,
-                                              **self.parameters)
+            transentropy.calc_infodynamics_te(
+                self.infodynamicsloc, self.estimator,
+                affectedvardata.T, causevardata.T, **self.parameters)
 
         transent_bwd, auxdata_bwd = \
-            transentropy.calc_infodynamics_te(self.infodynamicsloc,
-                                              self.normalise,
-                                              self.estimator,
-                                              causevardata.T,
-                                              affectedvardata.T,
-                                              **self.parameters)
+            transentropy.calc_infodynamics_te(
+                self.infodynamicsloc, self.estimator,
+                causevardata.T, affectedvardata.T, **self.parameters)
 
         transent_directional = transent_fwd - transent_bwd
         transent_absolute = transent_fwd
@@ -463,11 +456,11 @@ class TransentWeightcalc(object):
         for n in range(num):
 
             surr_te_fwd.append(transentropy.calc_infodynamics_te(
-                self.infodynamicsloc, self.normalise, self.estimator,
+                self.infodynamicsloc, self.estimator,
                 affected_data, surr_tsdata[n][0, :], **self.parameters)[0])
 
             surr_te_bwd.append(transentropy.calc_infodynamics_te(
-                self.infodynamicsloc, self.normalise, self.estimator,
+                self.infodynamicsloc, self.estimator,
                 surr_tsdata[n][0, :], affected_data,
                 **self.parameters)[0])
 

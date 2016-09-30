@@ -14,8 +14,9 @@ import sklearn.preprocessing
 import os
 import matplotlib.pyplot as plt
 import json
+import logging
 #import time
-#import logging
+
 
 # Own libraries
 import config_setup
@@ -752,11 +753,37 @@ def fft_calculation(headerline, normalised_tsdata, variables, sampling_rate,
 
     writecsv(filename('fft'), datalines, headerline)
 
-#    logging.info("Done with FFT calculations")
-    print "Done with FFT calculations"
+    logging.info("Done with FFT calculations")
+#    print "Done with FFT calculations"
 
     return None
 
+
+def write_boxdates(boxdates, saveloc, case, scenario):
+    
+    def filename(name):
+        return filename_template.format(case, scenario, name)
+        
+    datadir = config_setup.ensure_existence(
+        os.path.join(saveloc, 'boxdates'), make=True)
+    filename_template = os.path.join(datadir, '{}_{}_{}.csv')
+    
+    headerline = ['Box index', 'Box start', 'Box end']
+    datalines = np.zeros((len(boxdates), 3))
+    for index, boxdate in enumerate(boxdates):
+        box_index = index + 1
+        box_start = boxdate[0]
+        box_end = boxdate[1]
+        datalines[index, :] = [box_index, box_start, box_end]
+    
+    writecsv(filename('boxdates'), datalines, headerline)
+        
+    return None
+    
+    
+def write_boxes(boxes, saveloc, case, scenario):
+    # TODO: Complete box writing function
+    return None
 
 def bandgap(min_freq, max_freq, vardata):
     """Bandgap filter based on FFT/IFFT concatenation"""
@@ -886,13 +913,9 @@ def write_normdata(saveloc, case, scenario, headerline, datalines):
     return None
 
 
-def perform_normalisation(raw_tsdata, inputdata_raw, variables, saveloc, case,
+def perform_normalisation(headerline, timestamps,
+                          inputdata_raw, variables, saveloc, case,
                           scenario, method, scalingvalues):
-
-    # Header and time from main source file
-    headerline = np.genfromtxt(raw_tsdata, delimiter=',', dtype='string')[0, :]
-    time = np.genfromtxt(raw_tsdata, delimiter=',')[1:, 0]
-    time = time[:, np.newaxis]
 
     if method == 'standardise':
         inputdata_normalised = \
@@ -901,20 +924,21 @@ def perform_normalisation(raw_tsdata, inputdata_raw, variables, saveloc, case,
         inputdata_normalised = \
             skogestad_scale(inputdata_raw, variables, scalingvalues)
 
-    datalines = np.concatenate((time, inputdata_normalised), axis=1)
+    datalines = np.concatenate((timestamps, inputdata_normalised), axis=1)
 
     write_normdata(saveloc, case, scenario, headerline, datalines)
 
     return inputdata_normalised
 
 
-def normalise_data(raw_tsdata, inputdata_raw, variables,
+def normalise_data(headerline, timestamps, inputdata_raw, variables,
                    saveloc, case, scenario,
                    method, weight_methods, scalingvalues):
 
     if (method == 'standardise' or method == 'skogestad'):
         inputdata_normalised = \
-            perform_normalisation(raw_tsdata, inputdata_raw, variables,
+            perform_normalisation(headerline, timestamps,
+                                  inputdata_raw, variables,
                                   saveloc, case,
                                   scenario, method, scalingvalues)
     elif not method:
@@ -1008,7 +1032,7 @@ def read_header_values_datafile(location):
 
 
 def read_matrix(matrix_loc):
-    """This method a matrix scheme for a specific scenario.
+    """This method reads a matrix scheme for a specific scenario.
 
     Might need to pad matrix with zeros if it is non-square
     """

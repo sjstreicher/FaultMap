@@ -15,7 +15,6 @@ from transentropy import calc_infodynamics_te
 
 
 infodynamics_loc = "infodynamics.jar"
-normalise = False
 estimator = 'kraskov'
 
 add_parameters = {'test_significance': False,
@@ -28,11 +27,11 @@ add_parameters = {'test_significance': False,
 
 def tecalc_wrapper(causevardata, affectedvardata):
 
-    te_fwd = calc_infodynamics_te(infodynamics_loc, normalise, estimator,
+    te_fwd = calc_infodynamics_te(infodynamics_loc, estimator,
                                   causevardata.T, affectedvardata.T,
                                   **add_parameters)
 
-    te_bwd = calc_infodynamics_te(infodynamics_loc, normalise, estimator,
+    te_bwd = calc_infodynamics_te(infodynamics_loc, estimator,
                                   affectedvardata.T, causevardata.T,
                                   **add_parameters)
 
