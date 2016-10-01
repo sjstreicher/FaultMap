@@ -757,30 +757,31 @@ def fft_calculation(headerline, normalised_tsdata, variables, sampling_rate,
 
 
 def write_boxdates(boxdates, saveloc, case, scenario):
-    
+
     def filename(name):
         return filename_template.format(case, scenario, name)
-        
+
     datadir = config_setup.ensure_existence(
         os.path.join(saveloc, 'boxdates'), make=True)
     filename_template = os.path.join(datadir, '{}_{}_{}.csv')
-    
+
     headerline = ['Box index', 'Box start', 'Box end']
     datalines = np.zeros((len(boxdates), 3))
     for index, boxdate in enumerate(boxdates):
         box_index = index + 1
         box_start = boxdate[0]
-        box_end = boxdate[1]
+        box_end = boxdate[-1]
         datalines[index, :] = [box_index, box_start, box_end]
-    
+
     writecsv(filename('boxdates'), datalines, headerline)
-        
+
     return None
-    
-    
+
+
 def write_boxes(boxes, saveloc, case, scenario):
     # TODO: Complete box writing function
     return None
+
 
 def bandgap(min_freq, max_freq, vardata):
     """Bandgap filter based on FFT/IFFT concatenation"""
