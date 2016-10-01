@@ -1,5 +1,4 @@
-"""Performs various data processings support tasks called by the gaincalc
-module.
+"""Data processing support tasks.
 
 @author: St. Elmo Wilken, Simon Streicher
 
@@ -16,12 +15,14 @@ import numpy as np
 import pandas as pd
 import sklearn.preprocessing
 import tables as tb
+from numba import jit
 
 import config_setup
 import gaincalc
 import transentropy
 
 
+@jit
 def shuffle_data(input_data):
     """Returns a (seeded) randomly shuffled array of data.
     The data input needs to be a two-dimensional numpy array.
@@ -53,7 +54,7 @@ def getfolders(path):
 
     return folders
 
-
+@jit
 def gen_iaaft_surrogates(data, iterations):
     """Generates iAAFT surrogates
 
