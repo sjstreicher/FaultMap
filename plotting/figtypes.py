@@ -10,7 +10,7 @@ Graph types supported include:
 Time series plots
     Plots values of variables across time for specified variables
     of a single scenario
-    
+
 Scatter plot
     General scatter plot for plotting arbitrary data with no set formats.
 
@@ -59,9 +59,9 @@ yaxislabel = \
      u'directional_transfer_entropy_kernel':
          r'Directional transfer entropy (Kernel) (bits)',
      u'absolute_transfer_entropy_kraskov':
-         r'Absolute transfer entropy (Kraskov) (nats)',
+         r'Absolute transfer entropy (Kraskov) (bits)',
      u'directional_transfer_entropy_kraskov':
-         r'Directional transfer entropy (Kraskov) (nats)'}
+         r'Directional transfer entropy (Kraskov) (bits)'}
 
 linelabels = \
     {'cross_correlation': r'Correlation',
