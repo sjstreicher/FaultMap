@@ -5,11 +5,11 @@ Generates and plots test data.
 @author: Simon Streicher
 """
 
-import datagen
-
 import matplotlib.pyplot as plt
-import seaborn as sns
 import pandas as pd
+import seaborn as sns
+
+import datagen
 
 sns.set_style('darkgrid')
 

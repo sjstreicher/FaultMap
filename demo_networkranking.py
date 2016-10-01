@@ -1,8 +1,8 @@
+import numpy as np
+
 import networkgen
 from ranking import data_processing
-import numpy as np
 from ranking import noderank
-
 
 connections, gainmatrix, variables, testgraph = networkgen.fullconn_random()
 biasvector = np.ones(len(variables))

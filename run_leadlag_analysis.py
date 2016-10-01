@@ -5,14 +5,11 @@ Performs a lead/lag analysis on the full matrix provided.
 @author: Simon Streicher
 """
 
-
+import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-import matplotlib.pyplot as plt
-
 
 from transentropy import calc_infodynamics_te
-
 
 infodynamics_loc = "infodynamics.jar"
 normalise = False

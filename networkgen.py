@@ -10,9 +10,8 @@ import os
 import networkx as nx
 import numpy as np
 
-from ranking.data_processing import buildgraph
-
 from datagen import seed_randn
+from ranking.data_processing import buildgraph
 
 filesloc = json.load(open('config.json'))
 saveloc = os.path.expanduser(filesloc['saveloc'])
