@@ -1,9 +1,0 @@
-numpy
-scipy
-scikit-learn
-pandas
-matplotlib
-networkx
-control
-jpype
-h5py
