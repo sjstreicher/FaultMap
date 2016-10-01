@@ -4,13 +4,12 @@ used by the gaincalc module.
 
 """
 # Standard libraries
-import numpy as np
 import logging
-import time
 
-# Own libraries
-import transentropy
+import numpy as np
+
 import data_processing
+import transentropy
 
 
 class CorrWeightcalc(object):
