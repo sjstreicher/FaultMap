@@ -16,8 +16,12 @@ from ranking.gaincalc import weightcalc
 from ranking.data_processing import result_reconstruction
 from ranking.data_processing import trend_extraction
 from ranking.noderank import noderankcalc
+from ranking.graphreduce import reducegraph
 from plotting.plotter import plotdraw
 
+
+# TODO: Move to class object
+# TODO: Perform analysis on scenario level inside class object
 
 def run_weightcalc(configloc, writeoutput, mode, case):
     weightcalc_config = json.load(open(
@@ -69,6 +73,14 @@ def run_noderank(writeoutput, mode, case):
     return None
 
 
+def run_graphreduce(writeoutput, mode, case):
+
+    try:
+        reducegraph(mode, case, writeoutput)
+    except:
+        raise RuntimeError("Graph reduction failed for case: " + case)
+
+
 def run_plotting(writeoutput, mode, case):
 
     try:
@@ -98,5 +110,6 @@ if __name__ == '__main__':
         run_createarrays(writeoutput, mode, case)
         run_trendextraction(writeoutput, mode, case)
         run_noderank(writeoutput, mode, case)
+        run_graphreduce(writeoutput, mode, case)
         run_plotting(writeoutput, mode, case)
         logging.info("Done with case: " + case)
