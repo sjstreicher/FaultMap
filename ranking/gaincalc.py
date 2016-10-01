@@ -204,20 +204,20 @@ class WeightcalcData:
         
         # Perform normalisation
         # Retrieve scaling limits from file
-            if self.normalise == 'skogestad':
-                # Get scaling parameters
-                if 'scalelimits' in self.caseconfig[scenario]:
-                    scaling_loc = os.path.join(
-                        self.casedir, 'scalelimits',
-                        self.caseconfig[scenario]['scalelimits'])
-                    scalingvalues = \
-                        data_processing.read_scalelimits(scaling_loc)
-                else:
-                    raise NameError(
-                        "Scale limits reference missing from "
-                        "configuration file")
+        if self.normalise == 'skogestad':
+            # Get scaling parameters
+            if 'scalelimits' in self.caseconfig[scenario]:
+                scaling_loc = os.path.join(
+                    self.casedir, 'scalelimits',
+                    self.caseconfig[scenario]['scalelimits'])
+                scalingvalues = \
+                    data_processing.read_scalelimits(scaling_loc)
             else:
-                scalingvalues = None
+                raise NameError(
+                    "Scale limits reference missing from "
+                    "configuration file")
+        else:
+            scalingvalues = None
                 
         self.inputdata_normstep = data_processing.normalise_data(
             self.headerline, self.timestamps,
