@@ -15,7 +15,7 @@
 	"sub_sampling_interval": 1,
 	"sampling_unit": "seconds",
 	"testsize": 200,
-	"startindex": 0,
+	"startindex": 20,
 	"sigtest": true,
 	"allthresh": false,
 	"datagen_params": [
