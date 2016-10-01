@@ -225,7 +225,8 @@ class TransentWeightcalc(object):
             self.parameters = {}
 
         # Add kernel bandwidth to parameters
-        if self.kernel_bandwidth is not None:
+        if ((self.estimator == 'kernel') and
+                (weightcalcdata.kernel_bandwidth is not None)):
             self.parameters['kernel_bandwidth'] = \
                 weightcalcdata.kernel_bandwidth
 

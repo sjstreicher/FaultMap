@@ -34,9 +34,9 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
 
     causevar = weightcalcdata.variables[causevarindex]
 
-    print ("Start analysing causal variable: " + causevar +
-           " [" + str(causevarindex+1) + "/" +
-           str(len(weightcalcdata.causevarindexes)) + "]")
+    print("Start analysing causal variable: " + causevar +
+          " [" + str(causevarindex+1) + "/" +
+          str(len(weightcalcdata.causevarindexes)) + "]")
 
     directional_name = 'weights_directional'
     absolute_name = 'weights_absolute'
