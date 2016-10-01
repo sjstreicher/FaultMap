@@ -6,14 +6,11 @@ Performs weight calculation for all cases specified in the configuration file.
 
 """
 # Standard modules
-import logging
 import json
+import logging
+import multiprocessing
 import os
 
-# Modified modules
-import multiprocessing
-
-# Own modules
 import config_setup
 from ranking.gaincalc import weightcalc
 

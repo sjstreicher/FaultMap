@@ -3,11 +3,11 @@
 
 """
 
+import multiprocessing
 import unittest
 
-from ranking.gaincalc import weightcalc
 from ranking.data_processing import result_reconstruction
-import multiprocessing
+from ranking.gaincalc import weightcalc
 
 
 class TestWeightcalc(unittest.TestCase):

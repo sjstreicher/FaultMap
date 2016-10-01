@@ -4,8 +4,8 @@
 @author: Simon Streicher
 
 """
-import logging
 import json
+import logging
 import os
 
 import config_setup
