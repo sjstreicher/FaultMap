@@ -20,13 +20,11 @@ import os
 import networkx as nx
 import numpy as np
 
-# Own libraries
-import data_processing
 import config_setup
+import data_processing
 
 
 # Networks for tests
-import networkgen
 
 
 class NoderankData:

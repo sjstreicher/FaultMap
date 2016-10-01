@@ -18,11 +18,12 @@ case directory root.
 """
 
 # Library imports
-import numpy as np
-import networkx as nx
-import os
 import json
 import logging
+import os
+
+import networkx as nx
+import numpy as np
 
 import config_setup
 

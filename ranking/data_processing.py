@@ -5,24 +5,21 @@ module.
 
 """
 
-import numpy as np
-import tables as tb
-import networkx as nx
-import pandas as pd
 import csv
-import sklearn.preprocessing
-import os
-import matplotlib.pyplot as plt
 import json
 import logging
-#import time
+import os
 
+import matplotlib.pyplot as plt
+import networkx as nx
+import numpy as np
+import pandas as pd
+import sklearn.preprocessing
+import tables as tb
 
-# Own libraries
 import config_setup
-import transentropy
-
 import gaincalc
+import transentropy
 
 
 def shuffle_data(input_data):
@@ -1236,9 +1233,9 @@ def calc_signalent(vardata, weightcalcdata):
     """
 
     # Setup Java class for infodynamics toolkit
-    entropyCalc = \
-        transentropy.setup_infodynamics_entropy(weightcalcdata.infodynamicsloc,
-                                                weightcalcdata.normalise)
+    entropyCalc, estimator = \
+        transentropy.setup_infodynamics_entropy(weightcalcdata.infodynamicsloc)
 
-    entropy = transentropy.calc_infodynamics_entropy(entropyCalc, vardata)
+    entropy = transentropy.calc_infodynamics_entropy(
+        entropyCalc, vardata, estimator)
     return entropy

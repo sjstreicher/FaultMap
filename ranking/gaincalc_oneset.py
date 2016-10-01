@@ -8,11 +8,12 @@ process interruption tolerant up to a single causevar analysis.
 @author: Simon Streicher
 """
 
-import os
-import logging
-import numpy as np
 import csv
+import logging
+import os
 from functools import partial
+
+import numpy as np
 import pathos
 from pathos.multiprocessing import ProcessingPool as Pool
 
