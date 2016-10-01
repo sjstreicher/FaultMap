@@ -41,7 +41,7 @@ from gaincalculators import (PartialCorrWeightcalc, CorrWeightcalc,
 import datagen
 
 
-class WeightcalcData:
+class WeightcalcData(object):
     """Creates a data object from files or functions for use in
     weight calculation methods.
 

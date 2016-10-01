@@ -550,7 +550,7 @@ def result_reconstruction(mode, case, writeoutput):
 
     """
 
-    saveloc, caseconfigdir, casedir, _ = config_setup.runsetup(mode, case)
+    saveloc, caseconfigdir, _, _ = config_setup.runsetup(mode, case)
 
     caseconfig = json.load(
         open(os.path.join(caseconfigdir, case + '_weightcalc' + '.json')))
