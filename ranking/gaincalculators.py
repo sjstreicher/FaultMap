@@ -142,7 +142,7 @@ class PartialCorrWeightcalc(CorrWeightcalc):
         complete dataset.
 
         It is important to note that this function differs from the others
-        in the sense that it requires the full dataset to be known.
+        in the sense that it requires the full dataset in order to execute.
 
         """
 
@@ -217,8 +217,17 @@ class TransentWeightcalc(object):
 
         if self.estimator == 'kraskov':
             self.parameters = weightcalcdata.additional_parameters
-        else:
+
+        # Test if parameters dictionary exists
+        try:
+            self.parameters.keys()
+        except:
             self.parameters = {}
+
+        # Add kernel bandwidth to parameters
+        if self.kernel_bandwidth is not None:
+            self.parameters['kernel_bandwidth'] = \
+                weightcalcdata.kernel_bandwidth
 
     def calcweight(self, causevardata, affectedvardata, weightcalcdata,
                    causevarindex, affectedvarindex):
@@ -315,8 +324,6 @@ class TransentWeightcalc(object):
         if weightcalcdata.sigtest:
             self.te_thresh_method = weightcalcdata.te_thresh_method
             self.te_surr_method = weightcalcdata.te_surr_method
-            # logging.info("Starting directional/absolute threshold calculation")
-            # start_time = time.clock()
             # Calculate threshold for transfer entropy
             thresh_causevardata = \
                 inputdata[:, causevarindex][startindex:startindex+size]
@@ -344,24 +351,17 @@ class TransentWeightcalc(object):
                         thresh_affectedvardata_directional.T,
                         thresh_causevardata.T)
 
-            # end_time = time.clock()
-            # logging.info("Time to calculate threshold: " +
-            #              str(end_time - start_time))
             logging.info("The directional TE threshold is: " +
                          str(threshent_directional))
-            
 
             if maxval_directional >= threshent_directional \
                     and maxval_directional >= 0:
                 threshpass_directional = True
             else:
                 threshpass_directional = False
-#                maxval_directional = 0
 
             if not delay_index_directional == delay_index_absolute:
                 # Need to do own calculation of absolute significance
-                # logging.info("Starting absolute threshold calculation")
-                # start_time = time.clock()
                 if self.te_thresh_method == 'rankorder':
                     _, threshent_absolute = \
                         self.thresh_rankorder(
@@ -372,11 +372,7 @@ class TransentWeightcalc(object):
                         self.thresh_sixsigma(
                             thresh_affectedvardata_absolute.T,
                             thresh_causevardata.T)
-            
-                # end_time = time.clock()
-                # logging.info("Time to calculate absolute threshold: " +
-                #              str(end_time - start_time))
-               
+
             logging.info("The absolute TE threshold is: " +
                          str(threshent_absolute))
 
@@ -385,13 +381,10 @@ class TransentWeightcalc(object):
                 threshpass_absolute = True
             else:
                 threshpass_absolute = False
-#                maxval_absolute = 0
 
         elif not weightcalcdata.sigtest:
             threshent_directional = None
             threshent_absolute = None
-
-#        weight_array[affectedvarindex, causevarindex] = maxval_directional
 
         dataline_directional = \
             [causevar, affectedvar, str(weightlist_directional[0]),

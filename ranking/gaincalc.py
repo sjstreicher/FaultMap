@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """This module calculates the gains (weights) of edges connecting
 variables in the digraph.
 
@@ -52,8 +53,8 @@ class WeightcalcData:
         ----------
         mode : str
             Either 'tests' or 'cases'. Tests data are generated dynamically and
-            stored in specified folders. Case data are read from file and stored
-            under organized headings in the saveloc directory specified
+            stored in specified folders. Case data are read from file and
+            stored under organized headings in the saveloc directory specified
             in config.json.
         case : str
             The name of the case that is to be run. Points to dictionary in
@@ -65,7 +66,8 @@ class WeightcalcData:
             calculated.
         do_multiprocessing : bool
             Indicates whether the weight calculation operations should run in
-            parallel processing mode where all available CPU cores are utilized.
+            parallel processing mode where all available CPU cores
+            are utilized.
 
         """
         # Get file locations from configuration file
@@ -149,10 +151,18 @@ class WeightcalcData:
         else:
             self.startindex = 0
 
-        # Get any parameters for Kraskov method
+        # Get parameters for Kraskov method
         if 'transfer_entropy_kraskov' in self.methods:
             self.additional_parameters = \
                 self.caseconfig[settings_name]['additional_parameters']
+
+        # Get parameters for kernel method
+        if 'transfer_entropy_kernel' in self.methods:
+            if 'kernel_width' in self.caseconfig[settings_name]:
+                self.kernel_width = \
+                    self.caseconfig[settings_name]['kernel_width']
+            else:
+                self.kernel_width = None
 
         if self.datatype == 'file':
             # Get path to time series data input file in standard format
@@ -185,15 +195,15 @@ class WeightcalcData:
             raw_tsdata_gen = self.caseconfig[scenario]['datagen']
             if self.connections_used:
                 connectionloc = self.caseconfig[scenario]['connections']
+                # Get the variables and connection matrix
+                self.variables, self.connectionmatrix = \
+                    eval('datagen.' + connectionloc)()
             # TODO: Store function arguments in scenario config file
             params = self.caseconfig[settings_name]['datagen_params']
             # Get inputdata
             self.inputdata_raw = \
                 eval('datagen.' + raw_tsdata_gen)(params)
             self.inputdata_raw = np.asarray(self.inputdata_raw)
-            # Get the variables and connection matrix
-            self.variables, self.connectionmatrix = \
-                eval('datagen.' + connectionloc)()
 
             self.timestamps = np.arange(0, len(
                 self.inputdata_raw[:, 0]) * self.sampling_rate,
@@ -201,7 +211,7 @@ class WeightcalcData:
 
             self.headerline = ['Time']
             [self.headerline.append(variable) for variable in self.variables]
-        
+
         # Perform normalisation
         # Retrieve scaling limits from file
         if self.normalise == 'skogestad':
@@ -218,7 +228,7 @@ class WeightcalcData:
                     "configuration file")
         else:
             scalingvalues = None
-                
+
         self.inputdata_normstep = data_processing.normalise_data(
             self.headerline, self.timestamps,
             self.inputdata_raw, self.variables,
@@ -240,7 +250,7 @@ class WeightcalcData:
             self.bidirectional_delays = \
                 self.caseconfig[scenario]['bidirectional_delays']
         else:
-            self.bidirectional_delays = False
+            self.bidirectional_delays = True
         if self.bidirectional_delays is True:
             delay_range = range(-test_delays, test_delays + 1)
         else:
@@ -257,15 +267,24 @@ class WeightcalcData:
             self.delays = [(val * self.delayinterval)
                            for val in delay_range]
 
-        self.causevarindexes = self.caseconfig[scenario]['causevarindexes']
+        if 'causevarindexes' in self.caseconfig[scenario]:
+            self.causevarindexes = self.caseconfig[scenario]['causevarindexes']
+        else:
+            self.causevarindexes = 'all'
         if self.causevarindexes == 'all':
             self.causevarindexes = range(len(self.variables))
-        self.affectedvarindexes = \
-            self.caseconfig[scenario]['affectedvarindexes']
+        if 'affectedvarindexes' in self.caseconfig[scenario]:
+            self.affectedvarindexes = \
+                self.caseconfig[scenario]['affectedvarindexes']
+        else:
+            self.affectedvarindexes = 'all'
         if self.affectedvarindexes == 'all':
             self.affectedvarindexes = range(len(self.variables))
 
-        bandgap_filtering = self.caseconfig[scenario]['bandgap_filtering']
+        if 'bandgap_filtering' in self.caseconfig[scenario]:
+            bandgap_filtering = self.caseconfig[scenario]['bandgap_filtering']
+        else:
+            bandgap_filtering = False
         if bandgap_filtering:
             low_freq = self.caseconfig[scenario]['low_freq']
             high_freq = self.caseconfig[scenario]['high_freq']
@@ -300,21 +319,21 @@ class WeightcalcData:
             # This box should now return the same size
             # as the original data file - but it does not play a role at all
             # in the actual box determination for the case of boxnum = 1
-        
+
         # Get box start and end dates
         self.boxdates = data_processing.split_tsdata(
             self.timestamps, self.sampling_rate * self.sub_sampling_interval,
             self.boxsize, self.boxnum)
         data_processing.write_boxdates(self.boxdates, self.saveloc,
                                        self.casename, scenario)
-            
+
         # Generate boxes to use
         self.boxes = data_processing.split_tsdata(
             self.inputdata, self.sampling_rate * self.sub_sampling_interval,
             self.boxsize, self.boxnum)
         data_processing.write_boxes(self.boxes, self.saveloc,
                                     self.casename, scenario)
-        
+
         # Select which of the boxes to evaluate
         if self.transient:
             if 'boxindexes' in self.caseconfig[scenario]:
@@ -325,7 +344,7 @@ class WeightcalcData:
                 self.boxindexes = range(self.boxnum)
         else:
             self.boxindexes = [0]
-        
+
         # Calculate delays in indexes as well as time units
         if self.delaytype == 'datapoints':
             self.actual_delays = [(delay * self.sampling_rate *
@@ -378,8 +397,6 @@ def calc_weights(weightcalcdata, method, scenario, writeoutput):
     TODO: Fix partial correlation method to make use of time delays
 
     """
-    # TODO: Allow for calculation of significance values at each data point
-    # and storing in files similar to weight calculations
 
     if method == 'cross_correlation':
         weightcalculator = CorrWeightcalc(weightcalcdata)
@@ -536,9 +553,9 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False,
     ----------
         mode : str
             Either 'tests' or 'cases'. Tests data are generated dynamically and
-            stored in specified folders. Case data are read from file and stored
-            under organized headings in the saveloc directory specified
-            in config.json.
+            stored in specified folders. Case data are read from file
+            and stored under organized headings in the saveloc directory
+            specified in config.json.
         case : str
             The name of the case that is to be run. Points to dictionary in
             either test or case config files.
@@ -549,13 +566,13 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False,
             calculated.
         do_multiprocessing : bool
             Indicates whether the weight calculation operations should run in
-            parallel processing mode where all available CPU cores are utilized.
-
+            parallel processing mode where all available CPU cores
+            are utilized.
 
     Notes
     -----
-        Supports calculating weights according to either correlation or transfer
-        entropy metrics.
+        Supports calculating weights according to either correlation or
+        transfer entropy metrics.
 
     """
 
