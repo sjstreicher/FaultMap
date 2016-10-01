@@ -7,6 +7,7 @@ Created on Mon Feb 24 15:18:33 2014
 @author: Simon Streicher
 """
 import jpype
+import numpy as np
 
 
 def setup_infodynamics_te(infodynamicsloc, calcmethod, **parameters):
@@ -147,6 +148,8 @@ def setup_infodynamics_te(infodynamicsloc, calcmethod, **parameters):
 #        sourceHistoryEmbeddingLength = None  # not used at the moment
         teCalc = teCalcClass(base, destHistoryEmbedLength)
         teCalc.initialise()
+    else:
+        raise NameError("Transfer entropy method name not recognized")
 
     return teCalc
 
@@ -192,6 +195,16 @@ def calc_infodynamics_te(infodynamicsloc, calcmethod,
         teCalc.setObservations(sourceArrayJava, destArrayJava)
 
     transentropy = teCalc.computeAverageLocalOfObservations()
+    
+    # Convert nats to bits if necessary
+    if calcmethod == 'kraskov':
+        transentropy = transentropy / np.log(2.)
+    elif calcmethod == 'kernel':
+        transentropy = transentropy
+    elif calcmethod == 'discrete':
+        transentropy = transentropy
+    else:
+        raise NameError("Transfer entropy method name not recognized")
 
     if test_significance:
         significance = teCalc.computeSignificance(significance_permutations)
@@ -213,8 +226,8 @@ def calc_infodynamics_te(infodynamicsloc, calcmethod,
     return transentropy, [significance, properties]
 
 
-def setup_infodynamics_entropy(infodynamicsloc,
-                               estimator='kernel', kernel_bandwidth=0.10):
+def setup_infodynamics_entropy(infodynamicsloc, estimator='kernel',
+                               kernel_bandwidth=0.10, mult=False):
     """Prepares the entropyCalc class of the Java Infodyamics Toolkit (JIDK)
     in order to calculate differential entropy (continuous signals) according
     to the estimation method specified.
@@ -223,9 +236,6 @@ def setup_infodynamics_entropy(infodynamicsloc,
     ----------
         infodynamicsloc : path
             Location of infodynamics.jar
-        normalise : bool
-           Whether the data should be normalised by the JIDT calculator.
-           Changes the definition of bandwidth parameters in some cases.
          estimator : string, default='kernel'
             Either 'kernel' or 'gaussian'. Specifies the estimator to use in
             determining the required probability density functions.
@@ -233,13 +243,15 @@ def setup_infodynamics_entropy(infodynamicsloc,
             The width of the kernels for the kernel method. If normalisation
             is performed, these are in terms of standard deviation, otherwise
             absolute.
+        mult : bool, default=False
+            Indicates whether the entropy is to be calculated on a univariate
+            or multivariate signal.
     
     Returns
     -------
         entropyCalc : EntropyCalculator JIDT object
 
-    """
-    
+    """   
     if not jpype.isJVMStarted():
         jpype.startJVM(jpype.getDefaultJVMPath(),
                        "-Xms32M",
@@ -248,93 +260,40 @@ def setup_infodynamics_entropy(infodynamicsloc,
                        "-Djava.class.path=" + infodynamicsloc)
 
     if estimator == 'kernel':
-        entropyCalcClass = \
-            jpype.JPackage("infodynamics.measures.continuous.kernel") \
-            .EntropyCalculatorKernel
+        if mult:
+            entropyCalcClass = \
+                jpype.JPackage("infodynamics.measures.continuous.kernel") \
+                .EntropyCalculatorMultiVariateKernel
+        else:
+            entropyCalcClass = \
+                jpype.JPackage("infodynamics.measures.continuous.kernel") \
+                .EntropyCalculatorKernel
+            
         entropyCalc = entropyCalcClass()
-        entropyCalc.initialise(kernel_bandwidth)
-        
+        entropyCalc.initialise(kernel_bandwidth)    
         # Normalisation is performed before this step, set property to false to
         # prevent accidental data standardisation
         entropyCalc.setProperty("NORMALISE", "false")
             
     elif estimator == 'gaussian':
-        entropyCalcClass = \
-            jpype.JPackage("infodynamics.measures.continuous.gaussian") \
-            .EntropyCalculatorGaussian
-        entropyCalc = entropyCalcClass()
-        entropyCalc.initialise()
-        
-
-#    entropyCalcClass = None
-#    del entropyCalcClass
-#    jpype.java.lang.System.gc()
-
-    return entropyCalc
-
-
-def setup_infodynamics_entropy_mult(
-    infodynamicsloc, estimator='kernel', kernel_bandwidth=0.10):
-    """Prepares the entropyCalc class of the Java Infodyamics Toolkit (JIDK)
-    in order to calculate differential entropy (continuous signals) according
-    to the estimation method specified.
-    
-    Parameters
-    ----------
-        infodynamicsloc : path
-            Location of infodynamics.jar
-        normalise : bool
-           Whether the data should be normalised by the JIDT calculator.
-           Changes the definition of bandwidth parameters in some cases.
-         estimator : string, default='kernel'
-            Either 'kernel' or 'gaussian'. Specifies the estimator to use in
-            determining the required probability density functions.
-        kernel_bandwidth : float
-            The width of the kernels for the kernel method. If normalisation
-            is performed, these are in terms of standard deviation, otherwise
-            absolute.
-    
-    Returns
-    -------
-        entropyCalc : EntropyCalculator JIDT object
-
-    """
-    
-    if not jpype.isJVMStarted():
-        jpype.startJVM(jpype.getDefaultJVMPath(),
-                       "-Xms32M",
-                       "-Xmx512M",
-                       "-ea",
-                       "-Djava.class.path=" + infodynamicsloc)
-
-    if estimator == 'kernel':
-        entropyCalcClass = \
-            jpype.JPackage("infodynamics.measures.continuous.kernel") \
-            .EntropyCalculatorMultiVariateKernel
-        entropyCalc = entropyCalcClass()
-        entropyCalc.initialise(kernel_bandwidth)
-        # Normalisation is performed before this step, set property to false to
-        # prevent accidental data standardisation
-        entropyCalc.setProperty("NORMALISE", "false")
-
+        if mult:
+            entropyCalcClass = \
+                jpype.JPackage("infodynamics.measures.continuous.gaussian") \
+                .EntropyCalculatorMultiVariateGaussian
+        else:
+            entropyCalcClass = \
+                jpype.JPackage("infodynamics.measures.continuous.gaussian") \
+                .EntropyCalculatorGaussian
             
-    elif estimator == 'gaussian':
-        entropyCalcClass = \
-            jpype.JPackage("infodynamics.measures.continuous.gaussian") \
-            .EntropyCalculatorGaussian
         entropyCalc = entropyCalcClass()
         entropyCalc.initialise()
-        
+    else:
+        raise NameError("Estimator not recognized")
 
-#    entropyCalcClass = None
-#    del entropyCalcClass
-#    jpype.java.lang.System.gc()
-
-    return entropyCalc
-    
+    return entropyCalc, estimator   
     
 
-def calc_infodynamics_entropy(entropyCalc, data):
+def calc_infodynamics_entropy(entropyCalc, data, estimator):
     """Estimates the entropy of a single signal.
     
     Parameters
@@ -361,5 +320,13 @@ def calc_infodynamics_entropy(entropyCalc, data):
     dataArrayJava = jpype.JArray(jpype.JDouble, 1)(dataArray)
     entropyCalc.setObservations(dataArrayJava)
     entropy = entropyCalc.computeAverageLocalOfObservations()
+    if estimator == 'gaussian':
+        # Convert nats to bits
+        entropy = entropy / np.log(2.)
+    elif estimator == 'kernel':
+        # Do nothing
+        entropy = entropy
+    else:
+        raise NameError("Estimator not recognized")
 
     return entropy
