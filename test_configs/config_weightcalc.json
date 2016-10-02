@@ -1,0 +1,10 @@
+{
+  "mode": "tests",
+  "writeoutput": true,
+  "calc_single_entropies": true,
+  "fft_calc": true,
+  "multiprocessing": false,
+  "cases": [
+    "fulldemo"
+  ]
+}

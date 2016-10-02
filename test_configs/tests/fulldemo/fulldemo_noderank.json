@@ -1,0 +1,21 @@
+{
+  "datatype": "file",
+  "sampling_rate": 1,
+  "weight_methods": [
+    "cross_correlation",
+    "transfer_entropy_kernel",
+    "transfer_entropy_kraskov"
+  ],
+  "rank_methods": [
+    "eigenvector"
+  ],
+  "scenarios": [
+    "autoreg_2x2",
+    "random_2x2"
+  ],
+  "autoreg_2x2": {
+  },
+  "random_2x2": {
+    "m": 0.9
+  }
+}
