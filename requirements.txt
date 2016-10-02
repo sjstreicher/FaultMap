@@ -16,3 +16,4 @@ pandas
 jpype1
 pathos
 numba
+coverage
