@@ -44,6 +44,10 @@ def run_weightcalc(configloc, writeoutput, mode, case):
 def run_createarrays(writeoutput, mode, case):
 
     try:
+        # Needs to execute twice for nosigtest cases if derived from
+        # sigtest cases.
+        # TODO: Remove this requirement
+        result_reconstruction(mode, case, writeoutput)
         result_reconstruction(mode, case, writeoutput)
     except:
         raise RuntimeError("Array creation failed for case: " + case)
