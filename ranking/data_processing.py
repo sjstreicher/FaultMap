@@ -686,7 +686,7 @@ def change_dirtype(datadir, oldtype, newtype):
         datadir = os.path.join(datadir, pathpart)
 
     return datadir
-
+    
 
 def fft_calculation(headerline, normalised_tsdata, variables, sampling_rate,
                     sampling_unit, saveloc, case, scenario,
@@ -913,9 +913,9 @@ def write_normdata(saveloc, case, scenario, headerline, datalines):
     return None
 
 
-def perform_normalisation(headerline, timestamps,
-                          inputdata_raw, variables, saveloc, case,
-                          scenario, method, scalingvalues):
+def normalise_data(headerline, timestamps, inputdata_raw, variables,
+                   saveloc, case, scenario,
+                   method, weight_methods, scalingvalues):
 
     if method == 'standardise':
         inputdata_normalised = \
@@ -923,27 +923,6 @@ def perform_normalisation(headerline, timestamps,
     elif method == 'skogestad':
         inputdata_normalised = \
             skogestad_scale(inputdata_raw, variables, scalingvalues)
-    else:
-        raise NameError("Normalisation method not recognized")
-
-    datalines = np.concatenate((timestamps[:, np.newaxis],
-                                inputdata_normalised), axis=1)
-
-    write_normdata(saveloc, case, scenario, headerline, datalines)
-
-    return inputdata_normalised
-
-
-def normalise_data(headerline, timestamps, inputdata_raw, variables,
-                   saveloc, case, scenario,
-                   method, weight_methods, scalingvalues):
-
-    if (method == 'standardise' or method == 'skogestad'):
-        inputdata_normalised = \
-            perform_normalisation(headerline, timestamps,
-                                  inputdata_raw, variables,
-                                  saveloc, case,
-                                  scenario, method, scalingvalues)
     elif not method:
         # If method is simply false
         # Still norm centre the data
@@ -954,6 +933,11 @@ def normalise_data(headerline, timestamps, inputdata_raw, variables,
             inputdata_normalised = inputdata_raw
     else:
         raise NameError("Normalisation method not recognized")
+    
+    datalines = np.concatenate((timestamps[:, np.newaxis],
+                                inputdata_normalised), axis=1)
+
+    write_normdata(saveloc, case, scenario, headerline, datalines)
 
     return inputdata_normalised
 
