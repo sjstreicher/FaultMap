@@ -32,6 +32,6 @@ install:
 # command to run tests, e.g. python setup.py test
 script:
   # run tests
-  - nosetests -v -w $TRAVIS_BUILD_DIR
+  - nosetests -v -w $TRAVIS_BUILD_DIR --with-coverage --cover-erase --cover-package=ranking
 after_success:
   - coveralls
