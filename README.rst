@@ -38,7 +38,7 @@ Installation
     conda create --name faultmap python=2
     source activate faultmap
     cd ~/repos/FaultMap
-    conda install -f conda_requirements.txt
+    conda install --file conda_requirements.txt
     pip install -r requirements.txt
     nosetests
 
