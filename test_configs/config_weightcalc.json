@@ -5,6 +5,6 @@
   "fft_calc": true,
   "multiprocessing": false,
   "cases": [
-    "fulldemo"
+    "quickdemo"
   ]
 }

@@ -2,6 +2,6 @@
   "mode": "tests",
   "writeoutput": true,
   "cases": [
-    "fulldemo"
+    "quickdemo"
    ]
 }

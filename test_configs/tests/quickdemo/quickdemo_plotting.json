@@ -6,8 +6,7 @@
   "2x2_timeseries": {
     "plot_type": "fig_timeseries",
 	"scenarios": [
-      "autoreg_2x2",
-      "random_2x2"
+      "autoreg_2x2"
 	],
     "weight_methods": [
       "cross_correlation",
@@ -28,8 +27,7 @@
   "2x2_fft": {
     "plot_type": "fig_fft",
 	"scenarios": [
-      "autoreg_2x2",
-      "random_2x2"
+      "autoreg_2x2"
 	],
     "weight_methods": [
       "cross_correlation",
@@ -52,8 +50,7 @@
   "2x2_values_vs_delays": {
     "plot_type": "fig_values_vs_delays",
 	"scenarios": [
-      "autoreg_2x2",
-      "random_2x2"
+      "autoreg_2x2"
 	],
     "weight_methods": [
       "cross_correlation",
@@ -76,8 +73,7 @@
   "2x2_values_vs_boxes": {
     "plot_type": "fig_values_vs_boxes",
 	"scenarios": [
-    "autoreg_2x2",
-    "random_2x2"
+    "autoreg_2x2"
 	],
     "weight_methods": [
       "cross_correlation",

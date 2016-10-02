@@ -1,8 +1,7 @@
 {
   "datatype": "file",
   "scenarios": [
-    "autoreg_2x2",
-    "random_2x2"
+    "autoreg_2x2"
   ],
   "autoreg_2x2": {
     "graph": "graph_eigenvector",
