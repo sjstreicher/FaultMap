@@ -34,11 +34,10 @@ import numpy as np
 
 import config_setup
 import data_processing
+import datagen
 import gaincalc_oneset
 from gaincalculators import (PartialCorrWeightcalc, CorrWeightcalc,
                              TransentWeightcalc)
-
-import datagen
 
 
 class WeightcalcData:
@@ -197,14 +196,14 @@ class WeightcalcData:
                 connectionloc = self.caseconfig[scenario]['connections']
                 # Get the variables and connection matrix
                 self.variables, self.connectionmatrix = \
-                    eval('datagen.' + connectionloc)()
+                    getattr(datagen, connectionloc)()
             # TODO: Store function arguments in scenario config file
             params = self.caseconfig[settings_name]['datagen_params']
             # Get inputdata
             self.inputdata_raw = \
-                eval('datagen.' + raw_tsdata_gen)(params)
+                getattr(datagen, raw_tsdata_gen)(params)
             self.inputdata_raw = np.asarray(self.inputdata_raw)
-
+            
             self.timestamps = np.arange(0, len(
                 self.inputdata_raw[:, 0]) * self.sampling_rate,
                 self.sampling_rate)
