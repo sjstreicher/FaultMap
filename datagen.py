@@ -62,7 +62,7 @@ def autoreg_gen(params):
     seeds = iter(seed_list)
     cause = seed_randn(seeds.next(), samples + delay)
     affected = np.zeros_like(cause)
-    # Very close covariance occassionally breaks the kde estimator
+    # Very close covariance occasionally breaks the kde estimator
     # Another small random element is added to take care of this
     # This is not expected to be a problem on any "real" data
 
