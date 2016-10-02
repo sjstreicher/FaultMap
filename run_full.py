@@ -88,11 +88,9 @@ def run_plotting(writeoutput, mode, case):
 
     return None
 
-if __name__ == '__main__':
-    multiprocessing.freeze_support()
-    logging.basicConfig(level=logging.INFO)
 
-    _, configloc, _, _ = config_setup.get_locations()
+def run_all(mode):
+    _, configloc, _, _ = config_setup.get_locations(mode)
     fullrun_config = json.load(open(
         os.path.join(configloc, 'config_full' + '.json')))
 
@@ -111,3 +109,10 @@ if __name__ == '__main__':
         run_graphreduce(writeoutput, mode, case)
         run_plotting(writeoutput, mode, case)
         logging.info("Done with case: " + case)
+
+
+if __name__ == '__main__':
+    multiprocessing.freeze_support()
+    logging.basicConfig(level=logging.INFO)
+
+    run_all(mode='cases')

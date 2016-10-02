@@ -6,27 +6,13 @@
 import multiprocessing
 import unittest
 
-from ranking.gaincalc import weightcalc
-from ranking.data_processing import result_reconstruction
-from ranking.data_processing import trend_extraction
-from ranking.noderank import noderankcalc
-from ranking.graphreduce import reducegraph
-from plotting.plotter import plotdraw
+from run_full import run_all
 
 
 class TestFullDemo(unittest.TestCase):
 
-    def setUp(self):
-        self.mode = 'tests'
-        self.case = 'quickdemo'
-
     def test_full_analysis(self):
-        weightcalc(self.mode, self.case, True, False, False, False)
-        result_reconstruction(self.mode, self.case, True)
-        trend_extraction(self.mode, self.case, True)
-        noderankcalc(self.mode, self.case, True)
-        reducegraph(self.mode, self.case, True)
-        plotdraw(self.mode, self.case, True)
+        run_all('tests')
 
 
 #class TestWeightCalculation(unittest.TestCase):
