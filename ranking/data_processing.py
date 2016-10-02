@@ -331,8 +331,7 @@ def create_arrays(datadir, variables):
 
 
 def create_signtested_directionalarrays(datadir, writeoutput):
-    """
-    Checks whether the directional weight arrays have corresponding
+    """Checks whether the directional weight arrays have corresponding
     absolute positive entries, writes another version with zeros if
     absolutes are negative.
 

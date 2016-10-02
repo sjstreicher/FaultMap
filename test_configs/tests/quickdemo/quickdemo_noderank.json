@@ -10,8 +10,7 @@
     "eigenvector"
   ],
   "scenarios": [
-    "autoreg_2x2",
-    "random_2x2"
+    "autoreg_2x2"
   ],
   "autoreg_2x2": {
     "m": 0.9

@@ -44,8 +44,8 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
                 self.delay, timelag, self.samples, self.sub_samples)
 
             # Normalize data
-            # Not explicitly required as this is done by infodynamics package if
-            # setProperty("NORMALISE", "true" is called), but good practice
+            # Not explicitly required as this is done by infodynamics package
+            # if setProperty("NORMALISE", "true" is called), but good practice
             # for general example.
 
             x_hist_norm = preprocessing.scale(x_hist, axis=1)
