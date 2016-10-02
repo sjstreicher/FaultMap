@@ -45,7 +45,7 @@ def run_createarrays(writeoutput, mode, case):
 
     try:
         # Needs to execute twice for nosigtest cases if derived from
-        # sigtest cases.
+        # sigtest cases
         # TODO: Remove this requirement
         result_reconstruction(mode, case, writeoutput)
         result_reconstruction(mode, case, writeoutput)
