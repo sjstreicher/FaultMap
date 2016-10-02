@@ -780,11 +780,6 @@ def write_boxdates(boxdates, saveloc, case, scenario):
     return None
 
 
-def write_boxes(boxes, saveloc, case, scenario):
-    # TODO: Complete box writing function
-    return None
-
-
 def bandgap(min_freq, max_freq, vardata):
     """Bandgap filter based on FFT/IFFT concatenation"""
     # TODO: Add buffer values in order to prevent ringing
@@ -884,16 +879,6 @@ def skogestad_scale(data_raw, variables, scalingvalues):
             (data_raw[:, index] - nominalval) / factor
 
     return data_skogestadscaled
-
-
-def descriptive_dictionary(descriptive_file):
-    """Converts the description CSV file to a dictionary."""
-    descriptive_array = np.genfromtxt(descriptive_file, delimiter=',',
-                                      dtype='string')
-    tag_names = descriptive_array[1:, 0]
-    tag_descriptions = descriptive_array[1:, 1]
-    description_dict = dict(zip(tag_names, tag_descriptions))
-    return description_dict
 
 
 def write_normdata(saveloc, case, scenario, headerline, datalines):
@@ -1077,11 +1062,6 @@ def write_dictionary(filename, dictionary):
         json.dump(dictionary, f)
 
 
-def read_dictionary(filename):
-    with open(filename, 'rb') as f:
-        return json.load(f)
-
-
 def rankbackward(variables, gainmatrix, connections, biasvector,
                  dummyweight, dummycreation):
     """This method adds a unit gain node to all nodes with an out-degree
@@ -1142,79 +1122,6 @@ def split_tsdata(inputdata, samplerate, boxsize, boxnum):
                            int(boxsizesamples)]
                  for i in range(int(boxnum))]
     return boxes
-
-
-def ewma_weights_benchmark(weights, alpha_rate):
-    """Calculates an exponential moving average of weights
-    for different boxes to use as a benchmark.
-
-    weights is a list of weights for different boxes
-
-    """
-    benchmark_weights = np.zeros_like(weights)
-
-    for index, weight in enumerate(weights):
-        if index == 0:
-            benchmark_weights[index] = weights[index]
-        else:
-            benchmark_weights[index] = \
-                (alpha_rate * benchmark_weights[index-1]) + \
-                ((1-alpha_rate) * weight)
-
-    return benchmark_weights
-
-
-def vectorselection(data, timelag, sub_samples, k=1, l=1):
-    """Generates sets of vectors from tags time series data
-    for calculating transfer entropy.
-
-    For notation references see Shu2013.
-
-    Takes into account the time lag (number of samples between vectors of the
-    same variable).
-
-    In this application the prediction horizon (h) is set to equal
-    to the time lag.
-
-    The first vector in the data array should be the samples of the variable
-    to be predicted (x) while the second vector should be sampled of the vector
-    used to make the prediction (y).
-
-    sub_samples is the amount of samples in the dataset used to calculate the
-    transfer entropy between two vectors and must satisfy
-    sub_samples <= samples
-
-    The required number of samples is extracted from the end of the vector.
-    If the vector is longer than the number of samples specified plus the
-    desired time lag then the remained of the data will be discarded.
-
-    k refers to the dimension of the historical data to be predicted (x)
-
-    l refers to the dimension of the historical data used
-    to do the prediction (y)
-
-    """
-    _, sample_n = data.shape
-    x_pred = data[0, sample_n-sub_samples:]
-    x_pred = x_pred[np.newaxis, :]
-
-    x_hist = np.zeros((k, sub_samples))
-    y_hist = np.zeros((l, sub_samples))
-
-    for n in range(1, k+1):
-        # Original form according to Bauer (2007)
-        # TODO: Provide for comparison
-        # Modified form according to Shu & Zhao (2013)
-        startindex = (sample_n - sub_samples) - timelag*(n - 1) - 1
-        endindex = sample_n - timelag*(n - 1) - 1
-        x_hist[n-1, :] = data[1, startindex:endindex]
-    for m in range(1, l+1):
-        startindex = (sample_n - sub_samples) - timelag*m - 1
-        endindex = sample_n - timelag*m - 1
-        y_hist[m-1:, :] = data[0, startindex:endindex]
-
-    return x_pred, x_hist, y_hist
-
 
 def calc_signalent(vardata, weightcalcdata):
     """Calculates single signal differential entropies
