@@ -330,8 +330,6 @@ class WeightcalcData:
         self.boxes = data_processing.split_tsdata(
             self.inputdata, self.sampling_rate * self.sub_sampling_interval,
             self.boxsize, self.boxnum)
-        data_processing.write_boxes(self.boxes, self.saveloc,
-                                    self.casename, scenario)
 
         # Select which of the boxes to evaluate
         if self.transient:
