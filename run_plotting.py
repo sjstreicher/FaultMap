@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-@author: Simon Streicher
-
-This module is used to generate various plots as specified in the
-plotting configuration file.
+"""Generates various plots as specified in the plotting configuration file.
 
 """
 
@@ -15,7 +11,7 @@ import config_setup
 from plotting.plotter import plotdraw
 
 logging.basicConfig(level=logging.INFO)
-dataloc, configloc, _ = config_setup.get_locations()
+dataloc, configloc, _, _ = config_setup.get_locations()
 
 plotting_config = json.load(open(
     os.path.join(configloc, 'config_plotting' + '.json')))

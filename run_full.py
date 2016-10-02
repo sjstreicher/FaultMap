@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
-@author: Simon Streicher
-
-Performs all analysis steps for all cases specified in the configuration file.
+"""Performs all analysis steps for all cases specified in the
+configuration file.
 
 """
 # Standard modules
@@ -94,7 +92,7 @@ if __name__ == '__main__':
     multiprocessing.freeze_support()
     logging.basicConfig(level=logging.INFO)
 
-    _, configloc, _ = config_setup.get_locations()
+    _, configloc, _, _ = config_setup.get_locations()
     fullrun_config = json.load(open(
         os.path.join(configloc, 'config_full' + '.json')))
 
