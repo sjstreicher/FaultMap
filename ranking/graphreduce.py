@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Feb 10 13:42:09 2015
-
-@author: Simon Streicher
-
-Receives a weighted directed graph in GML format and deletes all edges
+"""Receives a weighted directed graph in GML format and deletes all edges
 that connects nodes that are connected via some other path. Only the longest
 paths are retained.
 
@@ -15,6 +10,7 @@ A reduced graph will have the same title as the original file with the suffix
 
 A <casename>_graphreduce.json configuration file needs to be available in the
 case directory root.
+
 """
 
 # Library imports

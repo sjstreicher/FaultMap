@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
-Demonstrates single signal entropy calculations.
+"""Demonstrates single signal entropy calculations.
 
-@author: Simon Streicher
 """
 
 import matplotlib.pyplot as plt
