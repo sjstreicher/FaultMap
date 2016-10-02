@@ -661,7 +661,6 @@ def read_timestamps(raw_tsdata):
             if rowindex > 0:
                 timestamps.append(row[0])
     timestamps = np.asarray(timestamps)
-    timestamps = timestamps.reshape((-1, 1))
     return timestamps
 
 
@@ -772,8 +771,8 @@ def write_boxdates(boxdates, saveloc, case, scenario):
     datalines = np.zeros((len(boxdates), 3))
     for index, boxdate in enumerate(boxdates):
         box_index = index + 1
-        box_start = boxdate[0][0]
-        box_end = boxdate[-1][0]
+        box_start = boxdate[0]
+        box_end = boxdate[-1]
         datalines[index, :] = [box_index, box_start, box_end]
 
     writecsv(filename('boxdates'), datalines, headerline)
@@ -927,7 +926,8 @@ def perform_normalisation(headerline, timestamps,
     else:
         raise NameError("Normalisation method not recognized")
 
-    datalines = np.concatenate((timestamps, inputdata_normalised), axis=1)
+    datalines = np.concatenate((timestamps[:, np.newaxis],
+                                inputdata_normalised), axis=1)
 
     write_normdata(saveloc, case, scenario, headerline, datalines)
 
