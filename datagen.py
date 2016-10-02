@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Feb 24 15:27:21 2014
+Generates various test data sets.
 
 @author: Simon Streicher
 """
