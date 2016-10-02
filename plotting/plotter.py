@@ -9,6 +9,7 @@ import json
 import os
 
 import config_setup
+import figtypes
 from ranking import data_processing
 
 
@@ -200,7 +201,7 @@ def drawplot(graphdata, scenario, datadir, graph, writeoutput):
         savedir = os.path.join(savedir, pathpart)
 
     config_setup.ensure_existence(os.path.join(savedir))
-    eval('figtypes.' + graphdata.plot_type)(
+    getattr(figtypes, graphdata.plot_type)(
         graphdata, graph, scenario, savedir)
 
     return None
