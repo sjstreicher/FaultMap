@@ -203,7 +203,7 @@ class WeightcalcData:
             self.inputdata_raw = \
                 getattr(datagen, raw_tsdata_gen)(params)
             self.inputdata_raw = np.asarray(self.inputdata_raw)
-            
+
             self.timestamps = np.arange(0, len(
                 self.inputdata_raw[:, 0]) * self.sampling_rate,
                 self.sampling_rate)

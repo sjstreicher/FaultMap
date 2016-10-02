@@ -58,9 +58,9 @@ class NoderankData:
         investigated.
 
         """
-        
+
         scenario_config = self.caseconfig[scenario]
-    
+
         if scenario_config:
             if 'settings' in scenario_config:
                 settings = self.caseconfig[scenario_config['settings']]
@@ -72,22 +72,22 @@ class NoderankData:
             settings = {}
             self.m = 0.999
             logging.info("Using default m value of 0.999")
-            
-        if 'use_connections' in settings:        
+
+        if 'use_connections' in settings:
             self.connections_used = settings['use_connections']
         else:
             self.connections_used = False
-        
+
         if 'use_bias' in settings:
             self.bias_used = settings['use_bias']
         else:
             self.bias_used = False
-            
-        if 'dummies' in settings:        
+
+        if 'dummies' in settings:
             self.dummies = settings['dummies']
         else:
-            self.dummies = False    
-            
+            self.dummies = False
+
         if 'katz' in self.rank_methods:
             self.alpha = scenario_config['alpha']
 
@@ -96,7 +96,7 @@ class NoderankData:
             tsfilename = os.path.join(
                 self.saveloc, 'normdata',
                 '{}_{}_{}.csv'.format(self.case, scenario, 'normalised_data'))
-                                      
+
             self.variablelist = data_processing.read_variables(tsfilename)
 
             # Retrieve connection matrix criteria from settings
@@ -135,8 +135,8 @@ class NoderankData:
         logging.info("Number of tags: {}".format(len(self.variablelist)))
 
     def get_boxes(self, scenario, datadir, typename):
-        if 'boxindexes' in self.caseconfig[scenario]:       
-             boxindexes = self.caseconfig[scenario]['boxindexes']
+        if 'boxindexes' in self.caseconfig[scenario]:
+            boxindexes = self.caseconfig[scenario]['boxindexes']
         else:
             boxindexes = 'all'
         if boxindexes == 'all':
