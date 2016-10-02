@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-General graph types are defined for re-usability and consistent formatting.
+"""General graph types are defined for re-usability and consistent formatting.
 
 The style is selected to be compatible with greyscale print work as far
 as reasonably possible.
@@ -34,7 +33,6 @@ between multiple scenarios
     different methods (value at optimizing delay used in actual testing
     for each box under consideration)
 
-@author: Simon Streicher
 """
 
 import os

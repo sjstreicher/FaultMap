@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
-This module executes all functions needed to draw desired plots.
-
-@author: Simon Streicher
+"""This module executes all functions needed to draw desired plots.
 
 """
+
 import json
 import os
 

@@ -1,5 +1,5 @@
-"""
-@author: Simon Streicher
+# -*- coding: utf-8 -*-
+"""Tests all functionality. Aims for full coverage.
 
 """
 
@@ -17,7 +17,7 @@ class TestWeightCalculation(unittest.TestCase):
 
     def setUp(self):
         self.mode = 'tests'
-        self.case = 'weightcalc_tests'
+        self.case = 'fulldemo'
 
     def test_weightcalc_singleprocess(self):
         weightcalc(self.mode, self.case, True, True, True, False)
@@ -30,7 +30,7 @@ class TestCreateArrays(unittest.TestCase):
 
     def setUp(self):
         self.mode = 'tests'
-        self.case = 'weightcalc_tests'
+        self.case = 'fulldemo'
         weightcalc(self.mode, self.case, True, False, False, True)
 
     def test_createarrays(self):
@@ -41,7 +41,7 @@ class TestTrendExtraction(unittest.TestCase):
 
     def setUp(self):
         self.mode = 'tests'
-        self.case = 'weightcalc_tests'
+        self.case = 'fulldemo'
         weightcalc(self.mode, self.case, True, False, False, True)
         result_reconstruction(self.mode, self.case, True)
 
@@ -53,7 +53,7 @@ class TestTrendExtraction(unittest.TestCase):
 #
 #    def setUp(self):
 #        self.mode = 'tests'
-#        self.case = 'weightcalc_tests'
+#        self.case = 'fulldemo'
 #        weightcalc(self.mode, self.case, True, False, False, True)
 #        result_reconstruction(self.mode, self.case, True)
 #        trend_extraction(self.mode, self.case, True)
@@ -66,7 +66,7 @@ class TestTrendExtraction(unittest.TestCase):
 #
 #    def setUp(self):
 #        self.mode = 'tests'
-#        self.case = 'weightcalc_tests'
+#        self.case = 'fulldemo'
 #        weightcalc(self.mode, self.case, True, False, False, True)
 #        result_reconstruction(self.mode, self.case, True)
 #        trend_extraction(self.mode, self.case, True)

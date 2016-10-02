@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
-Generates and plots test data.
+"""Generates and plots test data.
 
-@author: Simon Streicher
 """
 
 import matplotlib.pyplot as plt

@@ -1,6 +1,5 @@
+# -*- coding: utf-8 -*-
 """Data processing support tasks.
-
-@author: St. Elmo Wilken, Simon Streicher
 
 """
 
@@ -686,7 +685,7 @@ def change_dirtype(datadir, oldtype, newtype):
         datadir = os.path.join(datadir, pathpart)
 
     return datadir
-    
+
 
 def fft_calculation(headerline, normalised_tsdata, variables, sampling_rate,
                     sampling_unit, saveloc, case, scenario,
@@ -918,7 +917,7 @@ def normalise_data(headerline, timestamps, inputdata_raw, variables,
             inputdata_normalised = inputdata_raw
     else:
         raise NameError("Normalisation method not recognized")
-    
+
     datalines = np.concatenate((timestamps[:, np.newaxis],
                                 inputdata_normalised), axis=1)
 

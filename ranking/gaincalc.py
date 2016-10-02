@@ -18,9 +18,8 @@ The transfer entropy weights are tested for significance using a non-parametric
 rank-order method using surrogate data generated according to the iterative
 amplitude adjusted Fourier transform method (iAAFT).
 
-@author: Simon Streicher, St. Elmo Wilken
-
 """
+
 # Standard libraries
 import csv
 import json
