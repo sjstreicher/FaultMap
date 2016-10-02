@@ -17,3 +17,4 @@ jpype1
 pathos
 numba
 coverage
+python-coveralls
