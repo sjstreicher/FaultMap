@@ -33,3 +33,5 @@ install:
 script:
   # run tests
   - nosetests -v -w $TRAVIS_BUILD_DIR
+after_success:
+  - coveralls
