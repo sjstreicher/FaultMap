@@ -1,0 +1,96 @@
+{
+  "datatype": "file",
+  "graphs": [
+    "2x2_values_vs_delays"
+  ],
+  "2x2_timeseries": {
+    "plot_type": "fig_timeseries",
+	"scenarios": [
+      "autoreg_2x2"
+	],
+    "weight_methods": [
+      "cross_correlation",
+      "transfer_entropy_kernel",
+	  "transfer_entropy_kraskov"
+    ],
+    "sigtest_cases": [
+	  "sigtested"
+	],
+	"settings": "settings_rankorder_iAAFT",
+	"boxindex": 1,
+	"plotvars": ["X 1", "X 2"],
+	"starttime": 0,
+	"axis_limits": false,
+	"linelabels": false,
+	"legendbbox": [0.25, 1]
+  },
+  "2x2_fft": {
+    "plot_type": "fig_fft",
+	"scenarios": [
+      "autoreg_2x2"
+	],
+    "weight_methods": [
+      "cross_correlation",
+      "transfer_entropy_kernel",
+	  "transfer_entropy_kraskov"
+    ],
+	"sigtest_cases": [
+	  "sigtested",
+	  "nosigtest"
+	],
+	"settings": "settings_rankorder_iAAFT",
+	"boxindex": 1,
+	"plotvars": ["X 1", "X 2"],
+	"starttime": 0,
+	"axis_limits": false,
+	"linelabels": false,
+	"legendbbox": [0.25, 1],
+	"frequency_unit": "steps"
+  },
+  "2x2_values_vs_delays": {
+    "plot_type": "fig_values_vs_delays",
+	"scenarios": [
+      "autoreg_2x2"
+	],
+    "weight_methods": [
+      "cross_correlation",
+      "transfer_entropy_kernel",
+	  "transfer_entropy_kraskov"
+    ],
+	"sigtest_cases": [
+	  "sigtested"
+	],
+	"boxindexes": [1],
+	"sourcevars": ["X 1"],
+	"destvars": ["X 1", "X 2"],
+	"starttime": 0,
+	"axis_limits": false,
+	"linelabels": false,
+	"legendbbox": [1.0, 0.5],
+	"time_unit": "steps",
+	"threshold_plotting": false
+  },
+  "2x2_values_vs_boxes": {
+    "plot_type": "fig_values_vs_boxes",
+	"scenarios": [
+    "autoreg_2x2"
+	],
+    "weight_methods": [
+      "cross_correlation",
+      "transfer_entropy_kernel",
+	  "transfer_entropy_kraskov"
+    ],
+	"sigtest_cases": [
+	  "sigtested"
+	],
+	"sourcevars": [
+	    "X 1"
+	],
+	"destvars": ["X 1", "X 2"],
+	"starttime": 0,
+	"axis_limits": false,
+	"linelabels": false,
+	"legendbbox": [1.0, 0.5],
+	"time_unit": "steps"
+  }
+}

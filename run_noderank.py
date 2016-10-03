@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-
-"""
-@author: Simon Streicher
+"""Performs node ranking.
 
 """
 import json
@@ -13,7 +11,7 @@ from ranking.noderank import noderankcalc
 
 logging.basicConfig(level=logging.INFO)
 
-dataloc, configloc, saveloc = config_setup.get_locations()
+dataloc, configloc, saveloc, _ = config_setup.get_locations()
 noderank_config = json.load(open(
     os.path.join(configloc, 'config_noderank' + '.json')))
 

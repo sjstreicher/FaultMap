@@ -1,39 +1,81 @@
-"""
-@author: Simon Streicher
+# -*- coding: utf-8 -*-
+"""Tests all functionality. Aims for full coverage.
 
 """
 
 import multiprocessing
 import unittest
 
-from ranking.data_processing import result_reconstruction
-from ranking.gaincalc import weightcalc
+from run_full import run_all
 
 
-class TestWeightcalc(unittest.TestCase):
+class TestFullDemo(unittest.TestCase):
 
-    def setUp(self):
-        self.mode = 'tests'
-        self.case = 'weightcalc_tests'
-        self.writeoutput = True
-
-    def test_weightcalc_singleprocess(self):
-        weightcalc(self.mode, self.case, self.writeoutput, False, False, False)
-
-    def test_weightcalc_multiprocess(self):
-        weightcalc(self.mode, self.case, False, False, False, True)
+    def test_full_analysis(self):
+        run_all('tests')
 
 
-class TestCreateArrays(unittest.TestCase):
-
-    def setUp(self):
-        self.mode = 'tests'
-        self.case = 'weightcalc_tests'
-        self.writeoutput = True
-        weightcalc(self.mode, self.case, self.writeoutput, False, False, False)
-
-    def test_createarrays_singleprocess(self):
-        result_reconstruction(self.mode, self.case, self.writeoutput)
+#class TestWeightCalculation(unittest.TestCase):
+#
+#    def setUp(self):
+#        self.mode = 'tests'
+#        self.case = 'fulldemo'
+#
+#    def test_weightcalc_singleprocess(self):
+#        weightcalc(self.mode, self.case, True, True, True, False)
+#
+#    def test_weightcalc_multiprocess(self):
+#        weightcalc(self.mode, self.case, False, False, False, True)
+#
+#
+#class TestCreateArrays(unittest.TestCase):
+#
+#    def setUp(self):
+#        self.mode = 'tests'
+#        self.case = 'fulldemo'
+#        weightcalc(self.mode, self.case, True, False, False, True)
+#
+#    def test_createarrays(self):
+#        result_reconstruction(self.mode, self.case, True)
+#
+#
+#class TestTrendExtraction(unittest.TestCase):
+#
+#    def setUp(self):
+#        self.mode = 'tests'
+#        self.case = 'fulldemo'
+#        weightcalc(self.mode, self.case, True, False, False, True)
+#        result_reconstruction(self.mode, self.case, True)
+#
+#    def test_trendextraction(self):
+#        trend_extraction(self.mode, self.case, True)
+#
+#
+#class TestNodeRanking(unittest.TestCase):
+#
+#    def setUp(self):
+#        self.mode = 'tests'
+#        self.case = 'fulldemo'
+#        weightcalc(self.mode, self.case, True, False, False, True)
+#        result_reconstruction(self.mode, self.case, True)
+#        trend_extraction(self.mode, self.case, True)
+#
+#    def test_noderanking(self):
+#        noderankcalc(self.mode, self.case, True)
+#
+#
+#class TestGrapReduce(unittest.TestCase):
+#
+#    def setUp(self):
+#        self.mode = 'tests'
+#        self.case = 'fulldemo'
+#        weightcalc(self.mode, self.case, True, False, False, True)
+#        result_reconstruction(self.mode, self.case, True)
+#        trend_extraction(self.mode, self.case, True)
+#        noderankcalc(self.mode, self.case, True)
+#
+#    def test_graphreduce(self):
+#        reducegraph(self.mode, self.case, True)
 
 
 if __name__ == '__main__':

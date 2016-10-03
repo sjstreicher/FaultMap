@@ -1,3 +1,0 @@
-control
-jpype1
-pathos

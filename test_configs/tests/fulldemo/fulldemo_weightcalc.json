@@ -1,0 +1,212 @@
+{
+  "datatype": "function",
+  "methods": [
+    "cross_correlation",
+    "transfer_entropy_kernel",
+    "transfer_entropy_kraskov"
+  ],
+  "scenarios": [
+    "autoreg_2x2",
+    "random_2x2"
+  ],
+  "settings_rankorder_shuffle": {
+    "use_connections": true,
+    "sampling_rate": 1,
+    "sub_sampling_interval": 1,
+    "sampling_unit": "seconds",
+    "testsize": 2000,
+    "startindex": 50,
+    "sigtest": true,
+    "allthresh": true,
+    "datagen_params": [
+      2100,
+      10
+    ],
+    "te_thresh_method": "rankorder",
+    "te_surr_method": "random_shuffle",
+    "additional_parameters": {
+      "test_significance": false,
+      "significance_permutations": 30,
+      "auto_embed": false
+    }
+  },
+  "settings_sixsigma_shuffle": {
+    "use_connections": true,
+    "sampling_rate": 1,
+    "sub_sampling_interval": 1,
+    "sampling_unit": "seconds",
+    "testsize": 2000,
+    "startindex": 50,
+    "sigtest": true,
+    "allthresh": true,
+    "datagen_params": [
+      2100,
+      10
+    ],
+    "te_thresh_method": "sixsigma",
+    "te_surr_method": "random_shuffle",
+    "additional_parameters": {
+      "test_significance": false,
+      "significance_permutations": 30,
+      "auto_embed": false
+    }
+  },
+  "settings_rankorder_iAAFT": {
+    "use_connections": true,
+    "sampling_rate": 1,
+    "sub_sampling_interval": 1,
+    "sampling_unit": "seconds",
+    "testsize": 2000,
+    "startindex": 50,
+    "sigtest": true,
+    "allthresh": true,
+    "datagen_params": [
+      2100,
+      10
+    ],
+    "te_thresh_method": "rankorder",
+    "te_surr_method": "iAAFT",
+    "additional_parameters": {
+      "test_significance": false,
+      "significance_permutations": 30,
+      "auto_embed": false
+    }
+  },
+  "settings_sixsigma_iAAFT": {
+    "use_connections": true,
+    "sampling_rate": 1,
+    "sub_sampling_interval": 1,
+    "sampling_unit": "seconds",
+    "testsize": 2000,
+    "startindex": 50,
+    "sigtest": true,
+    "allthresh": true,
+    "datagen_params": [
+      2100,
+      10
+    ],
+    "te_thresh_method": "sixsigma",
+    "te_surr_method": "iAAFT",
+    "additional_parameters": {
+      "test_significance": false,
+      "significance_permutations": 30,
+      "auto_embed": false
+    }
+  },
+  "settings_rankorder_shuffle_autoembed": {
+    "use_connections": true,
+    "sampling_rate": 1,
+    "sub_sampling_interval": 1,
+    "sampling_unit": "seconds",
+    "testsize": 2000,
+    "startindex": 50,
+    "sigtest": true,
+    "allthresh": true,
+    "datagen_params": [
+      2100,
+      10
+    ],
+    "te_thresh_method": "rankorder",
+    "te_surr_method": "random_shuffle",
+    "additional_parameters": {
+      "test_significance": false,
+      "significance_permutations": 30,
+      "auto_embed": true
+    }
+  },
+  "settings_sixsigma_shuffle_autoembed": {
+    "use_connections": true,
+    "sampling_rate": 1,
+    "sub_sampling_interval": 1,
+    "sampling_unit": "seconds",
+    "testsize": 2000,
+    "startindex": 50,
+    "sigtest": true,
+    "allthresh": true,
+    "datagen_params": [
+      2100,
+      10
+    ],
+    "te_thresh_method": "sixsigma",
+    "te_surr_method": "random_shuffle",
+    "additional_parameters": {
+      "test_significance": false,
+      "significance_permutations": 30,
+      "auto_embed": true
+    }
+  },
+  "settings_rankorder_iAAFT_autoembed": {
+    "use_connections": true,
+    "sampling_rate": 1,
+    "sub_sampling_interval": 1,
+    "sampling_unit": "seconds",
+    "testsize": 2000,
+    "startindex": 50,
+    "sigtest": true,
+    "allthresh": true,
+    "datagen_params": [
+      2100,
+      10
+    ],
+    "te_thresh_method": "rankorder",
+    "te_surr_method": "iAAFT",
+    "additional_parameters": {
+      "test_significance": false,
+      "significance_permutations": 30,
+      "auto_embed": true
+    }
+  },
+  "settings_sixsigma_iAAFT_autoembed": {
+    "use_connections": true,
+    "sampling_rate": 1,
+    "sub_sampling_interval": 1,
+    "sampling_unit": "seconds",
+    "testsize": 2000,
+    "startindex": 50,
+    "sigtest": true,
+    "allthresh": true,
+    "datagen_params": [
+      2100,
+      10
+    ],
+    "te_thresh_method": "sixsigma",
+    "te_surr_method": "iAAFT",
+    "additional_parameters": {
+      "test_significance": false,
+      "significance_permutations": 30,
+      "auto_embed": true
+    }
+  },
+  "autoreg_2x2": {
+    "settings": [
+      "settings_rankorder_shuffle",
+      "settings_sixsigma_shuffle",
+      "settings_rankorder_iAAFT",
+      "settings_sixsigma_iAAFT",
+      "settings_rankorder_shuffle_autoembed",
+      "settings_sixsigma_shuffle_autoembed",
+      "settings_rankorder_iAAFT_autoembed",
+      "settings_sixsigma_iAAFT_autoembed"
+    ],
+    "connections": "connectionmatrix_2x2",
+    "datagen": "autoreg_gen",
+    "test_delays": 20,
+    "bidirectional_delays": true
+  },
+  "random_2x2": {
+    "settings": [
+      "settings_rankorder_shuffle",
+      "settings_sixsigma_shuffle",
+      "settings_rankorder_iAAFT",
+      "settings_sixsigma_iAAFT",
+      "settings_rankorder_shuffle_autoembed",
+      "settings_sixsigma_shuffle_autoembed",
+      "settings_rankorder_iAAFT_autoembed",
+      "settings_sixsigma_iAAFT_autoembed"
+    ],
+    "connections": "connectionmatrix_2x2",
+    "datagen": "random_gen",
+    "test_delays": 20,
+    "bidirectional_delays": true
+  }
+}

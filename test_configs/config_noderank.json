@@ -1,0 +1,7 @@
+{
+  "mode": "tests",
+  "writeoutput": true,
+  "cases": [
+    "quickdemo"
+   ]
+}

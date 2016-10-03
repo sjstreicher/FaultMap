@@ -2,7 +2,6 @@
 """Verifies the working of the transfer entropy calculation code by means of
 an example on autoregressive data with known time delay.
 
-@author: Simon Streicher
 """
 
 import unittest
@@ -41,13 +40,12 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
         self.entropies_infodyn_kernel = []
         for timelag in range(self.delay-5, self.delay+6):
             print "Results for timelag of: ", str(timelag)
-            [x_pred, x_hist, y_hist] = autoreg_datagen(self.delay, timelag,
-                                                       self.samples,
-                                                       self.sub_samples)
+            [_, x_hist, y_hist] = autoreg_datagen(
+                self.delay, timelag, self.samples, self.sub_samples)
 
             # Normalize data
-            # Not explicitly required as this is done by infodyns package if
-            # setProperty("NORMALISE", "true" is called), but good practice
+            # Not explicitly required as this is done by infodynamics package
+            # if setProperty("NORMALISE", "true" is called), but good practice
             # for general example.
 
             x_hist_norm = preprocessing.scale(x_hist, axis=1)

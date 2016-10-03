@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Feb 24 15:27:21 2014
+"""Generates various test and demo data sets.
 
-@author: Simon Streicher
 """
 
 from functools import partial
@@ -62,7 +60,7 @@ def autoreg_gen(params):
     seeds = iter(seed_list)
     cause = seed_randn(seeds.next(), samples + delay)
     affected = np.zeros_like(cause)
-    # Very close covariance occassionally breaks the kde estimator
+    # Very close covariance occasionally breaks the kde estimator
     # Another small random element is added to take care of this
     # This is not expected to be a problem on any "real" data
 
@@ -91,13 +89,13 @@ def autoreg_gen(params):
 def delay_gen(params):
     """Generates a normally distributed random data vector
     and a pure delay companion.
-    
+
     Parameters
     ----------
         params : list
             List with the first entry being the sample length of the returned
             signals and the second entry the delay between them.
-            
+
     Returns
     -------
         data : numpy.ndarray
@@ -175,7 +173,7 @@ def sinusoid_shift_gen(params, period=100, noiseamp=0.1, N=5,
                        addnoise=False):
     """Generates sinusoid signals together with optionally uniform noise.
     The signals are shifted by a quarter period.
-    
+
     Parameters
     ----------
         params : list
@@ -190,12 +188,12 @@ def sinusoid_shift_gen(params, period=100, noiseamp=0.1, N=5,
             How many signals to return.
         addnoise : bool, default=False
             If True, noise is added to the sinusoidal signals.
-    
+
     Returns
     -------
         data : numpy.ndarray
             Array containing the generated signals arranged in columns.
-            
+
     """
 
     samples = params[0]
@@ -226,7 +224,7 @@ def sinusoid_shift_gen(params, period=100, noiseamp=0.1, N=5,
 def sinusoid_gen(params, period=100, noiseamp=1.0):
     """Generates sinusoid signals together with optionally uniform noise.
     The signals are shifted by a quarter period.
-    
+
     Parameters
     ----------
         params : list
@@ -241,12 +239,12 @@ def sinusoid_gen(params, period=100, noiseamp=1.0):
             How many signals to return.
         addnoise : bool, default=False
             If True, noise is added to the sinusoidal signals.
-    
+
     Returns
     -------
         data : numpy.ndarray
             Array containing the generated signals arranged in columns.
-            
+
     """
 
     samples = params[0]
@@ -308,34 +306,3 @@ def firstorder_gen(params, period=0.01, noiseamp=1.0):
     tspan = P1_response[1][:offset]
 
     return tspan, cause, affected
-
-
-def oscillating_feedback_5x5(params, delays=None, period=0.01, noiseamp=1.0):
-    """Passes sine source signal through a number of transfer functions
-    before connecting back on itself.
-
-    delays is a list of length 4 and specifies the delays between each of the
-    transfer functions, i.e. delay[0] is the delay between the first and second
-    transfer functions.
-
-    """
-
-    samples = params[0]
-
-    if not delays:
-        delays = [3, 2, 5, 4]
-
-    # TODO: Make use of previously defined functions to build this one
-
-    timepoints = range(samples + sum(delays))
-
-    # Define source node as pure sine wave
-    sine_source = np.array([np.sin(period * t*2*np.pi) for t in timepoints])
-
-    # Calculate response of first transfer function on pure sine signal
-    TF_1 = control.matlab.tf([2], [3, 1])
-    P1_response = control.matlab.lsim(TF_1, sine_source, timepoints)
-    P1_response_random_add = (seed_rand(45, len(timepoints)) - 0.5) * noiseamp
-    TF_1_output_firstpass = P1_response[0] + P1_response_random_add
-
-    return None

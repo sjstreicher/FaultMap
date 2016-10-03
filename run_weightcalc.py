@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
-@author: Simon Streicher
-
-Performs weight calculation for all cases specified in the configuration file.
+"""Performs weight calculation for all cases specified in the
+configuration file.
 
 """
 # Standard modules
@@ -17,7 +15,7 @@ from ranking.gaincalc import weightcalc
 if __name__ == '__main__':
     multiprocessing.freeze_support()
     logging.basicConfig(level=logging.INFO)
-    dataloc, configloc, _ = config_setup.get_locations()
+    dataloc, configloc, _, _ = config_setup.get_locations()
     weightcalc_config = json.load(open(
         os.path.join(configloc, 'config_weightcalc' + '.json')))
 
