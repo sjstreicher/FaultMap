@@ -2,32 +2,50 @@ FaultMap
 ========
 
 .. image:: https://travis-ci.org/SimonStreicher/FaultMap.png?branch=master
-   :target: https://travis-ci.org/SimonStreicher/FaultMap
-   
+    :target: https://travis-ci.org/SimonStreicher/FaultMap
+    :alt: Travis Build
+
 .. image:: https://landscape.io/github/SimonStreicher/FaultMap/master/landscape.svg?style=flat
-   :target: https://landscape.io/github/SimonStreicher/FaultMap/master
-   :alt: Code Health
+    :target: https://landscape.io/github/SimonStreicher/FaultMap/master
+    :alt: Code Health
 
-FaultMap is a process fault detection/diagnosis tool.
-Causal links between processes elements are identified using information theory measures.
-These links are then used to create a visual representation of the mayor flows of information (disturbances, etc.) among the process elements as a directed graph.
-The ability to visually inspect and rearrange these digraphs into a hierarchical structure (using a tool such as Cytoscape) is arguably the most powerful feature currently offered.
+.. image:: https://coveralls.io/repos/github/SimonStreicher/FaultMap/badge.svg?branch=master
+    :target: https://coveralls.io/github/SimonStreicher/FaultMap?branch=master
+    :alt: Code Coverage
 
-Network centrality algorithms are applied in order to determine the most influential nodes in the network based on the strength and quantity of their influence on other nodes (and the importance of the nodes that are influenced).
- 
-Tests and demonstrations still under development.
+.. image:: https://codeclimate.com/github/SimonStreicher/FaultMap/badges/gpa.svg
+   :target: https://codeclimate.com/github/SimonStreicher/FaultMap
+   :alt: Code Climate
 
-The correct functioning of the weight calculation component can be tested by running:
+Introduction
+------------
 
-.. code:: python
+FaultMap is a data-driven model-free process fault detection and diagnosis tool.
+Causal links between processes elements are identified using information theory measures (transfer entropy).
+These links are then used to create a visual representation of the main flows of information (disturbances, etc.) among the process elements as a directed graph.
+These directed graphs are useful as troubleshooting aids.
 
-  test_weightcalc.py
+Network centrality algorithms are applied to determine the most
+The node ranking algorithm calculates an influence score for nodes in the network based on the strength and quality of their influence on other connected nodes (eigenvector centrality).
+
+Documentation and demonstrations still under development.
 
 Installation
-============
-Since the required setup is not trivial, a Docker image is made available with all necessary packages and dependencies installed.
-You can get the Docker image by
+------------
 
-docker pull simonstreicher/faultmap
+.. code-block:: bash
+
+    conda create --name faultmap python=2
+    source activate faultmap
+    cd ~/repos/FaultMap
+    conda install --file conda_requirements.txt
+    pip install -r requirements.txt
+    nosetests
+
+A Docker image is available with all necessary packages and dependencies installed.
+
+.. code-block:: bash
+
+    docker pull simonstreicher/faultmap
 
 If you want to build locally, the Dockerfile can be found at https://github.com/SimonStreicher/FaultMapDocker

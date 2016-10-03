@@ -1,7 +1,5 @@
-"""Performs various data processings support tasks called by the gaincalc
-module.
-
-@author: St. Elmo Wilken, Simon Streicher
+# -*- coding: utf-8 -*-
+"""Data processing support tasks.
 
 """
 
@@ -16,12 +14,14 @@ import numpy as np
 import pandas as pd
 import sklearn.preprocessing
 import tables as tb
+from numba import jit
 
 import config_setup
 import gaincalc
 import transentropy
 
 
+@jit
 def shuffle_data(input_data):
     """Returns a (seeded) randomly shuffled array of data.
     The data input needs to be a two-dimensional numpy array.
@@ -53,7 +53,7 @@ def getfolders(path):
 
     return folders
 
-
+@jit
 def gen_iaaft_surrogates(data, iterations):
     """Generates iAAFT surrogates
 
@@ -331,8 +331,7 @@ def create_arrays(datadir, variables):
 
 
 def create_signtested_directionalarrays(datadir, writeoutput):
-    """
-    Checks whether the directional weight arrays have corresponding
+    """Checks whether the directional weight arrays have corresponding
     absolute positive entries, writes another version with zeros if
     absolutes are negative.
 
@@ -659,6 +658,7 @@ def read_timestamps(raw_tsdata):
         for rowindex, row in enumerate(datareader):
             if rowindex > 0:
                 timestamps.append(row[0])
+    timestamps = np.asarray(timestamps)
     return timestamps
 
 
@@ -778,11 +778,6 @@ def write_boxdates(boxdates, saveloc, case, scenario):
     return None
 
 
-def write_boxes(boxes, saveloc, case, scenario):
-    # TODO: Complete box writing function
-    return None
-
-
 def bandgap(min_freq, max_freq, vardata):
     """Bandgap filter based on FFT/IFFT concatenation"""
     # TODO: Add buffer values in order to prevent ringing
@@ -884,16 +879,6 @@ def skogestad_scale(data_raw, variables, scalingvalues):
     return data_skogestadscaled
 
 
-def descriptive_dictionary(descriptive_file):
-    """Converts the description CSV file to a dictionary."""
-    descriptive_array = np.genfromtxt(descriptive_file, delimiter=',',
-                                      dtype='string')
-    tag_names = descriptive_array[1:, 0]
-    tag_descriptions = descriptive_array[1:, 1]
-    description_dict = dict(zip(tag_names, tag_descriptions))
-    return description_dict
-
-
 def write_normdata(saveloc, case, scenario, headerline, datalines):
 
     # Define export directories and filenames
@@ -911,9 +896,9 @@ def write_normdata(saveloc, case, scenario, headerline, datalines):
     return None
 
 
-def perform_normalisation(headerline, timestamps,
-                          inputdata_raw, variables, saveloc, case,
-                          scenario, method, scalingvalues):
+def normalise_data(headerline, timestamps, inputdata_raw, variables,
+                   saveloc, case, scenario,
+                   method, weight_methods, scalingvalues):
 
     if method == 'standardise':
         inputdata_normalised = \
@@ -921,24 +906,6 @@ def perform_normalisation(headerline, timestamps,
     elif method == 'skogestad':
         inputdata_normalised = \
             skogestad_scale(inputdata_raw, variables, scalingvalues)
-
-    datalines = np.concatenate((timestamps, inputdata_normalised), axis=1)
-
-    write_normdata(saveloc, case, scenario, headerline, datalines)
-
-    return inputdata_normalised
-
-
-def normalise_data(headerline, timestamps, inputdata_raw, variables,
-                   saveloc, case, scenario,
-                   method, weight_methods, scalingvalues):
-
-    if (method == 'standardise' or method == 'skogestad'):
-        inputdata_normalised = \
-            perform_normalisation(headerline, timestamps,
-                                  inputdata_raw, variables,
-                                  saveloc, case,
-                                  scenario, method, scalingvalues)
     elif not method:
         # If method is simply false
         # Still norm centre the data
@@ -949,6 +916,11 @@ def normalise_data(headerline, timestamps, inputdata_raw, variables,
             inputdata_normalised = inputdata_raw
     else:
         raise NameError("Normalisation method not recognized")
+
+    datalines = np.concatenate((timestamps[:, np.newaxis],
+                                inputdata_normalised), axis=1)
+
+    write_normdata(saveloc, case, scenario, headerline, datalines)
 
     return inputdata_normalised
 
@@ -1088,11 +1060,6 @@ def write_dictionary(filename, dictionary):
         json.dump(dictionary, f)
 
 
-def read_dictionary(filename):
-    with open(filename, 'rb') as f:
-        return json.load(f)
-
-
 def rankbackward(variables, gainmatrix, connections, biasvector,
                  dummyweight, dummycreation):
     """This method adds a unit gain node to all nodes with an out-degree
@@ -1154,25 +1121,19 @@ def split_tsdata(inputdata, samplerate, boxsize, boxnum):
                  for i in range(int(boxnum))]
     return boxes
 
-
-def ewma_weights_benchmark(weights, alpha_rate):
-    """Calculates an exponential moving average of weights
-    for different boxes to use as a benchmark.
-
-    weights is a list of weights for different boxes
+def calc_signalent(vardata, weightcalcdata):
+    """Calculates single signal differential entropies
+    by making use of the JIDT continuous box-kernel implementation.
 
     """
-    benchmark_weights = np.zeros_like(weights)
 
-    for index, weight in enumerate(weights):
-        if index == 0:
-            benchmark_weights[index] = weights[index]
-        else:
-            benchmark_weights[index] = \
-                (alpha_rate * benchmark_weights[index-1]) + \
-                ((1-alpha_rate) * weight)
+    # Setup Java class for infodynamics toolkit
+    entropyCalc, estimator = \
+        transentropy.setup_infodynamics_entropy(weightcalcdata.infodynamicsloc)
 
-    return benchmark_weights
+    entropy = transentropy.calc_infodynamics_entropy(
+        entropyCalc, vardata, estimator)
+    return entropy
 
 
 def vectorselection(data, timelag, sub_samples, k=1, l=1):
@@ -1225,18 +1186,3 @@ def vectorselection(data, timelag, sub_samples, k=1, l=1):
         y_hist[m-1:, :] = data[0, startindex:endindex]
 
     return x_pred, x_hist, y_hist
-
-
-def calc_signalent(vardata, weightcalcdata):
-    """Calculates single signal differential entropies
-    by making use of the JIDT continuous box-kernel implementation.
-
-    """
-
-    # Setup Java class for infodynamics toolkit
-    entropyCalc, estimator = \
-        transentropy.setup_infodynamics_entropy(weightcalcdata.infodynamicsloc)
-
-    entropy = transentropy.calc_infodynamics_entropy(
-        entropyCalc, vardata, estimator)
-    return entropy

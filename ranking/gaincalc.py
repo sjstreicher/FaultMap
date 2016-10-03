@@ -18,9 +18,8 @@ The transfer entropy weights are tested for significance using a non-parametric
 rank-order method using surrogate data generated according to the iterative
 amplitude adjusted Fourier transform method (iAAFT).
 
-@author: Simon Streicher, St. Elmo Wilken
-
 """
+
 # Standard libraries
 import csv
 import json
@@ -34,11 +33,10 @@ import numpy as np
 
 import config_setup
 import data_processing
+import datagen
 import gaincalc_oneset
 from gaincalculators import (PartialCorrWeightcalc, CorrWeightcalc,
                              TransentWeightcalc)
-
-import datagen
 
 
 class WeightcalcData(object):
@@ -197,12 +195,12 @@ class WeightcalcData(object):
                 connectionloc = self.caseconfig[scenario]['connections']
                 # Get the variables and connection matrix
                 self.variables, self.connectionmatrix = \
-                    eval('datagen.' + connectionloc)()
+                    getattr(datagen, connectionloc)()
             # TODO: Store function arguments in scenario config file
             params = self.caseconfig[settings_name]['datagen_params']
             # Get inputdata
             self.inputdata_raw = \
-                eval('datagen.' + raw_tsdata_gen)(params)
+                getattr(datagen, raw_tsdata_gen)(params)
             self.inputdata_raw = np.asarray(self.inputdata_raw)
 
             self.timestamps = np.arange(0, len(
@@ -331,8 +329,6 @@ class WeightcalcData(object):
         self.boxes = data_processing.split_tsdata(
             self.inputdata, self.sampling_rate * self.sub_sampling_interval,
             self.boxsize, self.boxnum)
-        data_processing.write_boxes(self.boxes, self.saveloc,
-                                    self.casename, scenario)
 
         # Select which of the boxes to evaluate
         if self.transient:

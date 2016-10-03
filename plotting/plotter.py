@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
-"""
-This module executes all functions needed to draw desired plots.
-
-@author: Simon Streicher
+"""This module executes all functions needed to draw desired plots.
 
 """
+
 import json
 import os
 
 import config_setup
+import figtypes
 from ranking import data_processing
 
 
@@ -39,12 +38,8 @@ class GraphData(object):
 
         # Get graphs
         self.graphs = self.caseconfig['graphs']
-        # Get weight_methods
-        self.weight_methods = self.caseconfig['weight_methods']
         # Get data type
         self.datatype = self.caseconfig['datatype']
-        # Get significanca test cases
-        self.significance_cases = self.caseconfig['sigtest_cases']
 
     def graphdetails(self, graph):
         """Retrieves data particular for each graph that is to be drawn.
@@ -53,7 +48,10 @@ class GraphData(object):
         self.plot_type = self.caseconfig[graph]['plot_type']
         self.scenarios = self.caseconfig[graph]['scenarios']
         self.axis_limits = self.caseconfig[graph]['axis_limits']
+        # Get weight_methods
         self.weight_methods = self.caseconfig[graph]['weight_methods']
+        # Get significance test cases
+        self.significance_cases = self.caseconfig[graph]['sigtest_cases']
 
     def get_plotvars(self, graph):
         self.plotvars = self.caseconfig[graph]['plotvars']
@@ -200,7 +198,7 @@ def drawplot(graphdata, scenario, datadir, graph, writeoutput):
         savedir = os.path.join(savedir, pathpart)
 
     config_setup.ensure_existence(os.path.join(savedir))
-    eval('figtypes.' + graphdata.plot_type)(
+    getattr(figtypes, graphdata.plot_type)(
         graphdata, graph, scenario, savedir)
 
     return None

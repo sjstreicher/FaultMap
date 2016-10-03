@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
-Performs a lead/lag analysis on the full matrix provided.
+"""Performs a lead/lag analysis on the full matrix provided.
 
-@author: Simon Streicher
 """
 
 import matplotlib.pyplot as plt

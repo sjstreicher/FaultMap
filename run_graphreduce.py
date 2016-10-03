@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-
-"""
-@author: Simon Streicher
+"""Performs graph reduction.
 
 """
 import json
@@ -13,7 +11,7 @@ from ranking.graphreduce import reducegraph
 
 logging.basicConfig(level=logging.INFO)
 
-dataloc, configloc, _ = config_setup.get_locations()
+dataloc, configloc, _, _ = config_setup.get_locations()
 graphreduce_config = json.load(open(
     os.path.join(configloc, 'config_graphreduce' + '.json')))
 

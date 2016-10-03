@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
-"""
-@author Simon Streicher, St. Elmo Wilken
-
-This module is used to rank nodes in a digraph.
+"""This module is used to rank nodes in a digraph.
 It requires a connection as well as a gain matrix as inputs.
 
 Future versions will make use of an intrinsic node importance score vector
 (for example, individual loop key performance indicators).
 
 """
+
 # Standard libraries
 import csv
 import itertools
@@ -51,6 +49,7 @@ class NoderankData:
         self.rank_methods = self.caseconfig['rank_methods']
         # Get data type
         self.datatype = self.caseconfig['datatype']
+        self.case = case
 
     def scenariodata(self, scenario):
         """Retrieves data particular to each scenario for the case being
@@ -59,20 +58,42 @@ class NoderankData:
         """
 
         scenario_config = self.caseconfig[scenario]
-        settings = self.caseconfig[scenario_config['settings']]
 
-        self.connections_used = settings['use_connections']
-        self.bias_used = settings['use_bias']
-        self.dummies = settings['dummies']
+        if scenario_config:
+            if 'settings' in scenario_config:
+                settings = self.caseconfig[scenario_config['settings']]
+            else:
+                settings = {}
+            if 'm' in scenario_config:
+                self.m = scenario_config['m']
+        else:
+            settings = {}
+            self.m = 0.999
+            logging.info("Using default m value of 0.999")
 
-        self.m = scenario_config['m']
+        if 'use_connections' in settings:
+            self.connections_used = settings['use_connections']
+        else:
+            self.connections_used = False
+
+        if 'use_bias' in settings:
+            self.bias_used = settings['use_bias']
+        else:
+            self.bias_used = False
+
+        if 'dummies' in settings:
+            self.dummies = settings['dummies']
+        else:
+            self.dummies = False
+
         if 'katz' in self.rank_methods:
             self.alpha = scenario_config['alpha']
 
         if self.datatype == 'file':
-            # Retrieve list of variables
-            tsfilename = os.path.join(self.casedir, 'data',
-                                      self.caseconfig[scenario]['data'])
+            # Retrieve list of variables from normalised data file
+            tsfilename = os.path.join(
+                self.saveloc, 'normdata',
+                '{}_{}_{}.csv'.format(self.case, scenario, 'normalised_data'))
 
             self.variablelist = data_processing.read_variables(tsfilename)
 
@@ -112,8 +133,11 @@ class NoderankData:
         logging.info("Number of tags: {}".format(len(self.variablelist)))
 
     def get_boxes(self, scenario, datadir, typename):
-        boxindexes = self.caseconfig[scenario]['boxindexes']
-        if boxindexes == "all":
+        if 'boxindexes' in self.caseconfig[scenario]:
+            boxindexes = self.caseconfig[scenario]['boxindexes']
+        else:
+            boxindexes = 'all'
+        if boxindexes == 'all':
             boxesdir = os.path.join(datadir, typename)
             print boxesdir
             boxes = next(os.walk(boxesdir))[1]

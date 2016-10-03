@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
-Setup functions used to read configuration files.
+"""Setup functions used to read configuration files.
 
-@author: Simon Streicher
 """
 
 import json
@@ -18,58 +16,73 @@ def ensure_existence(location, make=True):
     return location
 
 
+def get_locations(mode='cases'):
+    """Gets all required directories related to the specified mode.
+
+    Parameters
+    ----------
+        mode : string
+            Either 'tests' or 'cases'. Specifies whether the test or user
+            configureable cases directories should be set.
+            Test directiories are read from testconfig.json which is bundled
+            with the code, while cases directories are read from
+            caseconfig.json which must be created by the user.
+
+    Returns
+    -------
+        dataloc : path
+        configloc : path
+        saveloc : path
+        infodynamicsloc : path
+
+    """
+    # Load directories config file
+    if mode == 'tests':
+        dirs = json.load(open('testconfig.json'))
+    elif mode == 'cases':
+        dirs = json.load(open('caseconfig.json'))
+    else:
+        raise NameError("Mode name not recognized")
+
+    # Get data and preferred export directories from
+    # directories config file
+    locations = [ensure_existence(os.path.expanduser(dirs[location]))
+                 for location in ['dataloc', 'configloc', 'saveloc',
+                                  'infodynamicsloc']]
+    dataloc, configloc, saveloc, infodynamicsloc = locations
+
+    return dataloc, configloc, saveloc, infodynamicsloc
+
+
 def runsetup(mode, case):
     """Gets all required directories from the case configuration file.
 
     Parameters
     ----------
         mode : string
-            Either 'tests' or 'cases'. Tests data are generated dynamically and
-            stored in specified folders. Case data are read from file and stored
-            under organized headings in the saveloc directory specified
-            in config.json.
+            Either 'tests' or 'cases'. Specifies whether the test or user
+            configureable cases directories should be set.
+            Test directiories are read from testconfig.json which is bundled
+            with the code, while cases directories are read from
+            caseconfig.json which must be created by the user.
         case : string
-            The name of the case that is to be run. Points to dictionary in either
-            test or case config files.
+            The name of the case that is to be run. Points to dictionary
+            in either test or case config files.
 
     Returns
     -------
         saveloc : path
-        caseconfigloc : path
+        caseconfigdir : path
         casedir : path
         infodynamicsloc : path
 
     """
 
-    if mode == 'tests':
-        saveloc = 'test_exports'
-        casedir = 'test_configs'
-        caseconfigdir = 'test_configs'
-        infodynamicsloc = 'infodynamics.jar'
+    dataloc, configloc, saveloc, infodynamicsloc = get_locations(mode)
 
-    elif mode == 'cases':
-
-        # Load directories config file
-        dirs = json.load(open('config.json'))
-        # Get data and preferred export directories from
-        # directories config file
-        locations = [ensure_existence(os.path.expanduser(dirs[location]))
-                     for location in ['dataloc', 'configloc', 'saveloc',
-                                      'infodynamicsloc']]
-        dataloc, configloc, saveloc, infodynamicsloc = locations
-
-        # Define case data directory
-        casedir = ensure_existence(os.path.join(dataloc, mode, case),
-                                   make=True)
-        caseconfigdir = os.path.join(configloc, mode, case)
+    # Define case data directory
+    casedir = ensure_existence(os.path.join(dataloc, mode, case),
+                               make=True)
+    caseconfigdir = os.path.join(configloc, mode, case)
 
     return saveloc, caseconfigdir, casedir, infodynamicsloc
-
-
-def get_locations():
-    # Load directories config file
-    dirs = json.load(open('config.json'))
-    dataloc, configloc, saveloc = \
-        [os.path.expanduser(dirs[location])
-         for location in ['dataloc', 'configloc', 'saveloc']]
-    return dataloc, configloc, saveloc

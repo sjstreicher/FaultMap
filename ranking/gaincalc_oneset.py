@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
-"""
-Calculates weight and auxilliary data for each causevar and writes to files.
+"""Calculates weight and auxilliary data for each causevar and writes to files.
 
 All weight data file output writers are now called at this level, making the
 process interruption tolerant up to a single causevar analysis.
 
-@author: Simon Streicher
 """
 
 import csv

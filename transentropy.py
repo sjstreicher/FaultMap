@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
-"""This module contains the methods used in the calculation of transfer
-entropy.
+"""Methods used in the calculation of transfer entropy. A JIDT wrapper.
 
-Created on Mon Feb 24 15:18:33 2014
-
-@author: Simon Streicher
 """
+
 import jpype
 import numpy as np
 

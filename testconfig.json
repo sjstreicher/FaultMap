@@ -1,0 +1,6 @@
+{
+  "dataloc": "test_data",
+  "configloc": "test_configs",
+  "saveloc": "test_results",
+  "infodynamicsloc": "infodynamics.jar"
+}
