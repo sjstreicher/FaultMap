@@ -8,7 +8,7 @@ before_install:
   # Install from repository what we can
   - sudo apt-get update -qq
   - sudo apt-get install -qq pkg-config default-jdk wget python python-{dev,pip} cython lib{freetype6,xft,png,xext,openblas,lapack,hdf5-serial}-dev gfortran dvipng
-  - sudo apt-get --no-install-recommends install texlive-base
+  - sudo apt-get --no-install-recommends install texlive-base texlive-latex-extra texlive-fonts-recommended dvipng
   # Install miniconda
   # This comes from http://conda.pydata.org/docs/travis.html
   - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
