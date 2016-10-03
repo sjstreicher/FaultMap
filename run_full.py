@@ -21,7 +21,7 @@ from plotting.plotter import plotdraw
 # TODO: Move to class object
 # TODO: Perform analysis on scenario level inside class object
 
-def run_weightcalc(configloc, writeoutput, mode, case):
+def run_weightcalc(configloc, writeoutput, mode, case, robust):
     weightcalc_config = json.load(open(
         os.path.join(configloc, 'config_weightcalc' + '.json')))
 
@@ -32,68 +32,89 @@ def run_weightcalc(configloc, writeoutput, mode, case):
     fftcalc = weightcalc_config['fft_calc']
     do_multiprocessing = weightcalc_config['multiprocessing']
 
-    try:
+    if robust:
+        try:
+            weightcalc(mode, case, writeoutput, single_entropies, fftcalc,
+                       do_multiprocessing)
+        except:
+            raise RuntimeError("Weight calculation failed for case: " + case)
+    else:
         weightcalc(mode, case, writeoutput, single_entropies, fftcalc,
                    do_multiprocessing)
-    except:
-        raise RuntimeError("Weight calculation failed for case: " + case)
 
     return None
 
 
-def run_createarrays(writeoutput, mode, case):
+def run_createarrays(writeoutput, mode, case, robust):
 
-    try:
-        # Needs to execute twice for nosigtest cases if derived from
-        # sigtest cases
-        # TODO: Remove this requirement
+    if robust:
+        try:
+            # Needs to execute twice for nosigtest cases if derived from
+            # sigtest cases
+            # TODO: Remove this requirement
+            result_reconstruction(mode, case, writeoutput)
+            result_reconstruction(mode, case, writeoutput)
+        except:
+            raise RuntimeError("Array creation failed for case: " + case)
+    else:
         result_reconstruction(mode, case, writeoutput)
         result_reconstruction(mode, case, writeoutput)
-    except:
-        raise RuntimeError("Array creation failed for case: " + case)
+
 
     return None
 
 
-def run_trendextraction(writeoutput, mode, case):
+def run_trendextraction(writeoutput, mode, case, robust):
 
-    try:
+    if robust:
+        try:
+            trend_extraction(mode, case, writeoutput)
+        except:
+            raise RuntimeError("Trend extraction failed for case: " + case)
+    else:
         trend_extraction(mode, case, writeoutput)
-    except:
-        raise RuntimeError("Trend extraction failed for case: " + case)
 
     return None
 
 
-def run_noderank(writeoutput, mode, case):
+def run_noderank(writeoutput, mode, case, robust):
 
-    try:
+    if robust:
+        try:
+            noderankcalc(mode, case, writeoutput)
+        except:
+            raise RuntimeError("Node ranking failed for case: " + case)
+    else:
         noderankcalc(mode, case, writeoutput)
-    except:
-        raise RuntimeError("Node ranking failed for case: " + case)
 
     return None
 
 
-def run_graphreduce(writeoutput, mode, case):
+def run_graphreduce(writeoutput, mode, case, robust):
 
-    try:
+    if robust:
+        try:
+            reducegraph(mode, case, writeoutput)
+        except:
+            raise RuntimeError("Graph reduction failed for case: " + case)
+    else:
         reducegraph(mode, case, writeoutput)
-    except:
-        raise RuntimeError("Graph reduction failed for case: " + case)
 
 
-def run_plotting(writeoutput, mode, case):
+def run_plotting(writeoutput, mode, case, robust):
 
-    try:
+    if robust:
+        try:
+            plotdraw(mode, case, writeoutput)
+        except:
+            raise RuntimeError("Plotting failed for case: " + case)
+    else:
         plotdraw(mode, case, writeoutput)
-    except:
-        raise RuntimeError("Plotting failed for case: " + case)
 
     return None
 
 
-def run_all(mode):
+def run_all(mode, robust=False):
     _, configloc, _, _ = config_setup.get_locations(mode)
     fullrun_config = json.load(open(
         os.path.join(configloc, 'config_full' + '.json')))
@@ -106,12 +127,12 @@ def run_all(mode):
 
     for case in cases:
         logging.info("Now attempting case: " + case)
-        run_weightcalc(configloc, writeoutput, mode, case)
-        run_createarrays(writeoutput, mode, case)
-        run_trendextraction(writeoutput, mode, case)
-        run_noderank(writeoutput, mode, case)
-        run_graphreduce(writeoutput, mode, case)
-        run_plotting(writeoutput, mode, case)
+        run_weightcalc(configloc, writeoutput, mode, case, robust)
+        run_createarrays(writeoutput, mode, case, robust)
+        run_trendextraction(writeoutput, mode, case, robust)
+        run_noderank(writeoutput, mode, case, robust)
+        run_graphreduce(writeoutput, mode, case, robust)
+        run_plotting(writeoutput, mode, case, robust)
         logging.info("Done with case: " + case)
 
 
