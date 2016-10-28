@@ -248,7 +248,7 @@ class WeightcalcData(object):
             self.bidirectional_delays = \
                 self.caseconfig[scenario]['bidirectional_delays']
         else:
-            self.bidirectional_delays = True
+            self.bidirectional_delays = False
         if self.bidirectional_delays is True:
             delay_range = range(-test_delays, test_delays + 1)
         else:
