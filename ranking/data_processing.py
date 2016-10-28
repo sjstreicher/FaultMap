@@ -910,7 +910,7 @@ def normalise_data(headerline, timestamps, inputdata_raw, variables,
         # If method is simply false
         # Still norm centre the data
         # This breaks when trying to use discrete methods
-        if 'discrete' not in weight_methods:
+        if 'transfer_entropy_discrete' not in weight_methods:
             inputdata_normalised = subtract_mean(inputdata_raw)
         else:
             inputdata_normalised = inputdata_raw

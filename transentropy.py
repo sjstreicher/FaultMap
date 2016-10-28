@@ -217,7 +217,7 @@ def calc_infodynamics_te(infodynamicsloc, calcmethod,
 
         properties = [k_history, k_tau, l_history, l_tau, delay]
     else:
-        properties = None
+        properties = [None]
 
     return transentropy, [significance, properties]
 
