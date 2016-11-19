@@ -10,6 +10,12 @@ import config_setup
 import figtypes
 from ranking import data_processing
 
+def raw_string(s):
+    if isinstance(s, str):
+        s = s.encode('string-escape')
+    elif isinstance(s, unicode):
+        s = s.encode('unicode-escape')
+    return s
 
 class GraphData(object):
     """Creates a graph object storing information required by
@@ -78,7 +84,7 @@ class GraphData(object):
         self.linelabels = self.caseconfig[graph]['linelabels']
 
     def get_labelformat(self, graph):
-        self.labelformat = self.caseconfig[graph]['labelformat']
+        self.labelformat = raw_string(self.caseconfig[graph]['labelformat'])
 
     def get_starttime(self, graph):
         self.starttime = self.caseconfig[graph]['starttime']
