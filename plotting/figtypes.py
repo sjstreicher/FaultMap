@@ -151,8 +151,8 @@ def fig_fft(graphdata, graph, scenario, savedir):
     plt.close()
 
     return None
-
-
+    
+    
 def fig_values_vs_delays(graphdata, graph, scenario, savedir):
     """Generates a figure that shows dependence of method values on delays.
 
@@ -171,6 +171,8 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
     graphdata.get_sourcevars(graph)
     graphdata.get_destvars(graph)
     graphdata.get_sigthresholdplotting(graph)
+    graphdata.get_linelabels(graph)
+    graphdata.get_labelformat(graph)
 
     # Get back from savedir to weightdata source
     # This is up to the embed type level
@@ -192,6 +194,13 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
     else:
         typenames = ['weights']
         thresh_typenames = ['sigthresh']
+        
+    # Get labels
+    if graphdata.linelabels:
+        labels = [graphdata.labelformat.format(linelabel)
+                  for linelabel in graphdata.linelabels]
+    else:
+        labels = [destvar for destvar in graphdata.destvars]
 
     for typeindex, typename in enumerate(typenames):
         for boxindex in graphdata.boxindexes:
@@ -230,7 +239,8 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
                     ax.plot(valuematrix[:, 0],
                             valuematrix[:, destvarindex + 1],
                             marker="o", markersize=4,
-                            label=destvar)
+                            label=labels[destvarindex])
+                            
 
                     if graphdata.thresholdplotting:
                         ax.plot(threshmatrix[:, 0],
@@ -240,16 +250,16 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
                                 label=destvar + ' threshold')
 
                 # Shrink current axis by 20%
-                box = ax.get_position()
-                ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+#                box = ax.get_position()
+#                ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
 
                 ax.legend(loc='center left',
                           bbox_to_anchor=graphdata.legendbbox)
 
                 if graphdata.axis_limits is not False:
                     ax.axis(graphdata.axis_limits)
-
-                plt.gca().set_ylim(bottom=-0.05)
+                else:
+                    plt.gca().set_ylim(bottom=-0.05)
 
                 plt.savefig(os.path.join(
                     savedir,
@@ -403,5 +413,73 @@ def fig_values_vs_boxes(graphdata, graph, scenario, savedir):
                 '{}_{}_{}.pdf'.format(
                     scenario, delay_typename, sourcevar)))
             plt.close()
+
+    return None
+
+
+def fig_maxval_variables(graphdata, graph, scenario, savedir):
+    """Generates a figure that shows dependence of method values on
+    different variables in a scenario.
+    Draws one line for each scenario.
+    """
+
+    # Get values for x-axis
+    graphdata.get_xvalues(graph)
+    graphdata.get_linelabels(graph)
+    graphdata.get_legendbbox(graph)
+
+    # Get back from savedir to trends source
+    # This is up to the embed type level
+    trendsdir = data_processing.change_dirtype(savedir, 'graphs', 'trends')
+
+    # Extract current method and sigstatus from weightdir
+    dirparts = data_processing.getfolders(trendsdir)
+    # The method is three folders up from the embed level
+    method = dirparts[-3]
+    # The sigstatus is two folders up from the embed level
+    sigstatus = dirparts[-2]
+
+    plt.figure(1, (12, 6))
+
+    for count, scenario in enumerate(graphdata.scenario):
+
+        sourcefile = filename_template.format(
+            graphdata.case, scenario,
+            graphdata.method[0], graphdata.sigstatus, graphdata.boxindex,
+            graphdata.sourcevar)
+
+        if delays:
+            valuematrix, headers = \
+                data_processing.read_header_values_datafile(sourcefile)
+            max_values = [max(valuematrix[:, index+1])
+                          for index in range(valuematrix.shape[1]-1)]
+        else:
+            valuematrix, headers = \
+                data_processing.read_header_values_datafile(sourcefile)
+            max_values = valuematrix[1:]
+
+        plt.plot(graphdata.xvals, max_values, "--", marker="o", markersize=4,
+                 label=graphdata.linelabels[count])
+
+        if drawfit:
+            graphdata.fitlinelabels(graphname)
+            fit_params = np.polyfit(np.log(graphdata.xvals),
+                                    np.log(max_values), 1)
+            fit_y = [(i*fit_params[0] + fit_params[1])
+                     for i in np.log(graphdata.xvals)]
+            fitted_vals = [np.exp(val) for val in fit_y]
+
+            plt.loglog(graphdata.xvals, fitted_vals, "--",
+                       label=graphdata.fitlinelabels[count])
+
+    plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
+    plt.xlabel(r'Time constant ($\tau$)', fontsize=14)
+    plt.legend(bbox_to_anchor=graphdata.legendbbox)
+
+    if graphdata.axis_limits is not False:
+        plt.axis(graphdata.axis_limits)
+
+    plt.savefig(graph_filename_template.format(graphname))
+    plt.close()
 
     return None
