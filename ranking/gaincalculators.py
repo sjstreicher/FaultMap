@@ -55,6 +55,11 @@ class CorrWeightcalc(object):
         causevar = variables[causevarindex]
         affectedvar = variables[affectedvarindex]
 
+        if weightcalcdata.bidirectional_delays:
+            baseval = weightlist[(len(weightlist) / 2)]
+        else:
+            baseval = weightlist[0]
+
         maxval = max(weightlist)
         minval = min(weightlist)
         # Value used to break tie between maxval and minval if 1 and -1
@@ -103,7 +108,7 @@ class CorrWeightcalc(object):
             logging.info("Directionality threshold passed: " +
                          str(dirthreshpass))
 
-        dataline = [causevar, affectedvar, str(weightlist[0]),
+        dataline = [causevar, affectedvar, baseval,
                     maxcorr, str(bestdelay), str(delay_index),
                     signchange, self.threshcorr, self.threshdir,
                     corrthreshpass, dirthreshpass, directionindex]
@@ -261,6 +266,7 @@ class TransentWeightcalc(object):
         directionpass = None
 
         if weightcalcdata.bidirectional_delays:
+            baseval = weightlist[(len(weightlist) / 2)]
 
             # Get maximum weight in forward direction
             # This includes all positive delays including zero
@@ -311,6 +317,7 @@ class TransentWeightcalc(object):
                 logging.info("The direction test failed")
 
         else:
+            baseval = weightlist[0]
             maxval = max(weightlist)
             delay_index = weightlist.index(maxval)
             bestdelay = weightcalcdata.actual_delays[delay_index]
@@ -321,7 +328,8 @@ class TransentWeightcalc(object):
 
         bestdelay_sample = weightcalcdata.sample_delays[delay_index]
 
-        return maxval, delay_index, bestdelay, bestdelay_sample, directionpass
+        return baseval, maxval, delay_index, bestdelay, \
+             bestdelay_sample, directionpass
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
                weightlist, proplist):
@@ -356,16 +364,18 @@ class TransentWeightcalc(object):
         # directionality test was passed for bidirectional testing cases
 
         # Do everything for the directional case
-        maxval_directional, delay_index_directional, bestdelay_directional, \
-            bestdelay_sample_directional, directionpass_directional = \
-            self.select_weights(weightcalcdata, causevar,
+        baseval_directional, maxval_directional, delay_index_directional, \
+		bestdelay_directional, bestdelay_sample_directional, \
+		directionpass_directional = \
+		self.select_weights(weightcalcdata, causevar,
                                 affectedvar, weightlist_directional,
                                 True)
 
         # Repeat for the absolute case
-        maxval_absolute, delay_index_absolute, bestdelay_absolute, \
-            bestdelay_sample_absolute, directionpass_absolute = \
-            self.select_weights(weightcalcdata, causevar,
+        baseval_absolute, maxval_absolute, delay_index_absolute, \
+            bestdelay_absolute, bestdelay_sample_absolute, \
+            directionpass_absolute = \
+		 self.select_weights(weightcalcdata, causevar,
                                 affectedvar, weightlist_absolute,
                                 False)
 
@@ -435,15 +445,15 @@ class TransentWeightcalc(object):
             threshent_absolute = None
 
         dataline_directional = \
-            [causevar, affectedvar, str(weightlist_directional[0]),
-             maxval_directional, str(bestdelay_directional),
-             str(delay_index_directional), threshent_directional,
+            [causevar, affectedvar, baseval_directional,
+             maxval_directional, bestdelay_directional,
+             delay_index_directional, threshent_directional,
              threshpass_directional, directionpass_directional]
 
         dataline_absolute = \
-            [causevar, affectedvar, str(weightlist_absolute[0]),
-             maxval_absolute, str(bestdelay_absolute),
-             str(delay_index_absolute), threshent_absolute,
+            [causevar, affectedvar, baseval_absolute,
+             maxval_absolute, bestdelay_absolute,
+             delay_index_absolute, threshent_absolute,
              threshpass_absolute, directionpass_absolute]
 
         dataline_directional = dataline_directional + \
