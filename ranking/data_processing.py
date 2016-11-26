@@ -53,6 +53,7 @@ def getfolders(path):
 
     return folders
 
+
 @jit
 def gen_iaaft_surrogates(data, iterations):
     """Generates iAAFT surrogates
@@ -114,19 +115,21 @@ def process_auxfile(filename, allow_neg=False):
                     thresh_index = row.index('threshcorr')
 
                 threshpass_index = row.index('threshpass')
+                directionpass_index = row.index('directionpass')
                 maxdelay_index = row.index('max_delay')
 
             if rowindex > 0:
 
                 affectedvars.append(row[affectedvar_index])
 
-                # Test if weight failed threshpass test and write as zero
-                # if true
+                # Test if weight failed threshpass or directionpass test and
+                # write as zero if true
 
                 # In rare cases it might be desired to allow negative values
                 # (e.g. correlation tests)
                 # TODO: Put the allow_neg parameter in a configuration file
                 # NOTE: allow_neg also removes significance testing
+
                 weight_candidate = float(row[maxval_index])
 
                 if allow_neg:
@@ -136,7 +139,8 @@ def process_auxfile(filename, allow_neg=False):
                     if weight_candidate > 0.:
                         # Attach to no significance test result
                         nosigtest_weights.append(weight_candidate)
-                        if row[threshpass_index] == 'False':
+                        if (row[threshpass_index] == 'False' or
+                                row[directionpass_index] == 'False'):
                             weights.append(0.)
                         else:
                             # threshpass is either None or True
@@ -148,7 +152,8 @@ def process_auxfile(filename, allow_neg=False):
                 delays.append(float(row[maxdelay_index]))
 
                 # Test if sigtest passed before assigning weight
-                if row[threshpass_index] == 'True':
+                if (row[threshpass_index] == 'True' and
+                        row[directionpass_index] == 'True'):
                     # If the threshold is negative, take the absolute value
                     # TODO: Need to think the implications of this through
                     threshold = float(row[thresh_index])
@@ -173,9 +178,7 @@ def create_arrays(datadir, variables):
     datadir is the location of the auxdata and weights folders for the
     specific case that is under investigation
 
-    tsfilename is the file name of the original time series data file
-    used to generate each case and is only used for generating a list of
-    variables
+    variables is the list of variables
 
     """
 
