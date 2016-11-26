@@ -204,7 +204,7 @@ class TransentWeightcalc(object):
     def __init__(self, weightcalcdata, estimator):
         self.data_header = ['causevar', 'affectedvar', 'base_ent',
                             'max_ent', 'max_delay', 'max_index', 'threshold',
-                            'threshpass',
+                            'threshpass', 'directionpass',
                             'k_hist_fwd', 'k_tau_fwd', 'l_hist_fwd',
                             'l_tau_fwd', 'delay_fwd',
                             'k_hist_bwd', 'k_tau_bwd', 'l_hist_bwd',
@@ -254,16 +254,81 @@ class TransentWeightcalc(object):
         transent_directional = transent_fwd - transent_bwd
         transent_absolute = transent_fwd
 
-        # Do not pass negatives on to weight array
-        # TODO: Do this check later instead
-#        if transent_directional < 0:
-#            transent_directional = 0
-#
-#        if transent_absolute < 0:
-#            transent_absolute = 0
-
         return [transent_directional, transent_absolute], \
             [auxdata_fwd, auxdata_bwd]
+
+    def select_weights(self, weightcalcdata, causevar, affectedvar,
+                       weightlist, directional):
+
+        if directional:
+            directionstring = "directional"
+        else:
+            directionstring = "absolute"
+        # Initiate flag indicating whether direction test passed
+        directionpass = None
+
+        if weightcalcdata.bidirectional_delays:
+
+            # Get maximum weight in forward direction
+            # This includes all positive delays including zero
+            maxval_forward = \
+                max(weightlist[(len(weightlist) - 1) / 2:])
+            # Get maximum weight in backward direction
+            # This includes all negative delays exluding zero
+            maxval_backward = \
+                max(weightlist[:(len(weightlist) - 1) / 2])
+
+            delay_index_forward = weightlist.index(maxval_forward)
+            delay_index_backward = weightlist.index(maxval_backward)
+
+            bestdelay_forward = \
+                weightcalcdata.actual_delays[delay_index_forward]
+            bestdelay_backward = \
+                weightcalcdata.actual_delays[delay_index_backward]
+
+            # Test if the maximum forward delay is bigger than the maximum
+            # backward delay
+            if maxval_forward > maxval_backward:
+                # We accept this value as true (pending significance testing)
+                directionpass = True
+            else:
+                # Test whether the maximum forward delay is smaller than the
+                # maximum backward delay
+                # If this test passes we still consider the directiontest to
+                # pass
+                if bestdelay_forward < bestdelay_backward:
+                    directionpass = True
+                else:
+                    directionpass = False
+
+            # Assign forward values to generic outputs
+            maxval = maxval_forward
+            delay_index = delay_index_forward
+            bestdelay = bestdelay_forward
+
+            logging.info("The maximum forward " + directionstring +
+                         " TE between " + causevar + " and " + affectedvar +
+                         " is: " + str(maxval_forward))
+            logging.info("The maximum backward " + directionstring +
+                         " TE between " + causevar + " and " + affectedvar +
+                         " is: " + str(maxval_backward))
+            if directionpass is True:
+                logging.info("The direction test passed")
+            elif directionpass is False:
+                logging.info("The direction test failed")
+
+        else:
+            maxval = max(weightlist)
+            delay_index = weightlist.index(maxval)
+            bestdelay = weightcalcdata.actual_delays[delay_index]
+
+            logging.info("The maximum " + directionstring + " TE between " +
+                         causevar + " and " + affectedvar + " is: " +
+                         str(maxval))
+
+        bestdelay_sample = weightcalcdata.sample_delays[delay_index]
+
+        return maxval, delay_index, bestdelay, bestdelay_sample, directionpass
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
                weightlist, proplist):
@@ -294,33 +359,22 @@ class TransentWeightcalc(object):
         size = weightcalcdata.testsize
         startindex = weightcalcdata.startindex
 
-        # Need placeholder in case significance is not tested
-        threshpass_directional = None
-        threshpass_absolute = None
+        # Get best weights and delays and an indication whether the
+        # directionality test was passed for bidirectional testing cases
 
         # Do everything for the directional case
-        maxval_directional = max(weightlist_directional)
-        delay_index_directional = \
-            weightlist_directional.index(maxval_directional)
-        bestdelay_directional = \
-            weightcalcdata.actual_delays[delay_index_directional]
-        bestdelay_sample_directional = \
-            weightcalcdata.sample_delays[delay_index_directional]
-        logging.info("The maximum directional TE between " + causevar +
-                     " and " + affectedvar + " is: " +
-                     str(maxval_directional))
+        maxval_directional, delay_index_directional, bestdelay_directional, \
+            bestdelay_sample_directional, directionpass_directional = \
+            self.select_weights(self, weightcalcdata, causevar,
+                                affectedvar, weightlist_directional,
+                                True)
 
-        # Repeat for absolute case
-        maxval_absolute = max(weightlist_absolute)
-        delay_index_absolute = \
-            weightlist_absolute.index(maxval_absolute)
-        bestdelay_absolute = \
-            weightcalcdata.actual_delays[delay_index_absolute]
-        bestdelay_sample_absolute = \
-            weightcalcdata.sample_delays[delay_index_absolute]
-        logging.info("The maximum absolute TE between " + causevar +
-                     " and " + affectedvar + " is: " +
-                     str(maxval_absolute))
+        # Repeat for the absolute case
+        maxval_absolute, delay_index_absolute, bestdelay_absolute, \
+            bestdelay_sample_absolute, directionpass_absolute = \
+            self.select_weights(self, weightcalcdata, causevar,
+                                affectedvar, weightlist_absolute,
+                                False)
 
         if weightcalcdata.sigtest:
             self.te_thresh_method = weightcalcdata.te_thresh_method
@@ -391,13 +445,13 @@ class TransentWeightcalc(object):
             [causevar, affectedvar, str(weightlist_directional[0]),
              maxval_directional, str(bestdelay_directional),
              str(delay_index_directional), threshent_directional,
-             threshpass_directional]
+             threshpass_directional, directionpass_directional]
 
         dataline_absolute = \
             [causevar, affectedvar, str(weightlist_absolute[0]),
              maxval_absolute, str(bestdelay_absolute),
              str(delay_index_absolute), threshent_absolute,
-             threshpass_absolute]
+             threshpass_absolute, directionpass_absolute]
 
         dataline_directional = dataline_directional + \
             proplist_fwd[delay_index_directional] + \
