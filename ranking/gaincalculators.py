@@ -30,8 +30,7 @@ class CorrWeightcalc(object):
         self.data_header = ['causevar', 'affectedvar', 'base_corr',
                             'max_corr', 'max_delay', 'max_index',
                             'signchange', 'threshcorr', 'threshdir',
-                            'corrthreshpass', 'dirthreshpass',
-                            'threshpass', 'dirval']
+                            'threshpass', 'directionpass', 'dirval']
 
     def calcweight(self, causevardata, affectedvardata, *args):
         """Calculates the correlation between two vectors containing
@@ -95,7 +94,7 @@ class CorrWeightcalc(object):
 
         corrthreshpass = None
         dirthreshpass = None
-        threshpass = None
+
         if weightcalcdata.sigtest:
             corrthreshpass = (maxcorr_abs >= self.threshcorr)
             dirthreshpass = (directionindex >= self.threshdir)
@@ -103,17 +102,11 @@ class CorrWeightcalc(object):
                          str(corrthreshpass))
             logging.info("Directionality threshold passed: " +
                          str(dirthreshpass))
-            if not (corrthreshpass and dirthreshpass):
-                threshpass = False
-                maxcorr = 0
-            else:
-                threshpass = True
 
         dataline = [causevar, affectedvar, str(weightlist[0]),
                     maxcorr, str(bestdelay), str(delay_index),
                     signchange, self.threshcorr, self.threshdir,
-                    corrthreshpass, dirthreshpass,
-                    threshpass, directionindex]
+                    corrthreshpass, dirthreshpass, directionindex]
 
         return dataline
 
@@ -365,14 +358,14 @@ class TransentWeightcalc(object):
         # Do everything for the directional case
         maxval_directional, delay_index_directional, bestdelay_directional, \
             bestdelay_sample_directional, directionpass_directional = \
-            self.select_weights(self, weightcalcdata, causevar,
+            self.select_weights(weightcalcdata, causevar,
                                 affectedvar, weightlist_directional,
                                 True)
 
         # Repeat for the absolute case
         maxval_absolute, delay_index_absolute, bestdelay_absolute, \
             bestdelay_sample_absolute, directionpass_absolute = \
-            self.select_weights(self, weightcalcdata, causevar,
+            self.select_weights(weightcalcdata, causevar,
                                 affectedvar, weightlist_absolute,
                                 False)
 
