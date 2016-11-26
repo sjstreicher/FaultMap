@@ -295,7 +295,7 @@ class TransentWeightcalc(object):
                 # maximum backward delay
                 # If this test passes we still consider the directiontest to
                 # pass
-                if bestdelay_forward < bestdelay_backward:
+                if bestdelay_forward < abs(bestdelay_backward):
                     directionpass = True
                 else:
                     directionpass = False
@@ -329,7 +329,7 @@ class TransentWeightcalc(object):
         bestdelay_sample = weightcalcdata.sample_delays[delay_index]
 
         return baseval, maxval, delay_index, bestdelay, \
-             bestdelay_sample, directionpass
+            bestdelay_sample, directionpass
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
                weightlist, proplist):
@@ -365,9 +365,9 @@ class TransentWeightcalc(object):
 
         # Do everything for the directional case
         baseval_directional, maxval_directional, delay_index_directional, \
-		bestdelay_directional, bestdelay_sample_directional, \
-		directionpass_directional = \
-		self.select_weights(weightcalcdata, causevar,
+            bestdelay_directional, bestdelay_sample_directional, \
+            directionpass_directional = \
+            self.select_weights(weightcalcdata, causevar,
                                 affectedvar, weightlist_directional,
                                 True)
 
@@ -375,7 +375,7 @@ class TransentWeightcalc(object):
         baseval_absolute, maxval_absolute, delay_index_absolute, \
             bestdelay_absolute, bestdelay_sample_absolute, \
             directionpass_absolute = \
-		 self.select_weights(weightcalcdata, causevar,
+            self.select_weights(weightcalcdata, causevar,
                                 affectedvar, weightlist_absolute,
                                 False)
 
@@ -413,7 +413,7 @@ class TransentWeightcalc(object):
                          str(threshent_directional))
 
             if maxval_directional >= threshent_directional \
-                    and maxval_directional >= 0:
+                    and maxval_directional > 0:
                 threshpass_directional = True
             else:
                 threshpass_directional = False
@@ -435,7 +435,7 @@ class TransentWeightcalc(object):
                          str(threshent_absolute))
 
             if maxval_absolute >= threshent_absolute \
-                    and maxval_absolute >= 0:
+                    and maxval_absolute > 0:
                 threshpass_absolute = True
             else:
                 threshpass_absolute = False
