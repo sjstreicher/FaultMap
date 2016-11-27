@@ -73,18 +73,16 @@ class CorrWeightcalc(object):
 
         delay_index = weightlist.index(maxcorr)
 
-        # Correlation thresholds from Bauer2008 eq. 4
+        # Correlation thresholds from Bauer2008 Eq. 4
         maxcorr_abs = max(maxval, abs(minval))
         bestdelay = weightcalcdata.actual_delays[delay_index]
-        if not (maxval and minval) != 0:
+        if (maxval and minval) != 0:
             directionindex = 2 * (abs(maxval + minval) /
                                   (maxval + abs(minval)))
         else:
             directionindex = 0
 
-        signchange = not ((weightlist[0] / weightlist[delay_index]) >= 0)
-#        corrthreshpass = (maxcorr_abs >= self.threshcorr)
-#        dirthreshpass = (directionindex >= self.threshdir)
+        signchange = not ((baseval / weightlist[delay_index]) >= 0)
 
         logging.info("Maximum correlation value: " + str(maxval))
         logging.info("Minimum correlation value: " + str(minval))
@@ -93,7 +91,7 @@ class CorrWeightcalc(object):
         logging.info("The corresponding delay is: " +
                      str(bestdelay))
         logging.info("The correlation with no delay is: " +
-                     str(weightlist[0]))
+                     str(baseval))
 
         logging.info("Directionality value: " + str(directionindex))
 
