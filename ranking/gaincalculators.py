@@ -283,15 +283,15 @@ class TransentWeightcalc(object):
             bestdelay_backward = \
                 weightcalcdata.actual_delays[delay_index_backward]
 
-            # Test if the maximum forward delay is bigger than the maximum
-            # backward delay
+            # Test if the maximum forward value is bigger than the maximum
+            # backward value
             if maxval_forward > maxval_backward:
                 # We accept this value as true (pending significance testing)
                 directionpass = True
             else:
                 # Test whether the maximum forward delay is smaller than the
                 # maximum backward delay
-                # If this test passes we still consider the directiontest to
+                # If this test passes we still consider the direction test to
                 # pass
                 if bestdelay_forward < abs(bestdelay_backward):
                     directionpass = True
