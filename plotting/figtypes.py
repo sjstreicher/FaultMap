@@ -151,8 +151,8 @@ def fig_fft(graphdata, graph, scenario, savedir):
     plt.close()
 
     return None
-    
-    
+
+
 def fig_values_vs_delays(graphdata, graph, scenario, savedir):
     """Generates a figure that shows dependence of method values on delays.
 
@@ -193,7 +193,7 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
     else:
         typenames = ['weights']
         thresh_typenames = ['sigthresh']
-        
+
     # Get labels
     if graphdata.linelabels:
         graphdata.get_labelformat(graph)
@@ -234,17 +234,16 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
                         data_processing.read_header_values_datafile(
                             threshold_sourcefile)
 
-                for destvar in graphdata.destvars:
-                    destvarindex = graphdata.destvars.index(destvar)
+                for destvarindex, destvar in enumerate(graphdata.destvars):
+                    destvarvalueindex = headers.index(destvar)
                     ax.plot(valuematrix[:, 0],
-                            valuematrix[:, destvarindex + 1],
+                            valuematrix[:, destvarvalueindex],
                             marker="o", markersize=4,
                             label=labels[destvarindex])
-                            
 
                     if graphdata.thresholdplotting:
                         ax.plot(threshmatrix[:, 0],
-                                threshmatrix[:, destvarindex + 1],
+                                threshmatrix[:, destvarvalueindex],
                                 marker="x", markersize=4,
                                 linestyle=':',
                                 label=destvar + ' threshold')
