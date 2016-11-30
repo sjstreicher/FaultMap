@@ -20,13 +20,12 @@ FaultMap
 Introduction
 ------------
 
-FaultMap is a data-driven model-free process fault detection and diagnosis tool.
+FaultMap is a data-driven, model-free process fault detection and diagnosis tool.
 Causal links between processes elements are identified using information theory measures (transfer entropy).
 These links are then used to create a visual representation of the main flows of information (disturbances, etc.) among the process elements as a directed graph.
 These directed graphs are useful as troubleshooting aids.
 
-Network centrality algorithms are applied to determine the most
-The node ranking algorithm calculates an influence score for nodes in the network based on the strength and quality of their influence on other connected nodes (eigenvector centrality).
+Network centrality algorithms are applied to determine the most influential elements based on the strength and quality of their influence on other connected nodes (eigenvector centrality).
 
 Documentation and demonstrations still under development.
 
