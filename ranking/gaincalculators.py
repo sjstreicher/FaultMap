@@ -443,6 +443,10 @@ class TransentWeightcalc(object):
         elif not weightcalcdata.sigtest:
             threshent_directional = None
             threshent_absolute = None
+            threshpass_directional = None
+            threshpass_absolute = None
+            directionpass_directional = None
+            directionpass_absolute = None
 
         dataline_directional = \
             [causevar, affectedvar, baseval_directional,
