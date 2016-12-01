@@ -1114,15 +1114,16 @@ def split_tsdata(inputdata, samplerate, boxsize, boxnum):
         boxstartindex[:] = np.NAN
         boxstartindex[0] = 0
         boxstartindex[-1] = samples - boxsizesamples
-#        samplesbetween = int(round((samples - boxsizesamples) / boxnum))
         samplesbetween = \
-            ((float(samples) - float(boxsizesamples)) / float(boxnum))
+            ((float(samples - boxsizesamples)) / float(boxnum - 1))
         boxstartindex[1:-1] = [round(samplesbetween * index)
                                for index in range(1, boxnum-1)]
         boxes = [inputdata[int(boxstartindex[i]):int(boxstartindex[i]) +
                            int(boxsizesamples)]
                  for i in range(int(boxnum))]
+
     return boxes
+
 
 def calc_signalent(vardata, weightcalcdata):
     """Calculates single signal differential entropies
