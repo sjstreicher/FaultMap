@@ -41,15 +41,16 @@ class NoderankData:
 
         # Get scenarios
         self.scenarios = self.caseconfig['scenarios']
-        # Get weight_methods
-        if mode == 'cases':
-            self.weight_methods = self.caseconfig['weight_methods']
-        elif mode == 'tests':
-            self.weight_methods = ['test_noweightmethod']
         # Get ranking methods
         self.rank_methods = self.caseconfig['rank_methods']
         # Get data type
         self.datatype = self.caseconfig['datatype']
+        # Get weight_methods
+        if self.datatype == 'file':
+            self.weight_methods = self.caseconfig['weight_methods']
+        elif self.datatype == 'function':
+            self.weight_methods = ['test_noweightmethod']
+            
         self.case = case
 
     def scenariodata(self, scenario):
@@ -683,18 +684,18 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                 basedir = os.path.join(noderankdata.saveloc, 'weightdata',
                        case, scenario, weight_method)
 
-                if mode == 'cases':
+                if noderankdata.datatype == 'file':
                     sigtypes = next(os.walk(basedir))[1]
-                elif mode == 'tests':
+                elif noderankdata.datatype == 'function':
                     sigtypes = ['test_nosig']
 
                 for sigtype in sigtypes:
                     print sigtype
                     embedtypesdir = os.path.join(basedir, sigtype)
                     
-                    if mode == 'cases':
+                    if noderankdata.datatype == 'file':
                         embedtypes = next(os.walk(embedtypesdir))[1]
-                    elif mode == 'tests':
+                    elif noderankdata.datatype == 'function':
                         embedtypes = ['test_noembed']
                 
                     for embedtype in embedtypes:
