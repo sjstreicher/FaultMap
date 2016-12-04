@@ -1,13 +1,57 @@
 {
   "datatype": "function",
   "scenarios": [
-      "fullconn_equal"
+    "series_equal_five",
+    "series_equal_five_scaled",
+    "series_equal_five_biased",
+    "series_incomingon2ndand3rd",
+    "series_incomingon2ndand3rd_scaled"
   ],
   "rank_methods": [
-      "eigenvector"
+      "eigenvector",
+      "katz"
   ],
+  "settings_bias": {
+    "use_bias": true
+  },
   "fullconn_equal": {
     "networkgen": "fullconn_equal",
-    "m": 0.999
-  }
+    "m": 0.99
+  },
+  "series_incomingon2ndand3rd" : {
+    "networkgen": "series_incomingon2ndand3rd",
+    "m": 0.99,
+    "alpha": 1.0,
+    "relative_scaling": false
+  },
+  "series_incomingon2ndand3rd_scaled" : {
+    "networkgen": "series_incomingon2ndand3rd",
+    "m": 0.99,
+    "alpha": 1.0,
+    "relative_scaling": true
+  },
+  "series_equal_five" : {
+    "networkgen": "series_equal_five",
+    "m": 0.99,
+    "alpha": 1.0
+  },
+  "series_equal_five_scaled" : {
+    "networkgen": "series_equal_five",
+    "m": 0.99,
+    "alpha": 1.0,
+    "relative_scaling": true
+  },
+  "series_equal_five_biased" : {
+    "settings": "settings_bias",
+    "networkgen": "series_equal_five",
+    "m": 0.99,
+    "alpha": 1.0,
+    "biasgen": "bias_thirdlarger"
+  },
+  "scenarios_store": [
+    "series_equal_five",
+    "series_equal_five_biased",
+    "series_incomingon2ndand3rd",
+    "series_incomingon2ndand3rd_scaled"
+  ]
 }
