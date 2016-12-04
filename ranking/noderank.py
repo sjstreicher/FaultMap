@@ -20,9 +20,7 @@ import numpy as np
 
 import config_setup
 import data_processing
-
-
-# Networks for tests
+import networkgen
 
 
 class NoderankData:
@@ -44,7 +42,10 @@ class NoderankData:
         # Get scenarios
         self.scenarios = self.caseconfig['scenarios']
         # Get weight_methods
-        self.weight_methods = self.caseconfig['weight_methods']
+        if mode == 'cases':
+            self.weight_methods = self.caseconfig['weight_methods']
+        elif mode == 'tests':
+            self.weight_methods = ['test_noweightmethod']
         # Get ranking methods
         self.rank_methods = self.caseconfig['rank_methods']
         # Get data type
@@ -118,7 +119,6 @@ class NoderankData:
                                        scenario_config['biasvector'])
                 self.biasvector, _ = \
                     data_processing.read_biasvector(biasloc)
-
             else:
                 # If no bias vector is defined, use a vector of equal weights
                 self.biasvector = np.ones(len(self.variablelist))
@@ -128,7 +128,17 @@ class NoderankData:
             network_gen = scenario_config['networkgen']
             self.connectionmatrix, self.gainmatrix, \
                 self.variablelist, _ = \
-                eval('networkgen.' + network_gen)()
+                getattr(networkgen, network_gen)()
+            
+            if self.bias_used:
+                # Generate the bias vector
+                bias_gen = scenario_config['biasgen']
+                self.biasvector, _ = \
+                    getattr(networkgen, bias_gen)()
+            else:
+                # If no bias vector is defined, use a vector of equal weights
+                self.biasvector = np.ones(len(self.variablelist))
+            
 
         logging.info("Number of tags: {}".format(len(self.variablelist)))
 
@@ -538,23 +548,28 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
     boxrankdict_name = 'boxrankdict_{}.json'
     rel_boxrankdict_name = 'rel_boxrankdict_{}.json'
 
-    noderankdata.get_boxes(scenario, datadir, typename)
-    gainmatrices = get_gainmatrices(noderankdata, datadir, typename)
-    delaymatrices = get_delaymatrices(noderankdata, datadir, typename)
+    if noderankdata.datatype == 'file':
+        noderankdata.get_boxes(scenario, datadir, typename)
+        gainmatrices = get_gainmatrices(noderankdata, datadir, typename)
+        delaymatrices = get_delaymatrices(noderankdata, datadir, typename)
+    elif noderankdata.datatype == 'function':
+        gainmatrices = [noderankdata.gainmatrix]
+        delaymatrices = [np.zeros_like(noderankdata.gainmatrix)]
+        noderankdata.boxes = [0]
 
     # Create lists to store the backward ranking list
     # for each box and associated gainmatrix ranking result
     backward_rankinglists = []
     backward_rankingdicts = []
 
-    for boxindex, gainmatrix in enumerate(gainmatrices):
+    for index, gainmatrix in enumerate(gainmatrices):
         if preprocessing:
             modgainmatrix, _ = \
                 gainmatrix_preprocessing(gainmatrix)
         else:
             modgainmatrix = gainmatrix
 
-        delays = delaymatrices[boxindex]
+        delays = delaymatrices[index]
 
 #       _, dummyweight = gainmatrix_preprocessing(gainmatrix)
         # Set dummyweight to 10
@@ -606,7 +621,8 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
         # Save the ranking list for each box
         savepath = config_setup.ensure_existence(
             os.path.join(savedir, typename[:-7],
-                         'box{:03d}'.format(boxindex+1), dummystatus))
+                         'box{:03d}'.format(
+                         noderankdata.boxes[index]+1), dummystatus))
 
         writecsv_looprank(
             os.path.join(savepath,
@@ -654,8 +670,7 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
 
     Notes
     -----
-        Preprocessing is experimental and should always be set to False at this
-        stage.
+        Preprocessing is experimental and should always be set to False
 
     """
     noderankdata = NoderankData(mode, case)
@@ -673,16 +688,24 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
 
         for rank_method in noderankdata.rank_methods:
             for weight_method in noderankdata.weight_methods:
-
+                
                 basedir = os.path.join(noderankdata.saveloc, 'weightdata',
-                                       case, scenario, weight_method)
+                       case, scenario, weight_method)
 
-                sigtypes = next(os.walk(basedir))[1]
+                if mode == 'cases':
+                    sigtypes = next(os.walk(basedir))[1]
+                elif mode == 'tests':
+                    sigtypes = ['test_nosig']
 
                 for sigtype in sigtypes:
                     print sigtype
                     embedtypesdir = os.path.join(basedir, sigtype)
-                    embedtypes = next(os.walk(embedtypesdir))[1]
+                    
+                    if mode == 'cases':
+                        embedtypes = next(os.walk(embedtypesdir))[1]
+                    elif mode == 'tests':
+                        embedtypes = ['test_noembed']
+                
                     for embedtype in embedtypes:
                         print embedtype
                         datadir = os.path.join(embedtypesdir, embedtype)

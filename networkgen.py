@@ -12,7 +12,7 @@ import numpy as np
 from datagen import seed_randn
 from ranking.data_processing import buildgraph
 
-filesloc = json.load(open('config.json'))
+filesloc = json.load(open('testconfig.json'))
 saveloc = os.path.expanduser(filesloc['saveloc'])
 
 seed_list = [35, 88, 107, 52, 98]
