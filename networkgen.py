@@ -147,3 +147,6 @@ circle_unequalon2to3 = test_function_builder(
     filename='circle_unequalon2_to3',
     doc="""Creates five tags connected in a circle with unit weights on
         all edges except one.""")
+
+def bias_thirdlarger():
+    return np.array([1, 1, 3, 1, 1]), None
