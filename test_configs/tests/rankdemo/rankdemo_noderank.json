@@ -1,80 +1,13 @@
 {
   "datatype": "function",
-  "sampling_rate": 1,
-  "weight_methods": [
-    "transfer_entropy_kraskov"
+  "scenarios": [
+      "fullconn_equal"
   ],
   "rank_methods": [
       "eigenvector"
   ],
-  "scenarios": [
-      "fullconn_equal",
-      "series_equal_five",
-	  "series_incomingon2nd",
-	  "series_incomingon3rd",
-	  "series_incomingon2ndand3rd",
-	  "series_incomingon2ndand4th",
-	  "series_disjoint_equal",
-	  "series_disjoint_unequal",
-	  "series_disjoint_unequalsource",
-	  "circle_equal",
-	  "circle_unequalon2to3"
-  ],
-  "settings_standard": {
-    "use_connections": true,
-	"transient": false,
-    "use_bias": false,
-	"dummies": false
-  },
-  "settings_standard_transient": {
-    "use_connections": true,
-	"transient": true,
-    "use_bias": false,
-	"dummies": false
-  },
   "fullconn_equal": {
     "networkgen": "fullconn_equal",
-	"settings": "settings_standard",
     "m": 0.999
-  },
-  "series_equal_five": {
-    "networkgen": "series_equal_five",
-	"settings": "settings_standard"
-  },
-  "series_incomingon2nd": {
-    "networkgen": "series_incomingon2nd",
-	"settings": "settings_standard"
-  },
-  "series_incomingon3rd": {
-    "networkgen": "series_incomingon3rd",
-	"settings": "settings_standard"
-  },
-  "series_incomingon2ndand3rd": {
-    "networkgen": "series_incomingon2ndand3rd",
-	"settings": "settings_standard"
-  },
-  "series_incomingon2ndand4th": {
-    "networkgen": "series_incomingon2ndand4th",
-	"settings": "settings_standard"
-  },
-  "circle_equal": {
-    "networkgen": "circle_equal",
-	"settings": "settings_standard"
-  },
-  "circle_unequalon2to3": {
-    "networkgen": "circle_unequalon2to3",
-	"settings": "settings_standard"
-  },
-  "series_disjoint_equal": {
-    "networkgen": "series_disjoint_equal",
-	"settings": "settings_standard"
-  },
-  "series_disjoint_unequal": {
-    "networkgen": "series_disjoint_unequal",
-	"settings": "settings_standard"
-  },
-  "series_disjoint_unequalsource": {
-    "networkgen": "series_disjoint_unequalsource",
-	"settings": "settings_standard"
   }
 }
