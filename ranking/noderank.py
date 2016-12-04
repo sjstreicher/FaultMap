@@ -149,7 +149,6 @@ class NoderankData:
             boxindexes = 'all'
         if boxindexes == 'all':
             boxesdir = os.path.join(datadir, typename)
-            print boxesdir
             boxes = next(os.walk(boxesdir))[1]
             self.boxes = range(len(boxes))
         else:
@@ -172,25 +171,17 @@ def calc_simple_rank(gainmatrix, variables, biasvector, noderankdata,
     """Constructs the ranking dictionary using the eigenvector approach
     i.e. Ax = x where A is the local gain matrix.
 
-    Taking the absolute of the gainmatrix and normalizing to conform to
-    original LoopRank idea.
-
     """
     # Length of gain matrix = number of nodes
     n = gainmatrix.shape[0]
     gainmatrix = np.asmatrix(gainmatrix, dtype=float)
-
-    # Normalize the gainmatrix columns
-    for col in range(n):
-        colsum = np.sum(abs(gainmatrix[:, col]))
-        if colsum == 0:
-            # Option :1 do nothing
-            continue
-            # Option 2: equally connect to all other nodes
-    #        for row in range(n):
-    #            gainmatrix[row, col] = (1. / n)
-        else:
-            gainmatrix[:, col] = (gainmatrix[:, col] / colsum)
+    
+    # Scale to bring the gainmatrix into perspective with the reset matrix
+    rowsum_list = [np.sum(abs(gainmatrix[row, :])) for row in range(n)]
+    for row, rowsum in enumerate(rowsum_list):  
+        if rowsum != 0:
+    #        gainmatrix[row, :] = (gainmatrix[row, :] / max(rowsum_list))
+            gainmatrix[row, :] = (gainmatrix[row, :] / rowsum)
 
     # Generate the reset matrix
     # The reset matrix is also referred to as the personalisation matrix
@@ -203,7 +194,7 @@ def calc_simple_rank(gainmatrix, variables, biasvector, noderankdata,
 
     m = noderankdata.m
 
-    weightmatrix = (m * gainmatrix) + ((1-m) * resetmatrix)
+    weightmatrix = (m * gainmatrix) + ((1. - m) * resetmatrix)
 
     # Transpose the weightmatrix to ensure the correct direction of analysis
     weightmatrix = weightmatrix.T
