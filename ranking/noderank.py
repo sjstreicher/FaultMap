@@ -362,7 +362,7 @@ def calc_transient_importancediffs(rankingdicts, variablelist):
     return transientdict, basevaldict, boxrankdict, rel_boxrankdict
 
 
-def create_importance_graph(variablelist, closedconnections,
+def create_importance_graph(noderankdata, variablelist, closedconnections,
                             openconnections, gainmatrix, delaymatrix,
                             ranks):
     """Generates a graph containing the
@@ -376,10 +376,16 @@ def create_importance_graph(variablelist, closedconnections,
 
     for col, row in itertools.izip(openconnections.nonzero()[1],
                                    openconnections.nonzero()[0]):
-
-        opengraph.add_edge(variablelist[col], variablelist[row],
-                           weight=gainmatrix[row, col],
-                           delay=delaymatrix[row, col])
+        source_var = variablelist[col]
+        dest_var = variablelist[row]
+        
+        edge_weight = gainmatrix[row, col]
+        edge_delay = delaymatrix[
+            noderankdata.variablelist.index(dest_var),
+            noderankdata.variablelist.index(source_var)]
+        opengraph.add_edge(source_var, dest_var,
+                           weight=edge_weight,
+                           delay=edge_delay)
     openedgelist = opengraph.edges()
 
 #    closedgraph = nx.DiGraph()
@@ -394,8 +400,13 @@ def create_importance_graph(variablelist, closedconnections,
         newedge = (variablelist[col], variablelist[row])
 #        closedgraph.add_edge(*newedge, weight=gainmatrix[row, col],
 #                             controlloop=int(newedge not in openedgelist))
+        source_var = variablelist[col]
+        dest_var = variablelist[row]        
+        
         edge_weight = gainmatrix[row, col]
-        edge_delay = delaymatrix[row, col]
+        edge_delay = delaymatrix[
+            noderankdata.variablelist.index(dest_var),
+            noderankdata.variablelist.index(source_var)]
         # Do not include edges with zero weight
         if edge_weight != 0:
             relative_closedgraph.add_edge(
@@ -623,7 +634,7 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
 
         # Save the graphs to file
         graph, _ = \
-            create_importance_graph(
+            create_importance_graph(noderankdata,
                 variables, connections, connections, gains, delays,
                 rankingdict)
         graph_filename = \
