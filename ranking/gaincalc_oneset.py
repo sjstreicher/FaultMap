@@ -23,6 +23,15 @@ def writecsv_weightcalc(filename, datalines, header):
             csv.writer(f).writerow(header)
             csv.writer(f).writerows(datalines)
 
+def readcsv_weightcalc(filename):
+    """CSV reader customized for reading weights."""
+    
+    with open(filename) as f:
+        header = csv.reader(f).next()[:]
+        values = np.genfromtxt(f, delimiter=',', dtype=str)
+    
+    return values, header
+
 
 def calc_weights_oneset(weightcalcdata, weightcalculator,
                         box, startindex, size, newconnectionmatrix,
@@ -68,6 +77,27 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
     auxdata_absolute = []
     auxdata_neutral = []
 
+    if method[:16] == 'transfer_entropy':
+        if os.path.exists(filename(auxdirectional_name, boxindex+1, causevar)):
+            auxdata_directional = list(np.genfromtxt(
+                filename(auxdirectional_name, boxindex+1, causevar),
+                delimiter=',', dtype=str)[1:, :])
+            auxdata_absolute = list(np.genfromtxt(
+                filename(auxdirectional_name, boxindex+1, causevar),
+                delimiter=',', dtype=str)[1:, :])        
+        
+            datalines_directional, _ = readcsv_weightcalc(
+                filename(directional_name, boxindex+1, causevar))
+                
+            datalines_absolute, _ = readcsv_weightcalc(
+                filename(absolute_name, boxindex+1, causevar))
+            
+            if weightcalcdata.allthresh:
+                datalines_sigthresh_directional = readcsv_weightcalc(
+                  filename(sig_directional_name, boxindex+1, causevar))
+                datalines_sigthresh_absolute = readcsv_weightcalc(
+                  filename(sig_absolute_name, boxindex+1, causevar))
+
     for affectedvarindex in weightcalcdata.affectedvarindexes:
         affectedvar = weightcalcdata.variables[affectedvarindex]
 
@@ -76,8 +106,10 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                      str(boxindex + 1))
 
         exists = False
+        do_test = not(newconnectionmatrix[affectedvarindex,
+                                          causevarindex] == 0)
         # Test if the affectedvar has already been calculated
-        if method[:16] == 'transfer_entropy':
+        if (method[:16] == 'transfer_entropy') and do_test:
             testlocation = filename(auxdirectional_name, boxindex+1, causevar)
             if os.path.exists(testlocation):
                 # Open CSV file and read names of second affected vars
@@ -89,9 +121,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                     print "Affected variable results in existence"
                     exists = True
 
-        if (not(newconnectionmatrix[affectedvarindex,
-                                    causevarindex] == 0) and
-                (exists is False)):
+        if do_test and (exists is False):
             weightlist = []
             directional_weightlist = []
             absolute_weightlist = []
