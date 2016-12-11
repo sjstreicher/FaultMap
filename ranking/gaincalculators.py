@@ -100,7 +100,8 @@ class CorrWeightcalc(object):
 
         if weightcalcdata.sigtest:
             corrthreshpass = (maxcorr_abs >= self.threshcorr)
-            dirthreshpass = (directionindex >= self.threshdir)
+            dirthreshpass = ((directionindex >= self.threshdir)
+                             and (bestdelay >= 0.))
             logging.info("Correlation threshold passed: " +
                          str(corrthreshpass))
             logging.info("Directionality threshold passed: " +
