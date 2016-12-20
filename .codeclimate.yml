@@ -9,6 +9,9 @@ engines:
       - php
   fixme:
     enabled: true
+    checks:
+      TODO:
+        enabled: false
   radon:
     enabled: true
 ratings:
