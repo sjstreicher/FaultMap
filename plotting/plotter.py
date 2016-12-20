@@ -222,9 +222,9 @@ def plotdraw(mode, case, writeoutput):
     for graph in graphdata.graphs:
         graphdata.graphdetails(graph)
         for weight_method in graphdata.weight_methods:
-            print weight_method
+            print(weight_method)
             for scenario in graphdata.scenarios:
-                print scenario
+                print(scenario)
                 basedir = os.path.join(graphdata.saveloc, 'weightdata',
                                        case, scenario, weight_method)
 
@@ -232,11 +232,11 @@ def plotdraw(mode, case, writeoutput):
 
                 for sigtype in sigtypes:
                     if sigtype in graphdata.significance_cases:
-                        print sigtype
+                        print(sigtype)
                         embedtypesdir = os.path.join(basedir, sigtype)
                         embedtypes = next(os.walk(embedtypesdir))[1]
                         for embedtype in embedtypes:
-                            print embedtype
+                            print(embedtype)
                             datadir = os.path.join(embedtypesdir, embedtype)
                             # Actual plot drawing execution starts here
                             drawplot(graphdata, scenario, datadir,

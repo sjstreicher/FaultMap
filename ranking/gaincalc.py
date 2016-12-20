@@ -103,7 +103,7 @@ class WeightcalcData(object):
                 config file.
 
         """
-        print "The scenario name is: " + scenario
+        print("The scenario name is: " + scenario)
 
         self.settings_set = self.caseconfig[scenario]['settings']
 
@@ -589,7 +589,7 @@ def weightcalc(mode, case, writeoutput=False, single_entropies=False,
                 start_time = time.clock()
                 calc_weights(weightcalcdata, method, scenario, writeoutput)
                 end_time = time.clock()
-                print end_time - start_time
+                print(end_time - start_time)
 
 if __name__ == '__main__':
     multiprocessing.freezeSupport()

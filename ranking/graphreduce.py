@@ -89,7 +89,7 @@ def dographreduce(graphreducedata, scenario, datadir,
                 threshold = compute_edge_threshold(original_graph,
                                                    graphreducedata.percentile)
             except:
-                print "Empty graph"
+                print("Empty graph")
                 break
             # Delete low value edges from graph
             lowedge_graph = delete_lowval_edges(original_graph, threshold)
@@ -140,7 +140,7 @@ def reducegraph(mode, case, writeoutput):
             logging.info("Running scenario {}".format(scenario))
             # Update scenario-specific fields graphreducedata object
             graphreducedata.scenariodata(scenario)
-            print scenario
+            print(scenario)
         else:
             continue
 
@@ -150,15 +150,15 @@ def reducegraph(mode, case, writeoutput):
         methodsdir = os.path.join(scenariosdir, scenario)
         methods = next(os.walk(methodsdir))[1]
         for method in methods:
-            print method
+            print(method)
             sigtypesdir = os.path.join(methodsdir, method)
             sigtypes = next(os.walk(sigtypesdir))[1]
             for sigtype in sigtypes:
-                print sigtype
+                print(sigtype)
                 embedtypesdir = os.path.join(sigtypesdir, sigtype)
                 embedtypes = next(os.walk(embedtypesdir))[1]
                 for embedtype in embedtypes:
-                    print embedtype
+                    print(embedtype)
                     datadir = os.path.join(embedtypesdir, embedtype)
 
                     if method[:16] == 'transfer_entropy':
@@ -178,7 +178,7 @@ def reducegraph(mode, case, writeoutput):
                             typenames.append('sigweight')
 
                     for typename in typenames:
-                        print typename
+                        print(typename)
                         # Start the methods here
                         dographreduce(graphreducedata, scenario, datadir,
                                       typename, writeoutput)

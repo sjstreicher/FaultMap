@@ -564,7 +564,7 @@ def result_reconstruction(mode, case, writeoutput):
     scenarios = next(os.walk(scenariosdir))[1]
 
     for scenario in scenarios:
-        print scenario
+        print(scenario)
 
         weightcalcdata = \
             gaincalc.WeightcalcData(mode, case, False, False, False)
@@ -574,15 +574,15 @@ def result_reconstruction(mode, case, writeoutput):
         methodsdir = os.path.join(scenariosdir, scenario)
         methods = next(os.walk(methodsdir))[1]
         for method in methods:
-            print method
+            print(m0ethod)
             sigtypesdir = os.path.join(methodsdir, method)
             sigtypes = next(os.walk(sigtypesdir))[1]
             for sigtype in sigtypes:
-                print sigtype
+                print(sigtype)
                 embedtypesdir = os.path.join(sigtypesdir, sigtype)
                 embedtypes = next(os.walk(embedtypesdir))[1]
                 for embedtype in embedtypes:
-                    print embedtype
+                    print(embedtype)
                     datadir = os.path.join(embedtypesdir, embedtype)
                     create_arrays(datadir, weightcalcdata.variables)
                     # Provide directional array version tested with absolute
@@ -610,20 +610,20 @@ def trend_extraction(mode, case, writeoutput):
     scenarios = next(os.walk(scenariosdir))[1]
 
     for scenario in scenarios:
-        print scenario
+        print(scenario)
 
         methodsdir = os.path.join(scenariosdir, scenario)
         methods = next(os.walk(methodsdir))[1]
         for method in methods:
-            print method
+            print(method)
             sigtypesdir = os.path.join(methodsdir, method)
             sigtypes = next(os.walk(sigtypesdir))[1]
             for sigtype in sigtypes:
-                print sigtype
+                print(sigtype)
                 embedtypesdir = os.path.join(sigtypesdir, sigtype)
                 embedtypes = next(os.walk(embedtypesdir))[1]
                 for embedtype in embedtypes:
-                    print embedtype
+                    print(embedtype)
                     datadir = os.path.join(embedtypesdir, embedtype)
                     extract_trends(datadir, writeoutput)
 
@@ -695,7 +695,7 @@ def fft_calculation(headerline, normalised_tsdata, variables, sampling_rate,
 
     # logging.info("Starting FFT calculations")
     # Using a print command instead as logging is late
-    print "Starting FFT calculations"
+    print("Starting FFT calculations")
 
     # Change first entry of headerline from "Time" to "Frequency"
     headerline[0] = 'Frequency'

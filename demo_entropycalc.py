@@ -77,7 +77,7 @@ signalent_cause_gaussian_boxresults = []
 signalent_affected_kernel_boxresults = []
 signalent_affected_gaussian_boxresults = []
 for boxindex, box in enumerate(boxes):
-    print "Now processing box: " + str(boxindex + 1)
+    print("Now processing box: " + str(boxindex + 1))
     vardata_cause = box.T[0]
     vardata_effect = box.T[1]
 
