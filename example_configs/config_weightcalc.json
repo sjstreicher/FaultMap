@@ -1,0 +1,10 @@
+{
+  "mode": "cases",
+  "writeoutput": true,
+  "calc_single_entropies": false,
+  "fft_calc": true,
+  "multiprocessing": true,
+  "cases": [
+    "tennessee_eastman"
+  ]
+}

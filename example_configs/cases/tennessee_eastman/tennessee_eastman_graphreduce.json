@@ -1,0 +1,12 @@
+{
+  "datatype": "file",
+  "scenarios": [
+    "dist8_dist11_steps_noanalysers_skogestad"
+  ],
+  "dist8_dist11_steps_noanalysers_skogestad": {
+	"graph": "graph_eigenvector",
+	"percentile": 75,
+	"depth": "full",
+	"weight_discretion": false
+  }
+}

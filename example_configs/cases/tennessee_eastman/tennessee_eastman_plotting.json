@@ -1,0 +1,111 @@
+{
+  "datatype": "file",
+  "graphs": [
+	  "allvars_timeseries_noscaling"
+  ],
+  "weight_methods": [
+      "transfer_entropy_kernel",
+	  "transfer_entropy_kraskov"
+  ],
+  "sigtest_cases": [
+	  "sigtested"
+	],
+  "graphs": [
+	 "values_vs_boxes"
+  ],
+  "singlecon_timeseries": {
+    "plot_type": "fig_timeseries",
+	"scenarios": [
+	  "noiseonly_nosubs_set1"
+	],
+    "weight_methods": [
+      "cross_correlation",
+      "transfer_entropy_kernel",
+	  "transfer_entropy_kraskov"
+    ],
+	"sigtest_cases": [
+	  "sigtested",
+	  "nosigtest"
+	],
+	"settings": "settings_standard_sigtest",
+	"boxindex": 1,
+	"plotvars": ["X 1", "X 2", "X 3", "X 4", "X 5", "X 6"],
+	"starttime": 0,
+	"axis_limits": false,
+	"linelabels": false,
+	"legendbbox": [0.25, 1]
+  },
+  "singlecon_fft": {
+    "plot_type": "fig_fft",
+	"scenarios": [
+	  "noiseonly_nosubs_set1"
+	],
+    "weight_methods": [
+      "cross_correlation",
+      "transfer_entropy_kernel",
+	  "transfer_entropy_kraskov"
+    ],
+	"sigtest_cases": [
+	  "sigtested",
+	  "nosigtest"
+	],
+	"settings": "settings_standard_sigtest",
+	"boxindex": 1,
+	"plotvars": ["X 1", "X 2", "X 3", "X 4", "X 5", "X 6"],
+	"starttime": 0,
+	"axis_limits": false,
+	"linelabels": false,
+	"legendbbox": [0.25, 1],
+	"frequency_unit": "units"
+  },
+  "singlecon_values_vs_delays": {
+    "plot_type": "fig_values_vs_delays",
+	"scenarios": [
+      "noiseonly_nosubs_set1",
+	  "noiseonly_nosubs_set1_fullcon",
+	  "noiseonly_nosubs_set1_fullcon_sixsigma"
+	],
+    "weight_methods": [
+      "cross_correlation",
+      "transfer_entropy_kernel",
+	  "transfer_entropy_kraskov"
+    ],
+	"sigtest_cases": [
+	  "sigtested",
+	  "nosigtest"
+	],
+	"boxindexes": [
+	    1
+	],
+	"sourcevars": [
+	    "X 1"
+	],
+	"destvars": ["X 2", "X 3", "X 4", "X 5", "X 6"],
+	"starttime": 0,
+	"axis_limits": false,
+	"linelabels": false,
+	"legendbbox": [1.0, 0.5],
+	"time_unit": "steps",
+	"threshold_plotting": true
+  },
+    "values_vs_boxes": {
+    "plot_type": "fig_values_vs_boxes",
+	"scenarios": [
+	  "dist8_dist11_steps_noanalysers_walk"
+	],
+    "weight_methods": [
+      "transfer_entropy_kernel",
+	  "transfer_entropy_kraskov"
+    ],
+	"sigtest_cases": [
+	  "sigtested",
+	  "nosigtest"
+	],
+	"sourcevars": ["XMV 1"],
+	"destvars": ["XMV 2", "XMV 3", "XMV 4", "XMV 5", "XMV 6"],
+	"axis_limits": false,
+	"linelabels": false,
+	"legendbbox": [1.0, 0.5],
+	"time_unit": "steps"
+  }
+}
