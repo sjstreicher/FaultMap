@@ -574,7 +574,7 @@ def result_reconstruction(mode, case, writeoutput):
         methodsdir = os.path.join(scenariosdir, scenario)
         methods = next(os.walk(methodsdir))[1]
         for method in methods:
-            print(m0ethod)
+            print(method)
             sigtypesdir = os.path.join(methodsdir, method)
             sigtypes = next(os.walk(sigtypesdir))[1]
             for sigtype in sigtypes:
