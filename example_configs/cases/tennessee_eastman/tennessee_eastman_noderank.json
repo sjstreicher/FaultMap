@@ -1,0 +1,29 @@
+{
+  "datatype": "file",
+  "weight_methods": [
+	  "transfer_entropy_kernel"
+  ],
+  "rank_methods": [
+      "eigenvector"
+  ],
+  "scenarios": [
+    "dist8_dist11_steps_noanalysers_skogestad"
+  ],
+  "settings_standard": {
+    "use_connections": true,
+	"use_bias": false,
+	"dummies": false
+  },
+  "dist8_dist11_steps_noanalysers": {
+    "settings": "settings_standard",
+    "connections": "connections_nodiag_noanalysers.csv",
+    "m": 0.999,
+    "boxindexes": "all"
+  },
+  "dist8_dist11_steps_noanalysers_skogestad": {
+    "settings": "settings_standard",
+    "connections": "connections_nodiag_noanalysers.csv",
+    "m": 0.999,
+    "boxindexes": "all"
+  }
+}
