@@ -118,7 +118,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                                             dtype=str)
                 affectedvars = auxdatafile[:, 1]
                 if affectedvar in affectedvars:
-                    print "Affected variable results in existence"
+                    print("Affected variable results in existence")
                     exists = True
 
         if do_test and (exists is False):
@@ -326,9 +326,9 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                         sig_neutral_name, boxindex+1, causevar),
                         datalines_sigthresh_neutral, headerline)
 
-    print ("Done analysing causal variable: " + causevar +
-           " [" + str(causevarindex+1) + "/" +
-           str(len(weightcalcdata.causevarindexes)) + "]")
+    print("Done analysing causal variable: " + causevar +
+          " [" + str(causevarindex+1) + "/" +
+          str(len(weightcalcdata.causevarindexes)) + "]")
 
     return None
 

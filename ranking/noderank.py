@@ -701,7 +701,7 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                     sigtypes = ['test_nosig']
 
                 for sigtype in sigtypes:
-                    print sigtype
+                    print(sigtype)
                     embedtypesdir = os.path.join(basedir, sigtype)
                     
                     if noderankdata.datatype == 'file':
@@ -710,7 +710,7 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                         embedtypes = ['test_noembed']
                 
                     for embedtype in embedtypes:
-                        print embedtype
+                        print(embedtype)
                         datadir = os.path.join(embedtypesdir, embedtype)
 
                         if weight_method[:16] == 'transfer_entropy':

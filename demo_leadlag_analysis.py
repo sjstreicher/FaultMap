@@ -67,7 +67,7 @@ delays = range(-test_delays, test_delays + 1)
 corr_boxresults = []
 te_boxresults = []
 for boxindex, box in enumerate(boxes):
-    print "Now processing box: " + str(boxindex + 1)
+    print("Now processing box: " + str(boxindex + 1))
     corrvals = []
     tevals = []
     for delay in delays:

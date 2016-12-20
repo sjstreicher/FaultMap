@@ -175,8 +175,8 @@ def calc_infodynamics_te(infodynamicsloc, calcmethod,
     destArray = affected_data.tolist()
 
     if (len(sourceArray) != len(destArray)):
-        print "Source length: " + str(len(sourceArray))
-        print "Destination length: " + str(len(destArray))
+        print("Source length: " + str(len(sourceArray)))
+        print("Destination length: " + str(len(destArray)))
         raise ValueError(
             "The source and destination arrays are of different lengths")
 

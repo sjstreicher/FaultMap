@@ -39,7 +39,7 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
     def test_peakentropy_infodyn_kernel(self):
         self.entropies_infodyn_kernel = []
         for timelag in range(self.delay-5, self.delay+6):
-            print "Results for timelag of: ", str(timelag)
+            print("Results for timelag of: ", str(timelag))
             [_, x_hist, y_hist] = autoreg_datagen(
                 self.delay, timelag, self.samples, self.sub_samples)
 
@@ -60,7 +60,7 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
             self.entropies_infodyn_kernel.append(result_infodyn)
             print("Infodynamics TE result: %.4f bits" % result_infodyn)
 
-        print self.entropies_infodyn_kernel
+        print(self.entropies_infodyn_kernel)
 
         maxval = max(self.entropies_infodyn_kernel)
         # The maximum lags with one sample
@@ -70,7 +70,7 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
     def test_peakentropy_infodyn_kraskov_noautoembed(self):
         self.entropies_infodyn_kraskov = []
         for timelag in range(self.delay-5, self.delay+6):
-            print "Results for timelag of: ", str(timelag)
+            print("Results for timelag of: ", str(timelag))
             [x_pred, x_hist, y_hist] = autoreg_datagen(self.delay, timelag,
                                                        self.samples,
                                                        self.sub_samples)
@@ -92,10 +92,10 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
             self.entropies_infodyn_kraskov.append(result_infodyn)
             print("Infodynamics TE result: %.4f bits" % result_infodyn)
 
-            print properties
-            print significance
+            print(properties)
+            print(significance)
 
-        print self.entropies_infodyn_kraskov
+        print(self.entropies_infodyn_kraskov)
 
         maxval = max(self.entropies_infodyn_kraskov)
         # The maximum lags with one sample
@@ -105,7 +105,7 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
     def test_peakentropy_infodyn_kraskov_autoembed(self):
         self.entropies_infodyn_kraskov = []
         for timelag in range(self.delay-5, self.delay+6):
-            print "Results for timelag of: ", str(timelag)
+            print("Results for timelag of: ", str(timelag))
             [x_pred, x_hist, y_hist] = autoreg_datagen(self.delay, timelag,
                                                        self.samples,
                                                        self.sub_samples)
@@ -127,10 +127,10 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
             self.entropies_infodyn_kraskov.append(result_infodyn)
             print("Infodynamics TE result: %.4f bits" % result_infodyn)
 
-            print properties
-            print significance
+            print(properties)
+            print(significance)
 
-        print self.entropies_infodyn_kraskov
+        print(self.entropies_infodyn_kraskov)
 
         maxval = max(self.entropies_infodyn_kraskov)
         # The maximum lags with one sample
