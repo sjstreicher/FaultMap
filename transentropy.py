@@ -171,24 +171,27 @@ def calc_infodynamics_te(infodynamicsloc, calcmethod,
     test_significance = parameters.get('test_signifiance', False)
     significance_permutations = parameters.get('significance_permutations', 30)
 
-    sourceArray = causal_data.tolist()
-    destArray = affected_data.tolist()
+#    sourceArray = causal_data.tolist()
+#    destArray = affected_data.tolist()
 
-    if (len(sourceArray) != len(destArray)):
-        print("Source length: " + str(len(sourceArray)))
-        print("Destination length: " + str(len(destArray)))
+    if (len(causal_data) != len(affected_data)):
+        print("Source length: " + str(len(causal_data)))
+        print("Destination length: " + str(len(affected_data)))
         raise ValueError(
             "The source and destination arrays are of different lengths")
 
-    sourceArrayJava = jpype.JArray(jpype.JDouble, 1)(sourceArray)
-    destArrayJava = jpype.JArray(jpype.JDouble, 1)(destArray)
+    #sourceArrayJava = jpype.JArray(jpype.JDouble, 1)(sourceArray)
+    #destArrayJava = jpype.JArray(jpype.JDouble, 1)(destArray)
+
+#    sourceArrayJava = np.asarray(sourceArray)
+#    destArrayJava = np.asarray(destArray)
 
     if calcmethod == 'discrete':
-        sourceArray = map(int, sourceArray)
-        destArray = map(int, destArray)
-        teCalc.addObservations(sourceArray, destArray)
+        source = map(int, causal_data)
+        dest = map(int, affected_data)
+        teCalc.addObservations(source, dest)
     else:
-        teCalc.setObservations(sourceArrayJava, destArrayJava)
+        teCalc.setObservations(causal_data, affected_data)
 
     transentropy = teCalc.computeAverageLocalOfObservations()
 
