@@ -687,7 +687,7 @@ def trend_extraction(mode, case, writeoutput):
     return None
 
 
-def csv_to_h5(saveloc, raw_tsdata, scenario, case):
+def csv_to_h5(saveloc, raw_tsdata, scenario, case, overwrite=True):
 
     # Name the dataset according to the scenario
     dataset = scenario
@@ -697,7 +697,7 @@ def csv_to_h5(saveloc, raw_tsdata, scenario, case):
 
     filename = os.path.join(datapath, scenario + '.h5')
 
-    if not os.path.exists(filename):
+    if overwrite or (not os.path.exists(filename)):
 
         hdf5writer = tb.open_file(filename, 'w')
         data = np.genfromtxt(raw_tsdata, delimiter=',')
