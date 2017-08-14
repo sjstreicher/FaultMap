@@ -138,7 +138,7 @@ def fig_fft(graphdata, graph, scenario, savedir):
         varindex = headers.index(varname)
         plt.plot(valuematrix[:, 0], valuematrix[:, varindex],
                  "-",
-                 label=r'{}'.format(headers[varindex]))
+                 label=r'${}$'.format(headers[varindex]))
 
     plt.ylabel('Normalised value', fontsize=14)
     plt.xlabel(r'Frequency ({})'.format(graphdata.frequencyunit), fontsize=14)
