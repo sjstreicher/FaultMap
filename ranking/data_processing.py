@@ -339,7 +339,7 @@ def create_arrays(datadir, variables, generate_diffs=True):
             if generate_diffs and (len(boxes) > 1):
                 boxes = list(boxes)
                 boxes.sort()
-                for boxindex, box in enumerate(boxes[1:]):
+                for boxindex, box in enumerate(boxes):
 
                     difweights_matrix = np.zeros(
                         (len(variables) + 1, len(variables) + 1)).astype(object)
@@ -348,41 +348,40 @@ def create_arrays(datadir, variables, generate_diffs=True):
                     difweights_matrix[0, 1:] = variables
                     difweights_matrix[1:, 0] = variables
 
+                    if boxindex > 0:
 
-                    base_weight_array_dir = os.path.join(
-                        datadir, weightarray_name, boxes[boxindex])  # Already one behind
-                    base_weight_array_filename = \
-                        os.path.join(base_weight_array_dir, 'weight_array.csv')
-                    final_weight_array_dir = os.path.join(
-                        datadir, weightarray_name, box)
-                    final_weight_array_filename = \
-                        os.path.join(final_weight_array_dir, 'weight_array.csv')
+                        base_weight_array_dir = os.path.join(
+                            datadir, weightarray_name, boxes[boxindex - 1])  # Already one behind
+                        base_weight_array_filename = \
+                            os.path.join(base_weight_array_dir, 'weight_array.csv')
+                        final_weight_array_dir = os.path.join(
+                            datadir, weightarray_name, box)
+                        final_weight_array_filename = \
+                            os.path.join(final_weight_array_dir, 'weight_array.csv')
 
-                    with open(base_weight_array_filename, 'r') as f:
-                        num_cols = len(f.readline().split())
-                        f.seek(0)
-                        base_weight_matrix = np.genfromtxt(f, usecols=range(1, num_cols), skip_header=1, delimiter=',')
-                        f.close()
+                        with open(base_weight_array_filename, 'r') as f:
+                            num_cols = len(f.readline().split())
+                            f.seek(0)
+                            base_weight_matrix = np.genfromtxt(f, usecols=range(1, num_cols), skip_header=1, delimiter=',')
+                            f.close()
 
-                    with open(final_weight_array_filename, 'r') as f:
-                        num_cols = len(f.readline().split())
-                        f.seek(0)
-                        final_weight_matrix = np.genfromtxt(f, usecols=range(1, num_cols), skip_header=1, delimiter=',')
-                        f.close()
+                        with open(final_weight_array_filename, 'r') as f:
+                            num_cols = len(f.readline().split())
+                            f.seek(0)
+                            final_weight_matrix = np.genfromtxt(f, usecols=range(1, num_cols), skip_header=1, delimiter=',')
+                            f.close()
 
-                    # Calculate difference and save to file
-                    # TODO: Investigate effect of taking absolute of differences
-                    diffmatrix = final_weight_matrix - base_weight_matrix
-                    difweights_matrix[1:, 1:] = final_weight_matrix - base_weight_matrix
+                        # Calculate difference and save to file
+                        # TODO: Investigate effect of taking absolute of differences
+                        difweights_matrix[1:, 1:] = final_weight_matrix - base_weight_matrix
 
                     difweightarray_dir = os.path.join(
                         datadir, difweightarray_name, box)
                     config_setup.ensure_existence(difweightarray_dir)
                     difweightfilename = \
-                        os.path.join(difweightarray_dir, 'difweight_array.csv')
+                        os.path.join(difweightarray_dir, 'dif_weight_array.csv')
                     np.savetxt(difweightfilename, difweights_matrix,
                                delimiter=',', fmt='%s')
-
 
     return None
 

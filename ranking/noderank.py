@@ -458,6 +458,21 @@ def gainmatrix_preprocessing(gainmatrix):
     return modgainmatrix, currentmean
 
 
+def dif_gainmatrix_preprocessing(gainmatrix):
+    """Only keeps positive elements of the difference gain matrix.
+
+    WIP
+
+    """
+
+    modgainmatrix = np.zeros_like(gainmatrix)
+
+    for col, row in itertools.izip(gainmatrix.nonzero()[0],
+                                   gainmatrix.nonzero()[1]):
+        modgainmatrix[col, row] = max(0, gainmatrix[col, row])
+
+    return modgainmatrix
+
 def calc_gainrank(gainmatrix, noderankdata, rank_method,
                   dummyweight):
     """Calculates backward rankings.
@@ -499,6 +514,9 @@ def get_gainmatrices(noderankdata, datadir, typename):
         fname = 'sigweight_array.csv'
     elif typename[:6] == 'weight' or typename[:17] == 'signtested_weight':
         fname = 'weight_array.csv'
+    # TODO: There are more cases to add
+    elif typename[:10] == 'dif_weight':
+        fname = 'dif_weight_array.csv'
 
     for boxindex in noderankdata.boxes:
         gainmatrix = data_processing.read_matrix(
@@ -542,19 +560,27 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
                writeoutput, preprocessing):
 
     rankinglist_name = 'rankinglist_{}.csv'
+    dif_rankinglist_name = 'dif_rankinglist_{}.csv'
     modgainmatrix_name = 'modgainmatrix.csv'
     originalgainmatrix_name = 'originalgainmatrix.csv'
     graphfile_name = 'graph_{}.gml'
 #    importances_name = 'importances_{}.csv'
-#    transientdict_name = 'transientdict_{}.json'
-#    basevaldict_name = 'basevaldict_{}.json'
+    transientdict_name = 'transientdict_{}.json'
+    dif_transientdict_name = 'dif_transientdict_{}.json'
+    basevaldict_name = 'basevaldict_{}.json'
+    dif_basevaldict_name = 'dif_basevaldict_{}.json'
     boxrankdict_name = 'boxrankdict_{}.json'
+    dif_boxrankdict_name = 'dif_boxrankdict_{}.json'
     rel_boxrankdict_name = 'rel_boxrankdict_{}.json'
+    dif_rel_boxrankdict_name = 'dif_rel_boxrankdict_{}.json'
+
+    dif_typename = 'dif_' + typename
 
     if noderankdata.datatype == 'file':
         noderankdata.get_boxes(scenario, datadir, typename)
         gainmatrices = get_gainmatrices(noderankdata, datadir, typename)
         delaymatrices = get_delaymatrices(noderankdata, datadir, typename)
+        dif_gainmatrices = get_gainmatrices(noderankdata, datadir, dif_typename)
     elif noderankdata.datatype == 'function':
         gainmatrices = [noderankdata.gainmatrix]
         delaymatrices = [np.zeros_like(noderankdata.gainmatrix)]
@@ -562,8 +588,10 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
 
     # Create lists to store the backward ranking list
     # for each box and associated gainmatrix ranking result
-    backward_rankinglists = []
+
+    #backward_rankinglists = []
     backward_rankingdicts = []
+    dif_backward_rankingdicts = []
 
     for index, gainmatrix in enumerate(gainmatrices):
         if preprocessing:
@@ -572,6 +600,10 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
         else:
             modgainmatrix = gainmatrix
 
+        dif_gainmatrix = dif_gainmatrices[index]
+        # Take only positive values for now due to convergence issues
+        # TODO: Investigate proper handling of negative edge changes
+        mod_dif_gainmatrix = dif_gainmatrix_preprocessing(dif_gainmatrix)
         delays = delaymatrices[index]
 
 #       _, dummyweight = gainmatrix_preprocessing(gainmatrix)
@@ -579,16 +611,25 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
         dummyweight = 10
 
         # This is where the actual ranking calculation happens
-        rankingdict, rankinglist, connections, \
-            variables, gains = \
+        rankingdict, rankinglist, connections, variables, gains = \
             calc_gainrank(modgainmatrix, noderankdata,
+                          rank_method, dummyweight)
+
+        # Take only positive for now due to convergence issues, but investigate proper handling
+        # of negative edge changes
+
+        dif_rankingdict, dif_rankinglist, _, _, _ = \
+            calc_gainrank(mod_dif_gainmatrix, noderankdata,
                           rank_method, dummyweight)
 
         # The rest of the function deals with storing the
         # results in the desired formats
 
-        backward_rankinglists.append(rankinglist)
+        #backward_rankinglists.append(rankinglist)
         backward_rankingdicts.append(rankingdict)
+
+        #dif_backward_rankinglists.append(dif_rankinglist)
+        dif_backward_rankingdicts.append(dif_rankingdict)
 
         if writeoutput:
             # Make sure the correct directory exists
@@ -632,6 +673,11 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
                          rankinglist_name.format(rank_method)),
             rankinglist)
 
+        writecsv_looprank(
+            os.path.join(savepath,
+                         dif_rankinglist_name.format(rank_method)),
+            dif_rankinglist)
+
         # Save the graphs to file
         graph, _ = \
             create_importance_graph(noderankdata,
@@ -645,14 +691,21 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
         # in post-processing
         nx.readwrite.write_gml(graph, graph_filename)
 
-        # Get the transient and base value dictionaries
-        _, _, boxrankdict, rel_boxrankdict = \
+        # Get ranking dictionaries
+        transientdict, basevaldict, boxrankdict, rel_boxrankdict = \
             calc_transient_importancediffs(
                 backward_rankingdicts,
                 noderankdata.variablelist)
 
+        # Get ranking dictionaries for difference gain arrays
+        dif_transientdict, dif_basevaldict, dif_boxrankdict, dif_rel_boxrankdict = \
+            calc_transient_importancediffs(
+                dif_backward_rankingdicts,
+                noderankdata.variablelist)
+
         # Store dictonaries using JSON
 
+        # Normal dictionaries
         data_processing.write_dictionary(
             os.path.join(savepath, boxrankdict_name.format(rank_method)),
             boxrankdict)
@@ -660,6 +713,31 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
         data_processing.write_dictionary(
             os.path.join(savepath, rel_boxrankdict_name.format(rank_method)),
             rel_boxrankdict)
+
+        data_processing.write_dictionary(
+            os.path.join(savepath, transientdict_name.format(rank_method)),
+            transientdict)
+
+        data_processing.write_dictionary(
+            os.path.join(savepath, basevaldict_name.format(rank_method)),
+            basevaldict)
+
+        # Difference dictionaries
+        data_processing.write_dictionary(
+            os.path.join(savepath, dif_boxrankdict_name.format(rank_method)),
+            dif_boxrankdict)
+
+        data_processing.write_dictionary(
+            os.path.join(savepath, dif_rel_boxrankdict_name.format(rank_method)),
+            dif_rel_boxrankdict)
+
+        data_processing.write_dictionary(
+            os.path.join(savepath, dif_transientdict_name.format(rank_method)),
+            dif_transientdict)
+
+        data_processing.write_dictionary(
+            os.path.join(savepath, dif_basevaldict_name.format(rank_method)),
+            dif_basevaldict)
 
     return None
 
