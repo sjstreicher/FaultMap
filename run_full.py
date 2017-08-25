@@ -140,4 +140,4 @@ if __name__ == '__main__':
     multiprocessing.freeze_support()
     logging.basicConfig(level=logging.INFO)
 
-    run_all(mode='cases')
+    run_all('cases')

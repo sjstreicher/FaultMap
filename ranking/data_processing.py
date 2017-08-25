@@ -188,7 +188,7 @@ def process_auxfile(filename, bias_correct=True, allow_neg=False):
     return affectedvars, weights, nosigtest_weights, sigweights, delays
 
 
-def create_arrays(datadir, variables, bias_correct, generate_diffs=True):
+def create_arrays(datadir, variables, bias_correct, generate_diffs):
     """
     datadir is the location of the auxdata and weights folders for the
     specific case that is under investigation
@@ -353,7 +353,7 @@ def create_arrays(datadir, variables, bias_correct, generate_diffs=True):
                     np.savetxt(sigweightfilename, sigweights_matrix,
                                delimiter=',', fmt='%s')
 
-            if generate_diffs and (len(boxes) > 1):
+            if generate_diffs:
                 boxes = list(boxes)
                 boxes.sort()
                 for boxindex, box in enumerate(boxes):
@@ -657,7 +657,8 @@ def result_reconstruction(mode, case, writeoutput):
                 for embedtype in embedtypes:
                     print(embedtype)
                     datadir = os.path.join(embedtypesdir, embedtype)
-                    create_arrays(datadir, weightcalcdata.variables, weightcalcdata.bias_correct)
+                    create_arrays(datadir, weightcalcdata.variables, weightcalcdata.bias_correct,
+                                  weightcalcdata.generate_diffs)
                     # Provide directional array version tested with absolute
                     # weight sign
                     create_signtested_directionalarrays(datadir, writeoutput)
