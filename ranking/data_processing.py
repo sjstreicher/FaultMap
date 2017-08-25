@@ -85,11 +85,55 @@ def gen_iaaft_surrogates(data, iterations):
     return(xsur)
 
 
+class ResultReconstructionData:
+    """Creates a data object from file and or function definitions for use in
+    array creation methods.
+
+    """
+
+    def __init__(self, mode, case):
+
+        # Get locations from configuration file
+        self.saveloc, self.caseconfigloc, self.casedir, _ = \
+            config_setup.runsetup(mode, case)
+        # Load case config file
+        self.caseconfig = json.load(
+            open(os.path.join(self.caseconfigloc, case +
+                              '_resultreconstruction' + '.json')))
+
+        # Get data type
+        self.datatype = self.caseconfig['datatype']
+
+        self.case = case
+
+        # Get scenarios
+        self.scenarios = self.caseconfig['scenarios']
+        self.case = case
+
+    def scenariodata(self, scenario):
+        """Retrieves data particular to each scenario for the case being
+        investigated.
+
+        """
+
+        scenario_config = self.caseconfig[scenario]
+
+        if scenario_config:
+            if self.datatype == 'file':
+                if 'bias_correction' in scenario_config:
+                    self.bias_correction = scenario_config['bias_correction']
+        else:
+            settings = {}
+            self.bias_correction = False
+            logging.info("Defaulting to no bias correction")
+
+
 def process_auxfile(filename, bias_correct=True, allow_neg=False):
     """Processes an auxfile and returns a list of affected_vars,
     weight_array as well as relative significance weight array.
 
     Parameters:
+        filename (string): path to auxfile to process
         allow_neg (bool): if true, allows negative values in final weight arrays, otherwise sets them to zero.
         bias_correct (bool): if true, subtracts the mean of the null distribution off the final value in weight array
 
@@ -159,8 +203,10 @@ def process_auxfile(filename, bias_correct=True, allow_neg=False):
                         nosigtest_weight = 0.
 
                 # Perform bias correction if required
-                if bias_correct and biasmean_index:
-                    sigtest_weight = sigtest_weight - row[biasmean_index]
+                if bias_correct and biasmean_index and (sigtest_weight > 0.):
+                    sigtest_weight = sigtest_weight - float(row[biasmean_index])
+                    if sigtest_weight < 0:
+                        raise ValueError('Negative weight after subtracting biasmean')
 
                 weights.append(sigtest_weight)
                 nosigtest_weights.append(nosigtest_weight)
@@ -625,6 +671,11 @@ def result_reconstruction(mode, case, writeoutput):
 
     """
 
+    resultreconstructiondata = ResultReconstructionData(mode, case)
+
+    weightcalcdata = \
+        gaincalc.WeightcalcData(mode, case, False, False, False)
+
     saveloc, caseconfigdir, _, _ = config_setup.runsetup(mode, case)
 
     caseconfig = json.load(
@@ -639,8 +690,8 @@ def result_reconstruction(mode, case, writeoutput):
     for scenario in scenarios:
         print(scenario)
 
-        weightcalcdata = \
-            gaincalc.WeightcalcData(mode, case, False, False, False)
+        resultreconstructiondata.scenariodata(scenario)
+
         weightcalcdata.setsettings(scenario,
                                    caseconfig[scenario]['settings'][0])
 
@@ -657,7 +708,8 @@ def result_reconstruction(mode, case, writeoutput):
                 for embedtype in embedtypes:
                     print(embedtype)
                     datadir = os.path.join(embedtypesdir, embedtype)
-                    create_arrays(datadir, weightcalcdata.variables, weightcalcdata.bias_correct,
+                    create_arrays(datadir, weightcalcdata.variables,
+                                  resultreconstructiondata.bias_correction,
                                   weightcalcdata.generate_diffs)
                     # Provide directional array version tested with absolute
                     # weight sign
