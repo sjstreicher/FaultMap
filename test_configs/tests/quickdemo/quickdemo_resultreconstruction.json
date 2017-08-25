@@ -1,0 +1,9 @@
+{
+  "datatype": "file",
+  "scenarios": [
+    "autoreg_2x2"
+  ],
+  "autoreg_2x2": {
+    "bias_correction": true
+  }
+}

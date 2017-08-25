@@ -25,7 +25,7 @@ import networkgen
 
 class NoderankData:
     """Creates a data object from file and or function definitions for use in
-    weight calculation methods.
+    node ranking methods.
 
     """
 
