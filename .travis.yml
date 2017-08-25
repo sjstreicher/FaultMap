@@ -25,9 +25,11 @@ before_install:
 # Install packages
 install:
   # install what we can from condas
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION `cat conda_requirements.txt`
+  - conda env create -f environment.yml
+  - source activate faultmap
+  #- conda install --yes python=$TRAVIS_PYTHON_VERSION `cat conda_requirements.txt`
   # install the rest using pip
-  - pip install -r <( grep -v -f conda_requirements.txt requirements.txt )
+  #- pip install -r <( grep -v -f conda_requirements.txt requirements.txt )
   
 # command to run tests, e.g. python setup.py test
 script:
