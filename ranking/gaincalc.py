@@ -239,20 +239,30 @@ class WeightcalcData(object):
         else:
             self.delaytype = 'datapoints'
 
+        # Get bias correction parameter
+        if 'bias_correct' in self.caseconfig[scenario]:
+            self.bias_correct = self.caseconfig[scenario]['bias_correct']
+        else:
+            self.bias_correct = False
+
         # Get size of sample vectors for tests
         # Must be smaller than number of samples
         self.testsize = self.caseconfig[settings_name]['testsize']
+
         # Get number of delays to test
         test_delays = self.caseconfig[scenario]['test_delays']
+
         if 'bidirectional_delays' in self.caseconfig[scenario].keys():
             self.bidirectional_delays = \
                 self.caseconfig[scenario]['bidirectional_delays']
         else:
             self.bidirectional_delays = False
+
         if self.bidirectional_delays is True:
             delay_range = range(-test_delays, test_delays + 1)
         else:
             delay_range = range(test_delays + 1)
+
         # Define intervals of delays
         if self.delaytype == 'datapoints':
                 self.delays = delay_range

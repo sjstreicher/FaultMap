@@ -85,9 +85,13 @@ def gen_iaaft_surrogates(data, iterations):
     return(xsur)
 
 
-def process_auxfile(filename, allow_neg=False):
+def process_auxfile(filename, bias_correct=True, allow_neg=False):
     """Processes an auxfile and returns a list of affected_vars,
     weight_array as well as relative significance weight array.
+
+    Parameters:
+        allow_neg (bool): if true, allows negative values in final weight arrays, otherwise sets them to zero.
+        bias_correct (bool): if true, subtracts the mean of the null distribution off the final value in weight array
 
     """
 
@@ -108,6 +112,11 @@ def process_auxfile(filename, allow_neg=False):
                     maxval_index = row.index('max_ent')
                 else:
                     maxval_index = row.index('max_corr')
+
+                if 'bias_mean' in row:
+                    biasmean_index = row.index('bias_mean')
+                else:
+                    biasmean_index = None
 
                 if 'threshold' in row:
                     thresh_index = row.index('threshold')
@@ -133,22 +142,28 @@ def process_auxfile(filename, allow_neg=False):
                 weight_candidate = float(row[maxval_index])
 
                 if allow_neg:
-                    nosigtest_weights.append(weight_candidate)
-                    weights.append(weight_candidate)
+                    nosigtest_weight = weight_candidate
+                    sigtest_weight = weight_candidate
                 else:
                     if weight_candidate > 0.:
                         # Attach to no significance test result
-                        nosigtest_weights.append(weight_candidate)
+                        nosigtest_weight = weight_candidate
                         if (row[threshpass_index] == 'False' or
                                 row[directionpass_index] == 'False'):
-                            weights.append(0.)
+                            sigtest_weight = 0.
                         else:
                             # threshpass is either None or True
-                            weights.append(weight_candidate)
+                            sigtest_weight = weight_candidate
                     else:
-                        weights.append(0.)
-                        nosigtest_weights.append(0.)
+                        sigtest_weight = 0.
+                        nosigtest_weight = 0.
 
+                # Perform bias correction if required
+                if bias_correct and biasmean_index:
+                    sigtest_weight = sigtest_weight - row[biasmean_index]
+
+                weights.append(sigtest_weight)
+                nosigtest_weights.append(nosigtest_weight)
                 delays.append(float(row[maxdelay_index]))
 
                 # Test if sigtest passed before assigning weight
@@ -173,7 +188,7 @@ def process_auxfile(filename, allow_neg=False):
     return affectedvars, weights, nosigtest_weights, sigweights, delays
 
 
-def create_arrays(datadir, variables, generate_diffs=True):
+def create_arrays(datadir, variables, bias_correct, generate_diffs=True):
     """
     datadir is the location of the auxdata and weights folders for the
     specific case that is under investigation
@@ -236,9 +251,11 @@ def create_arrays(datadir, variables, generate_diffs=True):
                     # Open auxfile and return weight array as well as
                     # significance relative weight arrays
 
+                    # TODO: Confirm whether correlation tests absolutes correlations before sending to auxfile
+                    # Otherwise, the allow null must be used much more wisely
                     (affectedvars, weights, nosigtest_weights,
                      sigweights, delays) = \
-                        process_auxfile(os.path.join(boxdir, causevar_file))
+                        process_auxfile(os.path.join(boxdir, causevar_file), bias_correct=bias_correct)
 
                     affectedvar_array.append(affectedvars)
                     weight_array.append(weights)
@@ -640,7 +657,7 @@ def result_reconstruction(mode, case, writeoutput):
                 for embedtype in embedtypes:
                     print(embedtype)
                     datadir = os.path.join(embedtypesdir, embedtype)
-                    create_arrays(datadir, weightcalcdata.variables)
+                    create_arrays(datadir, weightcalcdata.variables, weightcalcdata.bias_correct)
                     # Provide directional array version tested with absolute
                     # weight sign
                     create_signtested_directionalarrays(datadir, writeoutput)
