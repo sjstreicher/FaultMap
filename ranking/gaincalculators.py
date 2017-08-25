@@ -201,6 +201,7 @@ class TransentWeightcalc(object):
     def __init__(self, weightcalcdata, estimator):
         self.data_header = ['causevar', 'affectedvar', 'base_ent',
                             'max_ent', 'max_delay', 'max_index', 'threshold',
+                            'bias_mean', 'bias_std',
                             'threshpass', 'directionpass',
                             'k_hist_fwd', 'k_tau_fwd', 'l_hist_fwd',
                             'l_tau_fwd', 'delay_fwd',
@@ -409,9 +410,9 @@ class TransentWeightcalc(object):
                         thresh_causevardata.T)
 
             logging.info("The directional TE threshold is: " +
-                         str(threshent_directional))
+                         str(threshent_directional[0]))
 
-            if maxval_directional >= threshent_directional \
+            if maxval_directional >= threshent_directional[0] \
                     and maxval_directional > 0:
                 threshpass_directional = True
             else:
@@ -431,9 +432,9 @@ class TransentWeightcalc(object):
                             thresh_causevardata.T)
 
             logging.info("The absolute TE threshold is: " +
-                         str(threshent_absolute))
+                         str(threshent_absolute[0]))
 
-            if maxval_absolute >= threshent_absolute \
+            if maxval_absolute >= threshent_absolute[0] \
                     and maxval_absolute > 0:
                 threshpass_absolute = True
             else:
@@ -450,13 +451,15 @@ class TransentWeightcalc(object):
         dataline_directional = \
             [causevar, affectedvar, baseval_directional,
              maxval_directional, bestdelay_directional,
-             delay_index_directional, threshent_directional,
+             delay_index_directional, threshent_directional[0],
+             threshent_directional[1], threshent_directional[2],
              threshpass_directional, directionpass_directional]
 
         dataline_absolute = \
             [causevar, affectedvar, baseval_absolute,
              maxval_absolute, bestdelay_absolute,
-             delay_index_absolute, threshent_absolute,
+             delay_index_absolute, threshent_absolute[0],
+             threshent_absolute[1], threshent_absolute[2],
              threshpass_absolute, directionpass_absolute]
 
         dataline_directional = dataline_directional + \
@@ -510,7 +513,8 @@ class TransentWeightcalc(object):
 
             surr_te_fwd.append(transentropy.calc_infodynamics_te(
                 self.infodynamicsloc, self.estimator,
-                affected_data, surr_tsdata[n][0, :], **self.parameters)[0])
+                affected_data, surr_tsdata[n][0, :],
+                **self.parameters)[0])
 
             surr_te_bwd.append(transentropy.calc_infodynamics_te(
                 self.infodynamicsloc, self.estimator,
@@ -541,9 +545,15 @@ class TransentWeightcalc(object):
             self.calc_surr_te(affected_data, causal_data, 19)
 
         threshent_directional = max(surr_te_directional)
-        threshent_absolute = max(surr_te_absolute)
+        nullbias_directional = np.mean(surr_te_directional)
+        nullstd_directional = np.std(surr_te_directional)
 
-        return threshent_directional, threshent_absolute
+        threshent_absolute = max(surr_te_absolute)
+        nullbias_absolute = np.mean(surr_te_absolute)
+        nullstd_absolute = np.std(surr_te_absolute)
+
+        return [threshent_directional, nullbias_directional, nullstd_directional], \
+               [threshent_absolute, nullbias_absolute, nullstd_absolute]
 
     def thresh_sixsigma(self, affected_data, causal_data):
         """Calculates the minimum threshold required for a transfer entropy
@@ -568,7 +578,8 @@ class TransentWeightcalc(object):
         threshent_absolute = (6 * surr_te_absolute_stdev) + \
             surr_te_absolute_mean
 
-        return threshent_directional, threshent_absolute
+        return [threshent_directional, surr_te_directional_mean, surr_te_directional_stdev], \
+               [threshent_absolute, surr_te_absolute_mean, surr_te_absolute_stdev]
 
     def calcsigthresh(self, weightcalcdata, affected_data, causal_data):
         # print affected_data
