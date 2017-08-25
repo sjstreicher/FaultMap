@@ -15,11 +15,6 @@ def setup_infodynamics_te(infodynamicsloc, calcmethod, **parameters):
     The embedding dimension of the destination or target variable (k) can
     easily be set by adjusting the histlength parameter.
 
-    # TODO: Allow for different destination embedding dimensions of the source
-    variable (l) by making use of the multivariable transfer entropy
-    implementation - currently only available for the implementation making use
-    of Kraskov MI estimators
-
     # UPDATE: (Still needs to be verified) The continous Kraskov estimator
     with the Ragwitz criterion is the basis for all results unless mentioned
     otherwise as this is the theoretical best automated procedure that is

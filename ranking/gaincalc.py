@@ -351,6 +351,11 @@ class WeightcalcData(object):
         else:
             self.boxindexes = [0]
 
+        if len(self.boxindexes) > 1:
+            self.generate_diffs = True
+        else:
+            self.generate_diffs = False
+
         # Calculate delays in indexes as well as time units
         if self.delaytype == 'datapoints':
             self.actual_delays = [(delay * self.sampling_rate *

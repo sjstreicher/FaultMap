@@ -592,4 +592,4 @@ class TransentWeightcalc(object):
         elif self.te_thresh_method == 'sixsigma':
             threshent_directional, threshent_absolute = \
                 self.thresh_sixsigma(affected_data, causal_data)
-        return [threshent_directional, threshent_absolute]
+        return [threshent_directional[0], threshent_absolute[0]]
