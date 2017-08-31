@@ -343,7 +343,12 @@ class WeightcalcData(object):
         # Select which of the boxes to evaluate
         if self.transient:
             if 'boxindexes' in self.caseconfig[scenario]:
-                self.boxindexes = self.caseconfig[scenario]['boxindexes']
+                if self.caseconfig[scenario]['boxindexes'] == "range":
+                    self.boxindexes = range(
+                        self.caseconfig[scenario]['boxindexes_start'],
+                        self.caseconfig[scenario]['boxindexes_end'] + 1)
+                else:
+                    self.boxindexes = self.caseconfig[scenario]['boxindexes']
             else:
                 self.boxindexes = 'all'
             if self.boxindexes == 'all':
