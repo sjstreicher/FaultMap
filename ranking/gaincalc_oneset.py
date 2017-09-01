@@ -134,7 +134,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
             propbwd_list = []
 
             for delay in weightcalcdata.sample_delays:
-                #logging.info("Now testing delay: " + str(delay))
+                logging.info("Now testing delay: " + str(delay))
 
                 causevardata = \
                     (box[:, causevarindex]

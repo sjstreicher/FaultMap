@@ -139,13 +139,17 @@ class NoderankData:
             else:
                 # If no bias vector is defined, use a vector of equal weights
                 self.biasvector = np.ones(len(self.variablelist))
-            
 
         logging.info("Number of tags: {}".format(len(self.variablelist)))
 
     def get_boxes(self, scenario, datadir, typename):
         if 'boxindexes' in self.caseconfig[scenario]:
-            boxindexes = self.caseconfig[scenario]['boxindexes']
+            if self.caseconfig[scenario]['boxindexes'] == "range":
+                boxindexes = range(
+                    self.caseconfig[scenario]['boxindexes_start'],
+                    self.caseconfig[scenario]['boxindexes_end'] + 1)
+            else:
+                boxindexes = self.caseconfig[scenario]['boxindexes']
         else:
             boxindexes = 'all'
         if boxindexes == 'all':
