@@ -144,6 +144,8 @@ def process_auxfile(filename, bias_correct=True, allow_neg=False):
     nosigtest_weights = []
     sigweights = []
     delays = []
+    sigthresholds = []
+    #sigstds = []
 
     with open(filename, 'rb') as auxfile:
         auxfilereader = csv.reader(auxfile, delimiter=',')
@@ -212,12 +214,15 @@ def process_auxfile(filename, bias_correct=True, allow_neg=False):
                 nosigtest_weights.append(nosigtest_weight)
                 delays.append(float(row[maxdelay_index]))
 
+
+                threshold = float(row[thresh_index])
+                sigthresholds.append(threshold)
+
                 # Test if sigtest passed before assigning weight
                 if (row[threshpass_index] == 'True' and
                         row[directionpass_index] == 'True'):
                     # If the threshold is negative, take the absolute value
                     # TODO: Need to think the implications of this through
-                    threshold = float(row[thresh_index])
                     if threshold != 0:
                         sigweight = (float(row[maxval_index]) /
                                      abs(threshold))
@@ -231,7 +236,7 @@ def process_auxfile(filename, bias_correct=True, allow_neg=False):
                 else:
                     sigweights.append(0.)
 
-    return affectedvars, weights, nosigtest_weights, sigweights, delays
+    return affectedvars, weights, nosigtest_weights, sigweights, delays, sigthresholds
 
 
 def create_arrays(datadir, variables, bias_correct, generate_diffs):
@@ -255,6 +260,9 @@ def create_arrays(datadir, variables, bias_correct, generate_diffs):
     absolutedelayarray_name = 'delay_absolute_arrays'
     directionaldelayarray_name = 'delay_directional_arrays'
     neutraldelayarray_name = 'delay_arrays'
+    absolutesigthresholdarray_name = 'sigthreshold_absolute_arrays'
+    directionalsigthresholdarray_name = 'sigthreshold_directional_arrays'
+    neutralsigthresholdarray_name = 'sigthreshold_arrays'
 
     directories = next(os.walk(datadir))[1]
 
@@ -269,16 +277,19 @@ def create_arrays(datadir, variables, bias_correct, generate_diffs):
                 difweightarray_name = difabsoluteweightarray_name
                 sigweightarray_name = absolutesigweightarray_name
                 delayarray_name = absolutedelayarray_name
+                sigthresholdarray_name = absolutesigthresholdarray_name
             elif test_string == 'auxdata_directional':
                 weightarray_name = directionalweightarray_name
                 difweightarray_name = difdirectionalweightarray_name
                 sigweightarray_name = directionalsigweightarray_name
                 delayarray_name = directionaldelayarray_name
+                sigthresholdarray_name = directionalsigthresholdarray_name
             elif test_string == 'auxdata':
                 weightarray_name = neutralweightarray_name
                 difweightarray_name = difneutralweightarray_name
                 sigweightarray_name = neutralsigweightarray_name
                 delayarray_name = neutraldelayarray_name
+                sigthresholdarray_name = neutralsigthresholdarray_name
 
             boxes = next(os.walk(os.path.join(datadir, test_string)))[1]
             for box in boxes:
@@ -291,6 +302,7 @@ def create_arrays(datadir, variables, bias_correct, generate_diffs):
                 nosigtest_weight_array = []
                 sigweight_array = []
                 delay_array = []
+                sigthreshold_array = []
                 for causevar_file in causevar_filenames:
                     causevars.append(str(causevar_file[:-4]))
 
@@ -300,7 +312,7 @@ def create_arrays(datadir, variables, bias_correct, generate_diffs):
                     # TODO: Confirm whether correlation tests absolutes correlations before sending to auxfile
                     # Otherwise, the allow null must be used much more wisely
                     (affectedvars, weights, nosigtest_weights,
-                     sigweights, delays) = \
+                     sigweights, delays, sigthresholds) = \
                         process_auxfile(os.path.join(boxdir, causevar_file), bias_correct=bias_correct)
 
                     affectedvar_array.append(affectedvars)
@@ -308,6 +320,7 @@ def create_arrays(datadir, variables, bias_correct, generate_diffs):
                     nosigtest_weight_array.append(nosigtest_weights)
                     sigweight_array.append(sigweights)
                     delay_array.append(delays)
+                    sigthreshold_array.append(sigthresholds)
 
                 # Write the arrays to file
                 # Create a base array based on the full set of variables
@@ -325,6 +338,7 @@ def create_arrays(datadir, variables, bias_correct, generate_diffs):
                 nosigtest_weights_matrix = np.copy(weights_matrix)
                 sigweights_matrix = np.copy(weights_matrix)
                 delay_matrix = np.copy(weights_matrix)
+                sigthresh_matrix = np.copy(weights_matrix)
 
                 # Write results to appropriate entries in array
                 for causevar_index, causevar in enumerate(causevars):
@@ -343,6 +357,8 @@ def create_arrays(datadir, variables, bias_correct, generate_diffs):
                             sigweight_array[causevar_index][affectedvar_index]
                         delay_matrix[affectedvarloc+1, causevarloc+1] = \
                             delay_array[causevar_index][affectedvar_index]
+                        sigthresh_matrix[affectedvarloc+1, causevarloc+1] = \
+                            sigthreshold_array[causevar_index][affectedvar_index]
 
                 # Write to CSV files
                 weightarray_dir = os.path.join(
@@ -397,6 +413,14 @@ def create_arrays(datadir, variables, bias_correct, generate_diffs):
                     sigweightfilename = \
                         os.path.join(sigweightarray_dir, 'sigweight_array.csv')
                     np.savetxt(sigweightfilename, sigweights_matrix,
+                               delimiter=',', fmt='%s')
+
+                    sigthresholdarray_dir = os.path.join(
+                        datadir, sigthresholdarray_name, box)
+                    config_setup.ensure_existence(sigthresholdarray_dir)
+                    sigthresholdfilename = \
+                        os.path.join(sigthresholdarray_dir, 'sigthreshold_array.csv')
+                    np.savetxt(sigthresholdfilename, sigthresh_matrix,
                                delimiter=',', fmt='%s')
 
             if generate_diffs:
@@ -582,7 +606,10 @@ def extract_trends(datadir, writeoutput):
                  'sigweight_arrays': 'sigweight_trend',
                  'delay_absolute_arrays': 'delay_absolute_trend',
                  'delay_directional_arrays': 'delay_directional_trend',
-                 'delay_arrays': 'delay_trend'}
+                 'delay_arrays': 'delay_trend',
+                 'sigthreshold_absolute_arrays': 'sigthreshold_absolute_trend',
+                 'sigthreshold_directional_arrays': 'sigthreshold_directional_trend',
+                 'sigthreshold_arrays': 'sigthreshold_trend'}
 
     boxfilenames = {'weight_absolute_arrays': 'weight_array',
                     'weight_directional_arrays': 'weight_array',
@@ -595,7 +622,10 @@ def extract_trends(datadir, writeoutput):
                     'sigweight_arrays': 'sigweight_array',
                     'delay_absolute_arrays': 'delay_array',
                     'delay_directional_arrays': 'delay_array',
-                    'delay_arrays': 'delay_array'}
+                    'delay_arrays': 'delay_array',
+                    'sigthreshold_absolute_arrays': 'sigthreshold_array',
+                    'sigthreshold_directional_arrays': 'sigthreshold_array',
+                    'sigthreshold_arrays': 'sigthreshold_array'}
 
     directories = next(os.walk(datadir))[1]
 
