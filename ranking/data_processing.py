@@ -743,7 +743,7 @@ def result_reconstruction(mode, case, writeoutput):
                                   weightcalcdata.generate_diffs)
                     # Provide directional array version tested with absolute
                     # weight sign
-                    create_signtested_directionalarrays(datadir, writeoutput)
+                    #create_signtested_directionalarrays(datadir, writeoutput)
 
     return None
 

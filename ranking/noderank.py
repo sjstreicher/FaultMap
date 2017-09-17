@@ -521,6 +521,9 @@ def get_gainmatrices(noderankdata, datadir, typename):
     # TODO: There are more cases to add
     elif typename[:10] == 'dif_weight':
         fname = 'dif_weight_array.csv'
+    # TODO: Complete and re-enable signtested directional arrays creation
+    #elif typename[:21] == 'dif_signtested_weight':
+    #    fname = ''
 
     for boxindex in noderankdata.boxes:
         gainmatrix = data_processing.read_matrix(
@@ -810,14 +813,14 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                         if weight_method[:16] == 'transfer_entropy':
                             typenames = [
                                 'weight_absolute_arrays',
-                                'weight_directional_arrays',
-                                'signtested_weight_directional_arrays']
+                                'weight_directional_arrays']
+                                #'signtested_weight_directional_arrays']
                             if sigtype == 'sigtest':
                                 typenames.append('sigweight_absolute_arrays')
                                 typenames.append(
                                     'sigweight_directional_arrays')
-                                typenames.append(
-                                    'signtested_sigweight_directional_arrays')
+                                #typenames.append(
+                                #    'signtested_sigweight_directional_arrays')
                         else:
                             typenames = ['weight_arrays']
                             if sigtype == 'sigtest':
