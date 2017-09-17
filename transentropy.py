@@ -281,6 +281,15 @@ def setup_infodynamics_entropy(infodynamicsloc, estimator='kernel',
 
         entropyCalc = entropyCalcClass()
         entropyCalc.initialise()
+
+    elif estimator == 'kozachenko':
+        entropyCalcClass = \
+            jpype.JPackage("infodynamics.measures.continuous.kozachenko") \
+            .EntropyCalculatorMultiVariateKozachenko
+
+        entropyCalc = entropyCalcClass()
+        entropyCalc.initialise()
+
     else:
         raise NameError("Estimator not recognized")
 
@@ -306,8 +315,8 @@ def calc_infodynamics_entropy(entropyCalc, data, estimator):
     Notes
     -----
         The entropy calculated with the Gaussian estimator is in nats, while
-        that calculated by the kernel estimator is in bits. Nats can be
-        converted to bits by division with ln(2).
+        that calculated by the kernel estimator is in bits.
+        Nats can be converted to bits by division with ln(2).
     """
 
     dataArray = data.tolist()
@@ -320,6 +329,8 @@ def calc_infodynamics_entropy(entropyCalc, data, estimator):
     elif estimator == 'kernel':
         # Do nothing
         entropy = entropy
+    elif estimator == 'kozachenko':
+        entropy = entropy / np.log(2.)
     else:
         raise NameError("Estimator not recognized")
 
