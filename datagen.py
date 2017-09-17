@@ -29,8 +29,8 @@ connectionmatrix_2x2, connectionmatrix_4x4, connectionmatrix_5x5 = [
 
 
 def seed_random(method, seed, samples):
-    np.random.seed(seed)
-    return method(samples)
+    np.random.seed(int(seed))
+    return method(int(samples))
 
 # Normal distribution
 seed_randn = partial(seed_random, np.random.randn)
