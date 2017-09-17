@@ -55,6 +55,12 @@ class GraphReduceData(object):
         self.depth = self.caseconfig[scenario]['depth']
         self.weight_discretion = self.caseconfig[scenario]['weight_discretion']
 
+        # Provides option of not removing self loops
+        if 'remove_self_loops' in self.caseconfig[scenario]:
+            self.remove_self_loops = self.caseconfig[scenario]['remove_self_loops']
+        else:
+            self.remove_self_loops = True
+
     def get_boxes(self, scenario, datadir, typename):
         boxindexes = self.caseconfig[scenario]['boxindexes']
         if boxindexes == "all":
@@ -92,7 +98,7 @@ def dographreduce(graphreducedata, scenario, datadir,
                 print("Empty graph")
                 break
             # Delete low value edges from graph
-            lowedge_graph = delete_lowval_edges(original_graph, threshold)
+            lowedge_graph = delete_lowval_edges(original_graph, threshold, graphreducedata.remove_self_loops)
             # Get simplified graph
             simplified_graph = \
                 delete_loworder_edges(lowedge_graph,
@@ -204,7 +210,7 @@ def compute_edge_threshold(graph, percentile):
     return threshold
 
 
-def delete_lowval_edges(graph, weight_threshold):
+def delete_lowval_edges(graph, weight_threshold, remove_self_loops=True):
     """Deletes all edges with weight below the threshold value.
     Also deletes all self-looping edges.
 
@@ -212,10 +218,11 @@ def delete_lowval_edges(graph, weight_threshold):
 
     lowedge_graph = graph.copy()
 
-    # First, delete all self-loops
-    selfloop_list = lowedge_graph.selfloop_edges()
-    lowedge_graph.remove_edges_from(selfloop_list)
-    logging.info("Deleted " + str(len(selfloop_list)) + " self-looping edges")
+    if remove_self_loops:
+        # First, delete all self-loops
+        selfloop_list = lowedge_graph.selfloop_edges()
+        lowedge_graph.remove_edges_from(selfloop_list)
+        logging.info("Deleted " + str(len(selfloop_list)) + " self-looping edges")
 
     edge_dellist = []
     edge_totlist = []
