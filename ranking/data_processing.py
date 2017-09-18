@@ -377,13 +377,13 @@ def create_arrays(datadir, variables, bias_correct, generate_diffs):
                 np.savetxt(delayfilename, delay_matrix,
                            delimiter=',', fmt='%s')
 
-                nosigtest_dirparts = getfolders(datadir)
-                if 'sigtested' in nosigtest_dirparts:
+                dirparts = getfolders(datadir)
+                if 'sigtested' in dirparts:
 
-                    nosigtest_dirparts[
-                        nosigtest_dirparts.index('sigtested')] = 'nosigtest'
-                    nosigtest_savedir = nosigtest_dirparts[0]
-                    for pathpart in nosigtest_dirparts[1:]:
+                    dirparts[
+                        dirparts.index('sigtested')] = 'nosigtest'
+                    nosigtest_savedir = dirparts[0]
+                    for pathpart in dirparts[1:]:
                         nosigtest_savedir = os.path.join(
                             nosigtest_savedir, pathpart)
 
@@ -426,6 +426,7 @@ def create_arrays(datadir, variables, bias_correct, generate_diffs):
             if generate_diffs:
                 boxes = list(boxes)
                 boxes.sort()
+
                 for boxindex, box in enumerate(boxes):
 
                     difweights_matrix = np.zeros(
@@ -458,9 +459,10 @@ def create_arrays(datadir, variables, bias_correct, generate_diffs):
                             final_weight_matrix = np.genfromtxt(f, usecols=range(1, num_cols), skip_header=1, delimiter=',')
                             f.close()
 
+
                         # Calculate difference and save to file
                         # TODO: Investigate effect of taking absolute of differences
-                        difweights_matrix[1:, 1:] = final_weight_matrix - base_weight_matrix
+                        difweights_matrix[1:, 1:] = abs(final_weight_matrix) - abs(base_weight_matrix)
 
                     difweightarray_dir = os.path.join(
                         datadir, difweightarray_name, box)
@@ -469,6 +471,55 @@ def create_arrays(datadir, variables, bias_correct, generate_diffs):
                         os.path.join(difweightarray_dir, 'dif_weight_array.csv')
                     np.savetxt(difweightfilename, difweights_matrix,
                                delimiter=',', fmt='%s')
+
+
+                    if 'sigtested' in getfolders(datadir):
+
+                        nosigtest_difweights_matrix = np.zeros(
+                            (len(variables) + 1, len(variables) + 1)).astype(object)
+
+                        nosigtest_difweights_matrix[0, 0] = ''
+                        nosigtest_difweights_matrix[0, 1:] = variables
+                        nosigtest_difweights_matrix[1:, 0] = variables
+
+                        if boxindex > 0:
+
+                            nosigtest_base_weight_array_dir = os.path.join(
+                                nosigtest_savedir, weightarray_name, boxes[boxindex - 1])
+                            nosigtest_base_weight_array_filename = \
+                                os.path.join(nosigtest_base_weight_array_dir, 'weight_array.csv')
+                            nosigtest_final_weight_array_dir = os.path.join(
+                                nosigtest_savedir, weightarray_name, box)
+                            nosigtest_final_weight_array_filename = \
+                                os.path.join(nosigtest_final_weight_array_dir, 'weight_array.csv')
+
+                            with open(nosigtest_base_weight_array_filename, 'r') as f:
+                                num_cols = len(f.readline().split())
+                                f.seek(0)
+                                nosigtest_base_weight_matrix = np.genfromtxt(f, usecols=range(1, num_cols),
+                                                                             skip_header=1, delimiter=',')
+                                f.close()
+
+                            with open(nosigtest_final_weight_array_filename, 'r') as f:
+                                num_cols = len(f.readline().split())
+                                f.seek(0)
+                                nosigtest_final_weight_matrix = np.genfromtxt(f, usecols=range(1, num_cols),
+                                                                    skip_header=1, delimiter=',')
+                                f.close()
+
+                            # Calculate difference and save to file
+                            # TODO: Investigate effect of taking absolute of differences
+                            nosigtest_difweights_matrix[1:, 1:] = abs(nosigtest_final_weight_matrix) - \
+                                                                  abs(nosigtest_base_weight_matrix)
+
+                        nosigtest_difweightarray_dir = os.path.join(
+                            nosigtest_savedir, difweightarray_name, box)
+                        config_setup.ensure_existence(nosigtest_difweightarray_dir)
+                        nosigtest_difweightfilename = \
+                            os.path.join(nosigtest_difweightarray_dir, 'dif_weight_array.csv')
+                        np.savetxt(nosigtest_difweightfilename, nosigtest_difweights_matrix,
+                                   delimiter=',', fmt='%s')
+
 
     return None
 
