@@ -448,13 +448,13 @@ def create_arrays(datadir, variables, bias_correct, generate_diffs):
                             os.path.join(final_weight_array_dir, 'weight_array.csv')
 
                         with open(base_weight_array_filename, 'r') as f:
-                            num_cols = len(f.readline().split())
+                            num_cols = len(f.readline().split(','))
                             f.seek(0)
                             base_weight_matrix = np.genfromtxt(f, usecols=range(1, num_cols), skip_header=1, delimiter=',')
                             f.close()
 
                         with open(final_weight_array_filename, 'r') as f:
-                            num_cols = len(f.readline().split())
+                            num_cols = len(f.readline().split(','))
                             f.seek(0)
                             final_weight_matrix = np.genfromtxt(f, usecols=range(1, num_cols), skip_header=1, delimiter=',')
                             f.close()
@@ -494,14 +494,14 @@ def create_arrays(datadir, variables, bias_correct, generate_diffs):
                                 os.path.join(nosigtest_final_weight_array_dir, 'weight_array.csv')
 
                             with open(nosigtest_base_weight_array_filename, 'r') as f:
-                                num_cols = len(f.readline().split())
+                                num_cols = len(f.readline().split(','))
                                 f.seek(0)
                                 nosigtest_base_weight_matrix = np.genfromtxt(f, usecols=range(1, num_cols),
                                                                              skip_header=1, delimiter=',')
                                 f.close()
 
                             with open(nosigtest_final_weight_array_filename, 'r') as f:
-                                num_cols = len(f.readline().split())
+                                num_cols = len(f.readline().split(','))
                                 f.seek(0)
                                 nosigtest_final_weight_matrix = np.genfromtxt(f, usecols=range(1, num_cols),
                                                                     skip_header=1, delimiter=',')
