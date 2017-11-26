@@ -99,8 +99,11 @@ class GraphData(object):
         self.thresholdplotting = self.caseconfig[graph]['threshold_plotting']
 
     def get_varindexes(self, graph):
-        self.varindexes = [x+1 for x in
-                           self.caseconfig[graph]['varindexes']]
+        self.varindexes = [
+            x+1 for x in self.caseconfig[graph]['varindexes']]
+
+    def get_typenames(self, graph):
+        self.typenames = self.caseconfig[graph]['types']
 
 
 def get_scenario_data_vectors(graphdata):

@@ -17,17 +17,17 @@ FFT plot
     Plots FFT magnitude across frequency for specified variables
     of a single scenario
 
-Absolute/Directional/Significance weight vs. delays for selected
+Simple/Directional/Significance weight vs. delays for selected
 variables of single scenario
     Includes the option to plot the significance threshold values obtained by
     different methods
 
-Absolute/Directional/Significance weight vs. delays for specific variable
+Simple/Directional/Significance weight vs. delays for specific variable
 between multiple scenarios
     Includes the option to plot the significance threshold values obtained by
     different methods
 
-Absolute/Directional/Significance weights vs. boxes for specifc variable
+Simple/Directional/Significance weights vs. boxes for specifc variable
 between multiple scenarios
     Includes the option to plot the significance threshold values obtained by
     different methods (value at optimizing delay used in actual testing
@@ -35,6 +35,7 @@ between multiple scenarios
 
 """
 
+import itertools
 import os
 
 import matplotlib.pyplot as plt
@@ -53,26 +54,26 @@ plt.rc('font', family='serif')
 yaxislabel = \
     {u'cross_correlation': r'Cross correlation',
      u'absolute_transfer_entropy_kernel':
-         r'Absolute transfer entropy (Kernel) (bits)',
+         r'Simple transfer entropy (Kernel) (bits)',
      u'directional_transfer_entropy_kernel':
          r'Directional transfer entropy (Kernel) (bits)',
      u'absolute_transfer_entropy_kraskov':
-         r'Absolute transfer entropy (Kraskov) (bits)',
+         r'Simple transfer entropy (Kraskov) (bits)',
      u'directional_transfer_entropy_kraskov':
          r'Directional transfer entropy (Kraskov) (bits)'}
 
 linelabels = \
     {'cross_correlation': r'Correlation',
-     'absolute_transfer_entropy_kernel': r'Absolute TE (Kernel)',
+     'absolute_transfer_entropy_kernel': r'Simple TE (Kernel)',
      'directional_transfer_entropy_kernel': r'Directional TE (Kernel)',
-     'absolute_transfer_entropy_kraskov': r'Absolute TE (Kraskov)',
+     'absolute_transfer_entropy_kraskov': r'Simple TE (Kraskov)',
      'directional_transfer_entropy_kraskov': r'Directional TE (Kraskov)'}
 
 fitlinelabels = \
     {'cross_correlation': r'Correlation fit',
-     'absolute_transfer_entropy_kernel': r'Absolute TE (Kernel) fit',
+     'absolute_transfer_entropy_kernel': r'Simple TE (Kernel) fit',
      'directional_transfer_entropy_kernel': r'Directional TE (Kernel) fit',
-     'absolute_transfer_entropy_kraskov': r'Absolute TE (Kraskov) fit',
+     'absolute_transfer_entropy_kraskov': r'Simple TE (Kraskov) fit',
      'directional_transfer_entropy_kraskov': r'Directional TE (Kraskov) fit'}
 
 
@@ -181,15 +182,25 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
     dirparts = data_processing.getfolders(weightdir)
     # The method is two folders up from the embed level
     method = dirparts[-3]
+    typename = dirparts[-3]
 
     # Select typenames based on method
     if method[:16] == 'transfer_entropy':
-        typenames = [
-            'weights_absolute',
-            'weights_directional']
-        thresh_typenames = [
-            'sigthresh_absolute',
-            'sigthresh_directional']
+        typenames = []
+        thresh_typenames = []
+        graphdata.get_typenames(graph)
+        if 'simple' in graphdata.typenames:
+            typenames.append('weights_absolute')
+            thresh_typenames.append('sigthresh_absolute')
+        if 'directional' in graphdata.typenames:
+            typenames.append('weights_directional')
+            thresh_typenames.append('sigthresh_directional')
+        # typenames = [
+        #     'weights_absolute',
+        #     'weights_directional']
+        # thresh_typenames = [
+        #     'sigthresh_absolute',
+        #     'sigthresh_directional']
     else:
         typenames = ['weights']
         thresh_typenames = ['sigthresh']
@@ -203,68 +214,68 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
         labels = [destvar for destvar in graphdata.destvars]
 
     for typeindex, typename in enumerate(typenames):
-        for boxindex in graphdata.boxindexes:
-            for sourcevar in graphdata.sourcevars:
+        for boxindex, sourcevar in itertools.product(
+                graphdata.boxindexes, graphdata.sourcevars):
 
-                fig = plt.figure(1, figsize=(12, 6))
-                ax = fig.add_subplot(111)
-                if len(typename) > 8:
-                    yaxislabelstring = typename[8:] + '_' + method
-                else:
-                    yaxislabelstring = method
-                ax.set_ylabel(yaxislabel[yaxislabelstring], fontsize=14)
-                ax.set_xlabel(r'Delay ({})'.format(graphdata.timeunit),
-                              fontsize=14)
+            fig = plt.figure(1, figsize=(12, 6))
+            ax = fig.add_subplot(111)
+            if len(typename) > 8:
+                yaxislabelstring = typename[8:] + '_' + method
+            else:
+                yaxislabelstring = method
+            ax.set_ylabel(yaxislabel[yaxislabelstring], fontsize=14)
+            ax.set_xlabel(r'Delay ({})'.format(graphdata.timeunit),
+                          fontsize=14)
 
-                # Open data file and plot graph
-                sourcefile = os.path.join(
-                    weightdir, typename, 'box{:03d}'.format(boxindex),
+            # Open data file and plot graph
+            sourcefile = os.path.join(
+                weightdir, typename, 'box{:03d}'.format(boxindex),
+                '{}.csv'.format(sourcevar))
+
+            valuematrix, headers = \
+                data_processing.read_header_values_datafile(sourcefile)
+
+            if graphdata.thresholdplotting:
+                threshold_sourcefile = os.path.join(
+                    weightdir, thresh_typenames[typeindex],
+                    'box{:03d}'.format(boxindex),
                     '{}.csv'.format(sourcevar))
 
-                valuematrix, headers = \
-                    data_processing.read_header_values_datafile(sourcefile)
+                threshmatrix, headers = \
+                    data_processing.read_header_values_datafile(
+                        threshold_sourcefile)
+
+            for destvarindex, destvar in enumerate(graphdata.destvars):
+                destvarvalueindex = headers.index(destvar)
+                ax.plot(valuematrix[:, 0],
+                        valuematrix[:, destvarvalueindex],
+                        marker="o", markersize=4,
+                        label=labels[destvarindex])
 
                 if graphdata.thresholdplotting:
-                    threshold_sourcefile = os.path.join(
-                        weightdir, thresh_typenames[typeindex],
-                        'box{:03d}'.format(boxindex),
-                        '{}.csv'.format(sourcevar))
+                    ax.plot(threshmatrix[:, 0],
+                            threshmatrix[:, destvarvalueindex],
+                            marker="x", markersize=4,
+                            linestyle=':',
+                            label=destvar + ' threshold')
 
-                    threshmatrix, headers = \
-                        data_processing.read_header_values_datafile(
-                            threshold_sourcefile)
-
-                for destvarindex, destvar in enumerate(graphdata.destvars):
-                    destvarvalueindex = headers.index(destvar)
-                    ax.plot(valuematrix[:, 0],
-                            valuematrix[:, destvarvalueindex],
-                            marker="o", markersize=4,
-                            label=labels[destvarindex])
-
-                    if graphdata.thresholdplotting:
-                        ax.plot(threshmatrix[:, 0],
-                                threshmatrix[:, destvarvalueindex],
-                                marker="x", markersize=4,
-                                linestyle=':',
-                                label=destvar + ' threshold')
-
-                # Shrink current axis by 20%
+            # Shrink current axis by 20%
 #                box = ax.get_position()
 #                ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
 
-                ax.legend(loc='center left',
-                          bbox_to_anchor=graphdata.legendbbox)
+            ax.legend(loc='center left',
+                      bbox_to_anchor=graphdata.legendbbox)
 
-                if graphdata.axis_limits is not False:
-                    ax.axis(graphdata.axis_limits)
-                else:
-                    plt.gca().set_ylim(bottom=-0.05)
+            if graphdata.axis_limits is not False:
+                ax.axis(graphdata.axis_limits)
+            else:
+                plt.gca().set_ylim(bottom=-0.05)
 
-                plt.savefig(os.path.join(
-                    savedir,
-                    '{}_{}_box{:03d}_{}.pdf'.format(
-                        scenario, typename, boxindex, sourcevar)))
-                plt.close()
+            plt.savefig(os.path.join(
+                savedir,
+                '{}_{}_box{:03d}_{}.pdf'.format(
+                    scenario, typename, boxindex, sourcevar)))
+            plt.close()
 
     return None
 
