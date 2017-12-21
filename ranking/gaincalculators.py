@@ -38,7 +38,11 @@ class CorrWeightcalc(object):
 
         """
 
-        corrval = np.corrcoef(causevardata.T, affectedvardata.T)[1, 0]
+        # corrval = np.corrcoef(causevardata.T, affectedvardata.T)[1, 0]
+        # corrval = np.cov(causevardata.T, affectedvardata.T)[1, 0]
+        corrval = np.correlate(causevardata.T, affectedvardata.T)[0] / len(affectedvardata)
+
+
         return [corrval], None
 
     def calcsigthresh(self, *_):
