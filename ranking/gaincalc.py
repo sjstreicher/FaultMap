@@ -35,8 +35,7 @@ import config_setup
 import data_processing
 import datagen
 import gaincalc_oneset
-from gaincalculators import (PartialCorrWeightcalc, CorrWeightcalc,
-                             TransentWeightcalc)
+from gaincalculators import CorrWeightcalc, TransentWeightcalc
 
 
 class WeightcalcData(object):
@@ -123,16 +122,21 @@ class WeightcalcData(object):
         else:
             self.normalise = False
             logging.info("Defaulting to no normalisation")
+        if 'detrend' in self.caseconfig[settings_name]:
+            self.detrend = self.caseconfig[settings_name]['detrend']
+        else:
+            self.detrend = False
+            logging.info("Defaulting to no detrending")
         self.sigtest = self.caseconfig[settings_name]['sigtest']
         if self.sigtest:
             # The transfer entropy threshold calculation method be either
             # 'sixsigma' or 'rankorder'
-            self.te_thresh_method = \
-                self.caseconfig[settings_name]['te_thresh_method']
+            self.thresh_method = \
+                self.caseconfig[settings_name]['thresh_method']
             # The transfer entropy surrogate generation method be either
             # 'iAAFT' or 'random_shuffle'
-            self.te_surr_method = \
-                self.caseconfig[settings_name]['te_surr_method']
+            self.surr_method = \
+                self.caseconfig[settings_name]['surr_method']
         if 'allthresh' in self.caseconfig[settings_name]:
             self.allthresh = self.caseconfig[settings_name]['allthresh']
         else:
@@ -306,6 +310,14 @@ class WeightcalcData(object):
             self.inputdata_originalrate = self.inputdata_bandgapfiltered
         else:
             self.inputdata_originalrate = self.inputdata_normstep
+
+        # Perform detrending
+        # Detrending should be performed after normalisation and band gap filtering
+
+        self.inputdata_originalrate = data_processing.detrend_data(
+            self.headerline, self.timestamps,
+            self.inputdata_originalrate,
+            self.saveloc, self.casename, scenario, self.detrend)
 
         # Subsample data if required
         # Get sub_sampling interval

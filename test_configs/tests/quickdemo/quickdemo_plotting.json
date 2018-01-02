@@ -60,6 +60,10 @@
 	"sigtest_cases": [
 	  "sigtested"
 	],
+    "types": [
+      "simple",
+      "directional"
+    ],
 	"boxindexes": [1],
 	"sourcevars": ["X 1"],
 	"destvars": ["X 1", "X 2"],

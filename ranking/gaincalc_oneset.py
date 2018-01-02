@@ -155,7 +155,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                 if weightcalcdata.allthresh:
                     sigthreshold = \
                         weightcalculator.calcsigthresh(
-                            weightcalcdata, affectedvardata, causevardata)
+                            weightcalcdata, affectedvar, causevar, box, delay)
 
                 if len(weight) > 1:
                     # If weight contains directional as well as
@@ -221,7 +221,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                 auxdata_thisvar_directional, auxdata_thisvar_absolute = \
                     weightcalculator.report(
                         weightcalcdata, causevarindex, affectedvarindex,
-                        weightlist, proplist)
+                        weightlist, box, proplist)
 
                 auxdata_directional.append(auxdata_thisvar_directional)
                 auxdata_absolute.append(auxdata_thisvar_absolute)
@@ -268,7 +268,7 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                 auxdata_thisvar_neutral = \
                     weightcalculator.report(
                         weightcalcdata, causevarindex, affectedvarindex,
-                        weightlist, proplist)
+                        weightlist, box, proplist)
 
                 auxdata_neutral.append(auxdata_thisvar_neutral)
 

@@ -6,15 +6,15 @@
 import csv
 import json
 import logging
-import os
-
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
+import os
 import pandas as pd
 import sklearn.preprocessing
 import tables as tb
 from numba import jit
+from scipy import signal
 
 import config_setup
 import gaincalc
@@ -1056,6 +1056,32 @@ def bandgapfilter_data(raw_tsdata, normalised_tsdata, variables,
     return inputdata_bandgapfiltered
 
 
+def detrend_linear_model(data):
+
+    df = pd.DataFrame(data)
+    detrended_df = pd.DataFrame(signal.detrend(df.dropna(), axis=0))
+    detrended_df.index = df.dropna().index
+    detrended_df.columns = df.columns
+
+    return detrended_df.dropna().values
+
+
+def detrend_first_differences(data):
+
+    df = pd.DataFrame(data)
+    detrended_df = df - df.shift(1)
+
+    return detrended_df.dropna().values
+
+
+def detrend_link_relatives(data):
+
+    df = pd.DataFrame(data)
+    detrended_df = df / df.shift(1)
+
+    return detrended_df.dropna().values
+
+
 def skogestad_scale_select(vartype, lower_limit, nominal_level, high_limit):
     if vartype == 'D':
         limit = max((nominal_level - lower_limit),
@@ -1106,6 +1132,23 @@ def write_normdata(saveloc, case, scenario, headerline, datalines):
     return None
 
 
+def write_detrenddata(saveloc, case, scenario, headerline, datalines):
+
+    # Define export directories and filenames
+    datadir = config_setup.ensure_existence(
+        os.path.join(saveloc, 'detrenddata'), make=True)
+
+    filename_template = os.path.join(datadir, '{}_{}_{}.csv')
+
+    def filename(name):
+        return filename_template.format(case, scenario, name)
+
+    # Store the detrended data in similar format as original data
+    writecsv(filename('detrended_data'), datalines, headerline)
+
+    return None
+
+
 def normalise_data(headerline, timestamps, inputdata_raw, variables,
                    saveloc, case, scenario,
                    method, weight_methods, scalingvalues):
@@ -1118,7 +1161,7 @@ def normalise_data(headerline, timestamps, inputdata_raw, variables,
             skogestad_scale(inputdata_raw, variables, scalingvalues)
     elif not method:
         # If method is simply false
-        # Still norm centre the data
+        # Still mean center the data
         # This breaks when trying to use discrete methods
         if 'transfer_entropy_discrete' not in weight_methods:
             inputdata_normalised = subtract_mean(inputdata_raw)
@@ -1133,6 +1176,35 @@ def normalise_data(headerline, timestamps, inputdata_raw, variables,
     write_normdata(saveloc, case, scenario, headerline, datalines)
 
     return inputdata_normalised
+
+
+def detrend_data(headerline, timestamps, inputdata,
+                 saveloc, case, scenario,
+                 method):
+
+    if method == 'first_differences':
+        inputdata_detrended = \
+            detrend_first_differences(inputdata)
+    elif method == 'link_relatives':
+        inputdata_detrended = \
+            detrend_link_relatives(inputdata)
+    elif method == 'linear_model':
+        inputdata_detrended = \
+            detrend_linear_model(inputdata)
+    elif not method:
+        # If method is False
+        # Write received data without any modifications
+        inputdata_detrended = inputdata
+
+    else:
+        raise NameError("Normalisation method not recognized")
+
+    datalines = np.concatenate((timestamps[:, np.newaxis],
+                                inputdata_detrended), axis=1)
+
+    write_detrenddata(saveloc, case, scenario, headerline, datalines)
+
+    return inputdata_detrended
 
 
 def subtract_mean(inputdata_raw):
@@ -1242,8 +1314,8 @@ def buildcase(dummyweight, digraph, name, dummycreation):
     nodedatalist = digraph.nodes(data=True)
 
     biaslist = []
-    for nodeindex, node in enumerate(digraph.nodes()):
-        biaslist.append(nodedatalist[nodeindex][1]['bias'])
+    for node in digraph.nodes():
+        biaslist.append(nodedatalist[node]['bias'])
 
     return np.array(connection), gain, variablelist, biaslist
 
