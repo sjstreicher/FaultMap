@@ -490,7 +490,7 @@ def calc_gainrank(gainmatrix, noderankdata, rank_method,
                                      dummyweight, noderankdata.dummies)
 
     connections = [backwardconnection]
-    variables = [backwardvariablelist]
+    variables = [list(backwardvariablelist)]
     gains = [np.array(backwardgain)]
 
     backwardrankingdict, backwardrankinglist = \
@@ -697,8 +697,8 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
 
         # Save the graphs to file
         graph, _ = \
-            create_importance_graph(noderankdata,
-                variables, connections, connections, gains, delays,
+            create_importance_graph(
+                noderankdata, variables, connections, connections, gains, delays,
                 rankingdict)
         graph_filename = \
             os.path.join(savepath,

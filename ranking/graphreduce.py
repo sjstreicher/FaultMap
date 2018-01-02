@@ -170,10 +170,10 @@ def reducegraph(mode, case, writeoutput):
                     if method[:16] == 'transfer_entropy':
                             typenames = [
                                 'weight_absolute',
-                                'weight_directional',
-                                'signtested_weight_directional']
+                                'weight_directional']
+                                #'signtested_weight_directional']
                             if sigtype == 'sigtest':
-                                typenames.append('sigweight_absolute')
+                                typenames.append('sig_dweight_absolute')
                                 typenames.append(
                                     'sigweight_directional')
                                 typenames.append(

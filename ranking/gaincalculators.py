@@ -8,22 +8,29 @@ import logging
 
 import numpy as np
 
-import data_processing
 import transentropy
+from ranking import data_processing
 
 
 class CorrWeightcalc(object):
     """This class provides methods for calculating the weights according to the
     cross-correlation method.
 
+    Calculates correlation using covariance with optional standardisation
+    and detrending. Allows for effect of Skogestad scaling to be reflected
+    in final result.
+
     """
     def __init__(self, weightcalcdata):
         """Read the files or functions and returns required data fields.
 
         """
-        self.threshcorr = (1.85*(weightcalcdata.testsize**(-0.41))) + \
-            (2.37*(weightcalcdata.testsize**(-0.53)))
-        self.threshdir = 0.46*(weightcalcdata.testsize**(-0.16))
+        # These are the Bauer2005 thresholds
+        # Due to the decision to make use of non-standardised correlation, a normal surrogate
+        # thresholding approach will be used for each individual pair
+        # self.threshcorr = (1.85*(weightcalcdata.testsize**(-0.41))) + \
+        #     (2.37*(weightcalcdata.testsize**(-0.53)))
+        # self.threshdir = 0.46*(weightcalcdata.testsize**(-0.16))
 #        logging.info("Directionality threshold: " + str(self.threshdir))
 #        logging.info("Correlation threshold: " + str(self.threshcorr))
 
@@ -32,32 +39,163 @@ class CorrWeightcalc(object):
                             'signchange', 'threshcorr', 'threshdir',
                             'threshpass', 'directionpass', 'dirval']
 
-    def calcweight(self, causevardata, affectedvardata, *args):
+        if weightcalcdata.sigtest:
+            self.thresh_method = weightcalcdata.thresh_method
+            self.surr_method = weightcalcdata.surr_method
+
+    def calcweight(self, causevardata, affectedvardata, *_):
         """Calculates the correlation between two vectors containing
         timer series data.
 
         """
 
         # corrval = np.corrcoef(causevardata.T, affectedvardata.T)[1, 0]
-        # corrval = np.cov(causevardata.T, affectedvardata.T)[1, 0]
-        corrval = np.correlate(causevardata.T, affectedvardata.T)[0] / len(affectedvardata)
-
+        # TODO: Provide the option of scaling the correlation measure
+        # Un-normalised measure
+        corrval = np.cov(causevardata.T, affectedvardata.T)[1, 0]
+        # Normalised measure
+        # corrval = np.corrcoef(causevardata.T, affectedvardata.T)[1, 0]
+        # Here we use the biased correlation measure
+        # corrval = np.correlate(causevardata.T, affectedvardata.T)[0] / len(affectedvardata)
 
         return [corrval], None
 
-    def calcsigthresh(self, *_):
-        return [self.threshcorr]
+    # def calcsigthresh(self, *_):
+    #     return [self.threshcorr]
 
-    def report(self, weightcalcdata, causevarindex, affectedvarindex,
-               weightlist, _):
+    def calc_surr_correlation(self, weightcalcdata, causevar, affectedvar, box, trials):
+        """Calculates surrogate correlation values for significance
+        threshold purposes.
 
-        """Calculates and reports the relevant output for each combination
-        of variables tested.
+        Two methods for generating surrogate data is available:
+        iAAFT (Schreiber 2000a) or random_shuffle in time.
+
+        Returns list of surrogate correlation entropy values of length num.
 
         """
-        variables = weightcalcdata.variables
-        causevar = variables[causevarindex]
-        affectedvar = variables[affectedvarindex]
+
+        # The causal (or source) data is replaced by surrogate data,
+        # while the affected (or destination) data remains unchanged.
+
+        # Generate surrogate causal data
+        thresh_causevardata = \
+            box[:, weightcalcdata.variables.index(causevar)][
+                weightcalcdata.startindex:
+                    weightcalcdata.startindex + weightcalcdata.testsize]
+
+        # Get the causal data in the correct format
+        # for surrogate generation
+        original_causal = np.zeros((1, len(thresh_causevardata)))
+        original_causal[0, :] = thresh_causevardata
+
+        if self.surr_method == 'iAAFT':
+            surr_tsdata = \
+                [data_processing.gen_iaaft_surrogates(
+                    original_causal, 10)
+                    for n in range(trials)]
+        elif self.surr_method == 'random_shuffle':
+            surr_tsdata = \
+                [data_processing.shuffle_data(thresh_causevardata) for n in range(trials)]
+
+        surr_corr_list = []
+        surr_dirindex_list = []
+        for n in range(trials):
+            # Compute the weightlist for every trial by evaluating all delays
+            surr_weightlist = []
+            for delay_index in weightcalcdata.sample_delays:
+                thresh_affectedvardata = \
+                    box[:, weightcalcdata.variables.index(affectedvar)][
+                        weightcalcdata.startindex + delay_index:
+                        weightcalcdata.startindex + weightcalcdata.testsize + delay_index]
+                surr_weightlist.append(self.calcweight(
+                    surr_tsdata[n][0, :], thresh_affectedvardata)[0][0])
+
+            _, maxcorr, _, _, _, directionindex, _ = self.select_weights(
+                weightcalcdata, causevar, affectedvar, surr_weightlist)
+
+            surr_corr_list.append(abs(maxcorr))
+            surr_dirindex_list.append(directionindex)
+
+        return surr_corr_list, surr_dirindex_list
+
+    def thresh_rankorder(self, surr_corr, surr_dirindex, trials=19):
+        """Calculates the minimum threshold required for a correlation
+        value to be considered significant.
+
+        Makes use of a 95% single-sided certainty and a rank-order method.
+        This correlates to taking the maximum transfer entropy from 19
+        surrogate transfer entropy calculations as the threshold,
+        see Schreiber2000a.
+
+        Alternatively, the second highest from 38 observations can be taken,
+        etc.
+
+        """
+
+        thresh_corr = max(surr_corr)
+        nullbias_corr = np.mean(surr_corr)
+        nullstd_corr = np.std(surr_corr)
+
+        thresh_dirindex = max(surr_dirindex)
+        nullbias_dirindex = np.mean(surr_dirindex)
+        nullstd_dirindex = np.std(surr_dirindex)
+
+        return [thresh_corr, nullbias_corr, nullstd_corr], \
+               [thresh_dirindex, nullbias_dirindex, nullstd_dirindex]
+
+    def thresh_sixsigma(self, surr_corr, surr_dirindex, stdevs=6, trials=30):
+        """Calculates the minimum threshold required for a transfer entropy
+        value to be considered significant.
+
+        Makes use of a six sigma Gaussian check as done in Bauer2005 with 30
+        samples of surrogate data.
+
+        """
+
+        surr_corr_mean = np.mean(surr_corr)
+        surr_corr_stdev = np.std(surr_corr)
+
+        surr_dirindex_mean = np.mean(surr_dirindex)
+        surr_dirindex_stdev = np.std(surr_dirindex)
+
+        thresh_corr = (stdevs * surr_corr_stdev) + surr_corr_mean
+
+        thresh_dirindex = (stdevs * surr_dirindex_stdev) + surr_dirindex_mean
+
+        return [thresh_corr, surr_corr_mean, surr_corr_stdev], \
+               [thresh_dirindex, surr_dirindex_mean, surr_dirindex_stdev]
+
+    def calcsigthresh(self, weightcalcdata, causevar, affectedvar, box, _):
+
+        # Calculates correlation as well as correlation directionality index
+        # significance thresholds
+        # The correlation threshold is a simple statistical significance test
+        # based on surrogate results
+        # The directionality threshold calculation is as described by Bauer2005
+
+        # This is only called when the entropy at each delay is tested
+
+        if self.thresh_method == 'rankorder':
+            surr_corr, surr_dirindex = \
+                self.calc_surr_correlation(
+                    weightcalcdata, causevar, affectedvar, box, 19)
+            thresh_corr, thresh_dirindex = \
+                self.thresh_rankorder(surr_corr, surr_dirindex)
+        elif self.thresh_method == 'sixsigma':
+            surr_corr, surr_dirindex = \
+                self.calc_surr_correlation(
+                    weightcalcdata, causevar, affectedvar, box, 30)
+            thresh_corr, thresh_dirindex = \
+                self.thresh_sixsigma(surr_corr, surr_dirindex)
+
+        return [thresh_corr[0], thresh_dirindex[0]]
+
+    @staticmethod
+    def select_weights(weightcalcdata, causevar, affectedvar,
+                       weightlist):
+
+        # Initiate flag indicating whether direction test passed
+        directionpass = None
 
         if weightcalcdata.bidirectional_delays:
             baseval = weightlist[(len(weightlist) / 2)]
@@ -78,7 +216,7 @@ class CorrWeightcalc(object):
         delay_index = weightlist.index(maxcorr)
 
         # Correlation thresholds from Bauer2008 Eq. 4
-        maxcorr_abs = max(maxval, abs(minval))
+        #maxcorr_abs = abs(maxcorr)
         bestdelay = weightcalcdata.actual_delays[delay_index]
         if (maxval and minval) != 0:
             directionindex = 2 * (abs(maxval + minval) /
@@ -99,101 +237,157 @@ class CorrWeightcalc(object):
 
         logging.info("Directionality value: " + str(directionindex))
 
+        bestdelay_sample = weightcalcdata.sample_delays[delay_index]
+
+        return baseval, maxcorr, delay_index, bestdelay, \
+            bestdelay_sample, directionindex, signchange
+
+    def report(self, weightcalcdata, causevarindex, affectedvarindex,
+               weightlist, box, _):
+
+        """Calculates and reports the relevant output for each combination
+        of variables tested.
+
+        """
+        causevar = weightcalcdata.variables[causevarindex]
+        affectedvar = weightcalcdata.variables[affectedvarindex]
+
+        # Get best weights and delays and an indication whether the
+        # directionality test was passed
+
+        baseval, maxcorr, delay_index, bestdelay, \
+        bestdelay_sample, directionindex, signchange = \
+            self.select_weights(weightcalcdata, causevar,
+                                affectedvar, weightlist)
+
         corrthreshpass = None
         dirthreshpass = None
 
         if weightcalcdata.sigtest:
-            corrthreshpass = (maxcorr_abs >= self.threshcorr)
-            dirthreshpass = ((directionindex >= self.threshdir)
+            # Calculate value and directionality thresholds for correlation
+
+            # In the case of correlation, we need to create one surrogate weightlist
+            # (evaluation at all delays) for every trial, and get the maxcorr and
+            # directionality index from it.
+
+            # Do significance calculations
+
+            if self.thresh_method == 'rankorder':
+                surr_corr, surr_dirindex = \
+                    self.calc_surr_correlation(
+                        weightcalcdata, causevar, affectedvar, box, 19)
+                threshcorr, threshdir = \
+                    self.thresh_rankorder(surr_corr, surr_dirindex)
+            elif self.thresh_method == 'sixsigma':
+                surr_corr, surr_dirindex = \
+                    self.calc_surr_correlation(
+                        weightcalcdata, causevar, affectedvar, box, 30)
+                threshcorr, threshdir = \
+                    self.thresh_sixsigma(surr_corr, surr_dirindex)
+
+            logging.info("The correlation threshold is: " +
+                         str(threshcorr[0]))
+            logging.info("The direction index threshold is: " +
+                         str(threshdir[0]))
+
+            corrthreshpass = (abs(maxcorr) >= threshcorr[0])
+            dirthreshpass = ((directionindex >= threshdir[0])
                              and (bestdelay >= 0.))
             logging.info("Correlation threshold passed: " +
                          str(corrthreshpass))
             logging.info("Directionality threshold passed: " +
                          str(dirthreshpass))
 
+        elif not weightcalcdata.sigtest:
+            threshcorr = [None]
+            threshdir = [None]
+
+        # The maxcorr value can be positive or negative, the eigenvector ranking steps
+        # needs to abs all the weights
+
         dataline = [causevar, affectedvar, baseval,
                     maxcorr, str(bestdelay), str(delay_index),
-                    signchange, self.threshcorr, self.threshdir,
+                    signchange, threshcorr[0], threshdir[0],
                     corrthreshpass, dirthreshpass, directionindex]
 
         return dataline
 
 
-class PartialCorrWeightcalc(CorrWeightcalc):
-    """This class provides methods for calculating the weights according to
-    the partial correlation method.
-
-    The option of handling delays in similar fashion to that of
-    cross-correlation is provided. However, the ambiguity of using any delays
-    in the partial correlation calculation should be noted.
-
-    """
-
-    def __init__(self, weightcalcdata):
-        """Read the files or functions and returns required data fields.
-
-        """
-        super(PartialCorrWeightcalc, self).__init__(self, weightcalcdata)
-
-        self.connections_used = weightcalcdata.connections_used
-
-    def calcweight(self, causevardata, affectedvardata, weightcalcdata,
-                   causevarindex, affectedvarindex):
-        """Calculates the partial correlation between two elements in the
-        complete dataset.
-
-        It is important to note that this function differs from the others
-        in the sense that it requires the full dataset in order to execute.
-
-        """
-
-        startindex = weightcalcdata.startindex
-        size = weightcalcdata.testsize
-        vardims = len(weightcalcdata.variables)
-
-        # Get inputdata and initial connectionmatrix
-        calcdata = (weightcalcdata.inputdata[:, :]
-                    [startindex:startindex+size])
-
-        newvariables = weightcalcdata.variables
-
-        if self.connections_used:
-            newconnectionmatrix = weightcalcdata.connectionmatrix
-        else:
-            # If there is not connection matrix given, create a fully
-            # connected connection matrix
-            newconnectionmatrix = np.ones((vardims, vardims))
-
-        # Delete all columns not listed in causevarindexes
-        # Calculation is cheap, and in order to keep things simple the
-        # causevarindexes are the sole means of doing selective calculation
-        dellist = []
-        for index in range(vardims):
-            if index not in weightcalcdata.causevarindexes:
-                dellist.append(index)
-                logging.info("Deleted column " + str(index))
-
-        # Delete all columns listed in dellist from calcdata
-        newcalcdata = np.delete(calcdata, dellist, 1)
-
-        # Delete all indexes listed in dellist from variables
-        newvariables = np.delete(newvariables, dellist)
-
-        # Delete all rows and columns listed in dellist
-        # from connectionmatrix
-        newconnectionmatrix = np.delete(newconnectionmatrix, dellist, 1)
-        newconnectionmatrix = np.delete(newconnectionmatrix, dellist, 0)
-
-        # Calculate correlation matrix
-        correlationmatrix = np.corrcoef(newcalcdata.T)
-        # Calculate partial correlation matrix
-        p_matrix = np.linalg.inv(correlationmatrix)
-        d = p_matrix.diagonal()
-        partialcorrelationmatrix = \
-            np.where(newconnectionmatrix,
-                     -p_matrix/np.abs(np.sqrt(np.outer(d, d))), 0)
-
-        return partialcorrelationmatrix[affectedvarindex, causevarindex], None
+# class PartialCorrWeightcalc(CorrWeightcalc):
+#     """This class provides methods for calculating the weights according to
+#     the partial correlation method.
+#
+#     The option of handling delays in similar fashion to that of
+#     cross-correlation is provided. However, the ambiguity of using any delays
+#     in the partial correlation calculation should be noted.
+#
+#     """
+#
+#     def __init__(self, weightcalcdata):
+#         """Read the files or functions and returns required data fields.
+#
+#         """
+#         super(PartialCorrWeightcalc, self).__init__(self, weightcalcdata)
+#
+#         self.connections_used = weightcalcdata.connections_used
+#
+#     def calcweight(self, causevardata, affectedvardata, weightcalcdata,
+#                    causevarindex, affectedvarindex):
+#         """Calculates the partial correlation between two elements in the
+#         complete dataset.
+#
+#         It is important to note that this function differs from the others
+#         in the sense that it requires the full dataset in order to execute.
+#
+#         """
+#
+#         startindex = weightcalcdata.startindex
+#         size = weightcalcdata.testsize
+#         vardims = len(weightcalcdata.variables)
+#
+#         # Get inputdata and initial connectionmatrix
+#         calcdata = (weightcalcdata.inputdata[:, :]
+#                     [startindex:startindex+size])
+#
+#         newvariables = weightcalcdata.variables
+#
+#         if self.connections_used:
+#             newconnectionmatrix = weightcalcdata.connectionmatrix
+#         else:
+#             # If there is not connection matrix given, create a fully
+#             # connected connection matrix
+#             newconnectionmatrix = np.ones((vardims, vardims))
+#
+#         # Delete all columns not listed in causevarindexes
+#         # Calculation is cheap, and in order to keep things simple the
+#         # causevarindexes are the sole means of doing selective calculation
+#         dellist = []
+#         for index in range(vardims):
+#             if index not in weightcalcdata.causevarindexes:
+#                 dellist.append(index)
+#                 logging.info("Deleted column " + str(index))
+#
+#         # Delete all columns listed in dellist from calcdata
+#         newcalcdata = np.delete(calcdata, dellist, 1)
+#
+#         # Delete all indexes listed in dellist from variables
+#         newvariables = np.delete(newvariables, dellist)
+#
+#         # Delete all rows and columns listed in dellist
+#         # from connectionmatrix
+#         newconnectionmatrix = np.delete(newconnectionmatrix, dellist, 1)
+#         newconnectionmatrix = np.delete(newconnectionmatrix, dellist, 0)
+#
+#         # Calculate correlation matrix
+#         correlationmatrix = np.corrcoef(newcalcdata.T)
+#         # Calculate partial correlation matrix
+#         p_matrix = np.linalg.inv(correlationmatrix)
+#         d = p_matrix.diagonal()
+#         partialcorrelationmatrix = \
+#             np.where(newconnectionmatrix,
+#                      -p_matrix/np.abs(np.sqrt(np.outer(d, d))), 0)
+#
+#         return partialcorrelationmatrix[affectedvarindex, causevarindex], None
 
 
 class TransentWeightcalc(object):
@@ -215,7 +409,8 @@ class TransentWeightcalc(object):
         self.estimator = estimator
         self.infodynamicsloc = weightcalcdata.infodynamicsloc
         if weightcalcdata.sigtest:
-            self.te_thresh_method = weightcalcdata.te_thresh_method
+            self.thresh_method = weightcalcdata.thresh_method
+            self.surr_method = weightcalcdata.surr_method
 
         if self.estimator == 'kraskov':
             self.parameters = weightcalcdata.additional_parameters
@@ -232,8 +427,7 @@ class TransentWeightcalc(object):
             self.parameters['kernel_width'] = \
                 weightcalcdata.kernel_width
 
-    def calcweight(self, causevardata, affectedvardata, weightcalcdata,
-                   causevarindex, affectedvarindex):
+    def calcweight(self, causevardata, affectedvardata, *_):
         """"Calculates the transfer entropy between two vectors containing
         timer series data.
 
@@ -259,7 +453,8 @@ class TransentWeightcalc(object):
         return [transent_directional, transent_absolute], \
             [auxdata_fwd, auxdata_bwd]
 
-    def select_weights(self, weightcalcdata, causevar, affectedvar,
+    @staticmethod
+    def select_weights(weightcalcdata, causevar, affectedvar,
                        weightlist, directional):
 
         if directional:
@@ -336,7 +531,7 @@ class TransentWeightcalc(object):
             bestdelay_sample, directionpass
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
-               weightlist, proplist):
+               weightlist, box, proplist):
 
         """Calculates and reports the relevant output for each combination
         of variables tested.
@@ -384,30 +579,28 @@ class TransentWeightcalc(object):
                                 False)
 
         if weightcalcdata.sigtest:
-            self.te_thresh_method = weightcalcdata.te_thresh_method
-            self.te_surr_method = weightcalcdata.te_surr_method
             # Calculate threshold for transfer entropy
             thresh_causevardata = \
-                inputdata[:, causevarindex][startindex:startindex+size]
+                box[:, causevarindex][startindex:startindex+size]
             thresh_affectedvardata_directional = \
-                inputdata[:, affectedvarindex][startindex +
+                box[:, affectedvarindex][startindex +
                                                bestdelay_sample_directional:
                                                startindex + size +
                                                bestdelay_sample_directional]
 
             thresh_affectedvardata_absolute = \
-                inputdata[:, affectedvarindex][startindex +
+                box[:, affectedvarindex][startindex +
                                                bestdelay_sample_absolute:
                                                startindex + size +
                                                bestdelay_sample_absolute]
 
             # Do significance calculations for directional case
-            if self.te_thresh_method == 'rankorder':
+            if self.thresh_method == 'rankorder':
                 threshent_directional, threshent_absolute = \
                     self.thresh_rankorder(
                         thresh_affectedvardata_directional.T,
                         thresh_causevardata.T)
-            elif self.te_thresh_method == 'sixsigma':
+            elif self.thresh_method == 'sixsigma':
                 threshent_directional, threshent_absolute = \
                     self.thresh_sixsigma(
                         thresh_affectedvardata_directional.T,
@@ -424,12 +617,12 @@ class TransentWeightcalc(object):
 
             if not delay_index_directional == delay_index_absolute:
                 # Need to do own calculation of absolute significance
-                if self.te_thresh_method == 'rankorder':
+                if self.thresh_method == 'rankorder':
                     _, threshent_absolute = \
                         self.thresh_rankorder(
                             thresh_affectedvardata_absolute.T,
                             thresh_causevardata.T)
-                elif self.te_thresh_method == 'sixsigma':
+                elif self.thresh_method == 'sixsigma':
                     _, threshent_absolute = \
                         self.thresh_sixsigma(
                             thresh_affectedvardata_absolute.T,
@@ -482,7 +675,7 @@ class TransentWeightcalc(object):
 
         return datalines
 
-    def calc_surr_te(self, affected_data, causal_data, num):
+    def calc_surr_te(self, weightcalcdata, causevar, affectedvar, box, delay_index, trials):
         """Calculates surrogate transfer entropy values for significance
         threshold purposes.
 
@@ -498,41 +691,42 @@ class TransentWeightcalc(object):
 
         # Get the causal data in the correct format
         # for surrogate generation
-        original_causal = np.zeros((1, len(causal_data)))
-        original_causal[0, :] = causal_data
 
-        if self.te_surr_method == 'iAAFT':
+        thresh_causevardata = \
+            box[:, weightcalcdata.variables.index(causevar)][
+            weightcalcdata.startindex:weightcalcdata.startindex + weightcalcdata.testsize]
+
+        thresh_affectedvardata = \
+            box[:, weightcalcdata.variables.index(affectedvar)][
+            weightcalcdata.startindex + delay_index:
+            weightcalcdata.startindex + weightcalcdata.testsize + delay_index]
+
+        original_causal = np.zeros((1, len(thresh_causevardata)))
+        original_causal[0, :] = thresh_causevardata
+
+        if self.surr_method == 'iAAFT':
             surr_tsdata = \
                 [data_processing.gen_iaaft_surrogates(
                     original_causal, 10)
-                 for n in range(num)]
+                 for n in range(trials)]
 
-        elif self.te_surr_method == 'random_shuffle':
+        elif self.surr_method == 'random_shuffle':
             surr_tsdata = \
-                [data_processing.shuffle_data(causal_data) for n in range(num)]
+                [data_processing.shuffle_data(thresh_causevardata) for n in range(trials)]
 
-        surr_te_fwd = []
-        surr_te_bwd = []
-        for n in range(num):
+        surr_te_absolute_list = []
+        surr_te_directional_list = []
+        for n in range(trials):
 
-            surr_te_fwd.append(transentropy.calc_infodynamics_te(
-                self.infodynamicsloc, self.estimator,
-                affected_data, surr_tsdata[n][0, :],
-                **self.parameters)[0])
+            [surr_te_directional, surr_te_absolute], _ = \
+                self.calcweight(surr_tsdata[n][0, :], thresh_affectedvardata)
 
-            surr_te_bwd.append(transentropy.calc_infodynamics_te(
-                self.infodynamicsloc, self.estimator,
-                surr_tsdata[n][0, :], affected_data,
-                **self.parameters)[0])
+            surr_te_absolute_list.append(surr_te_absolute)
+            surr_te_directional_list.append(surr_te_directional)
 
-        surr_te_directional = \
-            [surr_te_fwd[n] - surr_te_bwd[n] for n in range(num)]
+        return surr_te_directional_list, surr_te_absolute_list
 
-        surr_te_absolute = [surr_te_fwd[n] for n in range(num)]
-
-        return surr_te_directional, surr_te_absolute
-
-    def thresh_rankorder(self, affected_data, causal_data):
+    def thresh_rankorder(self, surr_te_directional, surr_te_absolute):
         """Calculates the minimum threshold required for a transfer entropy
         value to be considered significant.
 
@@ -545,8 +739,6 @@ class TransentWeightcalc(object):
         etc.
 
         """
-        surr_te_directional, surr_te_absolute = \
-            self.calc_surr_te(affected_data, causal_data, 19)
 
         threshent_directional = max(surr_te_directional)
         nullbias_directional = np.mean(surr_te_directional)
@@ -559,7 +751,7 @@ class TransentWeightcalc(object):
         return [threshent_directional, nullbias_directional, nullstd_directional], \
                [threshent_absolute, nullbias_absolute, nullstd_absolute]
 
-    def thresh_sixsigma(self, affected_data, causal_data):
+    def thresh_sixsigma(self, surr_te_directional, surr_te_absolute):
         """Calculates the minimum threshold required for a transfer entropy
         value to be considered significant.
 
@@ -567,8 +759,6 @@ class TransentWeightcalc(object):
         samples of surrogate data.
 
         """
-        surr_te_directional, surr_te_absolute = \
-            self.calc_surr_te(affected_data, causal_data, 30)
 
         surr_te_directional_mean = np.mean(surr_te_directional)
         surr_te_directional_stdev = np.std(surr_te_directional)
@@ -585,15 +775,21 @@ class TransentWeightcalc(object):
         return [threshent_directional, surr_te_directional_mean, surr_te_directional_stdev], \
                [threshent_absolute, surr_te_absolute_mean, surr_te_absolute_stdev]
 
-    def calcsigthresh(self, weightcalcdata, affected_data, causal_data):
-        # print affected_data
-        # print causal_data
-        self.te_thresh_method = weightcalcdata.te_thresh_method
-        self.te_surr_method = weightcalcdata.te_surr_method
-        if self.te_thresh_method == 'rankorder':
+    def calcsigthresh(self, weightcalcdata, causevar, affectedvar, box, delay):
+
+        # This is only called when the entropy at each delay is tested
+
+        if self.thresh_method == 'rankorder':
+            surr_te_directional, surr_te_absolute = \
+                self.calc_surr_te(weightcalcdata, causevar, affectedvar,
+                                  box, delay, 19)
             threshent_directional, threshent_absolute = \
-                self.thresh_rankorder(affected_data, causal_data)
-        elif self.te_thresh_method == 'sixsigma':
+                self.thresh_rankorder(surr_te_directional, surr_te_absolute)
+        elif self.thresh_method == 'sixsigma':
+            surr_te_directional, surr_te_absolute = \
+                self.calc_surr_te(weightcalcdata, causevar, affectedvar,
+                                  box, delay, 30)
             threshent_directional, threshent_absolute = \
-                self.thresh_sixsigma(affected_data, causal_data)
+                self.thresh_sixsigma(surr_te_directional, surr_te_absolute)
+
         return [threshent_directional[0], threshent_absolute[0]]

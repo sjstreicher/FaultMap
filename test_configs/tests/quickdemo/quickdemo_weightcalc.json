@@ -21,8 +21,8 @@
       2100,
       10
     ],
-    "te_thresh_method": "rankorder",
-    "te_surr_method": "random_shuffle",
+    "thresh_method": "rankorder",
+    "surr_method": "random_shuffle",
     "additional_parameters": {
       "test_significance": false,
       "significance_permutations": 30,
@@ -42,8 +42,8 @@
       2100,
       10
     ],
-    "te_thresh_method": "sixsigma",
-    "te_surr_method": "random_shuffle",
+    "thresh_method": "sixsigma",
+    "surr_method": "random_shuffle",
     "additional_parameters": {
       "test_significance": false,
       "significance_permutations": 30,
@@ -63,8 +63,8 @@
       2100,
       10
     ],
-    "te_thresh_method": "rankorder",
-    "te_surr_method": "iAAFT",
+    "thresh_method": "rankorder",
+    "surr_method": "iAAFT",
     "additional_parameters": {
       "test_significance": false,
       "significance_permutations": 30,
@@ -84,8 +84,8 @@
       2100,
       10
     ],
-    "te_thresh_method": "sixsigma",
-    "te_surr_method": "iAAFT",
+    "thresh_method": "sixsigma",
+    "surr_method": "iAAFT",
     "additional_parameters": {
       "test_significance": false,
       "significance_permutations": 30,
@@ -105,8 +105,8 @@
       2100,
       10
     ],
-    "te_thresh_method": "rankorder",
-    "te_surr_method": "random_shuffle",
+    "thresh_method": "rankorder",
+    "surr_method": "random_shuffle",
     "additional_parameters": {
       "test_significance": false,
       "significance_permutations": 30,
@@ -126,8 +126,8 @@
       2100,
       10
     ],
-    "te_thresh_method": "sixsigma",
-    "te_surr_method": "random_shuffle",
+    "thresh_method": "sixsigma",
+    "surr_method": "random_shuffle",
     "additional_parameters": {
       "test_significance": false,
       "significance_permutations": 30,
@@ -147,8 +147,8 @@
       2100,
       10
     ],
-    "te_thresh_method": "rankorder",
-    "te_surr_method": "iAAFT",
+    "thresh_method": "rankorder",
+    "surr_method": "iAAFT",
     "additional_parameters": {
       "test_significance": false,
       "significance_permutations": 30,
@@ -168,8 +168,8 @@
       2100,
       10
     ],
-    "te_thresh_method": "sixsigma",
-    "te_surr_method": "iAAFT",
+    "thresh_method": "sixsigma",
+    "surr_method": "iAAFT",
     "additional_parameters": {
       "test_significance": false,
       "significance_permutations": 30,
