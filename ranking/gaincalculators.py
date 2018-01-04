@@ -118,7 +118,7 @@ class CorrWeightcalc(object):
 
         return surr_corr_list, surr_dirindex_list
 
-    def thresh_rankorder(self, surr_corr, surr_dirindex, trials=19):
+    def thresh_rankorder(self, surr_corr, surr_dirindex):
         """Calculates the minimum threshold required for a correlation
         value to be considered significant.
 
@@ -143,7 +143,7 @@ class CorrWeightcalc(object):
         return [thresh_corr, nullbias_corr, nullstd_corr], \
                [thresh_dirindex, nullbias_dirindex, nullstd_dirindex]
 
-    def thresh_sixsigma(self, surr_corr, surr_dirindex, stdevs=6, trials=30):
+    def thresh_stdevs(self, surr_corr, surr_dirindex, stdevs):
         """Calculates the minimum threshold required for a transfer entropy
         value to be considered significant.
 
@@ -181,12 +181,12 @@ class CorrWeightcalc(object):
                     weightcalcdata, causevar, affectedvar, box, 19)
             thresh_corr, thresh_dirindex = \
                 self.thresh_rankorder(surr_corr, surr_dirindex)
-        elif self.thresh_method == 'sixsigma':
+        elif self.thresh_method == 'stdevs':
             surr_corr, surr_dirindex = \
                 self.calc_surr_correlation(
                     weightcalcdata, causevar, affectedvar, box, 30)
             thresh_corr, thresh_dirindex = \
-                self.thresh_sixsigma(surr_corr, surr_dirindex)
+                self.thresh_stdevs(surr_corr, surr_dirindex, 3)
 
         return [thresh_corr[0], thresh_dirindex[0]]
 
@@ -202,8 +202,18 @@ class CorrWeightcalc(object):
         else:
             baseval = weightlist[0]
 
-        maxval = max(weightlist)
-        minval = min(weightlist)
+        # Alternative interpretation:
+        # Maxval is defined as the maximum absolute value in the forward direction
+        # Minval is defined as the maximum absolute value in the negative direction
+        if weightcalcdata.bidirectional_delays:
+            maxval = max(np.abs(weightlist[(len(weightlist) / 2):]))
+            minval = -1 * max(np.abs(weightlist[:(len(weightlist) / 2)]))
+        else:
+            raise ValueError("The correlation directionality test is only defined for bidirectional delays")
+
+        # Test that maxval is positive and minval is negative
+        if maxval < 0 or minval > 0:
+            raise ValueError("Values do not adhere to sign expectations")
         # Value used to break tie between maxval and minval if 1 and -1
         tol = 0.
         # Always select maxval if both are equal
@@ -211,23 +221,23 @@ class CorrWeightcalc(object):
         if (maxval + (minval + tol)) >= 0:
             maxcorr = maxval
         else:
-            maxcorr = minval
+            maxcorr = abs(minval)
 
-        delay_index = weightlist.index(maxcorr)
+        delay_index = list(np.abs(weightlist)).index(maxcorr)
 
         # Correlation thresholds from Bauer2008 Eq. 4
         #maxcorr_abs = abs(maxcorr)
         bestdelay = weightcalcdata.actual_delays[delay_index]
         if (maxval and minval) != 0:
-            directionindex = 2 * (abs(maxval + minval) /
-                                  (maxval + abs(minval)))
+            directionindex = (abs(maxval + minval) /
+                                  ((maxval + abs(minval)) * 0.5))
         else:
             directionindex = 0
 
         signchange = not ((baseval / weightlist[delay_index]) >= 0)
 
-        logging.info("Maximum correlation value: " + str(maxval))
-        logging.info("Minimum correlation value: " + str(minval))
+        logging.info("Forwards maximum correlation value: " + str(maxval))
+        logging.info("Backwards maximum correlation value: " + str(minval))
         logging.info("The maximum correlation between " + causevar +
                      " and " + affectedvar + " is: " + str(maxcorr))
         logging.info("The corresponding delay is: " +
@@ -278,12 +288,12 @@ class CorrWeightcalc(object):
                         weightcalcdata, causevar, affectedvar, box, 19)
                 threshcorr, threshdir = \
                     self.thresh_rankorder(surr_corr, surr_dirindex)
-            elif self.thresh_method == 'sixsigma':
+            elif self.thresh_method == 'stdevs':
                 surr_corr, surr_dirindex = \
                     self.calc_surr_correlation(
                         weightcalcdata, causevar, affectedvar, box, 30)
                 threshcorr, threshdir = \
-                    self.thresh_sixsigma(surr_corr, surr_dirindex)
+                    self.thresh_stdevs(surr_corr, surr_dirindex, 3)
 
             logging.info("The correlation threshold is: " +
                          str(threshcorr[0]))
@@ -600,11 +610,11 @@ class TransentWeightcalc(object):
                     self.thresh_rankorder(
                         thresh_affectedvardata_directional.T,
                         thresh_causevardata.T)
-            elif self.thresh_method == 'sixsigma':
+            elif self.thresh_method == 'stdevs':
                 threshent_directional, threshent_absolute = \
-                    self.thresh_sixsigma(
+                    self.thresh_stdevs(
                         thresh_affectedvardata_directional.T,
-                        thresh_causevardata.T)
+                        thresh_causevardata.T, 3)
 
             logging.info("The directional TE threshold is: " +
                          str(threshent_directional[0]))
@@ -622,11 +632,11 @@ class TransentWeightcalc(object):
                         self.thresh_rankorder(
                             thresh_affectedvardata_absolute.T,
                             thresh_causevardata.T)
-                elif self.thresh_method == 'sixsigma':
+                elif self.thresh_method == 'stdevs':
                     _, threshent_absolute = \
-                        self.thresh_sixsigma(
+                        self.thresh_stdevs(
                             thresh_affectedvardata_absolute.T,
-                            thresh_causevardata.T)
+                            thresh_causevardata.T, 3)
 
             logging.info("The absolute TE threshold is: " +
                          str(threshent_absolute[0]))
@@ -751,7 +761,7 @@ class TransentWeightcalc(object):
         return [threshent_directional, nullbias_directional, nullstd_directional], \
                [threshent_absolute, nullbias_absolute, nullstd_absolute]
 
-    def thresh_sixsigma(self, surr_te_directional, surr_te_absolute):
+    def thresh_stdevs(self, surr_te_directional, surr_te_absolute, stdevs):
         """Calculates the minimum threshold required for a transfer entropy
         value to be considered significant.
 
@@ -766,10 +776,10 @@ class TransentWeightcalc(object):
         surr_te_absolute_mean = np.mean(surr_te_absolute)
         surr_te_absolute_stdev = np.std(surr_te_absolute)
 
-        threshent_directional = (6 * surr_te_directional_stdev) + \
+        threshent_directional = (stdevs * surr_te_directional_stdev) + \
             surr_te_directional_mean
 
-        threshent_absolute = (6 * surr_te_absolute_stdev) + \
+        threshent_absolute = (stdevs * surr_te_absolute_stdev) + \
             surr_te_absolute_mean
 
         return [threshent_directional, surr_te_directional_mean, surr_te_directional_stdev], \
@@ -785,11 +795,11 @@ class TransentWeightcalc(object):
                                   box, delay, 19)
             threshent_directional, threshent_absolute = \
                 self.thresh_rankorder(surr_te_directional, surr_te_absolute)
-        elif self.thresh_method == 'sixsigma':
+        elif self.thresh_method == 'stdevs':
             surr_te_directional, surr_te_absolute = \
                 self.calc_surr_te(weightcalcdata, causevar, affectedvar,
                                   box, delay, 30)
             threshent_directional, threshent_absolute = \
-                self.thresh_sixsigma(surr_te_directional, surr_te_absolute)
+                self.thresh_stdevs(surr_te_directional, surr_te_absolute, 3)
 
         return [threshent_directional[0], threshent_absolute[0]]

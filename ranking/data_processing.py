@@ -1070,6 +1070,8 @@ def detrend_first_differences(data):
 
     df = pd.DataFrame(data)
     detrended_df = df - df.shift(1)
+    # Make first entry zero
+    detrended_df.iloc[0, :] = 0.
 
     return detrended_df.dropna().values
 
