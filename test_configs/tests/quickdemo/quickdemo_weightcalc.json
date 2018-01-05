@@ -29,7 +29,7 @@
       "auto_embed": false
     }
   },
-  "settings_sixsigma_shuffle": {
+  "settings_stdevs_shuffle": {
     "use_connections": true,
     "sampling_rate": 1,
     "sub_sampling_interval": 1,
@@ -42,7 +42,7 @@
       2100,
       10
     ],
-    "thresh_method": "sixsigma",
+    "thresh_method": "stdevs",
     "surr_method": "random_shuffle",
     "additional_parameters": {
       "test_significance": false,
@@ -71,7 +71,7 @@
       "auto_embed": false
     }
   },
-  "settings_sixsigma_iAAFT": {
+  "settings_stdevs_iAAFT": {
     "use_connections": true,
     "sampling_rate": 1,
     "sub_sampling_interval": 1,
@@ -84,7 +84,7 @@
       2100,
       10
     ],
-    "thresh_method": "sixsigma",
+    "thresh_method": "stdevs",
     "surr_method": "iAAFT",
     "additional_parameters": {
       "test_significance": false,
@@ -113,7 +113,7 @@
       "auto_embed": true
     }
   },
-  "settings_sixsigma_shuffle_autoembed": {
+  "settings_stdevs_shuffle_autoembed": {
     "use_connections": true,
     "sampling_rate": 1,
     "sub_sampling_interval": 1,
@@ -126,7 +126,7 @@
       2100,
       10
     ],
-    "thresh_method": "sixsigma",
+    "thresh_method": "stdevs",
     "surr_method": "random_shuffle",
     "additional_parameters": {
       "test_significance": false,
@@ -155,7 +155,7 @@
       "auto_embed": true
     }
   },
-  "settings_sixsigma_iAAFT_autoembed": {
+  "settings_stdevs_iAAFT_autoembed": {
     "use_connections": true,
     "sampling_rate": 1,
     "sub_sampling_interval": 1,
@@ -168,7 +168,7 @@
       2100,
       10
     ],
-    "thresh_method": "sixsigma",
+    "thresh_method": "stdevs",
     "surr_method": "iAAFT",
     "additional_parameters": {
       "test_significance": false,
@@ -179,13 +179,13 @@
   "autoreg_2x2": {
     "settings": [
       "settings_rankorder_shuffle",
-      "settings_sixsigma_shuffle",
+      "settings_stdevs_shuffle",
       "settings_rankorder_iAAFT",
-      "settings_sixsigma_iAAFT",
+      "settings_stdevs_iAAFT",
       "settings_rankorder_shuffle_autoembed",
-      "settings_sixsigma_shuffle_autoembed",
+      "settings_stdevs_shuffle_autoembed",
       "settings_rankorder_iAAFT_autoembed",
-      "settings_sixsigma_iAAFT_autoembed"
+      "settings_stdevs_iAAFT_autoembed"
     ],
     "connections": "connectionmatrix_2x2",
     "datagen": "autoreg_gen",
@@ -195,13 +195,13 @@
   "random_2x2": {
     "settings": [
       "settings_rankorder_shuffle",
-      "settings_sixsigma_shuffle",
+      "settings_stdevs_shuffle",
       "settings_rankorder_iAAFT",
-      "settings_sixsigma_iAAFT",
+      "settings_stdevs_iAAFT",
       "settings_rankorder_shuffle_autoembed",
-      "settings_sixsigma_shuffle_autoembed",
+      "settings_stdevs_shuffle_autoembed",
       "settings_rankorder_iAAFT_autoembed",
-      "settings_sixsigma_iAAFT_autoembed"
+      "settings_stdevs_iAAFT_autoembed"
     ],
     "connections": "connectionmatrix_2x2",
     "datagen": "random_gen",
