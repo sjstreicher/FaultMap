@@ -190,6 +190,8 @@ class CorrWeightcalc(object):
                     weightcalcdata, causevar, affectedvar, box, 30)
             thresh_corr, thresh_dirindex = \
                 self.thresh_stdevs(surr_corr, surr_dirindex, 3)
+        else:
+            raise ValueError("Threshold method not recognized")
 
         return [thresh_corr[0], thresh_dirindex[0]]
 
