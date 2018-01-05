@@ -132,11 +132,13 @@ class CorrWeightcalc(object):
 
         """
 
-        thresh_corr = max(surr_corr)
+        thresh_corr = np.percentile(surr_corr, 95)
         nullbias_corr = np.mean(surr_corr)
         nullstd_corr = np.std(surr_corr)
 
-        thresh_dirindex = max(surr_dirindex)
+        # We can lower this limit to the 70th percentile to be more in line
+        # with the idea of one standard deviation
+        thresh_dirindex = np.percentile(surr_dirindex, 70)
         nullbias_dirindex = np.mean(surr_dirindex)
         nullstd_dirindex = np.std(surr_dirindex)
 
@@ -160,7 +162,8 @@ class CorrWeightcalc(object):
 
         thresh_corr = (stdevs * surr_corr_stdev) + surr_corr_mean
 
-        thresh_dirindex = (stdevs * surr_dirindex_stdev) + surr_dirindex_mean
+        # Their later work suggests only one standard deviation from mean
+        thresh_dirindex = (1 * surr_dirindex_stdev) + surr_dirindex_mean
 
         return [thresh_corr, surr_corr_mean, surr_corr_stdev], \
                [thresh_dirindex, surr_dirindex_mean, surr_dirindex_stdev]
