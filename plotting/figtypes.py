@@ -39,16 +39,19 @@ import itertools
 import os
 
 import matplotlib.pyplot as plt
-import numpy as np
 import seaborn as sns
+import numpy as np
 
 from ranking import data_processing
 from ranking.gaincalc import WeightcalcData
 
 # Preamble
-sns.set_style('darkgrid')
+#sns.set_style('seaborn-paper')
+plt.style.use(['seaborn-whitegrid', 'seaborn-paper'])
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
+
+markers = ['o', '*', 's', 'v', 'X', 'D', 'H']
 
 # Label dictionaries
 yaxislabel = \
@@ -165,6 +168,7 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
     Provides the option to plot weight significance threshold values.
 
     """
+    plt.close('all')
 
     graphdata.get_legendbbox(graph)
     graphdata.get_timeunit(graph)
@@ -245,12 +249,24 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
                     data_processing.read_header_values_datafile(
                         threshold_sourcefile)
 
+            bbox_props = dict(boxstyle="round", fc="w", ec="0.5", alpha=0.8)
+
             for destvarindex, destvar in enumerate(graphdata.destvars):
                 destvarvalueindex = headers.index(destvar)
                 ax.plot(valuematrix[:, 0],
                         valuematrix[:, destvarvalueindex],
-                        marker="o", markersize=4,
+                        marker=markers[destvarindex], markersize=8,
                         label=labels[destvarindex])
+                # plt.text(valuematrix[:, 0][-50],
+                #          valuematrix[:, destvarvalueindex][-50],
+                #          labels[destvarindex], fontsize=12)
+
+                label_index = list(valuematrix[:, destvarvalueindex]).index(max(valuematrix[:, destvarvalueindex]))
+
+                ax.text(valuematrix[:, 0][label_index],
+                        valuematrix[:, destvarvalueindex][label_index],
+                        labels[destvarindex], ha="center", va="center", size=14,
+                        bbox=bbox_props)
 
                 if graphdata.thresholdplotting:
                     ax.plot(threshmatrix[:, 0],
@@ -263,8 +279,8 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
 #                box = ax.get_position()
 #                ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
 
-            ax.legend(loc='center left',
-                      bbox_to_anchor=graphdata.legendbbox)
+            #ax.legend(loc='center left',
+            #          bbox_to_anchor=graphdata.legendbbox)
 
             if graphdata.axis_limits is not False:
                 ax.axis(graphdata.axis_limits)
