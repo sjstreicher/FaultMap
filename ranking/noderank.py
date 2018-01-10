@@ -250,7 +250,7 @@ def calc_simple_rank(gainmatrix, variables, biasvector, noderankdata,
 
         if rank_method == 'eigenvector':
             eig_rankingdict = nx.eigenvector_centrality(
-                reset_gaingraph.reverse())
+                reset_gaingraph.reverse(), weight='weight')
             eig_rankingdict_norm = norm_dict(eig_rankingdict)
             rankingdict = eig_rankingdict_norm
 
@@ -495,7 +495,7 @@ def calc_gainrank(gainmatrix, noderankdata, rank_method,
 
     backwardrankingdict, backwardrankinglist = \
         calc_simple_rank(backwardgain, backwardvariablelist, backwardbias,
-                         noderankdata, rank_method)
+                         noderankdata, rank_method, package='networkx')
 
     rankingdicts = [backwardrankingdict]
     rankinglists = [backwardrankinglist]
