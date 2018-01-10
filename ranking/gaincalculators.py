@@ -9,7 +9,7 @@ import logging
 import numpy as np
 
 import transentropy
-from ranking import data_processing
+import data_processing
 
 
 class CorrWeightcalc(object):
