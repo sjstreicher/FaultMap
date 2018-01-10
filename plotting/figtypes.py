@@ -38,6 +38,7 @@ between multiple scenarios
 import itertools
 import os
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
@@ -48,6 +49,9 @@ from ranking.gaincalc import WeightcalcData
 # Preamble
 #sns.set_style('seaborn-paper')
 plt.style.use(['seaborn-whitegrid', 'seaborn-paper'])
+
+mpl.rcParams['xtick.labelsize'] = 12
+mpl.rcParams['ytick.labelsize'] = 12
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
 
@@ -265,7 +269,7 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
 
                 ax.text(valuematrix[:, 0][label_index],
                         valuematrix[:, destvarvalueindex][label_index],
-                        labels[destvarindex], ha="center", va="center", size=14,
+                        labels[destvarindex], ha="center", va="center", size=10,
                         bbox=bbox_props)
 
                 if graphdata.thresholdplotting:
@@ -287,10 +291,10 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
             else:
                 plt.gca().set_ylim(bottom=-0.05)
 
-            plt.savefig(os.path.join(
-                savedir,
-                '{}_{}_box{:03d}_{}.pdf'.format(
-                    scenario, typename, boxindex, sourcevar)))
+            plt.savefig(
+                os.path.join(savedir, '{}_{}_box{:03d}_{}.pdf'.format(
+                    scenario, typename, boxindex, sourcevar)),
+                bbox_inches='tight', pad_inches=0)
             plt.close()
 
     return None
