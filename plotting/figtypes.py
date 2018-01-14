@@ -295,6 +295,12 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
                 os.path.join(savedir, '{}_{}_box{:03d}_{}.pdf'.format(
                     scenario, typename, boxindex, sourcevar)),
                 bbox_inches='tight', pad_inches=0)
+
+            # Also save as SVG to allow manual editing
+            plt.savefig(
+                os.path.join(savedir, '{}_{}_box{:03d}_{}.svg'.format(
+                    scenario, typename, boxindex, sourcevar)),
+                bbox_inches='tight', pad_inches=0, format='svg')
             plt.close()
 
     return None
