@@ -46,6 +46,9 @@ import numpy as np
 from ranking import data_processing
 from ranking.gaincalc import WeightcalcData
 
+import plotter
+#from plotter import get_scenario_data_vectors
+
 # Preamble
 #sns.set_style('seaborn-paper')
 plt.style.use(['seaborn-whitegrid', 'seaborn-paper'])
@@ -190,7 +193,6 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
     dirparts = data_processing.getfolders(weightdir)
     # The method is two folders up from the embed level
     method = dirparts[-3]
-    typename = dirparts[-3]
 
     # Select typenames based on method
     if method[:16] == 'transfer_entropy':
@@ -261,9 +263,6 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
                         valuematrix[:, destvarvalueindex],
                         marker=markers[destvarindex], markersize=8,
                         label=labels[destvarindex])
-                # plt.text(valuematrix[:, 0][-50],
-                #          valuematrix[:, destvarvalueindex][-50],
-                #          labels[destvarindex], fontsize=12)
 
                 label_index = list(valuematrix[:, destvarvalueindex]).index(max(valuematrix[:, destvarvalueindex]))
 
@@ -302,6 +301,138 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
                     scenario, typename, boxindex, sourcevar)),
                 bbox_inches='tight', pad_inches=0, format='svg')
             plt.close()
+
+    return None
+
+
+def fig_diffscen_vs_delay(graphdata, graph, scenario, savedir):
+    """Plot one variable from different scenarios.
+    Assumes only a single index in varindexes.
+    """
+
+    plt.close('all')
+
+    graphdata.get_legendbbox(graph)
+    graphdata.get_timeunit(graph)
+    graphdata.get_boxindexes(graph)
+    graphdata.get_sourcevars(graph)
+    graphdata.get_destvars(graph)
+    graphdata.get_sigthresholdplotting(graph)
+    graphdata.get_linelabels(graph)
+
+    # Get x-axis values
+    #    graphdata.get_xvalues(graphname)
+
+    # Get back from savedir to weightdata source
+    # This is up to the embed type level
+    weightdir = data_processing.change_dirtype(savedir, 'graphs', 'weightdata')
+
+    # Extract current method from weightdir
+    dirparts = data_processing.getfolders(weightdir)
+    # The method is two folders up from the embed level
+    method = dirparts[-3]
+
+    # Select typenames based on method
+    if method[:16] == 'transfer_entropy':
+        typenames = []
+        thresh_typenames = []
+        graphdata.get_typenames(graph)
+        if 'simple' in graphdata.typenames:
+            typenames.append('weights_absolute')
+            thresh_typenames.append('sigthresh_absolute')
+        if 'directional' in graphdata.typenames:
+            typenames.append('weights_directional')
+            thresh_typenames.append('sigthresh_directional')
+        # typenames = [
+        #     'weights_absolute',
+        #     'weights_directional']
+        # thresh_typenames = [
+        #     'sigthresh_absolute',
+        #     'sigthresh_directional']
+    else:
+        typenames = ['weights']
+        thresh_typenames = ['sigthresh']
+
+    # Get labels
+    if graphdata.linelabels:
+        graphdata.get_labelformat(graph)
+        labels = [graphdata.labelformat.format(linelabel)
+                  for linelabel in graphdata.linelabels]
+    else:
+        labels = [destvar for destvar in graphdata.destvars]
+
+    for typeindex, typename in enumerate(typenames):
+        for boxindex, sourcevar in itertools.product(
+                graphdata.boxindexes, graphdata.sourcevars):
+
+            fig = plt.figure(1, figsize=(12, 6))
+            ax = fig.add_subplot(111)
+            if len(typename) > 8:
+                yaxislabelstring = typename[8:] + '_' + method
+            else:
+                yaxislabelstring = method
+            ax.set_ylabel(yaxislabel[yaxislabelstring], fontsize=14)
+            ax.set_xlabel(r'Delay ({})'.format(graphdata.timeunit),
+                          fontsize=14)
+
+            # Open data file and plot graph
+            sourcefile = os.path.join(
+                weightdir, typename, 'box{:03d}'.format(boxindex),
+                '{}.csv'.format(sourcevar))
+
+            _, headers = \
+                data_processing.read_header_values_datafile(sourcefile)
+
+            # Get valuematrices
+            valuematrices = plotter.get_scenario_data_vectors(graphdata, sourcefile, scenario)
+
+            bbox_props = dict(boxstyle="round", fc="w", ec="0.5", alpha=0.8)
+
+            xaxis_intervals = []
+            relevant_values = []
+            for scenarioindex, valuematrix in enumerate(valuematrices):
+                # # Get the maximum from each valuematrix in the entry
+                # # which corresponds to the common element of interest.
+                #
+                # # TODO: Fix this old hardcoded remnant
+                # # 3 referred to the index of tau=1 for many cases involved
+                # #        values = valuematrix[:, 3]
+                # values = valuematrix[:, graphdata.varindexes]
+                # xaxis_intervals.append(valuematrix[:, 0])
+                # relevant_values.append(values)
+
+                for destvarindex, destvar in enumerate(graphdata.destvars):
+                    destvarvalueindex = headers.index(destvar)
+                    ax.plot(valuematrix[:, 0],
+                            valuematrix[:, destvarvalueindex],
+                            marker=markers[scenarioindex], markersize=8,
+                            label=labels[scenarioindex])
+
+                    label_index = list(valuematrix[:, destvarvalueindex]).index(max(valuematrix[:, destvarvalueindex]))
+
+                    ax.text(valuematrix[:, 0][label_index],
+                            valuematrix[:, destvarvalueindex][label_index],
+                            labels[scenarioindex], ha="center", va="center", size=10,
+                            bbox=bbox_props)
+
+            if graphdata.axis_limits is not False:
+                ax.axis(graphdata.axis_limits)
+            else:
+                plt.gca().set_ylim(bottom=-0.05)
+
+            plt.savefig(
+                os.path.join(savedir, '{}_{}_box{:03d}_{}.pdf'.format(
+                    scenario, typename, boxindex, sourcevar)),
+                bbox_inches='tight', pad_inches=0)
+
+            plt.close('all')
+
+            # Also save as SVG to allow manual editing
+            # plt.savefig(
+            #     os.path.join(savedir, '{}_{}_box{:03d}_{}.svg'.format(
+            #         scenario, typename, boxindex, sourcevar)),
+            #     bbox_inches='tight', pad_inches=0, format='svg')
+            # plt.close()
 
     return None
 
