@@ -106,16 +106,21 @@ class GraphData(object):
         self.typenames = self.caseconfig[graph]['types']
 
 
-def get_scenario_data_vectors(graphdata):
+def get_scenario_data_vectors(graphdata, example_sourcefile, example_scenario):
     """Extract value matrices from different scenarios."""
+
+    # example_sourcefile is based on the scenario with which the graph was called
+    # This graph will be plotted multiple times for all scenarios involved
+    # TODO: Find a more elegant solution
 
     valuematrices = []
 
-    for scenario in graphdata.scenario:
-        sourcefile = filename_template.format(
-            graphdata.case, scenario,
-            graphdata.method[0], graphdata.sigstatus, graphdata.boxindex,
-            graphdata.sourcevar)
+    for scenario in graphdata.scenarios:
+
+        # Change sourcefile path on scenario level
+
+        sourcefile = data_processing.change_dirtype(
+            example_sourcefile, example_scenario, scenario)
         valuematrix, _ = \
             data_processing.read_header_values_datafile(sourcefile)
         valuematrices.append(valuematrix)
