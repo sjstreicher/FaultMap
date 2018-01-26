@@ -200,7 +200,7 @@ def compute_edge_threshold(graph, percentile):
     # Get list of all edge weights
     weight_dict = nx.get_edge_attributes(graph, 'weight')
     edge_weightlist = []
-    for edge in graph.edges_iter():
+    for edge in graph.edges():
         edge_weightlist.append(weight_dict[edge])
 
     threshold = np.percentile(np.asarray(edge_weightlist), percentile)
@@ -220,14 +220,14 @@ def delete_lowval_edges(graph, weight_threshold, remove_self_loops=True):
 
     if remove_self_loops:
         # First, delete all self-loops
-        selfloop_list = lowedge_graph.selfloop_edges()
+        selfloop_list = list(lowedge_graph.selfloop_edges())
         lowedge_graph.remove_edges_from(selfloop_list)
         logging.info("Deleted " + str(len(selfloop_list)) + " self-looping edges")
 
     edge_dellist = []
     edge_totlist = []
     weight_dict = nx.get_edge_attributes(lowedge_graph, 'weight')
-    for edge in lowedge_graph.edges_iter():
+    for edge in lowedge_graph.edges():
         edge_totlist.append(edge)
         if weight_dict[edge] < weight_threshold:
             edge_dellist.append(edge)
@@ -298,7 +298,7 @@ def delete_loworder_edges(graph, max_depth, weight_discretion):
 
     removed_edges = []
 
-    for index, node in enumerate(simplified_graph.nodes_iter()):
+    for index, node in enumerate(simplified_graph.nodes()):
         children_lists = []
         logging.info("Currently processing node: " + str(node) + " (" +
                      str(index + 1) + "/" +
@@ -307,7 +307,7 @@ def delete_loworder_edges(graph, max_depth, weight_discretion):
         # up to the level where no childs are returned
         morechilds = True
         depth = 0
-        child_list = simplified_graph.successors(node)
+        child_list = list(simplified_graph.successors(node))
         if len(child_list) != 0:
             children_lists.append(child_list)
             while morechilds:
@@ -318,7 +318,7 @@ def delete_loworder_edges(graph, max_depth, weight_discretion):
                 for upper_child in children_lists_decomp:
                     # Get list of childs for each child in previous layer
                     upper_child_children = \
-                        simplified_graph.successors(upper_child)
+                        list(simplified_graph.successors(upper_child))
                     if len(upper_child_children) != 0:
                         children_lists.append(upper_child_children)
                         intersection_list = [val for val in child_list
@@ -349,7 +349,7 @@ def delete_loworder_edges(graph, max_depth, weight_discretion):
     in_deg_dict = simplified_graph.in_degree()
     # Remove nodes with sum(out+in) degree of zero
     node_dellist = []
-    for node in simplified_graph.nodes_iter():
+    for node in simplified_graph.nodes():
         if (out_deg_dict[node] == 0) and (in_deg_dict[node] == 0):
             node_dellist.append(node)
     simplified_graph.remove_nodes_from(node_dellist)
