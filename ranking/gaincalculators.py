@@ -611,15 +611,19 @@ class TransentWeightcalc(object):
 
             # Do significance calculations for directional case
             if self.thresh_method == 'rankorder':
+                surr_te_directional, surr_te_absolute = \
+                    self.calc_surr_te(weightcalcdata, causevar, affectedvar,
+                                      box, bestdelay_sample_directional, 19)
                 threshent_directional, threshent_absolute = \
                     self.thresh_rankorder(
-                        thresh_affectedvardata_directional.T,
-                        thresh_causevardata.T)
+                        surr_te_directional, surr_te_absolute)
             elif self.thresh_method == 'stdevs':
+                surr_te_directional, surr_te_absolute = \
+                    self.calc_surr_te(weightcalcdata, causevar, affectedvar,
+                                      box, bestdelay_sample_directional, 30)
                 threshent_directional, threshent_absolute = \
                     self.thresh_stdevs(
-                        thresh_affectedvardata_directional.T,
-                        thresh_causevardata.T, 3)
+                        surr_te_directional, surr_te_absolute, 3)
 
             logging.info("The directional TE threshold is: " +
                          str(threshent_directional[0]))
@@ -633,15 +637,19 @@ class TransentWeightcalc(object):
             if not delay_index_directional == delay_index_absolute:
                 # Need to do own calculation of absolute significance
                 if self.thresh_method == 'rankorder':
+                    surr_te_directional, surr_te_absolute = \
+                        self.calc_surr_te(weightcalcdata, causevar, affectedvar,
+                                          box, bestdelay_sample_absolute, 19)
                     _, threshent_absolute = \
                         self.thresh_rankorder(
-                            thresh_affectedvardata_absolute.T,
-                            thresh_causevardata.T)
+                            surr_te_directional, surr_te_absolute)
                 elif self.thresh_method == 'stdevs':
+                    surr_te_directional, surr_te_absolute = \
+                        self.calc_surr_te(weightcalcdata, causevar, affectedvar,
+                                          box, bestdelay_sample_absolute, 30)
                     _, threshent_absolute = \
                         self.thresh_stdevs(
-                            thresh_affectedvardata_absolute.T,
-                            thresh_causevardata.T, 3)
+                            surr_te_directional, surr_te_absolute, 3)
 
             logging.info("The absolute TE threshold is: " +
                          str(threshent_absolute[0]))
