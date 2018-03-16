@@ -462,8 +462,8 @@ def gainmatrix_preprocessing(gainmatrix):
     return modgainmatrix, currentmean
 
 
-def dif_gainmatrix_preprocessing(gainmatrix):
-    """Only keeps positive elements of the difference gain matrix.
+def dif_gainmatrix_preprocessing(gainmatrix, method='floor'):
+    """
 
     WIP
 
@@ -473,7 +473,13 @@ def dif_gainmatrix_preprocessing(gainmatrix):
 
     for col, row in itertools.izip(gainmatrix.nonzero()[0],
                                    gainmatrix.nonzero()[1]):
-        modgainmatrix[col, row] = max(0, gainmatrix[col, row])
+        if method == 'floor':
+            # Only keeps positive elements of the difference gain matrix
+            modgainmatrix[col, row] = max(0, gainmatrix[col, row])
+        elif method == 'abs':
+            # Alternative: Take absolute of change
+            modgainmatrix[col, row] = abs(gainmatrix[col, row])
+
 
     return modgainmatrix
 
@@ -618,7 +624,7 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
             dif_gainmatrix = dif_gainmatrices[index]
             # Take only positive values for now due to convergence issues
             # TODO: Investigate proper handling of negative edge changes
-            mod_dif_gainmatrix = dif_gainmatrix_preprocessing(dif_gainmatrix)
+            mod_dif_gainmatrix = dif_gainmatrix_preprocessing(dif_gainmatrix, method='floor')
 
         delays = delaymatrices[index]
 
