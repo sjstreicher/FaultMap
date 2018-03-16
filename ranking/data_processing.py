@@ -214,8 +214,10 @@ def process_auxfile(filename, bias_correct=True, allow_neg=False):
                 nosigtest_weights.append(nosigtest_weight)
                 delays.append(float(row[maxdelay_index]))
 
-
-                threshold = float(row[thresh_index])
+                try:
+                    threshold = float(row[thresh_index])
+                except:
+                    threshold = 0.
                 sigthresholds.append(threshold)
 
                 # Test if sigtest passed before assigning weight

@@ -661,8 +661,8 @@ class TransentWeightcalc(object):
                 threshpass_absolute = False
 
         elif not weightcalcdata.sigtest:
-            threshent_directional = None
-            threshent_absolute = None
+            threshent_directional = [None, None, None]
+            threshent_absolute = [None, None, None]
             threshpass_directional = None
             threshpass_absolute = None
             directionpass_directional = None
