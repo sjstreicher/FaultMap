@@ -19,7 +19,7 @@ from pathos.multiprocessing import ProcessingPool as Pool
 def writecsv_weightcalc(filename, datalines, header):
     """CSV writer customized for writing weights."""
 
-    with open(filename, 'wb') as f:
+    with open(filename, 'w', newline='') as f:
             csv.writer(f).writerow(header)
             csv.writer(f).writerows(datalines)
 
@@ -27,7 +27,7 @@ def readcsv_weightcalc(filename):
     """CSV reader customized for reading weights."""
     
     with open(filename) as f:
-        header = csv.reader(f).next()[:]
+        header = next(csv.reader(f))[:]
         values = np.genfromtxt(f, delimiter=',', dtype=str)
     
     return values, header

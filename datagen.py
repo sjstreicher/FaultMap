@@ -58,14 +58,14 @@ def autoreg_gen(params):
 
     # Define seed for initial source data
     seeds = iter(seed_list)
-    cause = seed_randn(seeds.next(), samples + delay)
+    cause = seed_randn(next(seeds), samples + delay)
     affected = np.zeros_like(cause)
     # Very close covariance occasionally breaks the kde estimator
     # Another small random element is added to take care of this
     # This is not expected to be a problem on any "real" data
 
     # Define seed for noise data
-    affected_random_add = seed_rand(seeds.next(), samples + delay) - 0.5
+    affected_random_add = seed_rand(next(seeds), samples + delay) - 0.5
 
     for i in range(delay, len(cause)):
         if alpha is None:
@@ -108,14 +108,14 @@ def delay_gen(params):
 
     # Define seed for initial source data
     seeds = iter(seed_list)
-    cause = seed_randn(seeds.next(), samples + delay)
+    cause = seed_randn(next(seeds), samples + delay)
     affected = np.zeros_like(cause)
     # Very close covariance occassionally breaks the kde estimator
     # Another small random element is added to take care of this
     # This is not expected to be a problem on any "real" data
 
     # Define seed for noise data
-    affected_random_add = seed_rand(seeds.next(), samples + delay) - 0.5
+    affected_random_add = seed_rand(next(seeds), samples + delay) - 0.5
 
     for i in range(delay, len(cause)):
         affected[i] = cause[i - delay]

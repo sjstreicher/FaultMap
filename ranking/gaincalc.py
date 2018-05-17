@@ -32,10 +32,10 @@ import h5py
 import numpy as np
 
 import config_setup
-import data_processing
 import datagen
-import gaincalc_oneset
-from gaincalculators import CorrWeightcalc, TransentWeightcalc
+from ranking import data_processing
+from ranking import gaincalc_oneset
+from ranking.gaincalculators import CorrWeightcalc, TransentWeightcalc
 
 
 class WeightcalcData(object):
@@ -191,7 +191,7 @@ class WeightcalcData(object):
             self.inputdata_raw = np.array(h5py.File(os.path.join(
                 datapath, scenario + '.h5'), 'r')[scenario])
             self.headerline = np.genfromtxt(raw_tsdata, delimiter=',',
-                                            dtype='string')[0, :]
+                                            dtype='str')[0, :]
 
         elif self.datatype == 'function':
             raw_tsdata_gen = self.caseconfig[scenario]['datagen']
@@ -404,7 +404,7 @@ class WeightcalcData(object):
 def writecsv_weightcalc(filename, items, header):
     """CSV writer customized for use in weightcalc function."""
 
-    with open(filename, 'wb') as f:
+    with open(filename, 'w', newline='') as f:
         csv.writer(f).writerow(header)
         csv.writer(f).writerows(items)
 
@@ -434,8 +434,10 @@ def calc_weights(weightcalcdata, method, scenario, writeoutput):
         weightcalculator = TransentWeightcalc(weightcalcdata, 'kraskov')
     elif method == 'transfer_entropy_discrete':
         weightcalculator = TransentWeightcalc(weightcalcdata, 'discrete')
-    elif method == 'partial_correlation':
-        weightcalculator = PartialCorrWeightcalc(weightcalcdata)
+    # elif method == 'partial_correlation':
+    #     weightcalculator = PartialCorrWeightcalc(weightcalcdata)
+    else:
+        raise ValueError("Method not recognized")
 
     if weightcalcdata.sigtest:
         sigstatus = 'sigtested'

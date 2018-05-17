@@ -17,7 +17,7 @@ from numba import jit
 from scipy import signal
 
 import config_setup
-import gaincalc
+from ranking import gaincalc
 import transentropy
 
 
@@ -147,7 +147,7 @@ def process_auxfile(filename, bias_correct=True, allow_neg=False):
     sigthresholds = []
     #sigstds = []
 
-    with open(filename, 'rb') as auxfile:
+    with open(filename, 'r') as auxfile:
         auxfilereader = csv.reader(auxfile, delimiter=',')
         for rowindex, row in enumerate(auxfilereader):
             if rowindex == 0:
@@ -876,13 +876,13 @@ def read_timestamps(raw_tsdata):
 
 def read_variables(raw_tsdata):
     with open(raw_tsdata) as f:
-        variables = csv.reader(f).next()[1:]
+        variables = next(csv.reader(f))[1:]
     return variables
 
 
 def writecsv(filename, items, header=None):
     """Write CSV directly"""
-    with open(filename, 'wb') as f:
+    with open(filename, 'w', newline='') as f:
         if header is not None:
             csv.writer(f).writerow(header)
         csv.writer(f).writerows(items)
@@ -1281,7 +1281,7 @@ def read_header_values_datafile(location):
     """
 
     with open(location) as f:
-        header = csv.reader(f).next()[:]
+        header = next(csv.reader(f))[:]
         values = np.genfromtxt(f, delimiter=',')
 
     return values, header
@@ -1342,7 +1342,7 @@ def buildgraph(variables, gainmatrix, connections, biasvector):
 
 
 def write_dictionary(filename, dictionary):
-    with open(filename, 'wb') as f:
+    with open(filename, 'w') as f:
         json.dump(dictionary, f)
 
 
