@@ -264,10 +264,10 @@ def setup_infodynamics_entropy(infodynamicsloc, estimator='kernel',
                 .EntropyCalculatorKernel
 
         entropyCalc = entropyCalcClass()
-        entropyCalc.initialise(kernel_bandwidth)
         # Normalisation is performed before this step, set property to false to
         # prevent accidental data standardisation
         entropyCalc.setProperty("NORMALISE", "false")
+        entropyCalc.initialise(kernel_bandwidth)
 
     elif estimator == 'gaussian':
         if mult:
