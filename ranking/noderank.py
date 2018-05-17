@@ -19,8 +19,8 @@ import networkx as nx
 import numpy as np
 
 import config_setup
-import data_processing
 import networkgen
+from ranking import data_processing
 
 
 class NoderankData:
@@ -161,7 +161,7 @@ class NoderankData:
 
 
 def writecsv_looprank(filename, items):
-    with open(filename, 'wb') as f:
+    with open(filename, 'w', newline='') as f:
         csv.writer(f).writerows(items)
 
 
@@ -290,7 +290,7 @@ def calc_simple_rank(gainmatrix, variables, biasvector, noderankdata,
         else:
             raise NameError("Method not defined")
 
-    rankinglist = sorted(rankingdict.iteritems(),
+    rankinglist = sorted(rankingdict.items(),
                          key=operator.itemgetter(1),
                          reverse=True)
 
@@ -313,7 +313,7 @@ def normalise_rankinglist(rankingdict, originalvariables):
         normalised_rankingdict[variable] = \
             normalised_rankingdict[variable] / total
 
-    normalised_rankinglist = sorted(normalised_rankingdict.iteritems(),
+    normalised_rankinglist = sorted(normalised_rankingdict.items(),
                                     key=operator.itemgetter(1),
                                     reverse=True)
 
@@ -378,8 +378,8 @@ def create_importance_graph(noderankdata, variablelist, closedconnections,
 
     opengraph = nx.DiGraph()
 
-    for col, row in itertools.izip(openconnections.nonzero()[1],
-                                   openconnections.nonzero()[0]):
+    for col, row in zip(openconnections.nonzero()[1],
+                        openconnections.nonzero()[0]):
         source_var = variablelist[col]
         dest_var = variablelist[row]
         
@@ -397,10 +397,10 @@ def create_importance_graph(noderankdata, variablelist, closedconnections,
 
     # Maximum edge weight
     max_weight = np.max(gainmatrix)
-    max_nodeimportance = max(ranks.iteritems(), key=operator.itemgetter(1))[1]
+    max_nodeimportance = max(ranks.items(), key=operator.itemgetter(1))[1]
 
-    for col, row in itertools.izip(closedconnections.nonzero()[1],
-                                   closedconnections.nonzero()[0]):
+    for col, row in zip(closedconnections.nonzero()[1],
+                        closedconnections.nonzero()[0]):
         newedge = (variablelist[col], variablelist[row])
 #        closedgraph.add_edge(*newedge, weight=gainmatrix[row, col],
 #                             controlloop=int(newedge not in openedgelist))
@@ -444,8 +444,8 @@ def gainmatrix_preprocessing(gainmatrix):
     # to the desired connectionmatrix.
     counter = 0
     gainsum = 0
-    for col, row in itertools.izip(gainmatrix.nonzero()[0],
-                                   gainmatrix.nonzero()[1]):
+    for col, row in zip(gainmatrix.nonzero()[0],
+                        gainmatrix.nonzero()[1]):
         gainsum += gainmatrix[col, row]
         counter += 1
 
@@ -455,8 +455,8 @@ def gainmatrix_preprocessing(gainmatrix):
     # Write meandiff to all gainmatrix elements indicated by connectionmatrix
     modgainmatrix = np.zeros_like(gainmatrix)
 
-    for col, row in itertools.izip(gainmatrix.nonzero()[0],
-                                   gainmatrix.nonzero()[1]):
+    for col, row in zip(gainmatrix.nonzero()[0],
+                        gainmatrix.nonzero()[1]):
         modgainmatrix[col, row] = gainmatrix[col, row] * meanscale
 
     return modgainmatrix, currentmean
@@ -471,8 +471,8 @@ def dif_gainmatrix_preprocessing(gainmatrix, method='floor'):
 
     modgainmatrix = np.zeros_like(gainmatrix)
 
-    for col, row in itertools.izip(gainmatrix.nonzero()[0],
-                                   gainmatrix.nonzero()[1]):
+    for col, row in zip(gainmatrix.nonzero()[0],
+                        gainmatrix.nonzero()[1]):
         if method == 'floor':
             # Only keeps positive elements of the difference gain matrix
             modgainmatrix[col, row] = max(0, gainmatrix[col, row])

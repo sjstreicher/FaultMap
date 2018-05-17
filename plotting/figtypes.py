@@ -40,13 +40,12 @@ import os
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
 
+from plotting import plotter
 from ranking import data_processing
 from ranking.gaincalc import WeightcalcData
 
-import plotter
 #from plotter import get_scenario_data_vectors
 
 # Preamble

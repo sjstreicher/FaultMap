@@ -32,7 +32,7 @@ alltestfunctions = []
 def gen_random_array(dimension):
     """Generates square normally distributed random array."""
     seeds = iter(seed_list)
-    random_array = np.expand_dims(seed_randn(seeds.next(), dimension ** 2),
+    random_array = np.expand_dims(seed_randn(next(seeds), dimension ** 2),
                                   axis=1).reshape((dimension, dimension))
 
     return np.abs(random_array)

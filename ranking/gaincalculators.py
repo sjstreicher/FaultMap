@@ -9,7 +9,7 @@ import logging
 import numpy as np
 
 import transentropy
-import data_processing
+from ranking import data_processing
 
 
 class CorrWeightcalc(object):
@@ -203,7 +203,7 @@ class CorrWeightcalc(object):
         directionpass = None
 
         if weightcalcdata.bidirectional_delays:
-            baseval = weightlist[(len(weightlist) / 2)]
+            baseval = weightlist[int((len(weightlist) / 2))]
         else:
             baseval = weightlist[0]
 
@@ -211,8 +211,8 @@ class CorrWeightcalc(object):
         # Maxval is defined as the maximum absolute value in the forward direction
         # Minval is defined as the maximum absolute value in the negative direction
         if weightcalcdata.bidirectional_delays:
-            maxval = max(np.abs(weightlist[(len(weightlist) / 2):]))
-            minval = -1 * max(np.abs(weightlist[:(len(weightlist) / 2)]))
+            maxval = max(np.abs(weightlist[int((len(weightlist) / 2)):]))
+            minval = -1 * max(np.abs(weightlist[:int((len(weightlist) / 2))]))
         else:
             raise ValueError("The correlation directionality test is only defined for bidirectional delays")
 
@@ -480,16 +480,16 @@ class TransentWeightcalc(object):
         directionpass = None
 
         if weightcalcdata.bidirectional_delays:
-            baseval = weightlist[(len(weightlist) / 2)]
+            baseval = weightlist[int(len(weightlist) / 2)]
 
             # Get maximum weight in forward direction
             # This includes all positive delays including zero
             maxval_forward = \
-                max(weightlist[(len(weightlist) - 1) / 2:])
+                max(weightlist[int((len(weightlist) - 1) / 2):])
             # Get maximum weight in backward direction
             # This includes all negative delays exluding zero
             maxval_backward = \
-                max(weightlist[:(len(weightlist) - 1) / 2])
+                max(weightlist[:int((len(weightlist) - 1) / 2)])
 
             delay_index_forward = weightlist.index(maxval_forward)
             delay_index_backward = weightlist.index(maxval_backward)

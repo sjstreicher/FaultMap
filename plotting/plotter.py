@@ -7,14 +7,16 @@ import json
 import os
 
 import config_setup
-import figtypes
+from plotting import figtypes
 from ranking import data_processing
 
+
 def raw_string(s):
+    # TODO: Review this for Python3
     if isinstance(s, str):
         s = s.encode('string-escape')
-    elif isinstance(s, unicode):
-        s = s.encode('unicode-escape')
+    # elif isinstance(s, unicode):
+    #     s = s.encode('unicode-escape')
     return s
 
 class GraphData(object):
