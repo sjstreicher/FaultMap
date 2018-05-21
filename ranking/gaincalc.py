@@ -30,6 +30,7 @@ import time
 
 import h5py
 import numpy as np
+import pandas as pd
 
 import config_setup
 import datagen
@@ -114,6 +115,10 @@ class WeightcalcData(object):
             self.connections_used = False
         if 'transient' in self.caseconfig[settings_name]:
             self.transient = self.caseconfig[settings_name]['transient']
+            if 'transient_method' in self.caseconfig[settings_name]:
+                self.transient_method = self.caseconfig[settings_name]['transient_method']
+            else:
+                self.transient_method = 'legacy'
         else:
             self.transient = False
             logging.info("Defaulting to single time region analysis")
@@ -181,17 +186,28 @@ class WeightcalcData(object):
                 self.connectionmatrix, _ = \
                     data_processing.read_connectionmatrix(connection_loc)
 
+            # Read data into Pandas dataframe
+            raw_df = pd.read_csv(raw_tsdata)
+            raw_df['Time'] = pd.to_datetime(raw_df['Time'], unit='s')
+            raw_df.set_index('Time', inplace=True)
+
+            self.variables = list(raw_df.keys())
+            self.timestamps = np.asarray(raw_df.index.astype(np.int64) // 10 ** 9)
+            self.headerline = ['Time'] + [var for var in self.variables]
+
+            self.inputdata_raw = np.asarray(raw_df)
+
             # Convert timeseries data in CSV file to H5 data format
-            datapath = data_processing.csv_to_h5(self.saveloc, raw_tsdata,
-                                                 scenario, self.casename)
+            # datapath = data_processing.csv_to_h5(self.saveloc, raw_tsdata,
+            #                                      scenario, self.casename)
             # Read variables from orignal CSV file
-            self.variables = data_processing.read_variables(raw_tsdata)
-            self.timestamps = data_processing.read_timestamps(raw_tsdata)
-            # Get inputdata from H5 table created
-            self.inputdata_raw = np.array(h5py.File(os.path.join(
-                datapath, scenario + '.h5'), 'r')[scenario])
-            self.headerline = np.genfromtxt(raw_tsdata, delimiter=',',
-                                            dtype='str')[0, :]
+            # self.variables = data_processing.read_variables(raw_tsdata)
+            # self.timestamps = data_processing.read_timestamps(raw_tsdata)
+            # # Get inputdata from H5 table created
+            # self.inputdata_raw = np.array(h5py.File(os.path.join(
+            #     datapath, scenario + '.h5'), 'r')[scenario])
+            # self.headerline = np.genfromtxt(raw_tsdata, delimiter=',',
+            #                                 dtype='str')[0, :]
 
         elif self.datatype == 'function':
             raw_tsdata_gen = self.caseconfig[scenario]['datagen']
@@ -330,8 +346,12 @@ class WeightcalcData(object):
             self.inputdata_originalrate[0::self.sub_sampling_interval]
 
         if self.transient:
-            self.boxnum = self.caseconfig[settings_name]['boxnum']
             self.boxsize = self.caseconfig[settings_name]['boxsize']
+            if self.transient_method == 'legacy':
+                self.boxnum = self.caseconfig[settings_name]['boxnum']
+            elif self.transient_method == 'robust':
+                self.boxoverlap = self.caseconfig[settings_name]['boxoverlap']
+
         else:
             self.boxnum = 1  # Only a single box will be used
             self.boxsize = self.inputdata.shape[0] * \
@@ -340,17 +360,35 @@ class WeightcalcData(object):
             # as the original data file - but it does not play a role at all
             # in the actual box determination for the case of boxnum = 1
 
-        # Get box start and end dates
-        self.boxdates = data_processing.split_tsdata(
-            self.timestamps, self.sampling_rate * self.sub_sampling_interval,
-            self.boxsize, self.boxnum)
-        data_processing.write_boxdates(self.boxdates, self.saveloc,
-                                       self.casename, scenario)
+        if self.transient_method == 'legacy':
+            # Get box start and end dates
+            self.boxdates = data_processing.split_tsdata(
+                self.timestamps, self.sampling_rate * self.sub_sampling_interval,
+                self.boxsize, self.boxnum)
+            data_processing.write_boxdates(self.boxdates, self.saveloc,
+                                           self.casename, scenario)
 
-        # Generate boxes to use
-        self.boxes = data_processing.split_tsdata(
-            self.inputdata, self.sampling_rate * self.sub_sampling_interval,
-            self.boxsize, self.boxnum)
+            # Generate boxes to use
+            self.boxes = data_processing.split_tsdata(
+                self.inputdata, self.sampling_rate * self.sub_sampling_interval,
+                self.boxsize, self.boxnum)
+
+        elif self.transient_method == 'robust':
+            # Get box start and end dates
+
+            df = pd.DataFrame(self.inputdata)
+            df.index = pd.to_datetime(self.timestamps, unit='s')
+            df.columns = self.variables
+
+            freq_string = str(self.sampling_rate) + 'S'
+
+            self.boxes, self.boxdates = data_processing.get_continous_boxes(
+                df, self.boxsize, self.boxoverlap, freq_string)
+
+            data_processing.write_boxdates(
+                self.boxdates, self.saveloc, self.casename, scenario)
+
+            self.boxnum = len(self.boxdates)
 
         # Select which of the boxes to evaluate
         if self.transient:
