@@ -1,8 +1,8 @@
 language: python
 python:
   - "3.6"
-virtualenv:
-    system_site_packages: true
+#virtualenv:
+#    system_site_packages: true
 
 before_install:
   # Install from repository what we can
@@ -24,9 +24,9 @@ before_install:
 
 # Install packages
 install:
-  # install what we can from condas
-  - conda env create -f environment.yml
-  - source activate faultmap
+  # install what we can from conda
+  - conda env create -f environment3.yml
+  - source activate faultmap3
   #- conda install --yes python=$TRAVIS_PYTHON_VERSION `cat conda_requirements.txt`
   # install the rest using pip
   #- pip install -r <( grep -v -f conda_requirements.txt requirements.txt )
