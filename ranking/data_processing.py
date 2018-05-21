@@ -1364,6 +1364,50 @@ def rankbackward(variables, gainmatrix, connections, biasvector,
     return buildcase(dummyweight, digraph, 'DV BWD ', dummycreation)
 
 
+def get_box_endates(clean_df, window, overlap, freq):
+    """Gets the end dates of boxes from dataframe that are continous over window and guarenteed to have a maximum
+    overlap.
+
+    clean_df: clean dataframe with nan assigned to all bad data
+    window: size of window in steps at desired frequency
+    overlap: size of minium overlap desired in steps at desired frequency
+    """
+
+    # Calculate the minimum timedelta between start of boxes
+    min_timedelta = pd.Timedelta(freq) * overlap
+
+    clean_df = clean_df.resample(freq).mean()  # Resamples at desired frequency
+
+    # Any aggregate function that returns nan when a nan occurs in window is suitable
+    rolling_clean_df = clean_df.rolling(window=window, min_periods=window).mean()
+    rolling_clean_df.dropna(inplace=True)  # All indexes that remain have window continous samples at freq
+
+    index_diffs = (rolling_clean_df.index[1:] - rolling_clean_df.index[:-1])
+    index_diffs_series = pd.Series(index_diffs, index=rolling_clean_df.index[1:])
+
+    indexes_that_pass = index_diffs_series > pd.Timedelta(min_timedelta)
+
+    bin_end_indexes = [rolling_clean_df.index[0]] + list(rolling_clean_df[1:][indexes_that_pass].index)
+
+    return bin_end_indexes
+
+
+def get_continous_boxes(clean_df, window, overlap, freq):
+
+    box_end_dates = get_box_endates(clean_df, window, overlap, freq)
+    boxdates = [
+        np.asarray([(box_end_date - (pd.Timedelta(freq) * window)).value // 10 ** 9,
+                    box_end_date.value // 10 ** 9])
+        for box_end_date in box_end_dates]
+
+    boxes = [clean_df[(box_end_date - (pd.Timedelta(freq) * (window - 1))):box_end_date]
+             for box_end_date in box_end_dates]
+
+    array_boxes = [np.asarray(box) for box in boxes]
+
+    return array_boxes, boxdates
+
+
 def split_tsdata(inputdata, samplerate, boxsize, boxnum):
     """Splits the inputdata into arrays useful for analysing the change of
     weights over time.
