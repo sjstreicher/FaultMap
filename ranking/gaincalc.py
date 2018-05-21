@@ -360,7 +360,12 @@ class WeightcalcData(object):
             # as the original data file - but it does not play a role at all
             # in the actual box determination for the case of boxnum = 1
 
-        if self.transient_method == 'legacy':
+        try:
+            self.transient_method
+        except:
+            self.transient_method = None
+
+        if self.transient_method == 'legacy' or self.transient_method is None:
             # Get box start and end dates
             self.boxdates = data_processing.split_tsdata(
                 self.timestamps, self.sampling_rate * self.sub_sampling_interval,
