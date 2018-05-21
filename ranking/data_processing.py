@@ -1382,14 +1382,21 @@ def get_box_endates(clean_df, window, overlap, freq):
     rolling_clean_df = clean_df.rolling(window=window, min_periods=window).mean()
     rolling_clean_df.dropna(inplace=True)  # All indexes that remain have window continous samples at freq
 
-    index_diffs = (rolling_clean_df.index[1:] - rolling_clean_df.index[:-1])
-    index_diffs_series = pd.Series(index_diffs, index=rolling_clean_df.index[1:])
+    end_indexes = [rolling_clean_df.index[0]]  # Initialise with first index
+    next_box_exists = True
+    while next_box_exists:
+        # Get current list of differences
+        index_diffs = (rolling_clean_df.index - end_indexes[-1])
+        # Get index of first entry that is within outside the minimum overlap range
+        try:
+            next_box_index = next(
+                index for index, timedelta in enumerate(index_diffs) if timedelta >= pd.Timedelta(min_timedelta))
+            # Append this end_index
+            end_indexes.append(rolling_clean_df.index[next_box_index])
+        except:
+            next_box_exists = False
 
-    indexes_that_pass = index_diffs_series > pd.Timedelta(min_timedelta)
-
-    bin_end_indexes = [rolling_clean_df.index[0]] + list(rolling_clean_df[1:][indexes_that_pass].index)
-
-    return bin_end_indexes
+    return end_indexes
 
 
 def get_continous_boxes(clean_df, window, overlap, freq):
