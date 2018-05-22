@@ -250,7 +250,7 @@ def calc_simple_rank(gainmatrix, variables, biasvector, noderankdata,
 
         if rank_method == 'eigenvector':
             eig_rankingdict = nx.eigenvector_centrality(
-                reset_gaingraph.reverse(), weight='weight')
+                reset_gaingraph.reverse(), weight='weight', max_iter=200)
             eig_rankingdict_norm = norm_dict(eig_rankingdict)
             rankingdict = eig_rankingdict_norm
 
@@ -289,6 +289,9 @@ def calc_simple_rank(gainmatrix, variables, biasvector, noderankdata,
             rankingdict = dict(zip(variables, rankarray_norm))
         else:
             raise NameError("Method not defined")
+
+    else:
+        raise NameError("Package not defined")
 
     rankinglist = sorted(rankingdict.items(),
                          key=operator.itemgetter(1),
@@ -480,8 +483,8 @@ def dif_gainmatrix_preprocessing(gainmatrix, method='floor'):
             # Alternative: Take absolute of change
             modgainmatrix[col, row] = abs(gainmatrix[col, row])
 
-
     return modgainmatrix
+
 
 def calc_gainrank(gainmatrix, noderankdata, rank_method,
                   dummyweight):
@@ -595,7 +598,6 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
     basevaldict_name = 'basevaldict_{}.json'
     boxrankdict_name = 'boxrankdict_{}.json'
     rel_boxrankdict_name = 'rel_boxrankdict_{}.json'
-
 
     if generate_diffs:
         dif_rankinglist_name = 'dif_rankinglist_{}.csv'

@@ -4,12 +4,14 @@
 """
 
 import csv
+import gc
 import json
 import logging
+import os
+
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-import os
 import pandas as pd
 import sklearn.preprocessing
 import tables as tb
@@ -17,8 +19,8 @@ from numba import jit
 from scipy import signal
 
 import config_setup
-from ranking import gaincalc
 import transentropy
+from ranking import gaincalc
 
 
 @jit
@@ -1078,10 +1080,19 @@ def detrend_first_differences(data):
     return detrended_df.dropna().values
 
 
-def detrend_link_relatives(data):
-
+def detrend_link_relatives(data, cap_values=True, cap=20.):
+    # Multiply by 100 to get idea of percentage change in
+    # Easier to make sense of when choosing estimator bandwidth, etc.
+    # Subtract by unit to center around 0
+    # TODO: Investigate effect of centering around 1 on single entropy estimates
     df = pd.DataFrame(data)
-    detrended_df = df / df.shift(1)
+    detrended_df = ((df / df.shift(1)) - 1.) * 100.
+    detrended_df.iloc[0, :] = 0.
+
+    # Cap at a specified difference
+    if cap_values:
+        detrended_df[detrended_df > cap] = cap
+        detrended_df[detrended_df < -cap] = -cap
 
     return detrended_df.dropna().values
 
@@ -1104,9 +1115,9 @@ def skogestad_scale(data_raw, variables, scalingvalues):
 
     data_skogestadscaled = np.zeros_like(data_raw)
 
-    scalingvalues['scale_factor'] = map(
+    scalingvalues['scale_factor'] = list(map(
         skogestad_scale_select, scalingvalues['vartype'], scalingvalues['low'],
-        scalingvalues['nominal'], scalingvalues['high'])
+        scalingvalues['nominal'], scalingvalues['high']))
 
     # Loop through variables
     # The variables are aligned with the columns in raw_data
@@ -1164,13 +1175,16 @@ def normalise_data(headerline, timestamps, inputdata_raw, variables,
         inputdata_normalised = \
             skogestad_scale(inputdata_raw, variables, scalingvalues)
     elif not method:
-        # If method is simply false
-        # Still mean center the data
-        # This breaks when trying to use discrete methods
-        if 'transfer_entropy_discrete' not in weight_methods:
-            inputdata_normalised = subtract_mean(inputdata_raw)
-        else:
-            inputdata_normalised = inputdata_raw
+        # This also breaks when using linked relatives
+        # Disable completely until full list of exlcusions properly implemented
+        # # If method is simply false
+        # # Still mean center the data
+        # # This breaks when trying to use discrete methods
+        # if 'transfer_entropy_discrete' not in weight_methods:
+        #     inputdata_normalised = subtract_mean(inputdata_raw)
+        # else:
+        #     inputdata_normalised = inputdata_raw
+        inputdata_normalised = inputdata_raw
     else:
         raise NameError("Normalisation method not recognized")
 
@@ -1201,7 +1215,7 @@ def detrend_data(headerline, timestamps, inputdata,
         inputdata_detrended = inputdata
 
     else:
-        raise NameError("Normalisation method not recognized")
+        raise NameError("Detrending method not recognized")
 
     datalines = np.concatenate((timestamps[:, np.newaxis],
                                 inputdata_detrended), axis=1)
@@ -1383,10 +1397,13 @@ def get_box_endates(clean_df, window, overlap, freq):
     rolling_clean_df.dropna(inplace=True)  # All indexes that remain have window continous samples at freq
 
     end_indexes = [rolling_clean_df.index[0]]  # Initialise with first index
+    next_box_index = 0
     next_box_exists = True
+    gc.disable()
     while next_box_exists:
+        logging.info("Bins identified: " + str(len(end_indexes)))
         # Get current list of differences
-        index_diffs = (rolling_clean_df.index - end_indexes[-1])
+        index_diffs = (rolling_clean_df.index - rolling_clean_df.index[next_box_index])
         # Get index of first entry that is within outside the minimum overlap range
         try:
             next_box_index = next(
@@ -1395,6 +1412,7 @@ def get_box_endates(clean_df, window, overlap, freq):
             end_indexes.append(rolling_clean_df.index[next_box_index])
         except:
             next_box_exists = False
+    gc.enable()
 
     return end_indexes
 

@@ -221,7 +221,7 @@ def calc_infodynamics_te(infodynamicsloc, calcmethod,
 
 
 def setup_infodynamics_entropy(infodynamicsloc, estimator='kernel',
-                               kernel_bandwidth=0.25, mult=False):
+                               kernel_bandwidth=0.1, mult=False):
     """Prepares the entropyCalc class of the Java Infodyamics Toolkit (JIDK)
     in order to calculate differential entropy (continuous signals) according
     to the estimation method specified.
