@@ -317,12 +317,9 @@ class WeightcalcData(object):
             low_freq = self.caseconfig[scenario]['low_freq']
             high_freq = self.caseconfig[scenario]['high_freq']
             self.inputdata_bandgapfiltered = \
-                data_processing.bandgapfilter_data(raw_tsdata,
-                                                   self.inputdata_normstep,
-                                                   self.variables,
-                                                   low_freq, high_freq,
-                                                   self.saveloc, self.casename,
-                                                   scenario)
+                data_processing.bandgapfilter_data(
+                    raw_tsdata, self.inputdata_normstep, self.variables,
+                    low_freq, high_freq, self.saveloc, self.casename, scenario)
             self.inputdata_originalrate = self.inputdata_bandgapfiltered
         else:
             self.inputdata_originalrate = self.inputdata_normstep
