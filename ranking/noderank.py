@@ -9,7 +9,6 @@ Future versions will make use of an intrinsic node importance score vector
 
 # Standard libraries
 import csv
-import itertools
 import json
 import logging
 import operator
@@ -465,6 +464,22 @@ def gainmatrix_preprocessing(gainmatrix):
     return modgainmatrix, currentmean
 
 
+def gainmatrix_tobinary(gainmatrix):
+    """Changes all the weights to a boolean
+
+    INCOMPLETE
+
+    """
+
+    modgainmatrix = np.zeros_like(gainmatrix)
+
+    for col, row in zip(gainmatrix.nonzero()[0],
+                        gainmatrix.nonzero()[1]):
+        modgainmatrix[col, row] = 1.
+
+    return modgainmatrix
+
+
 def dif_gainmatrix_preprocessing(gainmatrix, method='floor'):
     """
 
@@ -617,8 +632,9 @@ def dorankcalc(noderankdata, scenario, datadir, typename, rank_method,
 
     for index, gainmatrix in enumerate(gainmatrices):
         if preprocessing:
-            modgainmatrix, _ = \
-                gainmatrix_preprocessing(gainmatrix)
+            # modgainmatrix, _ = \
+            #     gainmatrix_preprocessing(gainmatrix)
+            modgainmatrix = gainmatrix_tobinary(gainmatrix)
         else:
             modgainmatrix = gainmatrix
 
