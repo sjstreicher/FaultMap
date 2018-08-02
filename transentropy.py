@@ -15,10 +15,6 @@ def setup_infodynamics_te(infodynamicsloc, calcmethod, **parameters):
     The embedding dimension of the destination or target variable (k) can
     easily be set by adjusting the histlength parameter.
 
-    # UPDATE: (Still needs to be verified) The continous Kraskov estimator
-    with the Ragwitz criterion is the basis for all results unless mentioned
-    otherwise as this is the theoretical best automated procedure that is
-    available in JIDT 1.3.
     """
 
     if not jpype.isJVMStarted():
@@ -51,7 +47,7 @@ def setup_infodynamics_te(infodynamicsloc, calcmethod, **parameters):
 
     elif calcmethod == 'kraskov':
         """The Kraskov method is the recommended method and also provides
-        methods for auto-embedding. The Ragwitz criterion auto-embedding method
+        methods for auto-embedding. The max corr AIS auto-embedding method
         will be enabled as the default.
 
         """
@@ -73,30 +69,6 @@ def setup_infodynamics_te(infodynamicsloc, calcmethod, **parameters):
         # prevent accidental data standardisation
         teCalc.setProperty("NORMALISE", "false")
 
-        if 'auto_embed' in parameters:
-            auto_embed = parameters['auto_embed']
-            if auto_embed is True:
-                # Enable the Ragwitz criterion
-                # Enable source as well as destination embedding due to the
-                # nature of our data.
-                # Use a maximum history and tau search of 5
-                teCalc.setProperty("AUTO_EMBED_METHOD", "RAGWITZ")
-
-                ksearchmax = parameters.get('k_search_max', 5)
-                teCalc.setProperty("AUTO_EMBED_K_SEARCH_MAX",
-                                   str(ksearchmax))
-                tausearchmax = parameters.get('tau_search_max', 5)
-                teCalc.setProperty("AUTO_EMBED_TAU_SEARCH_MAX",
-                                   str(tausearchmax))
-
-        # Note: If setting the delay is needed to be changed on each iteration,
-        # it may be best to do this outside the loop and initialise teCalc
-        # after each change.
-
-        if 'delay' in parameters:
-            delay = parameters['delay']
-            teCalc.setProperty("DELAY", str(delay))
-
         # Allow for manual override
 
         if 'k_history' in parameters:
@@ -114,6 +86,32 @@ def setup_infodynamics_te(infodynamicsloc, calcmethod, **parameters):
         if 'l_tau' in parameters:
             l_tau = parameters['l_tau']
             teCalc.setProperty("l_TAU", str(l_tau))
+
+        if 'auto_embed' in parameters:
+            auto_embed = parameters['auto_embed']
+            if auto_embed is True:
+                # Enable the Ragwitz or max AIS method criterion
+                # TODO: Enable flag to determine which one
+                # Enable source as well as destination embedding due to the
+                # nature of our data.
+                # Use a maximum history and tau search of 5
+                # teCalc.setProperty("AUTO_EMBED_METHOD", "RAGWITZ")
+                teCalc.setProperty("AUTO_EMBED_METHOD", "MAX_CORR_AIS")
+
+                ksearchmax = parameters.get('k_search_max', 5)
+                teCalc.setProperty("AUTO_EMBED_K_SEARCH_MAX",
+                                   str(ksearchmax))
+                tausearchmax = parameters.get('tau_search_max', 5)
+                teCalc.setProperty("AUTO_EMBED_TAU_SEARCH_MAX",
+                                   str(tausearchmax))
+
+        # Note: If setting the delay is needed to be changed on each iteration,
+        # it may be best to do this outside the loop and initialise teCalc
+        # after each change.
+
+        if 'delay' in parameters:
+            delay = parameters['delay']
+            teCalc.setProperty("DELAY", str(delay))
 
         teCalc.initialise()
 
@@ -140,6 +138,7 @@ def setup_infodynamics_te(infodynamicsloc, calcmethod, **parameters):
 #        sourceHistoryEmbeddingLength = None  # not used at the moment
         teCalc = teCalcClass(base, destHistoryEmbedLength)
         teCalc.initialise()
+
     else:
         raise NameError("Transfer entropy method name not recognized")
 
@@ -218,6 +217,97 @@ def calc_infodynamics_te(infodynamicsloc, calcmethod,
         properties = [None]
 
     return transentropy, [significance, properties]
+
+def setup_infodynamics_mi(infodynamicsloc, calcmethod, **parameters):
+    """Prepares the miCalc class of the Java Infodyamics Toolkit (JIDT)
+    in order to calculate mutual information according to the kernel or Kraskov
+    estimator method. Also supports discrete mutual information calculation.
+
+    The embedding dimension of the destination or target variable (k) can
+    easily be set by adjusting the histlength parameter.
+
+    """
+
+    if not jpype.isJVMStarted():
+        jpype.startJVM(jpype.getDefaultJVMPath(),
+                       "-Xms32M",
+                       "-Xmx512M",
+                       "-ea",
+                       "-Djava.class.path=" + infodynamicsloc)
+
+    if calcmethod == 'kernel':
+        miCalcClass = \
+            jpype.JPackage("infodynamics.measures.continuous.kernel") \
+            .MutualInfoCalculatorMultiVariateKernel
+        miCalc = miCalcClass()
+
+        # Normalisation is performed before this step, set property to false to
+        # prevent accidental data standardisation
+        miCalc.setProperty("NORMALISE", "false")
+
+        # Parameter definitions - refer to JIDT Javadocs
+        # k - destination embedded history length (Schreiber k=1)
+        # kernelWidth - if NORMALISE_PROP_NAME property has been set,
+        # then this kernel width corresponds to the number of
+        # standard deviations from the mean (otherwise it is an absolute value)
+
+        k = parameters.get('k', 1)
+        kernel_width = parameters.get('kernel_width', 0.25)
+
+        miCalc.setProperty("KERNEL_WIDTH", str(kernel_width))
+
+        miCalc.initialise()
+
+    elif calcmethod == 'kraskov':
+        """The Kraskov method is the recommended method and also provides
+        methods for auto-embedding. The max corr AIS auto-embedding method
+        will be enabled as the default.
+
+        """
+
+        miCalcClass = \
+            jpype.JPackage("infodynamics.measures.continuous.kraskov") \
+            .MutualInfoCalculatorMultiVariateKraskov1
+        miCalc = miCalcClass()
+        # Parameter definitions - refer to JIDT javadocs
+
+        # k - embedding length of destination past history to consider
+        # delay - time lag between last element of source and destination
+        # next value
+
+        # Normalisation is performed before this step, set property to false to
+        # prevent accidental data standardisation
+        miCalc.setProperty("NORMALISE", "false")
+
+        # Note: If setting the delay is needed to be changed on each iteration,
+        # it may be best to do this outside the loop and initialise teCalc
+        # after each change.
+
+        if 'delay' in parameters:
+            delay = parameters['delay']
+            miCalc.setProperty("TIME_DIFF", str(delay))
+
+        miCalc.initialise()
+
+    elif calcmethod == 'discrete':
+        miCalcClass = \
+            jpype.JPackage("infodynamics.measures.discrete") \
+            .MutualInformationCalculatorDiscrete
+        # Parameter definitions - refer to JIDT javadocs
+        # base - number of quantisation levels for each variable
+        # binary variables are in base 2
+        # TODO: Allow these settings to be defined by configuration file
+
+        base = parameters.get('base', 2)
+#            print "base default of 2 (binary) is used"
+
+        miCalc = miCalcClass(base, base, 0)
+        miCalc.initialise()
+
+    else:
+        raise NameError("Mutual information method name not recognized")
+
+    return miCalc
 
 
 def setup_infodynamics_entropy(infodynamicsloc, estimator='kernel',
