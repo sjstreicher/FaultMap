@@ -77,6 +77,8 @@ class NoderankData:
         else:
             self.connections_used = False
 
+        # This bias refers to assigning importance weights to different nodes
+        # and should not be confused with bias subtraction performed during resultreconstruction
         if 'use_bias' in settings:
             self.bias_used = settings['use_bias']
         else:

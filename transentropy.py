@@ -161,6 +161,8 @@ def calc_infodynamics_te(infodynamicsloc, calcmethod,
 
     teCalc = setup_infodynamics_te(infodynamicsloc, calcmethod,
                                    **parameters)
+    miCalc = setup_infodynamics_mi(infodynamicsloc, calcmethod,
+                                   **parameters)
 
     test_significance = parameters.get('test_signifiance', False)
     significance_permutations = parameters.get('significance_permutations', 30)
@@ -184,25 +186,30 @@ def calc_infodynamics_te(infodynamicsloc, calcmethod,
         source = map(int, causal_data)
         dest = map(int, affected_data)
         teCalc.addObservations(source, dest)
+        miCalc.addObservations(source, dest)
     else:
         teCalc.setObservations(causal_data, affected_data)
+        miCalc.setObservations(causal_data, affected_data)
 
     transentropy = teCalc.computeAverageLocalOfObservations()
+    mutualinfo = miCalc.computeAverageLocalOfObservations()
 
     # Convert nats to bits if necessary
     if calcmethod == 'kraskov':
         transentropy = transentropy / np.log(2.)
-    elif calcmethod == 'kernel':
+        mutualinfo = mutualinfo / np.log(2.)
+    elif (calcmethod == 'kernel') or (calcmethod == 'discrete'):
         transentropy = transentropy
-    elif calcmethod == 'discrete':
-        transentropy = transentropy
+        mutualinfo = mutualinfo
     else:
-        raise NameError("Transfer entropy method name not recognized")
+        raise NameError("Infodynamics method name not recognized")
 
     if test_significance:
-        significance = teCalc.computeSignificance(significance_permutations)
+        te_significance = teCalc.computeSignificance(significance_permutations)
+        mi_significance = miCalc.computeSignificance(significance_permutations)
     else:
-        significance = None
+        te_significance = None
+        mi_significance = None
 
     # Get all important properties from used teCalc
     if calcmethod != 'discrete':
@@ -212,11 +219,12 @@ def calc_infodynamics_te(infodynamicsloc, calcmethod,
         l_tau = teCalc.getProperty("l_TAU")
         delay = teCalc.getProperty("DELAY")
 
-        properties = [k_history, k_tau, l_history, l_tau, delay]
+        properties = [k_history, k_tau, l_history, l_tau, delay]  # Mutual info included as a property
     else:
         properties = [None]
 
-    return transentropy, [significance, properties]
+    return transentropy, [[te_significance, mi_significance], properties, mutualinfo]
+
 
 def setup_infodynamics_mi(infodynamicsloc, calcmethod, **parameters):
     """Prepares the miCalc class of the Java Infodyamics Toolkit (JIDT)

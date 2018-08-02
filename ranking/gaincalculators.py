@@ -419,7 +419,8 @@ class TransentWeightcalc(object):
                             'k_hist_fwd', 'k_tau_fwd', 'l_hist_fwd',
                             'l_tau_fwd', 'delay_fwd',
                             'k_hist_bwd', 'k_tau_bwd', 'l_hist_bwd',
-                            'l_tau_bwd', 'delay_bwd']
+                            'l_tau_bwd', 'delay_bwd',
+                            'mi_fwd', 'mi_bwd']
 
         self.estimator = estimator
         self.infodynamicsloc = weightcalcdata.infodynamicsloc
@@ -487,7 +488,7 @@ class TransentWeightcalc(object):
             maxval_forward = \
                 max(weightlist[int((len(weightlist) - 1) / 2):])
             # Get maximum weight in backward direction
-            # This includes all negative delays exluding zero
+            # This includes all negative delays excluding zero
             maxval_backward = \
                 max(weightlist[:int((len(weightlist) - 1) / 2)])
 
@@ -546,7 +547,7 @@ class TransentWeightcalc(object):
             bestdelay_sample, directionpass
 
     def report(self, weightcalcdata, causevarindex, affectedvarindex,
-               weightlist, box, proplist):
+               weightlist, box, proplist, milist):
 
         """Calculates and reports the relevant output for each combination
         of variables tested.
@@ -556,13 +557,14 @@ class TransentWeightcalc(object):
         variables = weightcalcdata.variables
         causevar = variables[causevarindex]
         affectedvar = variables[affectedvarindex]
-        inputdata = weightcalcdata.inputdata
+        # inputdata = weightcalcdata.inputdata
 
         # We already know that when dealing with transfer entropy
         # the weightlist will consist of a list of lists
         weightlist_directional, weightlist_absolute = weightlist
 
         proplist_fwd, proplist_bwd = proplist
+        milist_fwd, milist_bwd = milist
 
         # Not supposed to differ among delay tests
         # TODO: Confirm this
@@ -684,11 +686,16 @@ class TransentWeightcalc(object):
 
         dataline_directional = dataline_directional + \
             proplist_fwd[delay_index_directional] + \
-            proplist_bwd[delay_index_directional]
+            proplist_bwd[delay_index_directional] + \
+            [milist_fwd[delay_index_directional]] + \
+            [milist_bwd[delay_index_directional]]
+             # Only need to report one but write second one as check
 
         dataline_absolute = dataline_absolute + \
             proplist_fwd[delay_index_absolute] + \
-            proplist_bwd[delay_index_absolute]
+            proplist_bwd[delay_index_absolute] + \
+            [milist_fwd[delay_index_absolute]] + \
+            [milist_bwd[delay_index_absolute]]
 
         datalines = [dataline_directional, dataline_absolute]
 

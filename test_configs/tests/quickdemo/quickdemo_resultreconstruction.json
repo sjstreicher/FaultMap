@@ -4,6 +4,7 @@
     "autoreg_2x2"
   ],
   "autoreg_2x2": {
-    "bias_correction": true
+    "bias_correction": false,
+    "mi_scale": true
   }
 }
