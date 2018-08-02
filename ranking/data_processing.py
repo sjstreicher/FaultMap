@@ -124,13 +124,16 @@ class ResultReconstructionData:
             if self.datatype == 'file':
                 if 'bias_correction' in scenario_config:
                     self.bias_correction = scenario_config['bias_correction']
+                if 'mi_scale' in scenario_config:
+                    self.mi_scale = scenario_config['mi_scale']
         else:
             settings = {}
             self.bias_correction = False
+            self.mi_scale = False  # Make it False for now, might change this default in future
             logging.info("Defaulting to no bias correction")
 
 
-def process_auxfile(filename, bias_correct=True, allow_neg=False):
+def process_auxfile(filename, bias_correct=True, mi_scale=False, allow_neg=False):
     """Processes an auxfile and returns a list of affected_vars,
     weight_array as well as relative significance weight array.
 
@@ -171,6 +174,11 @@ def process_auxfile(filename, bias_correct=True, allow_neg=False):
                 else:
                     thresh_index = row.index('threshcorr')
 
+                if 'mi_fwd' in row:  # This should be available by default
+                    mi_index = row.index('mi_fwd')
+                else:
+                    mi_index = None
+
                 threshpass_index = row.index('threshpass')
                 directionpass_index = row.index('directionpass')
                 maxdelay_index = row.index('max_delay')
@@ -206,11 +214,17 @@ def process_auxfile(filename, bias_correct=True, allow_neg=False):
                         sigtest_weight = 0.
                         nosigtest_weight = 0.
 
+                # If both bias correction and mutual information scaling is to be performed,
+                # bias correction should happen first
+
                 # Perform bias correction if required
                 if bias_correct and biasmean_index and (sigtest_weight > 0.):
                     sigtest_weight = sigtest_weight - float(row[biasmean_index])
                     if sigtest_weight < 0:
                         raise ValueError('Negative weight after subtracting biasmean')
+
+                if mi_scale and (sigtest_weight > 0.):
+                    sigtest_weight = sigtest_weight / float(row[mi_index])
 
                 weights.append(sigtest_weight)
                 nosigtest_weights.append(nosigtest_weight)
@@ -243,7 +257,7 @@ def process_auxfile(filename, bias_correct=True, allow_neg=False):
     return affectedvars, weights, nosigtest_weights, sigweights, delays, sigthresholds
 
 
-def create_arrays(datadir, variables, bias_correct, generate_diffs):
+def create_arrays(datadir, variables, bias_correct, mi_scale, generate_diffs):
     """
     datadir is the location of the auxdata and weights folders for the
     specific case that is under investigation
@@ -317,7 +331,8 @@ def create_arrays(datadir, variables, bias_correct, generate_diffs):
                     # Otherwise, the allow null must be used much more wisely
                     (affectedvars, weights, nosigtest_weights,
                      sigweights, delays, sigthresholds) = \
-                        process_auxfile(os.path.join(boxdir, causevar_file), bias_correct=bias_correct)
+                        process_auxfile(os.path.join(boxdir, causevar_file),
+                                        bias_correct=bias_correct, mi_scale=mi_scale)
 
                     affectedvar_array.append(affectedvars)
                     weight_array.append(weights)
@@ -795,6 +810,7 @@ def result_reconstruction(mode, case, writeoutput):
                     datadir = os.path.join(embedtypesdir, embedtype)
                     create_arrays(datadir, weightcalcdata.variables,
                                   resultreconstructiondata.bias_correction,
+                                  resultreconstructiondata.mi_scale,
                                   weightcalcdata.generate_diffs)
                     # Provide directional array version tested with absolute
                     # weight sign

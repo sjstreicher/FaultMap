@@ -132,6 +132,8 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
             sigbwd_list = []
             propfwd_list = []
             propbwd_list = []
+            mifwd_list = []
+            mibwd_list = []
 
             for delay in weightcalcdata.sample_delays:
                 logging.info("Now testing delay: " + str(delay))
@@ -179,25 +181,23 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                         # This means we have auxdata for both the forward and
                         # backward calculation
                         [auxdata_fwd, auxdata_bwd] = auxdata
-                        [significance_fwd, properties_fwd] = auxdata_fwd
-                        [significance_bwd, properties_bwd] = auxdata_bwd
+                        [significance_fwd, properties_fwd, mi_fwd] = auxdata_fwd  # mi_fwd and mi_bwd should be the same
+                        [significance_bwd, properties_bwd, mi_bwd] = auxdata_bwd
                         sigfwd_list.append(significance_fwd)
                         sigbwd_list.append(significance_bwd)
                         propfwd_list.append(properties_fwd)
                         propbwd_list.append(properties_bwd)
+                        mifwd_list.append(mi_fwd)
+                        mibwd_list.append(mi_bwd)
 
             if len(weight) > 1:
 
                 twodimensions = True
 
-                proplist = [propfwd_list,
-                            propbwd_list]
-
-#                siglist = [sigfwd_list,
-#                           sigbwd_list]
-
-                weightlist = [directional_weightlist,
-                              absolute_weightlist]
+                proplist = [propfwd_list, propbwd_list]
+                milist = [mifwd_list, mibwd_list]
+                siglist = [sigfwd_list, sigbwd_list]
+                weightlist = [directional_weightlist, absolute_weightlist]
 
                 # Combine weight data
                 weights_thisvar_directional = np.asarray(weightlist[0])
@@ -216,12 +216,12 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                     np.concatenate((datalines_absolute,
                                     weights_thisvar_absolute), axis=1)
 
-                # Write all the auxilliary weight data
+                # Write all the auxiliary weight data
                 # Generate and store report files according to each method
                 auxdata_thisvar_directional, auxdata_thisvar_absolute = \
                     weightcalculator.report(
                         weightcalcdata, causevarindex, affectedvarindex,
-                        weightlist, box, proplist)
+                        weightlist, box, proplist, milist)
 
                 auxdata_directional.append(auxdata_thisvar_directional)
                 auxdata_absolute.append(auxdata_thisvar_absolute)
