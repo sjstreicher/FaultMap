@@ -14,10 +14,11 @@ from ranking import data_processing
 def raw_string(s):
     # TODO: Review this for Python3
     if isinstance(s, str):
-        s = s.encode('string-escape')
+        s = s.encode('unicode-escape')
     # elif isinstance(s, unicode):
     #     s = s.encode('unicode-escape')
-    return s
+    return s.decode('utf-8')
+
 
 class GraphData(object):
     """Creates a graph object storing information required by
