@@ -217,7 +217,7 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
     # Get labels
     if graphdata.linelabels:
         graphdata.get_labelformat(graph)
-        labels = [graphdata.labelformat.format(linelabel)
+        labels = [str(graphdata.labelformat).format(linelabel)
                   for linelabel in graphdata.linelabels]
     else:
         labels = [destvar for destvar in graphdata.destvars]
