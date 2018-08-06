@@ -49,6 +49,10 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
     absolute_name = 'weights_absolute'
     neutral_name = 'weights'
 
+    mis_directional_name = 'mis_directional'
+    mis_absolute_name = 'mis_absolute'
+    mis_neutral_name = 'mis'
+
     auxdirectional_name = 'auxdata_directional'
     auxabsolute_name = 'auxdata_absolute'
     auxneutral_name = 'auxdata'
@@ -65,6 +69,11 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
     datalines_directional = datalines_directional[:, np.newaxis]
     datalines_absolute = datalines_directional.copy()
     datalines_neutral = datalines_directional.copy()
+
+    # Datalines needed to store mutual information
+    mis_datalines_directional = datalines_directional.copy()
+    mis_datalines_absolute = datalines_directional.copy()
+    mis_datalines_neutral = datalines_directional.copy()
 
     # Datalines needed to store significance threshold values
     # for each variable combination
@@ -91,6 +100,12 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                 
             datalines_absolute, _ = readcsv_weightcalc(
                 filename(absolute_name, boxindex+1, causevar))
+
+            mis_datalines_directional, _ = readcsv_weightcalc(
+                filename(mis_directional_name, boxindex + 1, causevar))
+
+            mis_datalines_absolute, _ = readcsv_weightcalc(
+                filename(mis_absolute_name, boxindex + 1, causevar))
             
             if weightcalcdata.allthresh:
                 datalines_sigthresh_directional = readcsv_weightcalc(
@@ -204,17 +219,33 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                 weights_thisvar_directional = \
                     weights_thisvar_directional[:, np.newaxis]
 
+                mis_thisvar_directional = np.asarray(milist[0])
+                mis_thisvar_directional = \
+                    mis_thisvar_directional[:, np.newaxis]
+
                 datalines_directional = \
                     np.concatenate((datalines_directional,
                                     weights_thisvar_directional), axis=1)
+
+                mis_datalines_directional = \
+                    np.concatenate((mis_datalines_directional,
+                                    mis_thisvar_directional), axis=1)
 
                 weights_thisvar_absolute = np.asarray(weightlist[1])
                 weights_thisvar_absolute = \
                     weights_thisvar_absolute[:, np.newaxis]
 
+                mis_thisvar_absolute = np.asarray(milist[1])
+                mis_thisvar_absolute = \
+                    mis_thisvar_absolute[:, np.newaxis]
+
                 datalines_absolute = \
                     np.concatenate((datalines_absolute,
                                     weights_thisvar_absolute), axis=1)
+
+                mis_datalines_absolute = \
+                    np.concatenate((mis_datalines_absolute,
+                                    mis_thisvar_absolute), axis=1)
 
                 # Write all the auxiliary weight data
                 # Generate and store report files according to each method
@@ -294,6 +325,15 @@ def calc_weights_oneset(weightcalcdata, weightcalculator,
                 writecsv_weightcalc(filename(
                     absolute_name, boxindex+1, causevar),
                     datalines_absolute, headerline)
+
+                # Write mutual information over multiple delays to file just as for transfer entropy
+                writecsv_weightcalc(filename(
+                    mis_directional_name, boxindex + 1, causevar),
+                    mis_datalines_directional, headerline)
+
+                writecsv_weightcalc(filename(
+                    mis_absolute_name, boxindex + 1, causevar),
+                    mis_datalines_absolute, headerline)
 
                 writecsv_weightcalc(filename(
                     auxdirectional_name, boxindex+1, causevar),
