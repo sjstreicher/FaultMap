@@ -23,9 +23,9 @@ from plotting.plotter import plotdraw
 
 
 def run_weightcalc(configloc, writeoutput, mode, case, robust):
-    weightcalc_config = json.load(
-        open(os.path.join(configloc, "config_weightcalc" + ".json"))
-    )
+    with open(os.path.join(configloc, "config_weightcalc" + ".json")) as f:
+        weightcalc_config = json.load(f)
+    f.close()
 
     # Flag indicating whether single signal entropy values for each
     # signal involved should be calculated
@@ -119,7 +119,9 @@ def run_plotting(writeoutput, mode, case, robust):
 
 def run_all(mode, robust=False):
     _, configloc, _, _ = config_setup.get_locations(mode)
-    fullrun_config = json.load(open(os.path.join(configloc, "config_full" + ".json")))
+    with open(os.path.join(configloc, "config_full" + ".json")) as f:
+        fullrun_config = json.load(f)
+    f.close()
 
     # Flag indicating whether calculated results should be written to disk
     writeoutput = fullrun_config["writeoutput"]

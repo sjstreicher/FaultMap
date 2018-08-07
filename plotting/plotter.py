@@ -36,15 +36,19 @@ class GraphData(object):
         self.case = case
 
         # Load case config file
-        self.caseconfig = json.load(
-            open(os.path.join(self.caseconfigloc, case + "_plotting" + ".json"))
-        )
+        with open(
+            os.path.join(self.caseconfigloc, case + "_plotting" + ".json")
+        ) as configfile:
+            self.caseconfig = json.load(configfile)
+        configfile.close()
 
         # Load weight case config file
         # This is used in plots that make use of original time series data
-        self.weight_caseconfig = json.load(
-            open(os.path.join(self.caseconfigloc, case + "_weightcalc" + ".json"))
-        )
+        with open(
+            os.path.join(self.caseconfigloc, case + "_weightcalc" + ".json")
+        ) as f:
+            self.weight_caseconfig = json.load(f)
+        f.close()
 
         # Get graphs
         self.graphs = self.caseconfig["graphs"]

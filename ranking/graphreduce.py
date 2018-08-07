@@ -37,9 +37,11 @@ class GraphReduceData(object):
             mode, case
         )
         # Load case config file
-        self.caseconfig = json.load(
-            open(os.path.join(self.caseconfigloc, case + "_graphreduce" + ".json"))
-        )
+        with open(
+            os.path.join(self.caseconfigloc, case + "_graphreduce" + ".json")
+        ) as f:
+            self.caseconfig = json.load(f)
+        f.close()
 
         # Get scenarios
         self.scenarios = self.caseconfig["scenarios"]
@@ -225,7 +227,7 @@ def delete_lowval_edges(graph, weight_threshold, remove_self_loops=True):
 
     if remove_self_loops:
         # First, delete all self-loops
-        selfloop_list = list(lowedge_graph.selfloop_edges())
+        selfloop_list = list(nx.selfloop_edges(lowedge_graph))
         lowedge_graph.remove_edges_from(selfloop_list)
         logging.info("Deleted " + str(len(selfloop_list)) + " self-looping edges")
 

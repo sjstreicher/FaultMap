@@ -38,9 +38,13 @@ def get_locations(mode="cases"):
     """
     # Load directories config file
     if mode == "tests":
-        dirs = json.load(open("testconfig.json"))
+        with open("testconfig.json") as f:
+            dirs = json.load(f)
+        f.close()
     elif mode == "cases":
-        dirs = json.load(open("caseconfig.json"))
+        with open("caseconfig.json") as f:
+            dirs = json.load(f)
+        f.close()
     else:
         raise NameError("Mode name not recognized")
 
