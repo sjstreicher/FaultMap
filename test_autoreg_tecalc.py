@@ -14,7 +14,6 @@ from datagen import autoreg_datagen
 
 
 class TestAutoregressiveTransferEntropy(unittest.TestCase):
-
     def setUp(self):
         """Generate list of entropies to test"""
 
@@ -33,15 +32,17 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
             # Start the JVM
             # (add the "-Xmx" option with say 1024M if you get crashes
             # due to not enough memory space)
-            jpype.startJVM(jpype.getDefaultJVMPath(), "-ea",
-                           "-Djava.class.path=" + infodynamicsloc)
+            jpype.startJVM(
+                jpype.getDefaultJVMPath(), "-ea", "-Djava.class.path=" + infodynamicsloc
+            )
 
     def test_peakentropy_infodyn_kernel(self):
         self.entropies_infodyn_kernel = []
-        for timelag in range(self.delay-5, self.delay+6):
+        for timelag in range(self.delay - 5, self.delay + 6):
             print("Results for timelag of: ", str(timelag))
             [_, x_hist, y_hist] = autoreg_datagen(
-                self.delay, timelag, self.samples, self.sub_samples)
+                self.delay, timelag, self.samples, self.sub_samples
+            )
 
             # Normalize data
             # Not explicitly required as this is done by infodynamics package
@@ -54,9 +55,12 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
             # Calculate transfer entropy according to infodynamics method:
 
             result_infodyn, _ = te_info(
-                'infodynamics.jar', 'kernel',
-                x_hist_norm[0], y_hist_norm[0],
-                **{'kernel_width': 0.1})
+                "infodynamics.jar",
+                "kernel",
+                x_hist_norm[0],
+                y_hist_norm[0],
+                **{"kernel_width": 0.1}
+            )
             self.entropies_infodyn_kernel.append(result_infodyn)
             print("Infodynamics TE result: %.4f bits" % result_infodyn)
 
@@ -69,11 +73,11 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
 
     def test_peakentropy_infodyn_kraskov_noautoembed(self):
         self.entropies_infodyn_kraskov = []
-        for timelag in range(self.delay-5, self.delay+6):
+        for timelag in range(self.delay - 5, self.delay + 6):
             print("Results for timelag of: ", str(timelag))
-            [x_pred, x_hist, y_hist] = autoreg_datagen(self.delay, timelag,
-                                                       self.samples,
-                                                       self.sub_samples)
+            [x_pred, x_hist, y_hist] = autoreg_datagen(
+                self.delay, timelag, self.samples, self.sub_samples
+            )
             # Normalize data
             # Not explicitly required as this is done by infodyns package if
             # setProperty("NORMALISE", "true" is called), but good practice
@@ -84,11 +88,14 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
 
             # Calculate transfer entropy according to infodynamics method:
 
-            result_infodyn, [significance, properties] = \
-                te_info('infodynamics.jar', 'kraskov',
-                        x_hist_norm[0], y_hist_norm[0],
-                        test_significance=False,
-                        auto_embed=False)
+            result_infodyn, [significance, properties] = te_info(
+                "infodynamics.jar",
+                "kraskov",
+                x_hist_norm[0],
+                y_hist_norm[0],
+                test_significance=False,
+                auto_embed=False,
+            )
             self.entropies_infodyn_kraskov.append(result_infodyn)
             print("Infodynamics TE result: %.4f bits" % result_infodyn)
 
@@ -104,11 +111,11 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
 
     def test_peakentropy_infodyn_kraskov_autoembed(self):
         self.entropies_infodyn_kraskov = []
-        for timelag in range(self.delay-5, self.delay+6):
+        for timelag in range(self.delay - 5, self.delay + 6):
             print("Results for timelag of: ", str(timelag))
-            [x_pred, x_hist, y_hist] = autoreg_datagen(self.delay, timelag,
-                                                       self.samples,
-                                                       self.sub_samples)
+            [x_pred, x_hist, y_hist] = autoreg_datagen(
+                self.delay, timelag, self.samples, self.sub_samples
+            )
             # Normalize data
             # Not explicitly required as this is done by infodyns package if
             # setProperty("NORMALISE", "true" is called), but good practice
@@ -119,11 +126,14 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
 
             # Calculate transfer entropy according to infodynamics method:
 
-            result_infodyn, [significance, properties] = \
-                te_info('infodynamics.jar', 'kraskov',
-                        x_hist_norm[0], y_hist_norm[0],
-                        test_significance=False,
-                        auto_embed=True)
+            result_infodyn, [significance, properties] = te_info(
+                "infodynamics.jar",
+                "kraskov",
+                x_hist_norm[0],
+                y_hist_norm[0],
+                test_significance=False,
+                auto_embed=True,
+            )
             self.entropies_infodyn_kraskov.append(result_infodyn)
             print("Infodynamics TE result: %.4f bits" % result_infodyn)
 
@@ -137,5 +147,6 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
         delayedval = self.entropies_infodyn_kraskov[self.delay]
         self.assertEqual(maxval, delayedval)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

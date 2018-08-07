@@ -21,26 +21,30 @@ from plotting.plotter import plotdraw
 # TODO: Move to class object
 # TODO: Perform analysis on scenario level inside class object
 
+
 def run_weightcalc(configloc, writeoutput, mode, case, robust):
-    weightcalc_config = json.load(open(
-        os.path.join(configloc, 'config_weightcalc' + '.json')))
+    weightcalc_config = json.load(
+        open(os.path.join(configloc, "config_weightcalc" + ".json"))
+    )
 
     # Flag indicating whether single signal entropy values for each
     # signal involved should be calculated
-    single_entropies = weightcalc_config['calc_single_entropies']
+    single_entropies = weightcalc_config["calc_single_entropies"]
     # Flag indicating whether
-    fftcalc = weightcalc_config['fft_calc']
-    do_multiprocessing = weightcalc_config['multiprocessing']
+    fftcalc = weightcalc_config["fft_calc"]
+    do_multiprocessing = weightcalc_config["multiprocessing"]
 
     if robust:
         try:
-            weightcalc(mode, case, writeoutput, single_entropies, fftcalc,
-                       do_multiprocessing)
+            weightcalc(
+                mode, case, writeoutput, single_entropies, fftcalc, do_multiprocessing
+            )
         except:
             raise RuntimeError("Weight calculation failed for case: " + case)
     else:
-        weightcalc(mode, case, writeoutput, single_entropies, fftcalc,
-                   do_multiprocessing)
+        weightcalc(
+            mode, case, writeoutput, single_entropies, fftcalc, do_multiprocessing
+        )
 
     return None
 
@@ -59,7 +63,6 @@ def run_createarrays(writeoutput, mode, case, robust):
     else:
         result_reconstruction(mode, case, writeoutput)
         result_reconstruction(mode, case, writeoutput)
-
 
     return None
 
@@ -116,14 +119,13 @@ def run_plotting(writeoutput, mode, case, robust):
 
 def run_all(mode, robust=False):
     _, configloc, _, _ = config_setup.get_locations(mode)
-    fullrun_config = json.load(open(
-        os.path.join(configloc, 'config_full' + '.json')))
+    fullrun_config = json.load(open(os.path.join(configloc, "config_full" + ".json")))
 
     # Flag indicating whether calculated results should be written to disk
-    writeoutput = fullrun_config['writeoutput']
+    writeoutput = fullrun_config["writeoutput"]
     # Provide the mode and case names to calculate
-    mode = fullrun_config['mode']
-    cases = fullrun_config['cases']
+    mode = fullrun_config["mode"]
+    cases = fullrun_config["cases"]
 
     for case in cases:
         logging.info("Now attempting case: " + case)
@@ -136,8 +138,8 @@ def run_all(mode, robust=False):
         logging.info("Done with case: " + case)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     multiprocessing.freeze_support()
     logging.basicConfig(level=logging.INFO)
 
-    run_all('cases')
+    run_all("cases")

@@ -14,12 +14,13 @@ from ranking.data_processing import result_reconstruction
 logging.basicConfig(level=logging.INFO)
 
 dataloc, configloc, _, _ = config_setup.get_locations()
-createarrays_config = json.load(open(os.path.join(configloc, 'config'
-                                                  '_createarrays' + '.json')))
+createarrays_config = json.load(
+    open(os.path.join(configloc, "config" "_createarrays" + ".json"))
+)
 
-writeoutput = createarrays_config['writeoutput']
-mode = createarrays_config['mode']
-cases = createarrays_config['cases']
+writeoutput = createarrays_config["writeoutput"]
+mode = createarrays_config["mode"]
+cases = createarrays_config["cases"]
 
 for case in cases:
     result_reconstruction(mode, case, writeoutput)
