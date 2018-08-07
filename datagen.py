@@ -16,21 +16,25 @@ seed_list = [35, 88, 107, 52, 98]
 
 def connectionmatrix_maker(N):
     def maker():
-        variables = ['X {}'.format(i) for i in range(1, N+1)]
+        variables = ["X {}".format(i) for i in range(1, N + 1)]
         connectionmatrix = np.ones((N, N), dtype=int)
         return variables, connectionmatrix
-    maker.__doc__ = ("Generates a {0}x{0} connection matrix"
-                     "for use in tests.".format(N))
+
+    maker.__doc__ = "Generates a {0}x{0} connection matrix" "for use in tests.".format(
+        N
+    )
     return maker
+
 
 connectionmatrix_2x2, connectionmatrix_4x4, connectionmatrix_5x5 = [
     connectionmatrix_maker(N) for N in [2, 4, 5]
-    ]
+]
 
 
 def seed_random(method, seed, samples):
     np.random.seed(int(seed))
     return method(int(samples))
+
 
 # Normal distribution
 seed_randn = partial(seed_random, np.random.randn)
@@ -71,8 +75,7 @@ def autoreg_gen(params):
         if alpha is None:
             affected[i] = affected[i - 1] + cause[i - (delay + 1)]
         else:
-            affected[i] = alpha * affected[i - 1] + \
-                (1 - alpha) * cause[i - delay]
+            affected[i] = alpha * affected[i - 1] + (1 - alpha) * cause[i - delay]
 
     affected = affected[delay:]
     cause = cause[delay:]
@@ -162,15 +165,14 @@ def autoreg_datagen(delay, timelag, samples, sub_samples, k=1, l=1):
 
     data = autoreg_gen(params).T
 
-    [x_pred, x_hist, y_hist] = \
-        ranking.data_processing.vectorselection(data, timelag,
-                                                sub_samples, k, l)
+    [x_pred, x_hist, y_hist] = ranking.data_processing.vectorselection(
+        data, timelag, sub_samples, k, l
+    )
 
     return x_pred, x_hist, y_hist
 
 
-def sinusoid_shift_gen(params, period=100, noiseamp=0.1, N=5,
-                       addnoise=False):
+def sinusoid_shift_gen(params, period=100, noiseamp=0.1, N=5, addnoise=False):
     """Generates sinusoid signals together with optionally uniform noise.
     The signals are shifted by a quarter period.
 
@@ -198,12 +200,12 @@ def sinusoid_shift_gen(params, period=100, noiseamp=0.1, N=5,
 
     samples = params[0]
 
-    frequency = 1./period
+    frequency = 1. / period
 
-    tspan = range(samples + 2*period)
+    tspan = range(samples + 2 * period)
 
     # Generate source sine curve
-    sine = [np.sin(frequency * t*2*np.pi) for t in tspan]
+    sine = [np.sin(frequency * t * 2 * np.pi) for t in tspan]
 
     if addnoise:
         sine_noise = (seed_rand(117, len(tspan))) - 0.5 * noiseamp
@@ -213,8 +215,8 @@ def sinusoid_shift_gen(params, period=100, noiseamp=0.1, N=5,
     vectors = []
 
     for i in range(N):
-        sampleshift = (period/4)*i
-        vectors.append(sine[sampleshift:samples + sampleshift])
+        sampleshift = (period / 4) * i
+        vectors.append(sine[sampleshift : samples + sampleshift])
 
     data = vstack(vectors)
 
@@ -251,8 +253,8 @@ def sinusoid_gen(params, period=100, noiseamp=1.0):
     delay = params[1]
 
     tspan = range(samples + delay)
-    frequency = 1./period
-    cause = [np.sin(frequency * t*2*np.pi) for t in tspan]
+    frequency = 1. / period
+    cause = [np.sin(frequency * t * 2 * np.pi) for t in tspan]
 
     affected = np.zeros_like(cause)
 
@@ -288,7 +290,7 @@ def firstorder_gen(params, period=0.01, noiseamp=1.0):
 
     timepoints = np.array(range(samples + delay))
 
-    sine_input = np.array([np.sin(period * t*2*np.pi) for t in timepoints])
+    sine_input = np.array([np.sin(period * t * 2 * np.pi) for t in timepoints])
 
     P1_response = control.matlab.lsim(P1, sine_input, timepoints)
 
