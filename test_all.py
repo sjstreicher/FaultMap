@@ -10,12 +10,11 @@ from run_full import run_all
 
 
 class TestFullDemo(unittest.TestCase):
-
     def test_full_analysis(self):
-        run_all('tests')
+        run_all("tests")
 
 
-#class TestWeightCalculation(unittest.TestCase):
+# class TestWeightCalculation(unittest.TestCase):
 #
 #    def setUp(self):
 #        self.mode = 'tests'
@@ -28,7 +27,7 @@ class TestFullDemo(unittest.TestCase):
 #        weightcalc(self.mode, self.case, False, False, False, True)
 #
 #
-#class TestCreateArrays(unittest.TestCase):
+# class TestCreateArrays(unittest.TestCase):
 #
 #    def setUp(self):
 #        self.mode = 'tests'
@@ -39,7 +38,7 @@ class TestFullDemo(unittest.TestCase):
 #        result_reconstruction(self.mode, self.case, True)
 #
 #
-#class TestTrendExtraction(unittest.TestCase):
+# class TestTrendExtraction(unittest.TestCase):
 #
 #    def setUp(self):
 #        self.mode = 'tests'
@@ -51,7 +50,7 @@ class TestFullDemo(unittest.TestCase):
 #        trend_extraction(self.mode, self.case, True)
 #
 #
-#class TestNodeRanking(unittest.TestCase):
+# class TestNodeRanking(unittest.TestCase):
 #
 #    def setUp(self):
 #        self.mode = 'tests'
@@ -64,7 +63,7 @@ class TestFullDemo(unittest.TestCase):
 #        noderankcalc(self.mode, self.case, True)
 #
 #
-#class TestGrapReduce(unittest.TestCase):
+# class TestGrapReduce(unittest.TestCase):
 #
 #    def setUp(self):
 #        self.mode = 'tests'
@@ -78,6 +77,6 @@ class TestFullDemo(unittest.TestCase):
 #        reducegraph(self.mode, self.case, True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     multiprocessing.freeze_support()
     unittest.main()
