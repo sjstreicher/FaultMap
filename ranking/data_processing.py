@@ -100,13 +100,11 @@ class ResultReconstructionData:
             mode, case
         )
         # Load case config file
-        self.caseconfig = json.load(
-            open(
-                os.path.join(
-                    self.caseconfigloc, case + "_resultreconstruction" + ".json"
-                )
-            )
-        )
+        with open(
+            os.path.join(self.caseconfigloc, case + "_resultreconstruction" + ".json")
+        ) as f:
+            self.caseconfig = json.load(f)
+        f.close()
 
         # Get data type
         self.datatype = self.caseconfig["datatype"]
@@ -845,9 +843,9 @@ def result_reconstruction(mode, case, writeoutput):
 
     saveloc, caseconfigdir, _, _ = config_setup.runsetup(mode, case)
 
-    caseconfig = json.load(
-        open(os.path.join(caseconfigdir, case + "_weightcalc" + ".json"))
-    )
+    with open(os.path.join(caseconfigdir, case + "_weightcalc" + ".json")) as f:
+        caseconfig = json.load(f)
+    f.close()
 
     # Directory where subdirectories for scenarios will be stored
     scenariosdir = os.path.join(saveloc, "weightdata", case)

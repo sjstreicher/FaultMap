@@ -73,9 +73,11 @@ class WeightcalcData(object):
             mode, case
         )
         # Load case config file
-        self.caseconfig = json.load(
-            open(os.path.join(self.caseconfigdir, case + "_weightcalc" + ".json"))
-        )
+        with open(
+            os.path.join(self.caseconfigdir, case + "_weightcalc" + ".json")
+        ) as configfile:
+            self.caseconfig = json.load(configfile)
+        configfile.close()
         # Get data type
         self.datatype = self.caseconfig["datatype"]
         # Get scenarios
