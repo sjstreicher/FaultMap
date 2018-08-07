@@ -87,8 +87,11 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
             y_hist_norm = preprocessing.scale(y_hist, axis=1)
 
             # Calculate transfer entropy according to infodynamics method:
-
-            result_infodyn, [significance, properties] = te_info(
+            result_infodyn, [
+                [te_significance, mi_significance],
+                properties,
+                mutualinfo,
+            ] = te_info(
                 "infodynamics.jar",
                 "kraskov",
                 x_hist_norm[0],
@@ -100,7 +103,9 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
             print("Infodynamics TE result: %.4f bits" % result_infodyn)
 
             print(properties)
-            print(significance)
+            print(te_significance)
+            print(mi_significance)
+            print(mutualinfo)
 
         print(self.entropies_infodyn_kraskov)
 
@@ -126,7 +131,11 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
 
             # Calculate transfer entropy according to infodynamics method:
 
-            result_infodyn, [significance, properties] = te_info(
+            result_infodyn, [
+                [te_significance, mi_significance],
+                properties,
+                mutualinfo,
+            ] = te_info(
                 "infodynamics.jar",
                 "kraskov",
                 x_hist_norm[0],
@@ -138,7 +147,9 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
             print("Infodynamics TE result: %.4f bits" % result_infodyn)
 
             print(properties)
-            print(significance)
+            print(te_significance)
+            print(mi_significance)
+            print(mutualinfo)
 
         print(self.entropies_infodyn_kraskov)
 
