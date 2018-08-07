@@ -10,25 +10,27 @@ import seaborn as sns
 from transentropy import calc_infodynamics_te
 
 infodynamics_loc = "infodynamics.jar"
-estimator = 'kraskov'
+estimator = "kraskov"
 
-add_parameters = {'test_significance': False,
-                  'significance_permutations': 30,
-                  'auto_embed': False}
-#test_significance = False
-#significance_permutations = 30
-#auto_embed = False
+add_parameters = {
+    "test_significance": False,
+    "significance_permutations": 30,
+    "auto_embed": False,
+}
+# test_significance = False
+# significance_permutations = 30
+# auto_embed = False
 
 
 def tecalc_wrapper(causevardata, affectedvardata):
 
-    te_fwd = calc_infodynamics_te(infodynamics_loc, estimator,
-                                  causevardata.T, affectedvardata.T,
-                                  **add_parameters)
+    te_fwd = calc_infodynamics_te(
+        infodynamics_loc, estimator, causevardata.T, affectedvardata.T, **add_parameters
+    )
 
-    te_bwd = calc_infodynamics_te(infodynamics_loc, estimator,
-                                  affectedvardata.T, causevardata.T,
-                                  **add_parameters)
+    te_bwd = calc_infodynamics_te(
+        infodynamics_loc, estimator, affectedvardata.T, causevardata.T, **add_parameters
+    )
 
     return [te_fwd, te_bwd]
 
@@ -72,13 +74,11 @@ for boxindex, box in enumerate(boxes):
     tevals = []
     for delay in delays:
 
-        causevardata = \
-            (box[:, causevarindex]
-                [startindex:startindex+testsize])
+        causevardata = box[:, causevarindex][startindex : startindex + testsize]
 
-        affectedvardata = \
-            (box[:, affectedvarindex]
-                [startindex+delay:startindex+testsize+delay])
+        affectedvardata = box[:, affectedvarindex][
+            startindex + delay : startindex + testsize + delay
+        ]
 
         corrval = np.corrcoef(causevardata.T, affectedvardata.T)[1, 0]
 
@@ -116,14 +116,14 @@ for te_boxresult in te_boxresults[0:1]:
 fig, ax1 = plt.subplots()
 for corr_boxresult in corr_boxresults[0:1]:
     ax1.plot(delays, corr_boxresult)
-ax1.set_xlabel('Delay')
-ax1.set_ylabel('CC')
+ax1.set_xlabel("Delay")
+ax1.set_ylabel("CC")
 
 ax2 = ax1.twinx()
 
 for te_boxresult_index in range(len(te_diff_boxresults[0:1])):
-    ax2.plot(delays, te_diff_boxresults[te_boxresult_index], 'g')
-    ax2.plot(delays, te_fwd_boxresults[te_boxresult_index], 'b')
-    ax2.plot(delays, te_bwd_boxresults[te_boxresult_index], 'r')
-ax2.set_ylabel('TE diff')
+    ax2.plot(delays, te_diff_boxresults[te_boxresult_index], "g")
+    ax2.plot(delays, te_fwd_boxresults[te_boxresult_index], "b")
+    ax2.plot(delays, te_bwd_boxresults[te_boxresult_index], "r")
+ax2.set_ylabel("TE diff")
 plt.show()

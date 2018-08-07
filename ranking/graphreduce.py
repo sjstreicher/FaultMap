@@ -33,16 +33,18 @@ class GraphReduceData(object):
     def __init__(self, mode, case):
 
         # Get locations from configuration file
-        self.saveloc, self.caseconfigloc, self.casedir, _ = \
-            config_setup.runsetup(mode, case)
+        self.saveloc, self.caseconfigloc, self.casedir, _ = config_setup.runsetup(
+            mode, case
+        )
         # Load case config file
-        self.caseconfig = json.load(open(os.path.join(
-            self.caseconfigloc, case + '_graphreduce' + '.json')))
+        self.caseconfig = json.load(
+            open(os.path.join(self.caseconfigloc, case + "_graphreduce" + ".json"))
+        )
 
         # Get scenarios
-        self.scenarios = self.caseconfig['scenarios']
+        self.scenarios = self.caseconfig["scenarios"]
         # Get data type
-        self.datatype = self.caseconfig['datatype']
+        self.datatype = self.caseconfig["datatype"]
 
     def scenariodata(self, scenario):
         """Retrieves data particular to each scenario for the case being
@@ -50,19 +52,19 @@ class GraphReduceData(object):
 
         """
 
-        self.graph = self.caseconfig[scenario]['graph']
-        self.percentile = self.caseconfig[scenario]['percentile']
-        self.depth = self.caseconfig[scenario]['depth']
-        self.weight_discretion = self.caseconfig[scenario]['weight_discretion']
+        self.graph = self.caseconfig[scenario]["graph"]
+        self.percentile = self.caseconfig[scenario]["percentile"]
+        self.depth = self.caseconfig[scenario]["depth"]
+        self.weight_discretion = self.caseconfig[scenario]["weight_discretion"]
 
         # Provides option of not removing self loops
-        if 'remove_self_loops' in self.caseconfig[scenario]:
-            self.remove_self_loops = self.caseconfig[scenario]['remove_self_loops']
+        if "remove_self_loops" in self.caseconfig[scenario]:
+            self.remove_self_loops = self.caseconfig[scenario]["remove_self_loops"]
         else:
             self.remove_self_loops = True
 
     def get_boxes(self, scenario, datadir, typename):
-        boxindexes = self.caseconfig[scenario]['boxindexes']
+        boxindexes = self.caseconfig[scenario]["boxindexes"]
         if boxindexes == "all":
             boxesdir = os.path.join(datadir, typename)
             boxes = next(os.walk(boxesdir))[1]
@@ -71,12 +73,11 @@ class GraphReduceData(object):
             self.boxes = boxindexes
 
 
-def dographreduce(graphreducedata, scenario, datadir,
-                  typename, writeoutput):
+def dographreduce(graphreducedata, scenario, datadir, typename, writeoutput):
 
-    graph_filename = '{}.gml'
-    simplified_graph_filename = '{}_simplified.gml'
-    lowedge_graph_filename = '{}_lowedge.gml'
+    graph_filename = "{}.gml"
+    simplified_graph_filename = "{}_simplified.gml"
+    lowedge_graph_filename = "{}_lowedge.gml"
 
     boxesdir = os.path.join(datadir, typename)
     boxes = next(os.walk(boxesdir))[1]
@@ -87,23 +88,27 @@ def dographreduce(graphreducedata, scenario, datadir,
         for dummytype in dummytypes:
             # Open the original graph
             original_graph = nx.readwrite.read_gml(
-                os.path.join(dummiesdir, dummytype, graph_filename.format(
-                    graphreducedata.graph)))
+                os.path.join(
+                    dummiesdir, dummytype, graph_filename.format(graphreducedata.graph)
+                )
+            )
             # Get appropriate weight threshold for deleting edges from graph
             # TODO: Implement elegant way of dealing with empty graphs
             try:
-                threshold = compute_edge_threshold(original_graph,
-                                                   graphreducedata.percentile)
+                threshold = compute_edge_threshold(
+                    original_graph, graphreducedata.percentile
+                )
             except:
                 print("Empty graph")
                 break
             # Delete low value edges from graph
-            lowedge_graph = delete_lowval_edges(original_graph, threshold, graphreducedata.remove_self_loops)
+            lowedge_graph = delete_lowval_edges(
+                original_graph, threshold, graphreducedata.remove_self_loops
+            )
             # Get simplified graph
-            simplified_graph = \
-                delete_loworder_edges(lowedge_graph,
-                                      graphreducedata.depth,
-                                      graphreducedata.weight_discretion)
+            simplified_graph = delete_loworder_edges(
+                lowedge_graph, graphreducedata.depth, graphreducedata.weight_discretion
+            )
 
             # Write simplified graph to file
             if writeoutput:
@@ -111,16 +116,20 @@ def dographreduce(graphreducedata, scenario, datadir,
                 nx.readwrite.write_gml(
                     simplified_graph,
                     os.path.join(
-                        dummiesdir, dummytype,
-                        simplified_graph_filename.format(
-                             graphreducedata.graph)))
+                        dummiesdir,
+                        dummytype,
+                        simplified_graph_filename.format(graphreducedata.graph),
+                    ),
+                )
                 # Write lowedge graph
                 nx.readwrite.write_gml(
                     lowedge_graph,
                     os.path.join(
-                        dummiesdir, dummytype,
-                        lowedge_graph_filename.format(
-                             graphreducedata.graph)))
+                        dummiesdir,
+                        dummytype,
+                        lowedge_graph_filename.format(graphreducedata.graph),
+                    ),
+                )
     return None
 
 
@@ -130,13 +139,13 @@ def reducegraph(mode, case, writeoutput):
     saveloc, caseconfigdir, casedir, _ = config_setup.runsetup(mode, case)
 
     # Create output directory
-#    savedir = \
-#        config_setup.ensure_existence(
-#            os.path.join(graphreducedata.saveloc,
-#                         'graphs'), make=True)
+    #    savedir = \
+    #        config_setup.ensure_existence(
+    #            os.path.join(graphreducedata.saveloc,
+    #                         'graphs'), make=True)
 
     # Directory where subdirectories for scenarios will be found
-    scenariosdir = os.path.join(saveloc, 'noderank', case)
+    scenariosdir = os.path.join(saveloc, "noderank", case)
 
     # Get list of all scenarios
     scenarios = next(os.walk(scenariosdir))[1]
@@ -167,27 +176,24 @@ def reducegraph(mode, case, writeoutput):
                     print(embedtype)
                     datadir = os.path.join(embedtypesdir, embedtype)
 
-                    if method[:16] == 'transfer_entropy':
-                            typenames = [
-                                'weight_absolute',
-                                'weight_directional']
-                                #'signtested_weight_directional']
-                            if sigtype == 'sigtest':
-                                typenames.append('sig_dweight_absolute')
-                                typenames.append(
-                                    'sigweight_directional')
-                                typenames.append(
-                                    'signtested_sigweight_directional')
+                    if method[:16] == "transfer_entropy":
+                        typenames = ["weight_absolute", "weight_directional"]
+                        # 'signtested_weight_directional']
+                        if sigtype == "sigtest":
+                            typenames.append("sig_dweight_absolute")
+                            typenames.append("sigweight_directional")
+                            typenames.append("signtested_sigweight_directional")
                     else:
-                        typenames = ['weight']
-                        if sigtype == 'sigtest':
-                            typenames.append('sigweight')
+                        typenames = ["weight"]
+                        if sigtype == "sigtest":
+                            typenames.append("sigweight")
 
                     for typename in typenames:
                         print(typename)
                         # Start the methods here
-                        dographreduce(graphreducedata, scenario, datadir,
-                                      typename, writeoutput)
+                        dographreduce(
+                            graphreducedata, scenario, datadir, typename, writeoutput
+                        )
 
     return None
 
@@ -198,15 +204,14 @@ def compute_edge_threshold(graph, percentile):
 
     """
     # Get list of all edge weights
-    weight_dict = nx.get_edge_attributes(graph, 'weight')
+    weight_dict = nx.get_edge_attributes(graph, "weight")
     edge_weightlist = []
     for edge in graph.edges():
         edge_weightlist.append(weight_dict[edge])
 
     threshold = np.percentile(np.asarray(edge_weightlist), percentile)
 
-    logging.info("The " + str(percentile) + "th percentile is: " +
-                 str(threshold))
+    logging.info("The " + str(percentile) + "th percentile is: " + str(threshold))
     return threshold
 
 
@@ -226,22 +231,33 @@ def delete_lowval_edges(graph, weight_threshold, remove_self_loops=True):
 
     edge_dellist = []
     edge_totlist = []
-    weight_dict = nx.get_edge_attributes(lowedge_graph, 'weight')
+    weight_dict = nx.get_edge_attributes(lowedge_graph, "weight")
     for edge in lowedge_graph.edges():
         edge_totlist.append(edge)
         if weight_dict[edge] < weight_threshold:
             edge_dellist.append(edge)
     lowedge_graph.remove_edges_from(edge_dellist)
 
-    logging.info("Deleted " + str(len(edge_dellist)) + "/" +
-                 str(graph.number_of_edges()) + " low valued edges")
+    logging.info(
+        "Deleted "
+        + str(len(edge_dellist))
+        + "/"
+        + str(graph.number_of_edges())
+        + " low valued edges"
+    )
 
     return lowedge_graph
 
 
-def remove_duplicates(intersection_list, node, upper_child,
-                      simplified_graph, weight_dict, removed_edges,
-                      weight_discretion):
+def remove_duplicates(
+    intersection_list,
+    node,
+    upper_child,
+    simplified_graph,
+    weight_dict,
+    removed_edges,
+    weight_discretion,
+):
 
     for duplicate in intersection_list:
         if simplified_graph.has_edge(node, duplicate):
@@ -294,15 +310,21 @@ def delete_loworder_edges(graph, max_depth, weight_discretion):
     """
 
     simplified_graph = graph.copy()
-    weight_dict = nx.get_edge_attributes(simplified_graph, 'weight')
+    weight_dict = nx.get_edge_attributes(simplified_graph, "weight")
 
     removed_edges = []
 
     for index, node in enumerate(simplified_graph.nodes()):
         children_lists = []
-        logging.info("Currently processing node: " + str(node) + " (" +
-                     str(index + 1) + "/" +
-                     str(len(simplified_graph.nodes())) + ")")
+        logging.info(
+            "Currently processing node: "
+            + str(node)
+            + " ("
+            + str(index + 1)
+            + "/"
+            + str(len(simplified_graph.nodes()))
+            + ")"
+        )
         # First create a list of lists of all childs at different degrees,
         # up to the level where no childs are returned
         morechilds = True
@@ -314,22 +336,26 @@ def delete_loworder_edges(graph, max_depth, weight_discretion):
                 depth += 1
                 # Flatten list of children
                 children_lists_decomp = []
-                decompose(children_lists[depth-1], children_lists_decomp)
+                decompose(children_lists[depth - 1], children_lists_decomp)
                 for upper_child in children_lists_decomp:
                     # Get list of childs for each child in previous layer
-                    upper_child_children = \
-                        list(simplified_graph.successors(upper_child))
+                    upper_child_children = list(
+                        simplified_graph.successors(upper_child)
+                    )
                     if len(upper_child_children) != 0:
                         children_lists.append(upper_child_children)
-                        intersection_list = [val for val in child_list
-                                             if val in upper_child_children]
-                        simplified_graph, removed_edges = \
-                            remove_duplicates(intersection_list, node,
-                                              upper_child,
-                                              simplified_graph,
-                                              weight_dict,
-                                              removed_edges,
-                                              weight_discretion)
+                        intersection_list = [
+                            val for val in child_list if val in upper_child_children
+                        ]
+                        simplified_graph, removed_edges = remove_duplicates(
+                            intersection_list,
+                            node,
+                            upper_child,
+                            simplified_graph,
+                            weight_dict,
+                            removed_edges,
+                            weight_discretion,
+                        )
 
                     # If no upper children were found, set morechilds to False
                     if len(upper_child_children) == 0:
@@ -340,8 +366,7 @@ def delete_loworder_edges(graph, max_depth, weight_discretion):
                         if depth > (max_depth - 1):
                             morechilds = False
 
-    logging.info("Removed " + str(len(removed_edges)) +
-                 " higher connection edges")
+    logging.info("Removed " + str(len(removed_edges)) + " higher connection edges")
 
     # Remove nodes without edges
     # Get full dictionary of in- and out-degree
@@ -353,12 +378,14 @@ def delete_loworder_edges(graph, max_depth, weight_discretion):
         if (out_deg_dict[node] == 0) and (in_deg_dict[node] == 0):
             node_dellist.append(node)
     simplified_graph.remove_nodes_from(node_dellist)
-    logging.info("Removed " + str(len(node_dellist)) +
-                 " nodes that were left hanging")
+    logging.info("Removed " + str(len(node_dellist)) + " nodes that were left hanging")
 
-    logging.info("Simplified graph has " +
-                 str(simplified_graph.number_of_nodes()) +
-                 " nodes and " + str(simplified_graph.number_of_edges()) +
-                 " edges")
+    logging.info(
+        "Simplified graph has "
+        + str(simplified_graph.number_of_nodes())
+        + " nodes and "
+        + str(simplified_graph.number_of_edges())
+        + " edges"
+    )
 
     return simplified_graph

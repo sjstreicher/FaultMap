@@ -9,26 +9,30 @@ biasvector = np.ones(len(variables))
 dummyweight = 10
 dummies = False
 
-rank_method = 'eigenvector'
+rank_method = "eigenvector"
 
 
 class NodeRankdata(object):
     def __init__(self, m, alpha):
-        self.m=m
-        self.alpha=alpha
-noderankdata = NodeRankdata(0.999,  0.1)
+        self.m = m
+        self.alpha = alpha
 
-backwardconnection, backwardgain, backwardvariablelist, backwardbias = \
-    data_processing.rankbackward(variables, gainmatrix,
-                                 connections,
-                                 biasvector,
-                                 dummyweight, dummies)
+
+noderankdata = NodeRankdata(0.999, 0.1)
+
+backwardconnection, backwardgain, backwardvariablelist, backwardbias = data_processing.rankbackward(
+    variables, gainmatrix, connections, biasvector, dummyweight, dummies
+)
 
 connections = [backwardconnection]
 variables = [backwardvariablelist]
 gains = [np.array(backwardgain)]
 
-backwardrankingdict, backwardrankinglist = \
-    noderank.calc_simple_rank(backwardgain, backwardvariablelist, backwardbias,
-                              noderankdata, rank_method, package='simple')
-
+backwardrankingdict, backwardrankinglist = noderank.calc_simple_rank(
+    backwardgain,
+    backwardvariablelist,
+    backwardbias,
+    noderankdata,
+    rank_method,
+    package="simple",
+)

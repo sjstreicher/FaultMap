@@ -16,7 +16,7 @@ def ensure_existence(location, make=True):
     return location
 
 
-def get_locations(mode='cases'):
+def get_locations(mode="cases"):
     """Gets all required directories related to the specified mode.
 
     Parameters
@@ -37,18 +37,19 @@ def get_locations(mode='cases'):
 
     """
     # Load directories config file
-    if mode == 'tests':
-        dirs = json.load(open('testconfig.json'))
-    elif mode == 'cases':
-        dirs = json.load(open('caseconfig.json'))
+    if mode == "tests":
+        dirs = json.load(open("testconfig.json"))
+    elif mode == "cases":
+        dirs = json.load(open("caseconfig.json"))
     else:
         raise NameError("Mode name not recognized")
 
     # Get data and preferred export directories from
     # directories config file
-    locations = [ensure_existence(os.path.expanduser(dirs[location]))
-                 for location in ['dataloc', 'configloc', 'saveloc',
-                                  'infodynamicsloc']]
+    locations = [
+        ensure_existence(os.path.expanduser(dirs[location]))
+        for location in ["dataloc", "configloc", "saveloc", "infodynamicsloc"]
+    ]
     dataloc, configloc, saveloc, infodynamicsloc = locations
 
     return dataloc, configloc, saveloc, infodynamicsloc
@@ -81,8 +82,7 @@ def runsetup(mode, case):
     dataloc, configloc, saveloc, infodynamicsloc = get_locations(mode)
 
     # Define case data directory
-    casedir = ensure_existence(os.path.join(dataloc, mode, case),
-                               make=True)
+    casedir = ensure_existence(os.path.join(dataloc, mode, case), make=True)
     caseconfigdir = os.path.join(configloc, mode, case)
 
     return saveloc, caseconfigdir, casedir, infodynamicsloc
