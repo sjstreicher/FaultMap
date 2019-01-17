@@ -206,31 +206,31 @@ def process_auxfile(filename, bias_correct=True, mi_scale=False, allow_neg=False
                     nosigtest_weight = weight_candidate
                     sigtest_weight = weight_candidate
                 else:
-                    if weight_candidate > 0.:
+                    if weight_candidate > 0.0:
                         # Attach to no significance test result
                         nosigtest_weight = weight_candidate
                         if (
                             row[threshpass_index] == "False"
                             or row[directionpass_index] == "False"
                         ):
-                            sigtest_weight = 0.
+                            sigtest_weight = 0.0
                         else:
                             # threshpass is either None or True
                             sigtest_weight = weight_candidate
                     else:
-                        sigtest_weight = 0.
-                        nosigtest_weight = 0.
+                        sigtest_weight = 0.0
+                        nosigtest_weight = 0.0
 
                 # If both bias correction and mutual information scaling is to be performed,
                 # bias correction should happen first
 
                 # Perform bias correction if required
-                if bias_correct and biasmean_index and (sigtest_weight > 0.):
+                if bias_correct and biasmean_index and (sigtest_weight > 0.0):
                     sigtest_weight = sigtest_weight - float(row[biasmean_index])
                     if sigtest_weight < 0:
                         raise ValueError("Negative weight after subtracting biasmean")
 
-                if mi_scale and (sigtest_weight > 0.):
+                if (mi_scale and mi_index) and (sigtest_weight > 0.0):
                     sigtest_weight = sigtest_weight / float(row[mi_index])
 
                 weights.append(sigtest_weight)
@@ -240,7 +240,7 @@ def process_auxfile(filename, bias_correct=True, mi_scale=False, allow_neg=False
                 try:
                     threshold = float(row[thresh_index])
                 except:
-                    threshold = 0.
+                    threshold = 0.0
                 sigthresholds.append(threshold)
 
                 # Test if sigtest passed before assigning weight
@@ -252,15 +252,15 @@ def process_auxfile(filename, bias_correct=True, mi_scale=False, allow_neg=False
                     # TODO: Need to think the implications of this through
                     if threshold != 0:
                         sigweight = float(row[maxval_index]) / abs(threshold)
-                        if sigweight > 0.:
+                        if sigweight > 0.0:
                             sigweights.append(sigweight)
                         else:
-                            sigweights.append(0.)
+                            sigweights.append(0.0)
                     else:
-                        sigweights.append(0.)
+                        sigweights.append(0.0)
 
                 else:
-                    sigweights.append(0.)
+                    sigweights.append(0.0)
 
     return affectedvars, weights, nosigtest_weights, sigweights, delays, sigthresholds
 
@@ -1020,7 +1020,7 @@ def fft_calculation(
         vardata = normalised_tsdata[:, varindex]
 
         # Compute FFT (normalised amplitude)
-        var_fft = abs(np.fft.rfft(vardata)) * (2. / len(vardata))
+        var_fft = abs(np.fft.rfft(vardata)) * (2.0 / len(vardata))
 
         fft_data[:, varindex] = var_fft
 
@@ -1180,19 +1180,19 @@ def detrend_first_differences(data):
     df = pd.DataFrame(data)
     detrended_df = df - df.shift(1)
     # Make first entry zero
-    detrended_df.iloc[0, :] = 0.
+    detrended_df.iloc[0, :] = 0.0
 
     return detrended_df.dropna().values
 
 
-def detrend_link_relatives(data, cap_values=True, cap=20.):
+def detrend_link_relatives(data, cap_values=True, cap=20.0):
     # Multiply by 100 to get idea of percentage change in
     # Easier to make sense of when choosing estimator bandwidth, etc.
     # Subtract by unit to center around 0
     # TODO: Investigate effect of centering around 1 on single entropy estimates
     df = pd.DataFrame(data)
-    detrended_df = ((df / df.shift(1)) - 1.) * 100.
-    detrended_df.iloc[0, :] = 0.
+    detrended_df = ((df / df.shift(1)) - 1.0) * 100.0
+    detrended_df.iloc[0, :] = 0.0
 
     # Cap at a specified difference
     if cap_values:
@@ -1434,7 +1434,7 @@ def buildcase(dummyweight, digraph, name, dummycreation):
                 # TODO: Investigate the effect of different weights
                 nameofscale = name + str(counter)
                 digraph.add_edge(nameofscale, node, weight=dummyweight)
-                digraph.add_node(nameofscale, bias=1.)
+                digraph.add_node(nameofscale, bias=1.0)
                 counter += 1
 
     connection = nx.to_numpy_matrix(digraph, weight=None)
