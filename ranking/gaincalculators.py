@@ -483,6 +483,8 @@ class TransentWeightcalc(object):
             self.surr_method = weightcalcdata.surr_method
 
         if self.estimator == "kraskov":
+            parameters_dict = weightcalcdata.additional_parameters
+            parameters_dict["use_gpu"] = weightcalcdata.use_gpu
             self.parameters = weightcalcdata.additional_parameters
 
         # Test if parameters dictionary exists

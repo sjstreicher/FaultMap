@@ -113,6 +113,12 @@ def setup_infodynamics_te(infodynamicsloc, calcmethod, **parameters):
             delay = parameters["delay"]
             teCalc.setProperty("DELAY", str(delay))
 
+        if "use_gpu" in parameters:
+            if parameters["use_gpu"]:
+                teCalc.setProperty("USE_GPU", "true")
+            else:
+                teCalc.setProperty("USE_GPU", "false")
+
         teCalc.initialise()
 
     elif calcmethod == "discrete":

@@ -4,6 +4,7 @@
   "calc_single_entropies": true,
   "fft_calc": true,
   "multiprocessing": false,
+  "use_gpu": true,
   "cases": [
     "quickdemo"
   ]
