@@ -1,1 +1,0 @@
-run conda config --add channels petrush
