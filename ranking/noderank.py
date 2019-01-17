@@ -206,7 +206,7 @@ def calc_simple_rank(
 
     m = noderankdata.m
 
-    weightmatrix = (m * gainmatrix) + ((1. - m) * resetmatrix)
+    weightmatrix = (m * gainmatrix) + ((1.0 - m) * resetmatrix)
 
     # Transpose the weightmatrix to ensure the correct direction of analysis
     weightmatrix = weightmatrix.T
@@ -247,7 +247,7 @@ def calc_simple_rank(
                 # Create sparsely connected graph based on
                 # significant edge weights
                 # only for use with Katz centrality analysis
-                if gainmatrix[row, col] != 0.:
+                if gainmatrix[row, col] != 0.0:
                     # The node order is source, sink according to the
                     # convention that columns are sources and rows are sinks
                     sparse_gaingraph.add_edge(
@@ -462,7 +462,7 @@ def gainmatrix_preprocessing(gainmatrix):
         counter += 1
 
     currentmean = gainsum / counter
-    meanscale = 1. / currentmean
+    meanscale = 1.0 / currentmean
 
     # Write meandiff to all gainmatrix elements indicated by connectionmatrix
     modgainmatrix = np.zeros_like(gainmatrix)
@@ -483,7 +483,7 @@ def gainmatrix_tobinary(gainmatrix):
     modgainmatrix = np.zeros_like(gainmatrix)
 
     for col, row in zip(gainmatrix.nonzero()[0], gainmatrix.nonzero()[1]):
-        modgainmatrix[col, row] = 1.
+        modgainmatrix[col, row] = 1.0
 
     return modgainmatrix
 

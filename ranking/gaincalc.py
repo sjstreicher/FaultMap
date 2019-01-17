@@ -45,7 +45,9 @@ class WeightcalcData(object):
 
     """
 
-    def __init__(self, mode, case, single_entropies, fftcalc, do_multiprocessing, use_gpu):
+    def __init__(
+        self, mode, case, single_entropies, fftcalc, do_multiprocessing, use_gpu
+    ):
         """
         Parameters
         ----------
@@ -678,7 +680,7 @@ def weightcalc(
     single_entropies=False,
     fftcalc=False,
     do_multiprocessing=False,
-    use_gpu=False
+    use_gpu=False,
 ):
     """Reports the maximum weight as well as associated delay
     obtained by shifting the affected variable behind the causal variable a
@@ -712,8 +714,7 @@ def weightcalc(
     """
 
     weightcalcdata = WeightcalcData(
-        mode, case, single_entropies, fftcalc, do_multiprocessing,
-        use_gpu
+        mode, case, single_entropies, fftcalc, do_multiprocessing, use_gpu
     )
 
     for scenario in weightcalcdata.scenarios:

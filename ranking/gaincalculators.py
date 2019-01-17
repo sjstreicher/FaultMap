@@ -245,7 +245,7 @@ class CorrWeightcalc(object):
         if maxval < 0 or minval > 0:
             raise ValueError("Values do not adhere to sign expectations")
         # Value used to break tie between maxval and minval if 1 and -1
-        tol = 0.
+        tol = 0.0
         # Always select maxval if both are equal
         # This is to ensure that 1 is selected above -1
         if (maxval + (minval + tol)) >= 0:
@@ -337,7 +337,7 @@ class CorrWeightcalc(object):
             logging.info("The direction index threshold is: " + str(threshdir[0]))
 
             corrthreshpass = abs(maxcorr) >= threshcorr[0]
-            dirthreshpass = (directionindex >= threshdir[0]) and (bestdelay >= 0.)
+            dirthreshpass = (directionindex >= threshdir[0]) and (bestdelay >= 0.0)
             logging.info("Correlation threshold passed: " + str(corrthreshpass))
             logging.info("Directionality threshold passed: " + str(dirthreshpass))
 

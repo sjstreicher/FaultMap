@@ -200,8 +200,8 @@ def calc_infodynamics_te(
 
     # Convert nats to bits if necessary
     if calcmethod == "kraskov":
-        transentropy = transentropy / np.log(2.)
-        mutualinfo = mutualinfo / np.log(2.)
+        transentropy = transentropy / np.log(2.0)
+        mutualinfo = mutualinfo / np.log(2.0)
     elif (calcmethod == "kernel") or (calcmethod == "discrete"):
         transentropy = transentropy
         mutualinfo = mutualinfo
@@ -438,12 +438,12 @@ def calc_infodynamics_entropy(entropyCalc, data, estimator):
     entropy = entropyCalc.computeAverageLocalOfObservations()
     if estimator == "gaussian":
         # Convert nats to bits
-        entropy = entropy / np.log(2.)
+        entropy = entropy / np.log(2.0)
     elif estimator == "kernel":
         # Do nothing
         entropy = entropy
     elif estimator == "kozachenko":
-        entropy = entropy / np.log(2.)
+        entropy = entropy / np.log(2.0)
     else:
         raise NameError("Estimator not recognized")
 

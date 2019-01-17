@@ -200,7 +200,7 @@ def sinusoid_shift_gen(params, period=100, noiseamp=0.1, N=5, addnoise=False):
 
     samples = params[0]
 
-    frequency = 1. / period
+    frequency = 1.0 / period
 
     tspan = range(samples + 2 * period)
 
@@ -253,7 +253,7 @@ def sinusoid_gen(params, period=100, noiseamp=1.0):
     delay = params[1]
 
     tspan = range(samples + delay)
-    frequency = 1. / period
+    frequency = 1.0 / period
     cause = [np.sin(frequency * t * 2 * np.pi) for t in tspan]
 
     affected = np.zeros_like(cause)
