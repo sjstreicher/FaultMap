@@ -839,7 +839,7 @@ def result_reconstruction(mode, case, writeoutput):
 
     resultreconstructiondata = ResultReconstructionData(mode, case)
 
-    weightcalcdata = gaincalc.WeightcalcData(mode, case, False, False, False)
+    weightcalcdata = gaincalc.WeightcalcData(mode, case, False, False, False, False)
 
     saveloc, caseconfigdir, _, _ = config_setup.runsetup(mode, case)
 
