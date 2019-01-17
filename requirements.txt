@@ -1,4 +1,0 @@
-control
-jpype1
-pathos
-python-coveralls

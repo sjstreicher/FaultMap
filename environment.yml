@@ -2,177 +2,57 @@ name: faultmap
 channels:
 - defaults
 dependencies:
-- alabaster=0.7.10=py27he5a193a_0
-- asn1crypto=0.23.0=py27h7b0c810_0
-- astroid=1.5.3=py27h8f8f47c_0
-- babel=2.5.0=py27h20693cd_0
-- backports=1.0=py27h63c9359_1
-- backports.functools_lru_cache=1.4=py27he8db605_1
-- backports.shutil_get_terminal_size=1.0.0=py27h5bc021e_2
-- backports_abc=0.5=py27h7b3c97b_0
-- bleach=2.1.1=py27h655ea9b_0
-- bzip2=1.0.6=h6d464ef_2
-- ca-certificates=2017.08.26=h1d4fec5_0
-- cairo=1.14.10=hdf128ce_6
-- certifi=2017.11.5=py27h71e7faf_0
-- cffi=1.11.2=py27ha7929c6_0
-- chardet=3.0.4=py27hfa10054_1
-- configparser=3.5.0=py27h5117587_0
-- coverage=4.4.2=py27h86fff8b_0
-- cryptography=2.1.4=py27h6697b16_0
-- cycler=0.10.0=py27hc7354d3_0
-- dbus=1.10.22=h3b5a359_0
-- decorator=4.1.2=py27h1544723_0
-- docutils=0.14=py27hae222c1_0
-- entrypoints=0.2.3=py27h502b47d_2
-- enum34=1.1.6=py27h99a27e9_1
-- expat=2.2.5=he0dffb1_0
-- fontconfig=2.12.4=h88586e7_1
-- freetype=2.8=hab7d2ae_1
-- funcsigs=1.0.2=py27h83f16ab_0
-- functools32=3.2.3.2=py27h4ead58f_1
-- get_terminal_size=1.0.0=haa9412d_0
-- glib=2.53.6=h5d9569c_2
-- gmp=6.1.2=h6c8ec71_1
-- gst-plugins-base=1.12.2=he3457e5_0
-- gstreamer=1.12.2=h4f93127_0
-- h5py=2.7.1=py27h2697762_0
+- ca-certificates=2018.03.07=0
+- certifi=2018.4.16=py36_0
+- cython=0.28.2=py36h14c3975_0
+- decorator=4.3.0=py36_0
+- h5py=2.7.1=py36h3585f63_0
 - hdf5=1.10.1=h9caa474_1
-- html5lib=1.0.1=py27h5233db4_0
-- icu=58.2=h9c2bf20_1
-- idna=2.6=py27h5722d68_1
-- imagesize=0.7.1=py27hd17bf80_0
-- intel-openmp=2018.0.0=hc7b2577_8
-- ipaddress=1.0.18=py27h337fd85_0
-- ipykernel=4.7.0=py27h5233db4_0
-- ipython=5.4.1=py27h36c99b6_1
-- ipython_genutils=0.2.0=py27h89fb69b_0
-- isort=4.2.15=py27hcfa4749_0
-- jedi=0.11.0=py27_2
-- jinja2=2.10=py27h4114e70_0
-- jpeg=9b=h024ee3a_2
-- jsonschema=2.6.0=py27h7ed5aa4_0
-- jupyter_client=5.1.0=py27hbee1118_0
-- jupyter_core=4.4.0=py27h345911c_0
-- lazy-object-proxy=1.3.1=py27h682c727_0
-- libedit=3.1=heed3624_0
+- intel-openmp=2018.0.0=8
+- libedit=3.1.20170329=h6b74fdf_2
 - libffi=3.2.1=hd88cf55_4
-- libgcc=7.2.0=h69d50b8_2
-- libgcc-ng=7.2.0=h7cc24e2_2
-- libgfortran=3.0.0=1
-- libgfortran-ng=7.2.0=h9f7466a_2
-- libiconv=1.15=h63c8f33_5
-- libpng=1.6.32=hbd3595f_4
-- libsodium=1.0.15=hf101ebd_0
-- libstdcxx-ng=7.2.0=h7a57d05_2
-- libxcb=1.12=hcd93eb1_4
-- libxml2=2.9.4=h2e8b1d7_6
-- llvmlite=0.21.0=py27h6dad3f9_0
-- lzo=2.10=h49e0be7_2
-- markupsafe=1.0=py27h97b2822_1
-- matplotlib=2.1.1=py27h0128e01_0
-- mccabe=0.6.1=py27h0e7c7be_1
-- mistune=0.8.1=py27h1bd0165_0
-- mkl=2018.0.1=h19d6760_4
-- nbconvert=5.3.1=py27he041f76_0
-- nbformat=4.4.0=py27hed7f2b2_0
-- ncurses=6.0=h9df7e31_2
-- networkx=2.0=py27hfc23926_0
-- nose=1.3.7=py27heec2199_2
-- numba=0.36.1=np113py27hee5a248_0
-- numexpr=2.6.4=py27hd318778_0
-- numpy=1.13.3=py27hbcc08e0_0
-- numpydoc=0.7.0=py27h9647a75_0
-- openssl=1.0.2n=hb7f436b_0
-- pandas=0.21.1=py27h38cdd7d_0
-- pandoc=1.19.2.1=hea2e7c5_1
-- pandocfilters=1.4.2=py27h428e1e5_1
-- parso=0.1.1=py27h718acc2_0
-- path.py=10.5=py27hefe4bee_0
-- pathlib2=2.3.0=py27h6e9d198_0
-- patsy=0.4.1=py27hd1cf8c0_0
-- pcre=8.41=hc27e229_1
-- pep8=1.7.0=py27h444351c_0
-- pexpect=4.3.0=py27hdeba8d9_0
-- pickleshare=0.7.4=py27h09770e1_0
-- pip=9.0.1=py27ha730c48_4
-- pixman=0.34.0=hceecf20_3
-- plotly=2.2.2=py27hb784091_0
-- prompt_toolkit=1.0.15=py27h1b593e1_0
-- psutil=5.4.1=py27h61c8946_0
-- ptyprocess=0.5.2=py27h4ccb14c_0
-- pycairo=1.13.3=py27h44fc0e4_1
-- pycodestyle=2.3.1=py27h904819d_0
-- pycparser=2.18=py27hefa08c5_1
-- pyflakes=1.6.0=py27h904a57d_0
-- pygments=2.2.0=py27h4a8b6f5_0
-- pylint=1.7.4=py27h6bc7935_0
-- pyopenssl=17.5.0=py27hcee3be0_0
-- pyparsing=2.2.0=py27hf1513f8_1
-- pyqt=5.6.0=py27h4b1e83c_5
-- pysocks=1.6.7=py27he2db6d2_1
-- pytables=3.4.2=py27h1f7bffc_2
-- python=2.7.14=h1571d57_29
-- python-dateutil=2.6.1=py27h4ca5741_1
-- pytz=2017.3=py27h001bace_0
-- pyzmq=16.0.3=py27hc579512_0
-- qt=5.6.2=h974d657_12
-- qtawesome=0.4.4=py27hd7914c3_0
-- qtconsole=4.3.1=py27hc444b0d_0
-- qtpy=1.3.1=py27h63d3751_0
+- libgcc-ng=7.2.0=hdf63c60_3
+- libgfortran-ng=7.2.0=hdf63c60_3
+- libstdcxx-ng=7.2.0=hdf63c60_3
+- llvmlite=0.22.0=py36ha27ea49_0
+- mkl=2018.0.2=1
+- mkl_fft=1.0.1=py36h3010b51_0
+- mkl_random=1.0.1=py36h629b387_0
+- ncurses=6.1=hf484d3e_0
+- networkx=2.1=py36_0
+- nose=1.3.7=py36hcdf7029_2
+- numba=0.37.0=np114py36h5fcf951_0
+- numpy=1.14.2=py36hdbf6ddf_1
+- openssl=1.0.2o=h20670df_0
+- pandas=0.23.0=py36h637b7d7_0
+- pip=10.0.1=py36_0
+- python=3.6.5=hc3d631a_2
+- python-dateutil=2.7.3=py36_0
+- pytz=2018.4=py36_0
 - readline=7.0=ha6073c6_4
-- requests=2.18.4=py27hc5b0589_1
-- rope=0.10.7=py27hfe459b0_0
-- scandir=1.6=py27hf7388dc_0
-- scikit-learn=0.19.1=py27h445a80a_0
-- scipy=1.0.0=py27hf5f0f52_0
-- seaborn=0.8.1=py27h633ea1e_0
-- setuptools=36.5.0=py27h68b189e_0
-- simplegeneric=0.8.1=py27h19e43cd_0
-- singledispatch=3.4.0.3=py27h9bcb476_0
-- sip=4.18.1=py27he9ba0ab_2
-- six=1.11.0=py27h5f960f1_1
-- snowballstemmer=1.2.1=py27h44e2768_0
-- sphinx=1.6.3=py27hf9b1778_0
-- sphinxcontrib=1.0=py27h1512b58_1
-- sphinxcontrib-websupport=1.0.1=py27hf906f22_1
-- spyder=3.2.4=py27h04a3490_0
-- sqlite=3.20.1=hb898158_2
-- ssl_match_hostname=3.5.0.1=py27h4ec10b9_2
-- statsmodels=0.8.0=py27hc87d62d_0
-- subprocess32=3.2.7=py27h373dbce_0
-- testpath=0.3.1=py27hc38d2c4_0
+- scikit-learn=0.19.1=py36h7aa7ec6_0
+- scipy=1.1.0=py36hfc37229_0
+- setuptools=39.1.0=py36_0
+- six=1.11.0=py36h372c433_1
+- sqlite=3.23.1=he433501_0
 - tk=8.6.7=hc745277_3
-- tornado=4.5.2=py27h97b179f_0
-- traitlets=4.3.2=py27hd6ce930_0
-- typing=3.6.2=py27h66f49e2_0
-- urllib3=1.22=py27ha55213b_0
-- wcwidth=0.1.7=py27h9e3e1ab_0
-- webencodings=0.5.1=py27hff10b21_1
-- wheel=0.30.0=py27h2bc6bb2_1
-- wrapt=1.10.11=py27h04f6869_0
-- xz=5.2.3=h55aa19d_2
-- zeromq=4.2.2=hbedb6e5_2
+- wheel=0.31.1=py36_0
+- xz=5.2.3=h5e939de_4
 - zlib=1.2.11=ha838bed_2
 - pip:
-  - backports-abc==0.5
-  - backports.functools-lru-cache==1.4
-  - backports.shutil-get-terminal-size==1.0.0
-  - backports.ssl-match-hostname==3.5.0.1
-  - colorlover==0.2.1
   - control==0.7.0
-  - dill==0.2.5
-  - ipython-genutils==0.2.0
-  - jpype1==0.6.1
-  - jupyter-client==5.1.0
-  - jupyter-core==4.4.0
-  - multiprocess==0.70.4
-  - pathos==0.2.0
-  - pox==0.2.2
-  - ppft==1.6.4.6
-  - prompt-toolkit==1.0.15
-  - python-coveralls==2.8.0
-  - pyyaml==3.12
-  - sh==1.11
-  - tables==3.4.2
+  - cycler==0.10.0
+  - dill==0.2.7.1
+  - jpype1==0.6.3
+  - kiwisolver==1.0.1
+  - matplotlib==2.2.2
+  - mkl-fft==1.0.0
+  - mkl-random==1.0.1
+  - multiprocess==0.70.5
+  - numexpr==2.6.5
+  - pathos==0.2.1
+  - pox==0.2.3
+  - ppft==1.6.4.7.1
+  - pyparsing==2.2.0
+  - tables==3.4.3
 
