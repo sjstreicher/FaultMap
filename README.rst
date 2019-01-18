@@ -17,6 +17,10 @@ FaultMap
    :target: https://codeclimate.com/github/SimonStreicher/FaultMap
    :alt: Code Climate
 
+.. image:: https://zenodo.org/badge/14229559.svg
+   :target: https://zenodo.org/badge/latestdoi/14229559
+   :alt: DOI
+
 Introduction
 ------------
 
