@@ -113,7 +113,7 @@ class NoderankData:
                     connectionloc
                 )
             else:
-                # Generate a fully connected connectionmatrix
+                # Generate a fully connected connection matrix
 
                 self.connectionmatrix = np.ones(
                     (len(self.variablelist), len(self.variablelist))
