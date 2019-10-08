@@ -129,6 +129,8 @@ class ResultReconstructionData:
                     self.bias_correction = scenario_config["bias_correction"]
                 if "mi_scale" in scenario_config:
                     self.mi_scale = scenario_config["mi_scale"]
+                else:
+                    self.mi_scale = False
         else:
             settings = {}
             self.bias_correction = False
@@ -998,6 +1000,7 @@ def fft_calculation(
     plotting_endsample=500,
 ):
 
+    # TODO: Perform detrending
     # logging.info("Starting FFT calculations")
     # Using a print command instead as logging is late
     print("Starting FFT calculations")
@@ -1060,7 +1063,6 @@ def fft_calculation(
     writecsv(filename("fft"), datalines, headerline)
 
     logging.info("Done with FFT calculations")
-    #    print "Done with FFT calculations"
 
     return None
 
