@@ -1363,7 +1363,7 @@ def read_connectionmatrix(connection_loc):
 
     """
     with open(connection_loc) as f:
-        variables = csv.reader(f).next()[1:]
+        variables = next(csv.reader(f))[1:]
         connectionmatrix = np.genfromtxt(f, delimiter=",")[:, 1:]
 
     return connectionmatrix, variables
