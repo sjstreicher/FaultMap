@@ -23,7 +23,7 @@ from plotting.plotter import plotdraw
 
 
 def run_weightcalc(configloc, writeoutput, mode, case, robust):
-    with open(os.path.join(configloc, "config_weightcalc" + ".json")) as f:
+    with open(os.path.join(configloc, "config_weightcalc.json")) as f:
         weightcalc_config = json.load(f)
     f.close()
 
@@ -119,7 +119,7 @@ def run_plotting(writeoutput, mode, case, robust):
 
 def run_all(mode, robust=False):
     _, configloc, _, _ = config_setup.get_locations(mode)
-    with open(os.path.join(configloc, "config_full" + ".json")) as f:
+    with open(os.path.join(configloc, "config_full.json")) as f:
         fullrun_config = json.load(f)
     f.close()
 

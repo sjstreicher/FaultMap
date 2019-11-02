@@ -101,7 +101,7 @@ class ResultReconstructionData:
         )
         # Load case config file
         with open(
-            os.path.join(self.caseconfigloc, case + "_resultreconstruction" + ".json")
+            os.path.join(self.caseconfigloc, "resultreconstruction.json")
         ) as f:
             self.caseconfig = json.load(f)
         f.close()
@@ -845,7 +845,7 @@ def result_reconstruction(mode, case, writeoutput):
 
     saveloc, caseconfigdir, _, _ = config_setup.runsetup(mode, case)
 
-    with open(os.path.join(caseconfigdir, case + "_weightcalc" + ".json")) as f:
+    with open(os.path.join(caseconfigdir, "weightcalc.json")) as f:
         caseconfig = json.load(f)
     f.close()
 

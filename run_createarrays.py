@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 
 dataloc, configloc, _, _ = config_setup.get_locations()
 createarrays_config = json.load(
-    open(os.path.join(configloc, "config" "_createarrays" + ".json"))
+    open(os.path.join(configloc, "config_createarrays.json"))
 )
 
 writeoutput = createarrays_config["writeoutput"]

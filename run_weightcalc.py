@@ -17,7 +17,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     dataloc, configloc, _, _ = config_setup.get_locations()
     weightcalc_config = json.load(
-        open(os.path.join(configloc, "config_weightcalc" + ".json"))
+        open(os.path.join(configloc, "config_weightcalc.json"))
     )
 
     # Flag indicating whether calculated results should be written to disk
