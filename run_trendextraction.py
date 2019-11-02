@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
 
 dataloc, configloc, saveloc, _ = config_setup.get_locations()
 trendextraction_config = json.load(
-    open(os.path.join(configloc, "config_trendextraction" + ".json"))
+    open(os.path.join(configloc, "config_trendextraction.json"))
 )
 
 writeoutput = trendextraction_config["writeoutput"]

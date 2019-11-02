@@ -35,7 +35,7 @@ class NoderankData:
             mode, case
         )
         # Load case config file
-        with open(os.path.join(self.caseconfigloc, case + "_noderank" + ".json")) as f:
+        with open(os.path.join(self.caseconfigloc,  "noderank.json")) as f:
             self.caseconfig = json.load(f)
         f.close()
 

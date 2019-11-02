@@ -76,7 +76,7 @@ class WeightcalcData(object):
         )
         # Load case config file
         with open(
-            os.path.join(self.caseconfigdir, case + "_weightcalc" + ".json")
+            os.path.join(self.caseconfigdir, "weightcalc.json")
         ) as configfile:
             self.caseconfig = json.load(configfile)
         configfile.close()

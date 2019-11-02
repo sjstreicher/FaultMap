@@ -38,7 +38,7 @@ class GraphReduceData(object):
         )
         # Load case config file
         with open(
-            os.path.join(self.caseconfigloc, case + "_graphreduce" + ".json")
+            os.path.join(self.caseconfigloc, "graphreduce.json")
         ) as f:
             self.caseconfig = json.load(f)
         f.close()
