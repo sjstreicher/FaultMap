@@ -136,7 +136,7 @@ def run_all(mode, robust=False):
         run_trendextraction(writeoutput, mode, case, robust)
         run_noderank(writeoutput, mode, case, robust)
         run_graphreduce(writeoutput, mode, case, robust)
-        run_plotting(writeoutput, mode, case, robust)
+        # run_plotting(writeoutput, mode, case, robust)
         logging.info("Done with case: " + case)
 
 
