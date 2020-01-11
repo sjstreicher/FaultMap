@@ -5,10 +5,6 @@ FaultMap
     :target: https://travis-ci.org/SimonStreicher/FaultMap
     :alt: Travis Build
 
-.. image:: https://landscape.io/github/SimonStreicher/FaultMap/master/landscape.svg?style=flat
-    :target: https://landscape.io/github/SimonStreicher/FaultMap/master
-    :alt: Code Health
-
 .. image:: https://coveralls.io/repos/github/SimonStreicher/FaultMap/badge.svg?branch=master
     :target: https://coveralls.io/github/SimonStreicher/FaultMap?branch=master
     :alt: Code Coverage
