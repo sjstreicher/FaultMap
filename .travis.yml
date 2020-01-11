@@ -26,7 +26,7 @@ before_install:
 install:
   # Create a conda environment
   - conda create -n faultmap python=3.7
-  - conda activate faultmap
+  - source activate faultmap
   - pip install -r requirements.txt
 script:
   # run test
