@@ -1,6 +1,6 @@
 language: python
 python:
-  - "3.6"
+  - "3.7"
 #virtualenv:
 #    system_site_packages: true
 
@@ -9,7 +9,7 @@ before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq pkg-config default-jdk wget python python-{dev,pip} cython lib{freetype6,xft,png,xext,openblas,lapack,hdf5-serial}-dev gfortran dvipng
   - sudo apt-get --no-install-recommends install texlive-base texlive-latex-extra texlive-fonts-recommended dvipng
-  # Install miniconda
+  # Install Miniconda
   # This comes from http://conda.pydata.org/docs/travis.html
   - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
@@ -24,16 +24,12 @@ before_install:
 
 # Install packages
 install:
-  # install what we can from conda
-  - conda env create -f environment.yml
-  - source activate faultmap
-  #- conda install --yes python=$TRAVIS_PYTHON_VERSION `cat conda_requirements.txt`
-  # install the rest using pip
-  #- pip install -r <( grep -v -f conda_requirements.txt requirements.txt )
-  
-# command to run tests, e.g. python setup.py test
+  # Create a conda environment
+  - conda create -n faultmap python=3.7
+  - conda activate faultmap
+  - pip install -r requirements.txt
 script:
-  # run tests
-  - nosetests -v -w $TRAVIS_BUILD_DIR --with-coverage --cover-erase --cover-package=ranking
+  # run test
+  - nosetests -v -w $TRAVIS_BUILD_DIR --with-coverage --cover-erase --cover-package=faultmap
 after_success:
   - coveralls

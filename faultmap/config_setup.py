@@ -22,7 +22,7 @@ def get_locations(mode="cases"):
     Parameters
     ----------
         mode : string
-            Either 'tests' or 'cases'. Specifies whether the test or user
+            Either 'test' or 'cases'. Specifies whether the test or user
             configureable cases directories should be set.
             Test directiories are read from testconfig.json which is bundled
             with the code, while cases directories are read from
@@ -37,12 +37,12 @@ def get_locations(mode="cases"):
 
     """
     # Load directories config file
-    if mode == "tests":
-        with open("testconfig.json") as f:
+    if mode == "test":
+        with open("test/testconfig.json") as f:
             dirs = json.load(f)
         f.close()
     elif mode == "cases":
-        with open("caseconfig.json") as f:
+        with open("../caseconfig.json") as f:
             dirs = json.load(f)
         f.close()
     else:
@@ -65,7 +65,7 @@ def runsetup(mode, case):
     Parameters
     ----------
         mode : string
-            Either 'tests' or 'cases'. Specifies whether the test or user
+            Either 'test' or 'cases'. Specifies whether the test or user
             configureable cases directories should be set.
             Test directiories are read from testconfig.json which is bundled
             with the code, while cases directories are read from

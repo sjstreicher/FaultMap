@@ -6,9 +6,8 @@
 import json
 import os
 
-import config_setup
 from plotting import figtypes
-from ranking import data_processing
+from faultmap import data_processing, config_setup
 
 
 def raw_string(s):
@@ -29,9 +28,12 @@ class GraphData(object):
     def __init__(self, mode, case):
 
         # Get locations from configuration file
-        self.saveloc, self.caseconfigloc, self.casedir, _ = config_setup.runsetup(
-            mode, case
-        )
+        (
+            self.saveloc,
+            self.caseconfigloc,
+            self.casedir,
+            _,
+        ) = config_setup.runsetup(mode, case)
         self.mode = mode
         self.case = case
 
@@ -44,9 +46,7 @@ class GraphData(object):
 
         # Load weight case config file
         # This is used in plots that make use of original time series data
-        with open(
-            os.path.join(self.caseconfigloc, "weightcalc.json")
-        ) as f:
+        with open(os.path.join(self.caseconfigloc, "weightcalc.json")) as f:
             self.weight_caseconfig = json.load(f)
         f.close()
 
@@ -129,7 +129,9 @@ def get_scenario_data_vectors(graphdata, example_sourcefile, example_scenario):
         sourcefile = data_processing.change_dirtype(
             example_sourcefile, example_scenario, scenario
         )
-        valuematrix, _ = data_processing.read_header_values_datafile(sourcefile)
+        valuematrix, _ = data_processing.read_header_values_datafile(
+            sourcefile
+        )
         valuematrices.append(valuematrix)
 
     return valuematrices
@@ -158,7 +160,9 @@ def get_box_data_vectors(graphdata):
                 box,
                 sourcevar,
             )
-            valuematrix, _ = data_processing.read_header_values_datafile(sourcefile)
+            valuematrix, _ = data_processing.read_header_values_datafile(
+                sourcefile
+            )
             sourcevalues.append(valuematrix)
         valuematrices.append(sourcevalues)
 
@@ -202,9 +206,15 @@ def get_box_threshold_vectors(graphdata):
         sourcevalues = []
         for sourceindex, sourcevar in enumerate(graphdata.sourcevar):
             sourcefile = filename_sig_template.format(
-                graphdata.case, graphdata.scenario, graphdata.method[0], box, sourcevar
+                graphdata.case,
+                graphdata.scenario,
+                graphdata.method[0],
+                box,
+                sourcevar,
             )
-            valuematrix, _ = data_processing.read_header_values_datafile(sourcefile)
+            valuematrix, _ = data_processing.read_header_values_datafile(
+                sourcefile
+            )
             sourcevalues.append(valuematrix)
         valuematrices.append(sourcevalues)
 
@@ -230,7 +240,9 @@ def plotdraw(mode, case, writeoutput):
     graphdata = GraphData(mode, case)
 
     # Create output directory
-    config_setup.ensure_existence(os.path.join(graphdata.saveloc, "graphs"), make=True)
+    config_setup.ensure_existence(
+        os.path.join(graphdata.saveloc, "graphs"), make=True
+    )
 
     for graph in graphdata.graphs:
         graphdata.graphdetails(graph)
@@ -239,7 +251,11 @@ def plotdraw(mode, case, writeoutput):
             for scenario in graphdata.scenarios:
                 print(scenario)
                 basedir = os.path.join(
-                    graphdata.saveloc, "weightdata", case, scenario, weight_method
+                    graphdata.saveloc,
+                    "weightdata",
+                    case,
+                    scenario,
+                    weight_method,
                 )
 
                 sigtypes = next(os.walk(basedir))[1]
@@ -253,6 +269,12 @@ def plotdraw(mode, case, writeoutput):
                             print(embedtype)
                             datadir = os.path.join(embedtypesdir, embedtype)
                             # Actual plot drawing execution starts here
-                            drawplot(graphdata, scenario, datadir, graph, writeoutput)
+                            drawplot(
+                                graphdata,
+                                scenario,
+                                datadir,
+                                graph,
+                                writeoutput,
+                            )
 
     return None

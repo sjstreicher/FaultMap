@@ -7,8 +7,8 @@ import json
 import logging
 import os
 
-import config_setup
-from ranking.data_processing import trend_extraction
+from faultmap import config_setup
+from faultmap.data_processing import trend_extraction
 
 logging.basicConfig(level=logging.INFO)
 

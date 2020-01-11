@@ -11,13 +11,13 @@ from run_full import run_all
 
 class TestFullDemo(unittest.TestCase):
     def test_full_analysis(self):
-        run_all("tests")
+        run_all("test")
 
 
 # class TestWeightCalculation(unittest.TestCase):
 #
 #    def setUp(self):
-#        self.mode = 'tests'
+#        self.mode = 'test'
 #        self.case = 'fulldemo'
 #
 #    def test_weightcalc_singleprocess(self):
@@ -30,7 +30,7 @@ class TestFullDemo(unittest.TestCase):
 # class TestCreateArrays(unittest.TestCase):
 #
 #    def setUp(self):
-#        self.mode = 'tests'
+#        self.mode = 'test'
 #        self.case = 'fulldemo'
 #        weightcalc(self.mode, self.case, True, False, False, True)
 #
@@ -41,7 +41,7 @@ class TestFullDemo(unittest.TestCase):
 # class TestTrendExtraction(unittest.TestCase):
 #
 #    def setUp(self):
-#        self.mode = 'tests'
+#        self.mode = 'test'
 #        self.case = 'fulldemo'
 #        weightcalc(self.mode, self.case, True, False, False, True)
 #        result_reconstruction(self.mode, self.case, True)
@@ -53,7 +53,7 @@ class TestFullDemo(unittest.TestCase):
 # class TestNodeRanking(unittest.TestCase):
 #
 #    def setUp(self):
-#        self.mode = 'tests'
+#        self.mode = 'test'
 #        self.case = 'fulldemo'
 #        weightcalc(self.mode, self.case, True, False, False, True)
 #        result_reconstruction(self.mode, self.case, True)
@@ -66,7 +66,7 @@ class TestFullDemo(unittest.TestCase):
 # class TestGrapReduce(unittest.TestCase):
 #
 #    def setUp(self):
-#        self.mode = 'tests'
+#        self.mode = 'test'
 #        self.case = 'fulldemo'
 #        weightcalc(self.mode, self.case, True, False, False, True)
 #        result_reconstruction(self.mode, self.case, True)

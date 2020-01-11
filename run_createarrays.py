@@ -8,8 +8,8 @@ import json
 import logging
 import os
 
-import config_setup
-from ranking.data_processing import result_reconstruction
+from faultmap import config_setup
+from faultmap.data_processing import result_reconstruction
 
 logging.basicConfig(level=logging.INFO)
 

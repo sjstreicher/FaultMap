@@ -103,7 +103,9 @@ def setup_infodynamics_te(infodynamicsloc, calcmethod, **parameters):
                 ksearchmax = parameters.get("k_search_max", 5)
                 teCalc.setProperty("AUTO_EMBED_K_SEARCH_MAX", str(ksearchmax))
                 tausearchmax = parameters.get("tau_search_max", 5)
-                teCalc.setProperty("AUTO_EMBED_TAU_SEARCH_MAX", str(tausearchmax))
+                teCalc.setProperty(
+                    "AUTO_EMBED_TAU_SEARCH_MAX", str(tausearchmax)
+                )
 
         # Note: If setting the delay is needed to be changed on each iteration,
         # it may be best to do this outside the loop and initialise teCalc
@@ -178,7 +180,9 @@ def calc_infodynamics_te(
     if len(causal_data) != len(affected_data):
         print("Source length: " + str(len(causal_data)))
         print("Destination length: " + str(len(affected_data)))
-        raise ValueError("The source and destination arrays are of different lengths")
+        raise ValueError(
+            "The source and destination arrays are of different lengths"
+        )
 
     # sourceArrayJava = jpype.JArray(jpype.JDouble, 1)(sourceArray)
     # destArrayJava = jpype.JArray(jpype.JDouble, 1)(destArray)
@@ -233,7 +237,10 @@ def calc_infodynamics_te(
     else:
         properties = [None]
 
-    return transentropy, [[te_significance, mi_significance], properties, mutualinfo]
+    return (
+        transentropy,
+        [[te_significance, mi_significance], properties, mutualinfo],
+    )
 
 
 def setup_infodynamics_mi(infodynamicsloc, calcmethod, **parameters):

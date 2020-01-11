@@ -23,10 +23,10 @@ estimator = "kernel"
 
 sns.set_style("darkgrid")
 
-from datagen import autoreg_gen
-from ranking.data_processing import split_tsdata
+from test.datagen import autoreg_gen
+from faultmap.data_processing import split_tsdata
 
-import transentropy
+from faultmap import transentropy
 
 samples = 1e6
 
@@ -90,9 +90,10 @@ for boxindex, box in enumerate(boxes):
         vardata_cause
     )
 
-    signalent_affected_kernel, signalent_affected_gaussian = calculate_entropies(
-        vardata_effect
-    )
+    (
+        signalent_affected_kernel,
+        signalent_affected_gaussian,
+    ) = calculate_entropies(vardata_effect)
 
     signalent_cause_kernel_boxresults.append(signalent_cause_kernel)
     signalent_cause_gaussian_boxresults.append(signalent_cause_gaussian)
@@ -100,8 +101,14 @@ for boxindex, box in enumerate(boxes):
     signalent_affected_gaussian_boxresults.append(signalent_affected_gaussian)
 
 fig, ax1 = plt.subplots()
-ax1.plot(range(len(boxes)), signalent_cause_kernel_boxresults, label="cause kernel")
-ax1.plot(range(len(boxes)), signalent_cause_gaussian_boxresults, label="cause gaussian")
+ax1.plot(
+    range(len(boxes)), signalent_cause_kernel_boxresults, label="cause kernel"
+)
+ax1.plot(
+    range(len(boxes)),
+    signalent_cause_gaussian_boxresults,
+    label="cause gaussian",
+)
 ax1.set_xlabel("Box")
 ax1.set_ylabel("Signal entropy")
 plt.legend()
@@ -109,10 +116,14 @@ plt.show()
 
 fig, ax1 = plt.subplots()
 ax1.plot(
-    range(len(boxes)), signalent_affected_kernel_boxresults, label="affected kernel"
+    range(len(boxes)),
+    signalent_affected_kernel_boxresults,
+    label="affected kernel",
 )
 ax1.plot(
-    range(len(boxes)), signalent_affected_gaussian_boxresults, label="affected gaussian"
+    range(len(boxes)),
+    signalent_affected_gaussian_boxresults,
+    label="affected gaussian",
 )
 ax1.set_xlabel("Box")
 ax1.set_ylabel("Signal entropy")

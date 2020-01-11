@@ -7,13 +7,15 @@ import json
 import logging
 import os
 
-import config_setup
+from faultmap import config_setup
 from plotting.plotter import plotdraw
 
 logging.basicConfig(level=logging.INFO)
 dataloc, configloc, _, _ = config_setup.get_locations()
 
-plotting_config = json.load(open(os.path.join(configloc, "config_plotting.json")))
+plotting_config = json.load(
+    open(os.path.join(configloc, "config_plotting.json"))
+)
 
 # Flag indicating whether generated plots should be written to disk
 writeoutput = plotting_config["writeoutput"]
