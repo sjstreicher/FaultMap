@@ -1,8 +1,8 @@
 import numpy as np
 
-import networkgen
-from ranking import data_processing
-from ranking import noderank
+from faultmap import data_processing
+from test import networkgen
+from faultmap import noderank
 
 connections, gainmatrix, variables, testgraph = networkgen.fullconn_random()
 biasvector = np.ones(len(variables))
@@ -20,7 +20,12 @@ class NodeRankdata(object):
 
 noderankdata = NodeRankdata(0.999, 0.1)
 
-backwardconnection, backwardgain, backwardvariablelist, backwardbias = data_processing.rankbackward(
+(
+    backwardconnection,
+    backwardgain,
+    backwardvariablelist,
+    backwardbias,
+) = data_processing.rankbackward(
     variables, gainmatrix, connections, biasvector, dummyweight, dummies
 )
 

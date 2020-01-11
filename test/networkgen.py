@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Generates sample digraphs for testing and demonstrating ranking methods.
+"""Generates sample digraphs for testing and demonstrating faultmap methods.
 
 """
 
@@ -9,10 +9,10 @@ import os
 import networkx as nx
 import numpy as np
 
-from datagen import seed_randn
-from ranking.data_processing import buildgraph
+from .datagen import seed_randn
+from faultmap.data_processing import buildgraph
 
-filesloc = json.load(open("testconfig.json"))
+filesloc = json.load(open("test/testconfig.json"))
 saveloc = os.path.expanduser(filesloc["saveloc"])
 
 seed_list = [35, 88, 107, 52, 98]
@@ -144,8 +144,16 @@ series_disjoint_unequal = test_function_builder(
 )
 
 series_disjoint_unequalsource = test_function_builder(
-    (np.diag([1, 1, 0, 1, 1, 0], -1) + np.diag([1], 6) + np.diag([0, 0, 0, 1], 3)),
-    (np.diag([1, 1, 0, 1, 1, 0], -1) + np.diag([1], 6) + np.diag([0, 0, 0, 2], 3)),
+    (
+        np.diag([1, 1, 0, 1, 1, 0], -1)
+        + np.diag([1], 6)
+        + np.diag([0, 0, 0, 1], 3)
+    ),
+    (
+        np.diag([1, 1, 0, 1, 1, 0], -1)
+        + np.diag([1], 6)
+        + np.diag([0, 0, 0, 2], 3)
+    ),
     variables=(numberedvars("X", 3) + numberedvars("Y", 3) + ["I 1"]),
     filename="series_disjoint_unequalsource",
     doc="""Creates two sets of three tags connected in series with unit weights

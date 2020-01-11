@@ -9,12 +9,12 @@ import logging
 import multiprocessing
 import os
 
-import config_setup
-from ranking.gaincalc import weightcalc
-from ranking.data_processing import result_reconstruction
-from ranking.data_processing import trend_extraction
-from ranking.noderank import noderankcalc
-from ranking.graphreduce import reducegraph
+from faultmap import config_setup
+from faultmap.gaincalc import weightcalc
+from faultmap.data_processing import result_reconstruction
+from faultmap.data_processing import trend_extraction
+from faultmap.noderank import noderankcalc
+from faultmap.graphreduce import reducegraph
 from plotting.plotter import plotdraw
 
 
@@ -37,13 +37,23 @@ def run_weightcalc(configloc, writeoutput, mode, case, robust):
     if robust:
         try:
             weightcalc(
-                mode, case, writeoutput, single_entropies, fftcalc, do_multiprocessing
+                mode,
+                case,
+                writeoutput,
+                single_entropies,
+                fftcalc,
+                do_multiprocessing,
             )
         except:
             raise RuntimeError("Weight calculation failed for case: " + case)
     else:
         weightcalc(
-            mode, case, writeoutput, single_entropies, fftcalc, do_multiprocessing
+            mode,
+            case,
+            writeoutput,
+            single_entropies,
+            fftcalc,
+            do_multiprocessing,
         )
 
     return None
@@ -86,7 +96,7 @@ def run_noderank(writeoutput, mode, case, robust):
         try:
             noderankcalc(mode, case, writeoutput)
         except:
-            raise RuntimeError("Node ranking failed for case: " + case)
+            raise RuntimeError("Node faultmap failed for case: " + case)
     else:
         noderankcalc(mode, case, writeoutput)
 

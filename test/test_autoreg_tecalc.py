@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Verifies the working of the transfer entropy calculation code by means of
-an example on autoregressive data with known time delay.
+an example on auto-regressive data with known time delay.
 
 """
 
@@ -9,8 +9,8 @@ import unittest
 import jpype
 from sklearn import preprocessing
 
-from transentropy import calc_infodynamics_te as te_info
-from datagen import autoreg_datagen
+from faultmap.transentropy import calc_infodynamics_te as te_info
+from test.datagen import autoreg_datagen
 
 
 class TestAutoregressiveTransferEntropy(unittest.TestCase):
@@ -33,7 +33,9 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
             # (add the "-Xmx" option with say 1024M if you get crashes
             # due to not enough memory space)
             jpype.startJVM(
-                jpype.getDefaultJVMPath(), "-ea", "-Djava.class.path=" + infodynamicsloc
+                jpype.getDefaultJVMPath(),
+                "-ea",
+                "-Djava.class.path=" + infodynamicsloc,
             )
 
     def test_peakentropy_infodyn_kernel(self):
@@ -74,7 +76,7 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
     def test_peakentropy_infodyn_kraskov_noautoembed(self):
         self.entropies_infodyn_kraskov = []
         for timelag in range(self.delay - 5, self.delay + 6):
-            print("Results for timelag of: ", str(timelag))
+            print("Results for time lag of: ", str(timelag))
             [x_pred, x_hist, y_hist] = autoreg_datagen(
                 self.delay, timelag, self.samples, self.sub_samples
             )
@@ -87,11 +89,10 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
             y_hist_norm = preprocessing.scale(y_hist, axis=1)
 
             # Calculate transfer entropy according to infodynamics method:
-            result_infodyn, [
-                [te_significance, mi_significance],
-                properties,
-                mutualinfo,
-            ] = te_info(
+            (
+                result_infodyn,
+                [[te_significance, mi_significance], properties, mutualinfo,],
+            ) = te_info(
                 "infodynamics.jar",
                 "kraskov",
                 x_hist_norm[0],
@@ -122,7 +123,7 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
                 self.delay, timelag, self.samples, self.sub_samples
             )
             # Normalize data
-            # Not explicitly required as this is done by infodyns package if
+            # Not explicitly required as this is done by JIDT package if
             # setProperty("NORMALISE", "true" is called), but good practice
             # for general example.
 
@@ -131,11 +132,10 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
 
             # Calculate transfer entropy according to infodynamics method:
 
-            result_infodyn, [
-                [te_significance, mi_significance],
-                properties,
-                mutualinfo,
-            ] = te_info(
+            (
+                result_infodyn,
+                [[te_significance, mi_significance], properties, mutualinfo,],
+            ) = te_info(
                 "infodynamics.jar",
                 "kraskov",
                 x_hist_norm[0],
@@ -153,10 +153,10 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
 
         print(self.entropies_infodyn_kraskov)
 
-        maxval = max(self.entropies_infodyn_kraskov)
+        max_val = max(self.entropies_infodyn_kraskov)
         # The maximum lags with one sample
-        delayedval = self.entropies_infodyn_kraskov[self.delay]
-        self.assertEqual(maxval, delayedval)
+        delayed_val = self.entropies_infodyn_kraskov[self.delay]
+        self.assertEqual(max_val, delayed_val)
 
 
 if __name__ == "__main__":

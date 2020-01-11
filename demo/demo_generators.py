@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-import datagen
+from test import datagen
 
 sns.set_style("darkgrid")
 

@@ -28,15 +28,13 @@ import multiprocessing
 import os
 import time
 
-import h5py
 import numpy as np
 import pandas as pd
 
-import config_setup
-import datagen
-from ranking import data_processing
-from ranking import gaincalc_oneset
-from ranking.gaincalculators import CorrWeightcalc, TransentWeightcalc
+from faultmap import data_processing, config_setup
+from test import datagen
+from faultmap import gaincalc_oneset
+from faultmap.gaincalculators import CorrWeightcalc, TransentWeightcalc
 
 
 class WeightcalcData(object):
@@ -46,13 +44,19 @@ class WeightcalcData(object):
     """
 
     def __init__(
-        self, mode, case, single_entropies, fftcalc, do_multiprocessing, use_gpu
+        self,
+        mode,
+        case,
+        single_entropies,
+        fftcalc,
+        do_multiprocessing,
+        use_gpu,
     ):
         """
         Parameters
         ----------
         mode : str
-            Either 'tests' or 'cases'. Tests data are generated dynamically and
+            Either 'test' or 'cases'. Tests data are generated dynamically and
             stored in specified folders. Case data are read from file and
             stored under organized headings in the saveloc directory specified
             in config.json.
@@ -71,9 +75,12 @@ class WeightcalcData(object):
 
         """
         # Get file locations from configuration file
-        self.saveloc, self.caseconfigdir, self.casedir, self.infodynamicsloc = config_setup.runsetup(
-            mode, case
-        )
+        (
+            self.saveloc,
+            self.caseconfigdir,
+            self.casedir,
+            self.infodynamicsloc,
+        ) = config_setup.runsetup(mode, case)
         # Load case config file
         with open(
             os.path.join(self.caseconfigdir, "weightcalc.json")
@@ -114,7 +121,9 @@ class WeightcalcData(object):
 
     def setsettings(self, scenario, settings_name):
         if "use_connections" in self.caseconfig[settings_name]:
-            self.connections_used = self.caseconfig[settings_name]["use_connections"]
+            self.connections_used = self.caseconfig[settings_name][
+                "use_connections"
+            ]
         else:
             self.connections_used = False
         if "transient" in self.caseconfig[settings_name]:
@@ -142,7 +151,9 @@ class WeightcalcData(object):
         if self.sigtest:
             # The transfer entropy threshold calculation method be either
             # 'sixsigma' or 'rankorder'
-            self.thresh_method = self.caseconfig[settings_name]["thresh_method"]
+            self.thresh_method = self.caseconfig[settings_name][
+                "thresh_method"
+            ]
             # The transfer entropy surrogate generation method be either
             # 'iAAFT' or 'random_shuffle'
             self.surr_method = self.caseconfig[settings_name]["surr_method"]
@@ -169,7 +180,9 @@ class WeightcalcData(object):
         # Get parameters for kernel method
         if "transfer_entropy_kernel" in self.methods:
             if "kernel_width" in self.caseconfig[settings_name]:
-                self.kernel_width = self.caseconfig[settings_name]["kernel_width"]
+                self.kernel_width = self.caseconfig[settings_name][
+                    "kernel_width"
+                ]
             else:
                 self.kernel_width = None
 
@@ -188,9 +201,10 @@ class WeightcalcData(object):
                     "connections",
                     self.caseconfig[scenario]["connections"],
                 )
-                self.connectionmatrix, _ = data_processing.read_connectionmatrix(
-                    connection_loc
-                )
+                (
+                    self.connectionmatrix,
+                    _,
+                ) = data_processing.read_connectionmatrix(connection_loc)
 
             # Read data into Pandas dataframe
             raw_df = pd.read_csv(raw_tsdata)
@@ -198,7 +212,9 @@ class WeightcalcData(object):
             raw_df.set_index("Time", inplace=True)
 
             self.variables = list(raw_df.keys())
-            self.timestamps = np.asarray(raw_df.index.astype(np.int64) // 10 ** 9)
+            self.timestamps = np.asarray(
+                raw_df.index.astype(np.int64) // 10 ** 9
+            )
             self.headerline = ["Time"] + [var for var in self.variables]
 
             self.inputdata_raw = np.asarray(raw_df)
@@ -281,7 +297,7 @@ class WeightcalcData(object):
         else:
             self.bias_correct = False
 
-        # Get size of sample vectors for tests
+        # Get size of sample vectors for test
         # Must be smaller than number of samples
         self.testsize = self.caseconfig[settings_name]["testsize"]
 
@@ -306,7 +322,9 @@ class WeightcalcData(object):
 
         elif self.delaytype == "intervals":
             # Test delays at specified intervals
-            self.delayinterval = self.caseconfig[settings_name]["delay_interval"]
+            self.delayinterval = self.caseconfig[settings_name][
+                "delay_interval"
+            ]
 
             self.delays = [(val * self.delayinterval) for val in delay_range]
 
@@ -317,7 +335,9 @@ class WeightcalcData(object):
         if self.causevarindexes == "all":
             self.causevarindexes = range(len(self.variables))
         if "affectedvarindexes" in self.caseconfig[scenario]:
-            self.affectedvarindexes = self.caseconfig[scenario]["affectedvarindexes"]
+            self.affectedvarindexes = self.caseconfig[scenario][
+                "affectedvarindexes"
+            ]
         else:
             self.affectedvarindexes = "all"
         if self.affectedvarindexes == "all":
@@ -365,7 +385,9 @@ class WeightcalcData(object):
         # TODO: Use proper pandas.tseries.resample techniques
         # if it will really add any functionality
         # TODO: Investigate use of forward-backward Kalman filters
-        self.inputdata = self.inputdata_originalrate[0 :: self.sub_sampling_interval]
+        self.inputdata = self.inputdata_originalrate[
+            0 :: self.sub_sampling_interval
+        ]
 
         if self.transient:
             self.boxsize = self.caseconfig[settings_name]["boxsize"]
@@ -627,7 +649,9 @@ def calc_weights(weightcalcdata, method, scenario, writeoutput):
             signalentlist = []
             for varindex, _ in enumerate(weightcalcdata.variables):
                 vardata = box[:, varindex][startindex : startindex + size]
-                entropy = data_processing.calc_signalent(vardata, weightcalcdata)
+                entropy = data_processing.calc_signalent(
+                    vardata, weightcalcdata
+                )
                 signalentlist.append(entropy)
 
             # Write the signal entropies to file - one file for each box
@@ -689,7 +713,7 @@ def weightcalc(
     Parameters
     ----------
         mode : str
-            Either 'tests' or 'cases'. Tests data are generated dynamically and
+            Either 'test' or 'cases'. Tests data are generated dynamically and
             stored in specified folders. Case data are read from file
             and stored under organized headings in the saveloc directory
             specified in config.json.

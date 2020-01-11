@@ -9,7 +9,7 @@ import control
 import numpy as np
 from numpy import vstack
 
-import ranking.data_processing
+import faultmap.data_processing
 
 seed_list = [35, 88, 107, 52, 98]
 
@@ -20,8 +20,8 @@ def connectionmatrix_maker(N):
         connectionmatrix = np.ones((N, N), dtype=int)
         return variables, connectionmatrix
 
-    maker.__doc__ = "Generates a {0}x{0} connection matrix" "for use in tests.".format(
-        N
+    maker.__doc__ = (
+        "Generates a {0}x{0} connection matrix" "for use in test.".format(N)
     )
     return maker
 
@@ -75,7 +75,9 @@ def autoreg_gen(params):
         if alpha is None:
             affected[i] = affected[i - 1] + cause[i - (delay + 1)]
         else:
-            affected[i] = alpha * affected[i - 1] + (1 - alpha) * cause[i - delay]
+            affected[i] = (
+                alpha * affected[i - 1] + (1 - alpha) * cause[i - delay]
+            )
 
     affected = affected[delay:]
     cause = cause[delay:]
@@ -165,7 +167,7 @@ def autoreg_datagen(delay, timelag, samples, sub_samples, k=1, l=1):
 
     data = autoreg_gen(params).T
 
-    [x_pred, x_hist, y_hist] = ranking.data_processing.vectorselection(
+    [x_pred, x_hist, y_hist] = faultmap.data_processing.vectorselection(
         data, timelag, sub_samples, k, l
     )
 

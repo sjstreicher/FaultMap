@@ -9,8 +9,8 @@ import logging
 import multiprocessing
 import os
 
-import config_setup
-from ranking.gaincalc import weightcalc
+from faultmap import config_setup
+from faultmap.gaincalc import weightcalc
 
 if __name__ == "__main__":
     multiprocessing.freeze_support()
@@ -33,5 +33,10 @@ if __name__ == "__main__":
 
     for case in cases:
         weightcalc(
-            mode, case, writeoutput, single_entropies, fftcalc, do_multiprocessing
+            mode,
+            case,
+            writeoutput,
+            single_entropies,
+            fftcalc,
+            do_multiprocessing,
         )

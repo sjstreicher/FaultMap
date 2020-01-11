@@ -7,7 +7,7 @@
 .idea
 caseconfig.json
 demos/
-ranking/__pycache__/
+faultmap/__pycache__/
 test_data/
 test_exports/
 test_results/

@@ -43,8 +43,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from plotting import plotter
-from ranking import data_processing
-from ranking.gaincalc import WeightcalcData
+from faultmap import data_processing
+from faultmap.gaincalc import WeightcalcData
 
 # from plotter import get_scenario_data_vectors
 
@@ -93,7 +93,9 @@ def fig_timeseries(graphdata, graph, scenario, savedir):
     graphdata.get_plotvars(graph)
     # graphdata.get_starttime(graph)
 
-    weightcalcdata = WeightcalcData(graphdata.mode, graphdata.case, False, False, False)
+    weightcalcdata = WeightcalcData(
+        graphdata.mode, graphdata.case, False, False, False
+    )
     weightcalcdata.setsettings(scenario, graphdata.settings)
 
     valuematrix = weightcalcdata.inputdata_normstep
@@ -136,10 +138,14 @@ def fig_fft(graphdata, graph, scenario, savedir):
     graphdata.get_plotvars(graph)
 
     sourcefile = os.path.join(
-        graphdata.saveloc, "fftdata", "{}_{}_fft.csv".format(graphdata.case, scenario)
+        graphdata.saveloc,
+        "fftdata",
+        "{}_{}_fft.csv".format(graphdata.case, scenario),
     )
 
-    valuematrix, headers = data_processing.read_header_values_datafile(sourcefile)
+    valuematrix, headers = data_processing.read_header_values_datafile(
+        sourcefile
+    )
 
     plt.figure(1, (12, 6))
 
@@ -238,7 +244,9 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
             else:
                 yaxislabelstring = method
             ax.set_ylabel(yaxislabel[yaxislabelstring], fontsize=14)
-            ax.set_xlabel(r"Delay ({})".format(graphdata.timeunit), fontsize=14)
+            ax.set_xlabel(
+                r"Delay ({})".format(graphdata.timeunit), fontsize=14
+            )
 
             # Open data file and plot graph
             sourcefile = os.path.join(
@@ -260,7 +268,10 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
                     "{}.csv".format(sourcevar),
                 )
 
-                threshmatrix, headers = data_processing.read_header_values_datafile(
+                (
+                    threshmatrix,
+                    headers,
+                ) = data_processing.read_header_values_datafile(
                     threshold_sourcefile
                 )
 
@@ -410,7 +421,9 @@ def fig_diffscen_vs_delay(graphdata, graph, scenario, savedir):
             else:
                 yaxislabelstring = method
             ax.set_ylabel(yaxislabel[yaxislabelstring], fontsize=14)
-            ax.set_xlabel(r"Delay ({})".format(graphdata.timeunit), fontsize=14)
+            ax.set_xlabel(
+                r"Delay ({})".format(graphdata.timeunit), fontsize=14
+            )
 
             # Open data file and plot graph
             sourcefile = os.path.join(
@@ -420,7 +433,9 @@ def fig_diffscen_vs_delay(graphdata, graph, scenario, savedir):
                 "{}.csv".format(sourcevar),
             )
 
-            _, headers = data_processing.read_header_values_datafile(sourcefile)
+            _, headers = data_processing.read_header_values_datafile(
+                sourcefile
+            )
 
             # Get valuematrices
             valuematrices = plotter.get_scenario_data_vectors(
@@ -452,9 +467,9 @@ def fig_diffscen_vs_delay(graphdata, graph, scenario, savedir):
                         label=labels[scenarioindex],
                     )
 
-                    label_index = list(valuematrix[:, destvarvalueindex]).index(
-                        max(valuematrix[:, destvarvalueindex])
-                    )
+                    label_index = list(
+                        valuematrix[:, destvarvalueindex]
+                    ).index(max(valuematrix[:, destvarvalueindex]))
 
                     ax.text(
                         valuematrix[:, 0][label_index],
@@ -520,7 +535,10 @@ def fig_values_vs_boxes(graphdata, graph, scenario, savedir):
     # Select typenames based on method and sigstatus
     if method[:16] == "transfer_entropy":
 
-        typenames = ["weight_absolute_trend", "signtested_weight_directional_trend"]
+        typenames = [
+            "weight_absolute_trend",
+            "signtested_weight_directional_trend",
+        ]
         delay_typenames = ["delay_absolute_trend", "delay_directional_trend"]
 
         if sigstatus == "sigtested":
@@ -558,7 +576,9 @@ def fig_values_vs_boxes(graphdata, graph, scenario, savedir):
             ax.set_xlabel(r"Box", fontsize=14)
 
             # Open data file and plot graph
-            sourcefile = os.path.join(trendsdir, sourcevar, "{}.csv".format(typename))
+            sourcefile = os.path.join(
+                trendsdir, sourcevar, "{}.csv".format(typename)
+            )
 
             valuematrix, headers = data_processing.read_header_values_datafile(
                 sourcefile
@@ -587,7 +607,8 @@ def fig_values_vs_boxes(graphdata, graph, scenario, savedir):
 
             plt.savefig(
                 os.path.join(
-                    savedir, "{}_{}_{}.pdf".format(scenario, typename, sourcevar)
+                    savedir,
+                    "{}_{}_{}.pdf".format(scenario, typename, sourcevar),
                 )
             )
             plt.close()
@@ -602,7 +623,9 @@ def fig_values_vs_boxes(graphdata, graph, scenario, savedir):
             else:
                 yaxislabelstring = method
 
-            ax.set_ylabel(r"Delay ({})".format(graphdata.timeunit), fontsize=14)
+            ax.set_ylabel(
+                r"Delay ({})".format(graphdata.timeunit), fontsize=14
+            )
             ax.set_xlabel(r"Box", fontsize=14)
 
             # Open data file and plot graph
@@ -637,7 +660,8 @@ def fig_values_vs_boxes(graphdata, graph, scenario, savedir):
 
             plt.savefig(
                 os.path.join(
-                    savedir, "{}_{}_{}.pdf".format(scenario, delay_typename, sourcevar)
+                    savedir,
+                    "{}_{}_{}.pdf".format(scenario, delay_typename, sourcevar),
                 )
             )
             plt.close()
@@ -705,14 +729,20 @@ def fig_maxval_variables(graphdata, graph, scenario, savedir):
 
         if drawfit:
             graphdata.fitlinelabels(graphname)
-            fit_params = np.polyfit(np.log(graphdata.xvals), np.log(max_values), 1)
+            fit_params = np.polyfit(
+                np.log(graphdata.xvals), np.log(max_values), 1
+            )
             fit_y = [
-                (i * fit_params[0] + fit_params[1]) for i in np.log(graphdata.xvals)
+                (i * fit_params[0] + fit_params[1])
+                for i in np.log(graphdata.xvals)
             ]
             fitted_vals = [np.exp(val) for val in fit_y]
 
             plt.loglog(
-                graphdata.xvals, fitted_vals, "--", label=graphdata.fitlinelabels[count]
+                graphdata.xvals,
+                fitted_vals,
+                "--",
+                label=graphdata.fitlinelabels[count],
             )
 
     plt.ylabel(yaxislabel[graphdata.method[0]], fontsize=14)
