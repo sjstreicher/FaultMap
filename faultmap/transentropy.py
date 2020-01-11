@@ -7,6 +7,18 @@ import jpype
 import numpy as np
 
 
+def check_jvm(infodynamicsloc):
+    if not jpype.isJVMStarted():
+        jpype.startJVM(
+            jpype.getDefaultJVMPath(),
+            "-Xms32M",
+            "-Xmx512M",
+            "-ea",
+            "-Djava.class.path=" + infodynamicsloc,
+            convertStrings=True,
+        )
+
+
 def setup_infodynamics_te(infodynamicsloc, calcmethod, **parameters):
     """Prepares the teCalc class of the Java Infodyamics Toolkit (JIDT)
     in order to calculate transfer entropy according to the kernel or Kraskov
@@ -17,14 +29,7 @@ def setup_infodynamics_te(infodynamicsloc, calcmethod, **parameters):
 
     """
 
-    if not jpype.isJVMStarted():
-        jpype.startJVM(
-            jpype.getDefaultJVMPath(),
-            "-Xms32M",
-            "-Xmx512M",
-            "-ea",
-            "-Djava.class.path=" + infodynamicsloc,
-        )
+    check_jvm(infodynamicsloc)
 
     if calcmethod == "kernel":
         teCalcClass = jpype.JPackage(
@@ -253,14 +258,7 @@ def setup_infodynamics_mi(infodynamicsloc, calcmethod, **parameters):
 
     """
 
-    if not jpype.isJVMStarted():
-        jpype.startJVM(
-            jpype.getDefaultJVMPath(),
-            "-Xms32M",
-            "-Xmx512M",
-            "-ea",
-            "-Djava.class.path=" + infodynamicsloc,
-        )
+    check_jvm(infodynamicsloc)
 
     if calcmethod == "kernel":
         miCalcClass = jpype.JPackage(
@@ -364,14 +362,8 @@ def setup_infodynamics_entropy(
         entropyCalc : EntropyCalculator JIDT object
 
     """
-    if not jpype.isJVMStarted():
-        jpype.startJVM(
-            jpype.getDefaultJVMPath(),
-            "-Xms32M",
-            "-Xmx512M",
-            "-ea",
-            "-Djava.class.path=" + infodynamicsloc,
-        )
+
+    check_jvm(infodynamicsloc)
 
     if estimator == "kernel":
         if mult:
