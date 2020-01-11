@@ -33,15 +33,25 @@ Network centrality algorithms are applied to determine the most influential elem
 
 Documentation and demonstrations still under development.
 
+Prerequisites
+-------------
+Most of the prerequisites are related to getting JPype to work correctly:
+
+- Python 3.7+ with compatible C++ compiler
+    On Windows compiling packages usually requires the `VC++ 2015.3 v14.00 (v140) toolset for desktop` to be installed
+    from the Visual Studio installer
+- Java JDK 1.8.201+ (or latest Java 8 SDK)
+    The JAVA_HOME environment variable should point to the installation directory
+
 Installation
 ------------
 
 .. code-block:: bash
 
-    conda create --name faultmap python=2
+    git clone https://github.com/SimonStreicher/FaultMap.git
+    cd FaultMap
+    conda create --name faultmap python=3.7
     source activate faultmap
-    cd ~/repos/FaultMap
-    conda install --file conda_requirements.txt
     pip install -r requirements.txt
     nosetests
 
@@ -77,10 +87,10 @@ Configuration
 Refer to the ``example_configs`` directory in the distribution for the required format of configuration files in order to fully define cases and scenarios.
 The following configuration files are needed to fully specify a specific case:
 
-1. ``{casename}_weightcalc.json``
-2. ``{casename}_noderank.json``
-3. ``{casename}_graphreduce.json``
-4. ``{casename}_plotting.json``
+1. ``weightcalc.json``
+2. ``noderank.json``
+3. ``graphreduce.json``
+4. ``plotting.json``
 
 Execution
 ---------
