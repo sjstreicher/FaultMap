@@ -54,8 +54,8 @@ def getfolders(path):
     return folders
 
 
-# TODO: jit decorated functions need to be made nopython compatible or dropped
-# @jit
+# Use jit for loop-jitting
+@jit(forceobj=True)
 def gen_iaaft_surrogates(data, iterations):
     """Generates iAAFT surrogates
 
