@@ -11,3 +11,4 @@ faultmap/__pycache__/
 test_data/
 test_exports/
 test_results/
+.coverage
