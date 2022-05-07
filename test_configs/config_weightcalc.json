@@ -1,6 +1,6 @@
 {
   "mode": "test",
-  "writeoutput": true,
+  "write_output": true,
   "calc_single_entropies": true,
   "fft_calc": true,
   "multiprocessing": false,

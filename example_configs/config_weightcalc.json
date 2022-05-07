@@ -1,6 +1,6 @@
 {
   "mode": "cases",
-  "writeoutput": true,
+  "write_output": true,
   "calc_single_entropies": false,
   "fft_calc": true,
   "multiprocessing": true,

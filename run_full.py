@@ -10,13 +10,11 @@ import multiprocessing
 import os
 
 from faultmap import config_setup
+from faultmap.data_processing import result_reconstruction, trend_extraction
 from faultmap.gaincalc import weightcalc
-from faultmap.data_processing import result_reconstruction
-from faultmap.data_processing import trend_extraction
-from faultmap.noderank import noderankcalc
 from faultmap.graphreduce import reducegraph
+from faultmap.noderank import noderankcalc
 from plotting.plotter import plotdraw
-
 
 # TODO: Move to class object
 # TODO: Perform analysis on scenario level inside class object

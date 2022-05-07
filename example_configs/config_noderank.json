@@ -1,6 +1,6 @@
 {
   "mode": "cases",
-  "writeoutput": true,
+  "write_output": true,
   "cases": [
     "tennessee_eastman"
   ]

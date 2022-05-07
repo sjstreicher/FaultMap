@@ -1,5 +1,4 @@
-FaultMap
-========
+# FaultMap
 
 .. image:: https://travis-ci.org/SimonStreicher/FaultMap.png?branch=master
     :target: https://travis-ci.org/SimonStreicher/FaultMap
@@ -17,8 +16,7 @@ FaultMap
    :target: https://zenodo.org/badge/latestdoi/14229559
    :alt: DOI
 
-Introduction
-------------
+## Introduction
 
 FaultMap is a data-driven, model-free process fault detection and diagnosis tool.
 Causal links between processes elements are identified using information theory measures (transfer entropy).
@@ -29,8 +27,8 @@ Network centrality algorithms are applied to determine the most influential elem
 
 Documentation and demonstrations still under development.
 
-Prerequisites
--------------
+## Prerequisites
+
 Most of the prerequisites are related to getting JPype to work correctly:
 
 - Python 3.7+ with compatible C++ compiler
@@ -39,8 +37,7 @@ Most of the prerequisites are related to getting JPype to work correctly:
 - Java JDK 1.8.201+ (or latest Java 8 SDK)
     The JAVA_HOME environment variable should point to the installation directory
 
-Installation
-------------
+## Installation
 
 .. code-block:: bash
 
@@ -59,8 +56,7 @@ A Docker image is available with all necessary packages and dependencies install
 
 If you want to build locally, the Dockerfile can be found at https://github.com/SimonStreicher/FaultMapDocker
 
-Setup
------
+## Setup
 
 Create directories for storing the data, configuration files as well as results.
 Create a file ``caseconfig.json`` in the root directory, similar to ``testconfig.json`` which comes with the distribution.
@@ -77,8 +73,7 @@ Example ``caseconfig.json`` file (also included in ``example_configs`` directory
       "infodynamicsloc": "~/repos/FaultMap/infodynamics.jar"
     }
 
-Configuration
--------------
+## Configuration
 
 Refer to the ``example_configs`` directory in the distribution for the required format of configuration files in order to fully define cases and scenarios.
 The following configuration files are needed to fully specify a specific case:
@@ -88,11 +83,11 @@ The following configuration files are needed to fully specify a specific case:
 3. ``graphreduce.json``
 4. ``plotting.json``
 
-Execution
----------
+## Execution
+
 In order to calculate a full set of results for a specific case, make sure this case name is included in the ``config_full.json`` file in the directory defined under ``configloc`` in the ``caseconfig.json`` file.
 
-Example ``config_full.json`` file (also included in ``example_configs`` directory):
+Example `config_full.json` file (also included in ``example_configs`` directory):
 
 .. code-block:: javascript
 

@@ -1,8 +1,8 @@
+from test import networkgen
+
 import numpy as np
 
-from faultmap import data_processing
-from test import networkgen
-from faultmap import noderank
+from faultmap import data_processing, noderank
 
 connections, gainmatrix, variables, testgraph = networkgen.fullconn_random()
 biasvector = np.ones(len(variables))
