@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-"""Performs graph reduction.
+"""Performs graph reduction."""
 
-"""
 import json
 import logging
 import os
@@ -12,9 +10,7 @@ from faultmap.graphreduce import reducegraph
 logging.basicConfig(level=logging.INFO)
 
 dataloc, configloc, _, _ = config_setup.get_locations()
-graphreduce_config = json.load(
-    open(os.path.join(configloc, "config_graphreduce.json"))
-)
+graphreduce_config = json.load(open(os.path.join(configloc, "config_graphreduce.json")))
 
 writeoutput = graphreduce_config["writeoutput"]
 mode = graphreduce_config["mode"]

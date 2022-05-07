@@ -12,9 +12,7 @@ from faultmap.noderank import noderankcalc
 logging.basicConfig(level=logging.INFO)
 
 dataloc, configloc, saveloc, _ = config_setup.get_locations()
-noderank_config = json.load(
-    open(os.path.join(configloc, "config_noderank.json"))
-)
+noderank_config = json.load(open(os.path.join(configloc, "config_noderank.json")))
 
 writeoutput = noderank_config["writeoutput"]
 mode = noderank_config["mode"]

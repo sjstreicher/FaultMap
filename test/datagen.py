@@ -4,6 +4,7 @@
 """
 
 from functools import partial
+from typing import Callable, List, Tuple
 
 import control
 import numpy as np
@@ -14,20 +15,29 @@ import faultmap.data_processing
 seed_list = [35, 88, 107, 52, 98]
 
 
-def connectionmatrix_maker(N):
-    def maker():
-        variables = ["X {}".format(i) for i in range(1, N + 1)]
-        connectionmatrix = np.ones((N, N), dtype=int)
-        return variables, connectionmatrix
+def connection_matrix_maker(n_dims: int) -> Callable[[], Tuple[List[str], np.array]]:
+    """
 
-    maker.__doc__ = (
-        "Generates a {0}x{0} connection matrix" "for use in test.".format(N)
+    Args:
+        n_dims:
+
+    Returns:
+
+    """
+
+    def maker():
+        variables = [f"X {index}" for index in range(1, n_dims + 1)]
+        connection_matrix = np.ones((n_dims, n_dims), dtype=int)
+        return variables, connection_matrix
+
+    maker.__doc__ = "Generates a {0}x{0} connection matrix" "for use in test.".format(
+        n_dims
     )
     return maker
 
 
 connectionmatrix_2x2, connectionmatrix_4x4, connectionmatrix_5x5 = [
-    connectionmatrix_maker(N) for N in [2, 4, 5]
+    connection_matrix_maker(N) for N in [2, 4, 5]
 ]
 
 
@@ -75,9 +85,7 @@ def autoreg_gen(params):
         if alpha is None:
             affected[i] = affected[i - 1] + cause[i - (delay + 1)]
         else:
-            affected[i] = (
-                alpha * affected[i - 1] + (1 - alpha) * cause[i - delay]
-            )
+            affected[i] = alpha * affected[i - 1] + (1 - alpha) * cause[i - delay]
 
     affected = affected[delay:]
     cause = cause[delay:]

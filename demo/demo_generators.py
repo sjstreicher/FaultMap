@@ -3,11 +3,11 @@
 
 """
 
+from test import datagen
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-
-from test import datagen
 
 sns.set_style("darkgrid")
 

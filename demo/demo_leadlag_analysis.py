@@ -25,19 +25,11 @@ add_parameters = {
 def tecalc_wrapper(causevardata, affectedvardata):
 
     te_fwd = calc_infodynamics_te(
-        infodynamics_loc,
-        estimator,
-        causevardata.T,
-        affectedvardata.T,
-        **add_parameters
+        infodynamics_loc, estimator, causevardata.T, affectedvardata.T, **add_parameters
     )
 
     te_bwd = calc_infodynamics_te(
-        infodynamics_loc,
-        estimator,
-        affectedvardata.T,
-        causevardata.T,
-        **add_parameters
+        infodynamics_loc, estimator, affectedvardata.T, causevardata.T, **add_parameters
     )
 
     return [te_fwd, te_bwd]
@@ -47,6 +39,7 @@ def tecalc_wrapper(causevardata, affectedvardata):
 
 
 from test.datagen import autoreg_gen
+
 from faultmap.data_processing import split_tsdata
 
 sns.set_style("darkgrid")
@@ -82,9 +75,7 @@ for boxindex, box in enumerate(boxes):
     tevals = []
     for delay in delays:
 
-        causevardata = box[:, causevarindex][
-            startindex : startindex + testsize
-        ]
+        causevardata = box[:, causevarindex][startindex : startindex + testsize]
 
         affectedvardata = box[:, affectedvarindex][
             startindex + delay : startindex + testsize + delay

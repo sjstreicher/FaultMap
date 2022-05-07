@@ -42,9 +42,9 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
-from plotting import plotter
 from faultmap import data_processing
 from faultmap.gaincalc import WeightcalcData
+from plotting import plotter
 
 # from plotter import get_scenario_data_vectors
 
@@ -61,11 +61,11 @@ markers = ["o", "*", "s", "v", "X", "D", "H"]
 
 # Label dictionaries
 yaxislabel = {
-    u"cross_correlation": r"Cross correlation",
-    u"absolute_transfer_entropy_kernel": r"Simple transfer entropy (Kernel) (bits)",
-    u"directional_transfer_entropy_kernel": r"Directional transfer entropy (Kernel) (bits)",
-    u"absolute_transfer_entropy_kraskov": r"Simple transfer entropy (Kraskov) (bits)",
-    u"directional_transfer_entropy_kraskov": r"Directional transfer entropy (Kraskov) (bits)",
+    "cross_correlation": r"Cross correlation",
+    "absolute_transfer_entropy_kernel": r"Simple transfer entropy (Kernel) (bits)",
+    "directional_transfer_entropy_kernel": r"Directional transfer entropy (Kernel) (bits)",
+    "absolute_transfer_entropy_kraskov": r"Simple transfer entropy (Kraskov) (bits)",
+    "directional_transfer_entropy_kraskov": r"Directional transfer entropy (Kraskov) (bits)",
 }
 
 linelabels = {
@@ -93,10 +93,8 @@ def fig_timeseries(graphdata, graph, scenario, savedir):
     graphdata.get_plotvars(graph)
     # graphdata.get_starttime(graph)
 
-    weightcalcdata = WeightcalcData(
-        graphdata.mode, graphdata.case, False, False, False
-    )
-    weightcalcdata.setsettings(scenario, graphdata.settings)
+    weightcalcdata = WeightcalcData(graphdata.mode, graphdata.case, False, False, False)
+    weightcalcdata.set_settings(scenario, graphdata.settings)
 
     valuematrix = weightcalcdata.inputdata_normstep
     variables = weightcalcdata.variables
@@ -138,14 +136,12 @@ def fig_fft(graphdata, graph, scenario, savedir):
     graphdata.get_plotvars(graph)
 
     sourcefile = os.path.join(
-        graphdata.saveloc,
+        graphdata.save_loc,
         "fftdata",
         "{}_{}_fft.csv".format(graphdata.case, scenario),
     )
 
-    valuematrix, headers = data_processing.read_header_values_datafile(
-        sourcefile
-    )
+    valuematrix, headers = data_processing.read_header_values_datafile(sourcefile)
 
     plt.figure(1, (12, 6))
 
@@ -244,9 +240,7 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
             else:
                 yaxislabelstring = method
             ax.set_ylabel(yaxislabel[yaxislabelstring], fontsize=14)
-            ax.set_xlabel(
-                r"Delay ({})".format(graphdata.timeunit), fontsize=14
-            )
+            ax.set_xlabel(r"Delay ({})".format(graphdata.timeunit), fontsize=14)
 
             # Open data file and plot graph
             sourcefile = os.path.join(
@@ -271,9 +265,7 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
                 (
                     threshmatrix,
                     headers,
-                ) = data_processing.read_header_values_datafile(
-                    threshold_sourcefile
-                )
+                ) = data_processing.read_header_values_datafile(threshold_sourcefile)
 
             bbox_props = dict(boxstyle="round", fc="w", ec="0.5", alpha=0.8)
 
@@ -421,9 +413,7 @@ def fig_diffscen_vs_delay(graphdata, graph, scenario, savedir):
             else:
                 yaxislabelstring = method
             ax.set_ylabel(yaxislabel[yaxislabelstring], fontsize=14)
-            ax.set_xlabel(
-                r"Delay ({})".format(graphdata.timeunit), fontsize=14
-            )
+            ax.set_xlabel(r"Delay ({})".format(graphdata.timeunit), fontsize=14)
 
             # Open data file and plot graph
             sourcefile = os.path.join(
@@ -433,9 +423,7 @@ def fig_diffscen_vs_delay(graphdata, graph, scenario, savedir):
                 "{}.csv".format(sourcevar),
             )
 
-            _, headers = data_processing.read_header_values_datafile(
-                sourcefile
-            )
+            _, headers = data_processing.read_header_values_datafile(sourcefile)
 
             # Get valuematrices
             valuematrices = plotter.get_scenario_data_vectors(
@@ -467,9 +455,9 @@ def fig_diffscen_vs_delay(graphdata, graph, scenario, savedir):
                         label=labels[scenarioindex],
                     )
 
-                    label_index = list(
-                        valuematrix[:, destvarvalueindex]
-                    ).index(max(valuematrix[:, destvarvalueindex]))
+                    label_index = list(valuematrix[:, destvarvalueindex]).index(
+                        max(valuematrix[:, destvarvalueindex])
+                    )
 
                     ax.text(
                         valuematrix[:, 0][label_index],
@@ -576,9 +564,7 @@ def fig_values_vs_boxes(graphdata, graph, scenario, savedir):
             ax.set_xlabel(r"Box", fontsize=14)
 
             # Open data file and plot graph
-            sourcefile = os.path.join(
-                trendsdir, sourcevar, "{}.csv".format(typename)
-            )
+            sourcefile = os.path.join(trendsdir, sourcevar, "{}.csv".format(typename))
 
             valuematrix, headers = data_processing.read_header_values_datafile(
                 sourcefile
@@ -623,9 +609,7 @@ def fig_values_vs_boxes(graphdata, graph, scenario, savedir):
             else:
                 yaxislabelstring = method
 
-            ax.set_ylabel(
-                r"Delay ({})".format(graphdata.timeunit), fontsize=14
-            )
+            ax.set_ylabel(r"Delay ({})".format(graphdata.timeunit), fontsize=14)
             ax.set_xlabel(r"Box", fontsize=14)
 
             # Open data file and plot graph
@@ -729,12 +713,9 @@ def fig_maxval_variables(graphdata, graph, scenario, savedir):
 
         if drawfit:
             graphdata.fitlinelabels(graphname)
-            fit_params = np.polyfit(
-                np.log(graphdata.xvals), np.log(max_values), 1
-            )
+            fit_params = np.polyfit(np.log(graphdata.xvals), np.log(max_values), 1)
             fit_y = [
-                (i * fit_params[0] + fit_params[1])
-                for i in np.log(graphdata.xvals)
+                (i * fit_params[0] + fit_params[1]) for i in np.log(graphdata.xvals)
             ]
             fitted_vals = [np.exp(val) for val in fit_y]
 

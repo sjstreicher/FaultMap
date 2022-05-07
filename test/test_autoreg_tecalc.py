@@ -1,19 +1,22 @@
 # -*- coding: utf-8 -*-
 """Verifies the working of the transfer entropy calculation code by means of
-an example on auto-regressive data with known time delay.
+an example on autoregressive data with known time delay.
 
 """
 
 import unittest
+from test.datagen import autoreg_datagen
 
 import jpype
 from sklearn import preprocessing
 
 from faultmap.transentropy import calc_infodynamics_te as te_info
-from test.datagen import autoreg_datagen
 
 
 class TestAutoregressiveTransferEntropy(unittest.TestCase):
+    """ """
+
+    # TODO: Use pytest fixtures
     def setUp(self):
         """Generate list of entropies to test"""
 
@@ -61,10 +64,10 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
                 "kernel",
                 x_hist_norm[0],
                 y_hist_norm[0],
-                **{"kernel_width": 0.1}
+                **{"kernel_width": 0.1},
             )
             self.entropies_infodyn_kernel.append(result_infodyn)
-            print("Infodynamics TE result: %.4f bits" % result_infodyn)
+            print(f"Infodynamics TE result: {result_infodyn:.4f} bits")
 
         print(self.entropies_infodyn_kernel)
 
@@ -91,7 +94,11 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
             # Calculate transfer entropy according to infodynamics method:
             (
                 result_infodyn,
-                [[te_significance, mi_significance], properties, mutualinfo,],
+                [
+                    [te_significance, mi_significance],
+                    properties,
+                    mutualinfo,
+                ],
             ) = te_info(
                 "infodynamics.jar",
                 "kraskov",
@@ -134,7 +141,11 @@ class TestAutoregressiveTransferEntropy(unittest.TestCase):
 
             (
                 result_infodyn,
-                [[te_significance, mi_significance], properties, mutualinfo,],
+                [
+                    [te_significance, mi_significance],
+                    properties,
+                    mutualinfo,
+                ],
             ) = te_info(
                 "infodynamics.jar",
                 "kraskov",

@@ -102,9 +102,7 @@ def calc_weights_oneset(
     auxdata_neutral = []
 
     if method[:16] == "transfer_entropy":
-        if os.path.exists(
-            filename(auxdirectional_name, boxindex + 1, causevar)
-        ):
+        if os.path.exists(filename(auxdirectional_name, boxindex + 1, causevar)):
             auxdata_directional = list(
                 np.genfromtxt(
                     filename(auxdirectional_name, boxindex + 1, causevar),
@@ -157,14 +155,10 @@ def calc_weights_oneset(
         )
 
         exists = False
-        do_test = not (
-            newconnectionmatrix[affectedvarindex, causevarindex] == 0
-        )
+        do_test = not (newconnectionmatrix[affectedvarindex, causevarindex] == 0)
         # Test if the affectedvar has already been calculated
         if (method[:16] == "transfer_entropy") and do_test:
-            testlocation = filename(
-                auxdirectional_name, boxindex + 1, causevar
-            )
+            testlocation = filename(auxdirectional_name, boxindex + 1, causevar)
             if os.path.exists(testlocation):
                 # Open CSV file and read names of second affected vars
                 auxdatafile = np.genfromtxt(
@@ -195,15 +189,13 @@ def calc_weights_oneset(
             for delay in weightcalcdata.sample_delays:
                 logging.info("Now testing delay: " + str(delay))
 
-                causevardata = box[:, causevarindex][
-                    startindex : startindex + size
-                ]
+                causevardata = box[:, causevarindex][startindex : startindex + size]
 
                 affectedvardata = box[:, affectedvarindex][
                     startindex + delay : startindex + size + delay
                 ]
 
-                weight, auxdata = weightcalculator.calcweight(
+                weight, auxdata = weightcalculator.calc_weight(
                     causevardata,
                     affectedvardata,
                     weightcalcdata,
@@ -213,7 +205,7 @@ def calc_weights_oneset(
 
                 # Calculate significance thresholds at each data point
                 if weightcalcdata.allthresh:
-                    sigthreshold = weightcalculator.calcsigthresh(
+                    sigthreshold = weightcalculator.calc_significance_threshold(
                         weightcalcdata, affectedvar, causevar, box, delay
                     )
 
@@ -265,14 +257,10 @@ def calc_weights_oneset(
 
                 # Combine weight data
                 weights_thisvar_directional = np.asarray(weightlist[0])
-                weights_thisvar_directional = weights_thisvar_directional[
-                    :, np.newaxis
-                ]
+                weights_thisvar_directional = weights_thisvar_directional[:, np.newaxis]
 
                 mis_thisvar_directional = np.asarray(milist[0])
-                mis_thisvar_directional = mis_thisvar_directional[
-                    :, np.newaxis
-                ]
+                mis_thisvar_directional = mis_thisvar_directional[:, np.newaxis]
 
                 datalines_directional = np.concatenate(
                     (datalines_directional, weights_thisvar_directional),
@@ -285,9 +273,7 @@ def calc_weights_oneset(
                 )
 
                 weights_thisvar_absolute = np.asarray(weightlist[1])
-                weights_thisvar_absolute = weights_thisvar_absolute[
-                    :, np.newaxis
-                ]
+                weights_thisvar_absolute = weights_thisvar_absolute[:, np.newaxis]
 
                 mis_thisvar_absolute = np.asarray(milist[1])
                 mis_thisvar_absolute = mis_thisvar_absolute[:, np.newaxis]
@@ -325,9 +311,7 @@ def calc_weights_oneset(
                         absolute_sigthreshlist,
                     ]
 
-                    sigthresh_thisvar_directional = np.asarray(
-                        sigthreshlist[0]
-                    )
+                    sigthresh_thisvar_directional = np.asarray(sigthreshlist[0])
                     sigthresh_thisvar_directional = sigthresh_thisvar_directional[
                         :, np.newaxis
                     ]
@@ -358,9 +342,7 @@ def calc_weights_oneset(
                 twodimensions = False
 
                 weights_thisvar_neutral = np.asarray(weightlist)
-                weights_thisvar_neutral = weights_thisvar_neutral[
-                    :, np.newaxis
-                ]
+                weights_thisvar_neutral = weights_thisvar_neutral[:, np.newaxis]
 
                 datalines_neutral = np.concatenate(
                     (datalines_neutral, weights_thisvar_neutral), axis=1
@@ -384,9 +366,7 @@ def calc_weights_oneset(
                 # Write the significance thresholds to file
                 if weightcalcdata.allthresh:
                     sigthresh_thisvar_neutral = np.asarray(sigthreshlist)
-                    sigthresh_thisvar_neutral = sigthresh_thisvar_neutral[
-                        :, np.newaxis
-                    ]
+                    sigthresh_thisvar_neutral = sigthresh_thisvar_neutral[:, np.newaxis]
 
                     datalines_sigthresh_neutral = np.concatenate(
                         (

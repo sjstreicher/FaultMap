@@ -1,6 +1,6 @@
 {
   "mode": "test",
-  "writeoutput": true,
+  "write_output": true,
   "cases": [
     "quickdemo"
    ]

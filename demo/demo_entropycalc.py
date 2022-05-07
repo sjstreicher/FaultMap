@@ -3,76 +3,73 @@
 
 """
 
+from test.datagen import autoreg_gen
+
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
-infodynamicsloc = "infodynamics.jar"
-estimator = "kernel"
-# estimator = 'gaussian'
-
-
-# class SpoofClass(object):
-#
-#    def __init__(self, infodynamicsloc, normalise):
-#        self.infodynamicsloc = infodynamicsloc
-#        self.normalise = normalise
-#
-# weightcalcdata = SpoofClass(infodynamics_loc, True)
-
+from faultmap import transentropy
+from faultmap.data_processing import split_tsdata
 
 sns.set_style("darkgrid")
 
-from test.datagen import autoreg_gen
-from faultmap.data_processing import split_tsdata
+INFODYNAMICS_LOCATION = "infodynamics.jar"
+ESTIMATOR = "kernel"
+# ESTIMATOR = 'gaussian'
 
-from faultmap import transentropy
+SAMPLES = 1e6
 
-samples = 1e6
+ALPHA = 0.9
+NOISE_RATIO = 0.1
+DELAY = 10
 
-alpha = 0.9
-noise_ratio = 0.1
-delay = 10
+BOX_SIZE = 100
+BOX_NUM = 10
 
-boxsize = 100
-boxnum = 10
+SAMPLING_RATE = 1
+KERNEL_BANDWIDTH = 0.5
 
-sampling_rate = 1
-# kernel_bandwidth = 0.5
+sampledata = autoreg_gen([SAMPLES, DELAY, ALPHA, NOISE_RATIO])
 
-sampledata = autoreg_gen([samples, delay, alpha, noise_ratio])
+boxes = split_tsdata(sampledata, SAMPLING_RATE, BOX_SIZE, BOX_NUM)
 
-boxes = split_tsdata(sampledata, sampling_rate, boxsize, boxnum)
-
-causevarindex = 0
-affectedvarindex = 1
+CAUSE_VAR_INDEX = 0
+AFFECTED_VAR_INDEX = 1
 
 
 def gaussian_entropy(data):
-    "Returns entropy of Gaussian signal in bits"
+    """Returns entropy of Gaussian signal in bits
+
+    Args:
+        data:
+
+    Returns:
+
+    """
     variance = np.var(data)
     entropy = 0.5 * np.log2(2.0 * np.pi * np.e * variance)
     return entropy
 
 
-def silverman_bandwidth(vardata):
-    return 1.06 * np.std(vardata) * (len(vardata) ** (-1 / 5))
+def silverman_bandwidth(var_data):
+    return 1.06 * np.std(var_data) * (len(var_data) ** (-1 / 5))
 
 
-def calculate_entropies(vardata, estimator=estimator):
-    #    kernel_bandwidth = silverman_bandwidth(vardata)
+def calculate_entropies(var_data, estimator=ESTIMATOR):
+    # kernel_bandwidth = silverman_bandwidth(var_data)
     kernel_bandwidth = 0.8
-    print("Kernel bandwidth: " + str(kernel_bandwidth))
+    print(f"Kernel bandwidth: {str(kernel_bandwidth)}")
     # Setup Java class for infodynamics toolkit
-    entropyCalc = transentropy.setup_infodynamics_entropy(
-        infodynamicsloc, estimator, kernel_bandwidth
+    entropy_calc = transentropy.setup_infodynamics_entropy(
+        INFODYNAMICS_LOCATION, estimator, kernel_bandwidth
     )
-    signalent_kernel = transentropy.calc_infodynamics_entropy(
-        entropyCalc, vardata, estimator
+    signal_entropy_kernel = transentropy.calc_infodynamics_entropy(
+        entropy_calc, var_data, estimator
     )
-    signalent_gaussian = gaussian_entropy(vardata)
+    signal_entropy_gaussian = gaussian_entropy(var_data)
 
-    return signalent_kernel, signalent_gaussian
+    return signal_entropy_kernel, signal_entropy_gaussian
 
 
 # corr_boxresults = []
@@ -101,9 +98,7 @@ for boxindex, box in enumerate(boxes):
     signalent_affected_gaussian_boxresults.append(signalent_affected_gaussian)
 
 fig, ax1 = plt.subplots()
-ax1.plot(
-    range(len(boxes)), signalent_cause_kernel_boxresults, label="cause kernel"
-)
+ax1.plot(range(len(boxes)), signalent_cause_kernel_boxresults, label="cause kernel")
 ax1.plot(
     range(len(boxes)),
     signalent_cause_gaussian_boxresults,

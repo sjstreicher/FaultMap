@@ -108,9 +108,7 @@ def setup_infodynamics_te(infodynamicsloc, calcmethod, **parameters):
                 ksearchmax = parameters.get("k_search_max", 5)
                 teCalc.setProperty("AUTO_EMBED_K_SEARCH_MAX", str(ksearchmax))
                 tausearchmax = parameters.get("tau_search_max", 5)
-                teCalc.setProperty(
-                    "AUTO_EMBED_TAU_SEARCH_MAX", str(tausearchmax)
-                )
+                teCalc.setProperty("AUTO_EMBED_TAU_SEARCH_MAX", str(tausearchmax))
 
         # Note: If setting the delay is needed to be changed on each iteration,
         # it may be best to do this outside the loop and initialise teCalc
@@ -159,78 +157,67 @@ def setup_infodynamics_te(infodynamicsloc, calcmethod, **parameters):
 
 
 def calc_infodynamics_te(
-    infodynamicsloc, calcmethod, affected_data, causal_data, **parameters
+    infodynamicsloc, calc_method, affected_data, causal_data, **parameters
 ):
-    """Calculates the transfer entropy for a specific timelag (equal to
+    """Calculates the transfer entropy for a specific time lag (equal to
     prediction horison) between two sets of time series data.
 
     This implementation makes use of the infodynamics toolkit:
     https://code.google.com/p/information-dynamics-toolkit/
 
-    The transfer entropy should have a maximum value when timelag = delay
+    The transfer entropy should have a maximum value when time lag = delay
     used to generate an autoregressive dataset, or will otherwise indicate the
     dead time between data indicating a causal relationship.
 
     """
 
-    teCalc = setup_infodynamics_te(infodynamicsloc, calcmethod, **parameters)
-    miCalc = setup_infodynamics_mi(infodynamicsloc, calcmethod, **parameters)
+    te_calc = setup_infodynamics_te(infodynamicsloc, calc_method, **parameters)
+    mi_calc = setup_infodynamics_mi(infodynamicsloc, calc_method, **parameters)
 
-    test_significance = parameters.get("test_signifiance", False)
+    test_significance = parameters.get("test_significance", False)
     significance_permutations = parameters.get("significance_permutations", 30)
-
-    #    sourceArray = causal_data.tolist()
-    #    destArray = affected_data.tolist()
 
     if len(causal_data) != len(affected_data):
         print("Source length: " + str(len(causal_data)))
         print("Destination length: " + str(len(affected_data)))
-        raise ValueError(
-            "The source and destination arrays are of different lengths"
-        )
+        raise ValueError("The source and destination arrays are of different lengths")
 
-    # sourceArrayJava = jpype.JArray(jpype.JDouble, 1)(sourceArray)
-    # destArrayJava = jpype.JArray(jpype.JDouble, 1)(destArray)
-
-    #    sourceArrayJava = np.asarray(sourceArray)
-    #    destArrayJava = np.asarray(destArray)
-
-    if calcmethod == "discrete":
+    if calc_method == "discrete":
         source = map(int, causal_data)
-        dest = map(int, affected_data)
-        teCalc.addObservations(source, dest)
-        miCalc.addObservations(source, dest)
+        destination = map(int, affected_data)
+        te_calc.addObservations(source, destination)
+        mi_calc.addObservations(source, destination)
     else:
-        teCalc.setObservations(causal_data, affected_data)
-        miCalc.setObservations(causal_data, affected_data)
+        te_calc.setObservations(causal_data, affected_data)
+        mi_calc.setObservations(causal_data, affected_data)
 
-    transentropy = teCalc.computeAverageLocalOfObservations()
-    mutualinfo = miCalc.computeAverageLocalOfObservations()
+    transfer_entropy = te_calc.computeAverageLocalOfObservations()
+    mutual_information = mi_calc.computeAverageLocalOfObservations()
 
     # Convert nats to bits if necessary
-    if calcmethod == "kraskov":
-        transentropy = transentropy / np.log(2.0)
-        mutualinfo = mutualinfo / np.log(2.0)
-    elif (calcmethod == "kernel") or (calcmethod == "discrete"):
-        transentropy = transentropy
-        mutualinfo = mutualinfo
+    if calc_method == "kraskov":
+        transfer_entropy = transfer_entropy / np.log(2.0)
+        mutual_information = mutual_information / np.log(2.0)
+    elif calc_method in ("kernel", "discrete"):
+        transfer_entropy = transfer_entropy
+        mutual_information = mutual_information
     else:
         raise NameError("Infodynamics method name not recognized")
 
     if test_significance:
-        te_significance = teCalc.computeSignificance(significance_permutations)
-        mi_significance = miCalc.computeSignificance(significance_permutations)
+        te_significance = te_calc.computeSignificance(significance_permutations)
+        mi_significance = mi_calc.computeSignificance(significance_permutations)
     else:
         te_significance = None
         mi_significance = None
 
-    # Get all important properties from used teCalc
-    if calcmethod != "discrete":
-        k_history = teCalc.getProperty("k_HISTORY")
-        k_tau = teCalc.getProperty("k_TAU")
-        l_history = teCalc.getProperty("l_HISTORY")
-        l_tau = teCalc.getProperty("l_TAU")
-        delay = teCalc.getProperty("DELAY")
+    # Get all important properties from used te_calc
+    if calc_method != "discrete":
+        k_history = te_calc.getProperty("k_HISTORY")
+        k_tau = te_calc.getProperty("k_TAU")
+        l_history = te_calc.getProperty("l_HISTORY")
+        l_tau = te_calc.getProperty("l_TAU")
+        delay = te_calc.getProperty("DELAY")
 
         properties = [
             k_history,
@@ -243,32 +230,36 @@ def calc_infodynamics_te(
         properties = [None]
 
     return (
-        transentropy,
-        [[te_significance, mi_significance], properties, mutualinfo],
+        transfer_entropy,
+        [[te_significance, mi_significance], properties, mutual_information],
     )
 
 
 def setup_infodynamics_mi(infodynamicsloc, calcmethod, **parameters):
-    """Prepares the miCalc class of the Java Infodyamics Toolkit (JIDT)
+    """Prepares the mi_calc class of the Java Infodyamics Toolkit (JIDT)
     in order to calculate mutual information according to the kernel or Kraskov
     estimator method. Also supports discrete mutual information calculation.
 
     The embedding dimension of the destination or target variable (k) can
     easily be set by adjusting the histlength parameter.
 
+    The Kraskov method is the recommended method and also provides
+    methods for auto-embedding. The max corr AIS auto-embedding method
+    will be enabled as the default.
+
     """
 
     check_jvm(infodynamicsloc)
 
     if calcmethod == "kernel":
-        miCalcClass = jpype.JPackage(
+        mi_calc_class = jpype.JPackage(
             "infodynamics.measures.continuous.kernel"
         ).MutualInfoCalculatorMultiVariateKernel
-        miCalc = miCalcClass()
+        mi_calc = mi_calc_class()
 
-        # Normalisation is performed before this step, set property to false to
+        # Normalisation is performed before this step, set property false to
         # prevent accidental data standardisation
-        miCalc.setProperty("NORMALISE", "false")
+        mi_calc.setProperty("NORMALISE", "false")
 
         # Parameter definitions - refer to JIDT Javadocs
         # k - destination embedded history length (Schreiber k=1)
@@ -276,33 +267,28 @@ def setup_infodynamics_mi(infodynamicsloc, calcmethod, **parameters):
         # then this kernel width corresponds to the number of
         # standard deviations from the mean (otherwise it is an absolute value)
 
-        k = parameters.get("k", 1)
+        # k = parameters.get("k", 1)
         kernel_width = parameters.get("kernel_width", 0.25)
 
-        miCalc.setProperty("KERNEL_WIDTH", str(kernel_width))
+        mi_calc.setProperty("KERNEL_WIDTH", str(kernel_width))
 
-        miCalc.initialise()
+        mi_calc.initialise()
 
     elif calcmethod == "kraskov":
-        """The Kraskov method is the recommended method and also provides
-        methods for auto-embedding. The max corr AIS auto-embedding method
-        will be enabled as the default.
 
-        """
-
-        miCalcClass = jpype.JPackage(
+        mi_calc_class = jpype.JPackage(
             "infodynamics.measures.continuous.kraskov"
         ).MutualInfoCalculatorMultiVariateKraskov1
-        miCalc = miCalcClass()
+        mi_calc = mi_calc_class()
         # Parameter definitions - refer to JIDT javadocs
 
         # k - embedding length of destination past history to consider
         # delay - time lag between last element of source and destination
         # next value
 
-        # Normalisation is performed before this step, set property to false to
+        # Normalisation is performed before this step, set property false to
         # prevent accidental data standardisation
-        miCalc.setProperty("NORMALISE", "false")
+        mi_calc.setProperty("NORMALISE", "false")
 
         # Note: If setting the delay is needed to be changed on each iteration,
         # it may be best to do this outside the loop and initialise teCalc
@@ -310,12 +296,12 @@ def setup_infodynamics_mi(infodynamicsloc, calcmethod, **parameters):
 
         if "delay" in parameters:
             delay = parameters["delay"]
-            miCalc.setProperty("TIME_DIFF", str(delay))
+            mi_calc.setProperty("TIME_DIFF", str(delay))
 
-        miCalc.initialise()
+        mi_calc.initialise()
 
     elif calcmethod == "discrete":
-        miCalcClass = jpype.JPackage(
+        mi_calc_class = jpype.JPackage(
             "infodynamics.measures.discrete"
         ).MutualInformationCalculatorDiscrete
         # Parameter definitions - refer to JIDT javadocs
@@ -326,19 +312,19 @@ def setup_infodynamics_mi(infodynamicsloc, calcmethod, **parameters):
         base = parameters.get("base", 2)
         #            print "base default of 2 (binary) is used"
 
-        miCalc = miCalcClass(base, base, 0)
-        miCalc.initialise()
+        mi_calc = mi_calc_class(base, base, 0)
+        mi_calc.initialise()
 
     else:
         raise NameError("Mutual information method name not recognized")
 
-    return miCalc
+    return mi_calc
 
 
 def setup_infodynamics_entropy(
     infodynamicsloc, estimator="kernel", kernel_bandwidth=0.1, mult=False
 ):
-    """Prepares the entropyCalc class of the Java Infodyamics Toolkit (JIDK)
+    """Prepares the entropy_calc class of the Java Infodyamics Toolkit (JIDK)
     in order to calculate differential entropy (continuous signals) according
     to the estimation method specified.
 
@@ -359,7 +345,10 @@ def setup_infodynamics_entropy(
 
     Returns
     -------
-        entropyCalc : EntropyCalculator JIDT object
+        entropy_calc : EntropyCalculator JIDT object
+
+    Args:
+        estimator:
 
     """
 
@@ -367,57 +356,57 @@ def setup_infodynamics_entropy(
 
     if estimator == "kernel":
         if mult:
-            entropyCalcClass = jpype.JPackage(
+            entropy_calc_class = jpype.JPackage(
                 "infodynamics.measures.continuous.kernel"
             ).EntropyCalculatorMultiVariateKernel
         else:
-            entropyCalcClass = jpype.JPackage(
+            entropy_calc_class = jpype.JPackage(
                 "infodynamics.measures.continuous.kernel"
             ).EntropyCalculatorKernel
 
-        entropyCalc = entropyCalcClass()
-        # Normalisation is performed before this step, set property to false to
+        entropy_calc = entropy_calc_class()
+        # Normalisation is performed before this step, set property false to
         # prevent accidental data standardisation
-        entropyCalc.setProperty("NORMALISE", "false")
-        entropyCalc.initialise(kernel_bandwidth)
+        entropy_calc.setProperty("NORMALISE", "false")
+        entropy_calc.initialise(kernel_bandwidth)
 
     elif estimator == "gaussian":
         if mult:
-            entropyCalcClass = jpype.JPackage(
+            entropy_calc_class = jpype.JPackage(
                 "infodynamics.measures.continuous.gaussian"
             ).EntropyCalculatorMultiVariateGaussian
         else:
-            entropyCalcClass = jpype.JPackage(
+            entropy_calc_class = jpype.JPackage(
                 "infodynamics.measures.continuous.gaussian"
             ).EntropyCalculatorGaussian
 
-        entropyCalc = entropyCalcClass()
-        entropyCalc.initialise()
+        entropy_calc = entropy_calc_class()
+        entropy_calc.initialise()
 
     elif estimator == "kozachenko":
-        entropyCalcClass = jpype.JPackage(
+        entropy_calc_class = jpype.JPackage(
             "infodynamics.measures.continuous.kozachenko"
         ).EntropyCalculatorMultiVariateKozachenko
 
-        entropyCalc = entropyCalcClass()
-        entropyCalc.initialise()
+        entropy_calc = entropy_calc_class()
+        entropy_calc.initialise()
 
     else:
         raise NameError("Estimator not recognized")
 
-    return entropyCalc, estimator
+    return entropy_calc, estimator
 
 
-def calc_infodynamics_entropy(entropyCalc, data, estimator):
+def calc_infodynamics_entropy(entropy_calculator, data, estimator):
     """Estimates the entropy of a single signal.
 
     Parameters
     ----------
-        entropyCalc : EntropyCalculator JIDT object
+        entropy_calculator : EntropyCalculator JIDT object
            The estimation method is determined during initialisation of this
            object beforehand.
         data : one-dimensional numpy.ndarray
-           The univariate signal.
+           The uni-variate signal.
 
     Returns
     -------
@@ -431,16 +420,15 @@ def calc_infodynamics_entropy(entropyCalc, data, estimator):
         Nats can be converted to bits by division with ln(2).
     """
 
-    dataArray = data.tolist()
-    dataArrayJava = jpype.JArray(jpype.JDouble, 1)(dataArray)
-    entropyCalc.setObservations(dataArrayJava)
-    entropy = entropyCalc.computeAverageLocalOfObservations()
+    data_array = data.tolist()
+    data_array_java = jpype.JArray(jpype.JDouble, 1)(data_array)
+    entropy_calculator.setObservations(data_array_java)
+    entropy = entropy_calculator.computeAverageLocalOfObservations()
     if estimator == "gaussian":
         # Convert nats to bits
         entropy = entropy / np.log(2.0)
     elif estimator == "kernel":
-        # Do nothing
-        entropy = entropy
+        pass
     elif estimator == "kozachenko":
         entropy = entropy / np.log(2.0)
     else:

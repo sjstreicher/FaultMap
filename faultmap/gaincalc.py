@@ -1,22 +1,19 @@
-# -*- coding: utf-8 -*-
-"""This module calculates the gains (weights) of edges connecting
-variables in the digraph.
+"""This module provides methods for calculating the gains (weights) of edges connecting
+variables in the directed graph.
 
 Calculation of both Pearson's correlation and transfer entropy is supported.
-Transfer entropy is calculated according to the global average of local
-entropies method.
-All weights are optimized with respect to time shifts between the time series
-data vectors (i.e. cross-correlated).
+Transfer entropy is calculated according to the global average of local entropy method.
+All weights are optimized with respect to time shifts between the time series data
+vectors (i.e. cross-correlated).
 
-The delay giving the maximum weight is returned, together with the maximum
-weights.
+The delay giving the maximum weight is returned, together with the maximum weights.
 
 All weights are tested for significance.
 The Pearson's correlation weights are tested for significance according to
 the parameters presented by Bauer2005.
 The transfer entropy weights are tested for significance using a non-parametric
-rank-order method using surrogate data generated according to the iterative
-amplitude adjusted Fourier transform method (iAAFT).
+rank-order method using surrogate data generated according to the iterative amplitude
+adjusted Fourier transform method (iAAFT).
 
 """
 
@@ -27,14 +24,13 @@ import logging
 import multiprocessing
 import os
 import time
+from test import datagen
 
 import numpy as np
 import pandas as pd
 
-from faultmap import data_processing, config_setup
-from test import datagen
-from faultmap import gaincalc_oneset
-from faultmap.gaincalculators import CorrWeightcalc, TransentWeightcalc
+from faultmap import config_setup, data_processing, gaincalc_oneset
+from faultmap.gaincalculators import CorrWeightCalculator, TransEntWeightCalculator
 
 
 class WeightcalcData(object):
@@ -45,11 +41,11 @@ class WeightcalcData(object):
 
     def __init__(
         self,
-        mode,
-        case,
-        single_entropies,
-        fftcalc,
-        do_multiprocessing,
+        mode: str,
+        case: str,
+        single_entropies: bool,
+        fft_calc: bool,
+        do_multiprocessing: bool,
         use_gpu,
     ):
         """
@@ -65,7 +61,7 @@ class WeightcalcData(object):
             either test or case config files.
         single_entropies : bool
             Flags whether the entropies of single signals should be calculated.
-        fftcalc : bool
+        fft_calc : bool
             Indicates whether the FFT of all individual signals should be
             calculated.
         do_multiprocessing : bool
@@ -80,11 +76,9 @@ class WeightcalcData(object):
             self.caseconfigdir,
             self.casedir,
             self.infodynamicsloc,
-        ) = config_setup.runsetup(mode, case)
+        ) = config_setup.run_setup(mode, case)
         # Load case config file
-        with open(
-            os.path.join(self.caseconfigdir, "weightcalc.json")
-        ) as configfile:
+        with open(os.path.join(self.caseconfigdir, "weightcalc.json")) as configfile:
             self.caseconfig = json.load(configfile)
         configfile.close()
         # Get data type
@@ -97,14 +91,25 @@ class WeightcalcData(object):
         self.do_multiprocessing = do_multiprocessing
         self.use_gpu = use_gpu
 
-        self.casename = case
+        self.case_name = case
 
         # Flag for calculating single signal entropies
         self.single_entropies = single_entropies
         # Flag for calculating FFT of all signals
-        self.fftcalc = fftcalc
+        self.fft_calc = fft_calc
 
-    def scenariodata(self, scenario):
+        self.settings_set = None
+        self.connections_used = None
+
+    def scenario_data(self, scenario: str):
+        """
+
+        Args:
+            scenario:
+
+        Returns:
+
+        """
         """Retrieves data particular to each scenario for the case being
         investigated.
 
@@ -115,15 +120,13 @@ class WeightcalcData(object):
                 config file.
 
         """
-        print("The scenario name is: " + scenario)
+        print(f"The scenario name is: {scenario}")
 
         self.settings_set = self.caseconfig[scenario]["settings"]
 
-    def setsettings(self, scenario, settings_name):
+    def set_settings(self, scenario, settings_name):
         if "use_connections" in self.caseconfig[settings_name]:
-            self.connections_used = self.caseconfig[settings_name][
-                "use_connections"
-            ]
+            self.connections_used = self.caseconfig[settings_name]["use_connections"]
         else:
             self.connections_used = False
         if "transient" in self.caseconfig[settings_name]:
@@ -151,9 +154,7 @@ class WeightcalcData(object):
         if self.sigtest:
             # The transfer entropy threshold calculation method be either
             # 'sixsigma' or 'rankorder'
-            self.thresh_method = self.caseconfig[settings_name][
-                "thresh_method"
-            ]
+            self.thresh_method = self.caseconfig[settings_name]["thresh_method"]
             # The transfer entropy surrogate generation method be either
             # 'iAAFT' or 'random_shuffle'
             self.surr_method = self.caseconfig[settings_name]["surr_method"]
@@ -180,9 +181,7 @@ class WeightcalcData(object):
         # Get parameters for kernel method
         if "transfer_entropy_kernel" in self.methods:
             if "kernel_width" in self.caseconfig[settings_name]:
-                self.kernel_width = self.caseconfig[settings_name][
-                    "kernel_width"
-                ]
+                self.kernel_width = self.caseconfig[settings_name]["kernel_width"]
             else:
                 self.kernel_width = None
 
@@ -212,9 +211,7 @@ class WeightcalcData(object):
             raw_df.set_index("Time", inplace=True)
 
             self.variables = list(raw_df.keys())
-            self.timestamps = np.asarray(
-                raw_df.index.astype(np.int64) // 10 ** 9
-            )
+            self.timestamps = np.asarray(raw_df.index.astype(np.int64) // 10**9)
             self.headerline = ["Time"] + [var for var in self.variables]
 
             self.inputdata_raw = np.asarray(raw_df)
@@ -278,7 +275,7 @@ class WeightcalcData(object):
             self.inputdata_raw,
             self.variables,
             self.saveloc,
-            self.casename,
+            self.case_name,
             scenario,
             self.normalise,
             self.methods,
@@ -322,9 +319,7 @@ class WeightcalcData(object):
 
         elif self.delaytype == "intervals":
             # Test delays at specified intervals
-            self.delayinterval = self.caseconfig[settings_name][
-                "delay_interval"
-            ]
+            self.delayinterval = self.caseconfig[settings_name]["delay_interval"]
 
             self.delays = [(val * self.delayinterval) for val in delay_range]
 
@@ -335,9 +330,7 @@ class WeightcalcData(object):
         if self.causevarindexes == "all":
             self.causevarindexes = range(len(self.variables))
         if "affectedvarindexes" in self.caseconfig[scenario]:
-            self.affectedvarindexes = self.caseconfig[scenario][
-                "affectedvarindexes"
-            ]
+            self.affectedvarindexes = self.caseconfig[scenario]["affectedvarindexes"]
         else:
             self.affectedvarindexes = "all"
         if self.affectedvarindexes == "all":
@@ -357,7 +350,7 @@ class WeightcalcData(object):
                 low_freq,
                 high_freq,
                 self.saveloc,
-                self.casename,
+                self.case_name,
                 scenario,
             )
             self.inputdata_originalrate = self.inputdata_bandgapfiltered
@@ -372,7 +365,7 @@ class WeightcalcData(object):
             self.timestamps,
             self.inputdata_originalrate,
             self.saveloc,
-            self.casename,
+            self.case_name,
             scenario,
             self.detrend,
         )
@@ -385,9 +378,7 @@ class WeightcalcData(object):
         # TODO: Use proper pandas.tseries.resample techniques
         # if it will really add any functionality
         # TODO: Investigate use of forward-backward Kalman filters
-        self.inputdata = self.inputdata_originalrate[
-            0 :: self.sub_sampling_interval
-        ]
+        self.inputdata = self.inputdata_originalrate[0 :: self.sub_sampling_interval]
 
         if self.transient:
             self.boxsize = self.caseconfig[settings_name]["boxsize"]
@@ -417,7 +408,7 @@ class WeightcalcData(object):
                 self.boxnum,
             )
             data_processing.write_boxdates(
-                self.boxdates, self.saveloc, self.casename, scenario
+                self.boxdates, self.saveloc, self.case_name, scenario
             )
 
             # Generate boxes to use
@@ -442,7 +433,7 @@ class WeightcalcData(object):
             )
 
             data_processing.write_boxdates(
-                self.boxdates, self.saveloc, self.casename, scenario
+                self.boxdates, self.saveloc, self.case_name, scenario
             )
 
             self.boxnum = len(self.boxdates)
@@ -494,7 +485,7 @@ class WeightcalcData(object):
         # FFT the data and write back in format that can be analysed in
         # TOPCAT in a plane plot
 
-        if self.fftcalc:
+        if self.fft_calc:
             data_processing.fft_calculation(
                 self.headerline,
                 self.inputdata_originalrate,
@@ -502,7 +493,7 @@ class WeightcalcData(object):
                 self.sampling_rate,
                 self.sampling_unit,
                 self.saveloc,
-                self.casename,
+                self.case_name,
                 scenario,
             )
 
@@ -510,148 +501,149 @@ class WeightcalcData(object):
 def writecsv_weightcalc(filename, items, header):
     """CSV writer customized for use in weightcalc function."""
 
-    with open(filename, "w", newline="") as f:
-        csv.writer(f).writerow(header)
-        csv.writer(f).writerows(items)
+    with open(filename, "w", newline="", encoding="utf-8") as file:
+        csv.writer(file).writerow(header)
+        csv.writer(file).writerows(items)
 
 
-def calc_weights(weightcalcdata, method, scenario, writeoutput):
+def calc_weights(weight_calc_data, method: str, scenario, write_output):
     """Determines the maximum weight between two variables by searching through
     a specified set of delays.
 
-    Parameters
-    ----------
-        method : str
-        Can be one of the following:
-        'cross_correlation'
-        'partial_correlation' -- does not support time delays
-        'transfer_entropy_kernel'
-        'transfer_entropy_kraskov'
+    Args:
+        weight_calc_data:
+        method: Can be one of the following:
+            'cross_correlation'
+            'partial_correlation' -- does not support time delays
+            'transfer_entropy_kernel'
+            'transfer_entropy_kraskov'
+        scenario:
+        write_output:
 
     TODO: Fix partial correlation method to make use of time delays
+
+    Returns:
 
     """
 
     if method == "cross_correlation":
-        weightcalculator = CorrWeightcalc(weightcalcdata)
+        weight_calculator = CorrWeightCalculator(weight_calc_data)
     elif method == "transfer_entropy_kernel":
-        weightcalculator = TransentWeightcalc(weightcalcdata, "kernel")
+        weight_calculator = TransEntWeightCalculator(weight_calc_data, "kernel")
     elif method == "transfer_entropy_kraskov":
-        weightcalculator = TransentWeightcalc(weightcalcdata, "kraskov")
+        weight_calculator = TransEntWeightCalculator(weight_calc_data, "kraskov")
     elif method == "transfer_entropy_discrete":
-        weightcalculator = TransentWeightcalc(weightcalcdata, "discrete")
+        weight_calculator = TransEntWeightCalculator(weight_calc_data, "discrete")
     # elif method == 'partial_correlation':
-    #     weightcalculator = PartialCorrWeightcalc(weightcalcdata)
+    #     weight_calculator = PartialCorrWeightCalculator(weight_calc_data)
     else:
         raise ValueError("Method not recognized")
 
-    if weightcalcdata.sigtest:
-        sigstatus = "sigtested"
-    elif not weightcalcdata.sigtest:
-        sigstatus = "nosigtest"
+    if weight_calc_data.sigtest:
+        significance_status = "significance_tested"
+    else:
+        significance_status = "no_significance_test"
 
     if method == "transfer_entropy_kraskov":
-        if weightcalcdata.additional_parameters["auto_embed"]:
-            embedstatus = "autoembedding"
+        if weight_calc_data.additional_parameters["auto_embed"]:
+            embed_status = "auto-embedding"
         else:
-            embedstatus = "naive"
+            embed_status = "naive"
     else:
-        embedstatus = "naive"
+        embed_status = "naive"
 
-    vardims = len(weightcalcdata.variables)
-    startindex = weightcalcdata.startindex
-    size = weightcalcdata.testsize
+    var_dims = len(weight_calc_data.variables)
+    start_index = weight_calc_data.startindex
+    size = weight_calc_data.testsize
 
-    cause_dellist = []
-    affected_dellist = []
-    for index in range(vardims):
-        if index not in weightcalcdata.causevarindexes:
-            cause_dellist.append(index)
-            logging.info("Deleted column " + str(index))
-        if index not in weightcalcdata.affectedvarindexes:
-            affected_dellist.append(index)
-            logging.info("Deleted row " + str(index))
+    cause_delete_list = []
+    affected_delete_list = []
+    for index in range(var_dims):
+        if index not in weight_calc_data.causevarindexes:
+            cause_delete_list.append(index)
+            logging.info("Deleted column %s", str(index))
+        if index not in weight_calc_data.affectedvarindexes:
+            affected_delete_list.append(index)
+            logging.info("Deleted row %s", str(index))
 
-    if weightcalcdata.connections_used:
-        newconnectionmatrix = weightcalcdata.connectionmatrix
+    if weight_calc_data.connections_used:
+        new_connection_matrix = weight_calc_data.connectionmatrix
     else:
-        newconnectionmatrix = np.ones((vardims, vardims))
-    # Substitute columns not used with zeros in connectionmatrix
-    for cause_delindex in cause_dellist:
-        newconnectionmatrix[:, cause_delindex] = np.zeros(vardims)
-    # Substitute rows not used with zeros in connectionmatrix
-    for affected_delindex in affected_dellist:
-        newconnectionmatrix[affected_delindex, :] = np.zeros(vardims)
+        new_connection_matrix = np.ones((var_dims, var_dims))
+    # Substitute columns not used with zeros in connection matrix
+    for cause_delete_index in cause_delete_list:
+        new_connection_matrix[:, cause_delete_index] = np.zeros(var_dims)
+    # Substitute rows not used with zeros in connection matrix
+    for affected_delete_index in affected_delete_list:
+        new_connection_matrix[affected_delete_index, :] = np.zeros(var_dims)
 
-    # Initiate headerline for weightstore file
+    # Initiate header line for weight store file
     # Create "Delay" as header for first row
-    headerline = ["Delay"]
-    for affectedvarindex in weightcalcdata.affectedvarindexes:
-        affectedvarname = weightcalcdata.variables[affectedvarindex]
-        headerline.append(affectedvarname)
+    header_line = ["Delay"]
+    for affected_var_index in weight_calc_data.affectedvarindexes:
+        affected_var_name = weight_calc_data.variables[affected_var_index]
+        header_line.append(affected_var_name)
 
     # Define filename structure for CSV file containing weights between
-    # a specific causevar and all the subsequent affectedvars
-    def filename(weightname, boxindex, causevar):
-        boxstring = "box{:03d}".format(boxindex)
+    # a specific cause variable and all the subsequent affected variables
+    def filename(weight_name, box_index, cause_var):
+        box_string = f"box{box_index:03d}"
 
         filedir = config_setup.ensure_existence(
-            os.path.join(weightstoredir, weightname, boxstring), make=True
+            os.path.join(weight_store_dir, weight_name, box_string), make=True
         )
 
-        filename = "{}.csv".format(causevar)
+        filename = f"{cause_var}.csv"
 
         return os.path.join(filedir, filename)
 
     # Store the weight calculation results in similar format as original data
 
-    # Define weightstoredir up to the method level
-    weightstoredir = config_setup.ensure_existence(
+    # Define weight_store_dir up to the method level
+    weight_store_dir = config_setup.ensure_existence(
         os.path.join(
-            weightcalcdata.saveloc,
-            "weightdata",
-            weightcalcdata.casename,
+            weight_calc_data.save_loc,
+            "weight_data",
+            weight_calc_data.case_name,
             scenario,
             method,
-            sigstatus,
-            embedstatus,
+            significance_status,
+            embed_status,
         ),
         make=True,
     )
 
-    if weightcalcdata.single_entropies:
-        # Initiate headerline for single signal entropies storage file
-        signalent_headerline = weightcalcdata.variables
+    if weight_calc_data.single_entropies:
+        # Initiate header_line for single signal entropy storage file
+        signal_entropy_header_line = weight_calc_data.variables
         # Define filename structure for CSV file
 
-        def signalent_filename(name, boxindex):
+        def signal_entropy_filename(name, box_index):
             return signalent_filename_template.format(
-                weightcalcdata.casename, scenario, name, boxindex
+                weight_calc_data.case_name, scenario, name, box_index
             )
 
         signalentstoredir = config_setup.ensure_existence(
-            os.path.join(weightcalcdata.saveloc, "signal_entropies"), make=True
+            os.path.join(weight_calc_data.save_loc, "signal_entropies"), make=True
         )
 
         signalent_filename_template = os.path.join(
             signalentstoredir, "{}_{}_{}_box{:03d}.csv"
         )
 
-    for boxindex in weightcalcdata.boxindexes:
-        box = weightcalcdata.boxes[boxindex]
+    for boxindex in weight_calc_data.boxindexes:
+        box = weight_calc_data.boxes[boxindex]
 
         # Calculate single signal entropies - do not worry about
         # delays, but still do it according to different boxes
-        if weightcalcdata.single_entropies:
+        if weight_calc_data.single_entropies:
             # Calculate single signal entropies of all variables
             # and save output in similar format to
             # standard weight calculation results
             signalentlist = []
-            for varindex, _ in enumerate(weightcalcdata.variables):
-                vardata = box[:, varindex][startindex : startindex + size]
-                entropy = data_processing.calc_signalent(
-                    vardata, weightcalcdata
-                )
+            for varindex, _ in enumerate(weight_calc_data.variables):
+                vardata = box[:, varindex][start_index : start_index + size]
+                entropy = data_processing.calc_signalent(vardata, weight_calc_data)
                 signalentlist.append(entropy)
 
             # Write the signal entropies to file - one file for each box
@@ -665,9 +657,9 @@ def calc_weights(weightcalcdata, method, scenario, writeoutput):
             signalentlist = signalentlist[np.newaxis, :]
 
             writecsv_weightcalc(
-                signalent_filename("signal_entropy", boxindex + 1),
+                signal_entropy_filename("signal_entropy", boxindex + 1),
                 signalentlist,
-                signalent_headerline,
+                signal_entropy_header_line,
             )
 
         # Start parallelising code here
@@ -676,21 +668,21 @@ def calc_weights(weightcalcdata, method, scenario, writeoutput):
         ###########################################################
 
         non_iter_args = [
-            weightcalcdata,
-            weightcalculator,
+            weight_calc_data,
+            weight_calculator,
             box,
-            startindex,
+            start_index,
             size,
-            newconnectionmatrix,
+            new_connection_matrix,
             method,
             boxindex,
             filename,
-            headerline,
-            writeoutput,
+            header_line,
+            write_output,
         ]
 
         # Run the script that will handle multiprocessing
-        gaincalc_oneset.run(non_iter_args, weightcalcdata.do_multiprocessing)
+        gaincalc_oneset.run(non_iter_args, weight_calc_data.do_multiprocessing)
 
         ########################################################
 
@@ -744,9 +736,9 @@ def weightcalc(
     for scenario in weightcalcdata.scenarios:
         logging.info("Running scenario {}".format(scenario))
         # Update scenario-specific fields of weightcalcdata object
-        weightcalcdata.scenariodata(scenario)
+        weightcalcdata.scenario_data(scenario)
         for settings_name in weightcalcdata.settings_set:
-            weightcalcdata.setsettings(scenario, settings_name)
+            weightcalcdata.set_settings(scenario, settings_name)
             logging.info("Now running settings {}".format(settings_name))
 
             for method in weightcalcdata.methods:

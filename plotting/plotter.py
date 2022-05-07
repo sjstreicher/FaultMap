@@ -6,8 +6,8 @@
 import json
 import os
 
+from faultmap import config_setup, data_processing
 from plotting import figtypes
-from faultmap import data_processing, config_setup
 
 
 def raw_string(s):
@@ -33,14 +33,12 @@ class GraphData(object):
             self.caseconfigloc,
             self.casedir,
             _,
-        ) = config_setup.runsetup(mode, case)
+        ) = config_setup.run_setup(mode, case)
         self.mode = mode
         self.case = case
 
         # Load case config file
-        with open(
-            os.path.join(self.caseconfigloc, "plotting.json")
-        ) as configfile:
+        with open(os.path.join(self.caseconfigloc, "plotting.json")) as configfile:
             self.caseconfig = json.load(configfile)
         configfile.close()
 
@@ -56,9 +54,7 @@ class GraphData(object):
         self.datatype = self.caseconfig["datatype"]
 
     def graphdetails(self, graph):
-        """Retrieves data particular for each graph that is to be drawn.
-
-        """
+        """Retrieves data particular for each graph that is to be drawn."""
         self.plot_type = self.caseconfig[graph]["plot_type"]
         self.scenarios = self.caseconfig[graph]["scenarios"]
         self.axis_limits = self.caseconfig[graph]["axis_limits"]
@@ -129,9 +125,7 @@ def get_scenario_data_vectors(graphdata, example_sourcefile, example_scenario):
         sourcefile = data_processing.change_dirtype(
             example_sourcefile, example_scenario, scenario
         )
-        valuematrix, _ = data_processing.read_header_values_datafile(
-            sourcefile
-        )
+        valuematrix, _ = data_processing.read_header_values_datafile(sourcefile)
         valuematrices.append(valuematrix)
 
     return valuematrices
@@ -160,9 +154,7 @@ def get_box_data_vectors(graphdata):
                 box,
                 sourcevar,
             )
-            valuematrix, _ = data_processing.read_header_values_datafile(
-                sourcefile
-            )
+            valuematrix, _ = data_processing.read_header_values_datafile(sourcefile)
             sourcevalues.append(valuematrix)
         valuematrices.append(sourcevalues)
 
@@ -212,9 +204,7 @@ def get_box_threshold_vectors(graphdata):
                 box,
                 sourcevar,
             )
-            valuematrix, _ = data_processing.read_header_values_datafile(
-                sourcefile
-            )
+            valuematrix, _ = data_processing.read_header_values_datafile(sourcefile)
             sourcevalues.append(valuematrix)
         valuematrices.append(sourcevalues)
 
@@ -240,9 +230,7 @@ def plotdraw(mode, case, writeoutput):
     graphdata = GraphData(mode, case)
 
     # Create output directory
-    config_setup.ensure_existence(
-        os.path.join(graphdata.saveloc, "graphs"), make=True
-    )
+    config_setup.ensure_existence(os.path.join(graphdata.saveloc, "graphs"), make=True)
 
     for graph in graphdata.graphs:
         graphdata.graphdetails(graph)

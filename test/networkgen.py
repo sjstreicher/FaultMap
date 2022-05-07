@@ -5,35 +5,53 @@
 
 import json
 import os
+from typing import List
 
 import networkx as nx
 import numpy as np
+from datagen import seed_randn
 
-from .datagen import seed_randn
 from faultmap.data_processing import buildgraph
 
-filesloc = json.load(open("test/testconfig.json"))
-saveloc = os.path.expanduser(filesloc["saveloc"])
+files_loc = json.load(open("test/testconfig.json"))
+save_loc = os.path.expanduser(files_loc["save_loc"])
 
 seed_list = [35, 88, 107, 52, 98]
 
 
-def numberedvars(name, N):
-    return ["{} {}".format(name, i + 1) for i in range(N)]
+def numbered_variables(name: str, n_vars: int) -> List[str]:
+    """
+
+    Args:
+        name:
+        n_vars:
+
+    Returns:
+
+    """
+    return [f"{name} {index + 1}" for index in range(n_vars)]
 
 
-def graphname(name):
-    return os.path.join(saveloc, "testgraphs", name + ".gml")
+def graph_name(name: str):
+    """
+
+    Args:
+        name:
+
+    Returns:
+
+    """
+    return os.path.join(save_loc, "test_graphs", name + ".gml")
 
 
-alltestfunctions = []
+all_test_functions = []
 
 
 def gen_random_array(dimension):
     """Generates square normally distributed random array."""
     seeds = iter(seed_list)
     random_array = np.expand_dims(
-        seed_randn(next(seeds), dimension ** 2), axis=1
+        seed_randn(next(seeds), dimension**2), axis=1
     ).reshape((dimension, dimension))
 
     return np.abs(random_array)
@@ -41,30 +59,30 @@ def gen_random_array(dimension):
 
 # TODO: Replace this with a proper class
 def test_function_builder(
-    connections, gainmatrix=None, filename=None, variables=None, doc=None
+    connections, gain_matrix=None, filename=None, variables=None, doc=None
 ):
-    N, _ = connections.shape
+    n_vars, _ = connections.shape
 
-    if gainmatrix is None:
-        gainmatrix = connections.copy()
+    if gain_matrix is None:
+        gain_matrix = connections.copy()
 
     if variables is None:
-        variables = numberedvars("X", N)
+        variables = numbered_variables("X", n_vars)
 
     def graph_generator(draw=False):
-        testgraph = buildgraph(
-            variables, gainmatrix, connections, np.ones(len(variables))
+        test_graph = buildgraph(
+            variables, gain_matrix, connections, np.ones(len(variables))
         )
 
         if draw and filename:
-            nx.write_gml(testgraph, filename)
-            nx.draw(testgraph)
+            nx.write_gml(test_graph, filename)
+            nx.draw(test_graph)
 
-        return connections, gainmatrix, variables, testgraph
+        return connections, gain_matrix, variables, test_graph
 
     if doc:
         graph_generator.__doc__ = doc
-    alltestfunctions.append(graph_generator)
+    all_test_functions.append(graph_generator)
     return graph_generator
 
 
@@ -101,31 +119,31 @@ connect_4th = np.diag([0, 0, 0, 1], 2)
 
 series_incomingon2nd = test_function_builder(
     connect_5 + connect_2nd,
-    variables=numberedvars("X", 5) + ["I 1"],
+    variables=numbered_variables("X", 5) + ["I 1"],
     filename="series_incomingon2nd",
 )
 
 series_incomingon3rd = test_function_builder(
     connect_5 + connect_3rd,
-    variables=numberedvars("X", 5) + ["I 1"],
+    variables=numbered_variables("X", 5) + ["I 1"],
     filename="series_incomingon3rd",
 )
 
 series_incomingon2ndand3rd = test_function_builder(
     connect_5 + connect_2nd + connect_3rd,
-    variables=numberedvars("X", 5) + ["I 1"],
+    variables=numbered_variables("X", 5) + ["I 1"],
     filename="series_incomingon2ndand3rd",
 )
 
 series_incomingon2ndand4th = test_function_builder(
     connect_5 + connect_2nd + connect_4th,
-    variables=numberedvars("X", 5) + ["I 1"],
+    variables=numbered_variables("X", 5) + ["I 1"],
     filename="series_incomingon2ndand4th",
 )
 
 series_disjoint_equal = test_function_builder(
     np.diag([1, 1, 0, 1, 1], -1),
-    variables=(numberedvars("X", 3) + numberedvars("Y", 3)),
+    variables=(numbered_variables("X", 3) + numbered_variables("Y", 3)),
     filename="series_disjoint_equal",
     doc=(
         """Creates two sets of three tags connected in series """
@@ -136,7 +154,7 @@ series_disjoint_equal = test_function_builder(
 series_disjoint_unequal = test_function_builder(
     np.diag([1, 1, 0, 1, 1], -1),
     np.diag([1, 1, 0, 2, 2], -1),
-    variables=(numberedvars("X", 3) + numberedvars("Y", 3)),
+    variables=(numbered_variables("X", 3) + numbered_variables("Y", 3)),
     filename="series_disjoint_unequal",
     doc="""Creates two sets of three tags connected in series with unit
         weights on the edges of one series and weights of 2 on that
@@ -144,17 +162,9 @@ series_disjoint_unequal = test_function_builder(
 )
 
 series_disjoint_unequalsource = test_function_builder(
-    (
-        np.diag([1, 1, 0, 1, 1, 0], -1)
-        + np.diag([1], 6)
-        + np.diag([0, 0, 0, 1], 3)
-    ),
-    (
-        np.diag([1, 1, 0, 1, 1, 0], -1)
-        + np.diag([1], 6)
-        + np.diag([0, 0, 0, 2], 3)
-    ),
-    variables=(numberedvars("X", 3) + numberedvars("Y", 3) + ["I 1"]),
+    (np.diag([1, 1, 0, 1, 1, 0], -1) + np.diag([1], 6) + np.diag([0, 0, 0, 1], 3)),
+    (np.diag([1, 1, 0, 1, 1, 0], -1) + np.diag([1], 6) + np.diag([0, 0, 0, 2], 3)),
+    variables=(numbered_variables("X", 3) + numbered_variables("Y", 3) + ["I 1"]),
     filename="series_disjoint_unequalsource",
     doc="""Creates two sets of three tags connected in series with unit weights
         on the edges of one series and weights of 2 on that of the other.""",
