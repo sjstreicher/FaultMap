@@ -3,13 +3,11 @@
 """
 
 from pathlib import Path
-from typing import Literal
 
 import jpype  # type: ignore
 import numpy as np
 
-MutualInformationMethods = Literal["kernel", "kraskov", "discrete"]
-EntropyMethods = Literal["gaussian", "kernel", "kozachenko"]
+from faultmap.type_definitions import EntropyMethods, MutualInformationMethods
 
 
 def check_jvm(infodynamics_path: Path):
@@ -108,17 +106,17 @@ def setup_te(infodynamics_path: Path, method: MutualInformationMethods, **parame
             if auto_embed is True:
                 # Enable the Ragwitz or max AIS method criterion
                 # TODO: Enable flag to determine which one
-                # Enable source as well as destination embedding due to the
-                # nature of our data.
+                # Enable source as well as destination embedding due to the nature of
+                # our data.
                 # Use a maximum history and tau search of 5
                 # teCalc.setProperty("AUTO_EMBED_METHOD", "RAGWITZ")
                 te_calculator.setProperty("AUTO_EMBED_METHOD", "MAX_CORR_AIS")
 
-                ksearchmax = parameters.get("k_search_max", 5)
-                te_calculator.setProperty("AUTO_EMBED_K_SEARCH_MAX", str(ksearchmax))
-                tausearchmax = parameters.get("tau_search_max", 5)
+                k_search_max = parameters.get("k_search_max", 5)
+                te_calculator.setProperty("AUTO_EMBED_K_SEARCH_MAX", str(k_search_max))
+                tau_search_max = parameters.get("tau_search_max", 5)
                 te_calculator.setProperty(
-                    "AUTO_EMBED_TAU_SEARCH_MAX", str(tausearchmax)
+                    "AUTO_EMBED_TAU_SEARCH_MAX", str(tau_search_max)
                 )
 
         # Note: If setting the delay is needed to be changed on each iteration,
@@ -178,7 +176,7 @@ def calc_te(infodynamics_path, calc_method, affected_data, causal_data, **parame
     """
 
     te_calc = setup_te(infodynamics_path, calc_method, **parameters)
-    mi_calc = setup_mi(infodynamics_path, calc_method, **parameters)
+    mi_calc = setup_mi_calculator(infodynamics_path, calc_method, **parameters)
 
     test_significance = parameters.get("test_significance", False)
     significance_permutations = parameters.get("significance_permutations", 30)
@@ -240,10 +238,12 @@ def calc_te(infodynamics_path, calc_method, affected_data, causal_data, **parame
     )
 
 
-def setup_mi(infodynamics_path: Path, method: str, **parameters):
-    """Prepares the mi_calc class of the Java Infodynamics Toolkit (JIDT)
-    in order to calculate mutual information according to the kernel or Kraskov
-    estimator method. Also supports discrete mutual information calculation.
+def setup_mi_calculator(
+    infodynamics_path: Path, method: MutualInformationMethods, **parameters
+):
+    """Instantiates a mutual information class of the Java Infodynamics Toolkit (JIDT)
+    to calculate mutual information according to the kernel or Kraskov estimator method.
+    Also supports discrete mutual information calculation.
 
     The Kraskov method is the recommended method and also provides
     methods for auto-embedding. The max corr AIS auto-embedding method
@@ -322,15 +322,15 @@ def setup_mi(infodynamics_path: Path, method: str, **parameters):
     return mi_calc
 
 
-def setup_entropy(
-    infodynamics_path,
+def setup_entropy_calculator(
+    infodynamics_path: Path,
     estimator=EntropyMethods,
     kernel_bandwidth=0.1,
     multivariate=False,
 ):
-    """Prepares the entropy_calc class of the Java Infodynamics Toolkit (JIDT)
-    in order to calculate differential entropy (continuous signals) according
-    to the estimation method specified.
+    """Instantiates an entropy calculator from a class of the Java Infodynamics Toolkit
+    (JIDT) to calculate differential entropy (continuous signals) according to the
+    estimation method specified.
 
     Parameters
     ----------
@@ -368,11 +368,11 @@ def setup_entropy(
                 "infodynamics.measures.continuous.kernel"
             ).EntropyCalculatorKernel
 
-        entropy_calc = entropy_calc_class()
+        entropy_calculator = entropy_calc_class()
         # Normalisation is performed before this step, set property false to
         # prevent accidental data standardisation
-        entropy_calc.setProperty("NORMALISE", "false")
-        entropy_calc.initialise(kernel_bandwidth)
+        entropy_calculator.setProperty("NORMALISE", "false")
+        entropy_calculator.initialise(kernel_bandwidth)
 
     elif estimator == "gaussian":
         if multivariate:
@@ -384,21 +384,21 @@ def setup_entropy(
                 "infodynamics.measures.continuous.gaussian"
             ).EntropyCalculatorGaussian
 
-        entropy_calc = entropy_calc_class()
-        entropy_calc.initialise()
+        entropy_calculator = entropy_calc_class()
+        entropy_calculator.initialise()
 
     elif estimator == "kozachenko":
         entropy_calc_class = jpype.JPackage(
             "infodynamics.measures.continuous.kozachenko"
         ).EntropyCalculatorMultiVariateKozachenko
 
-        entropy_calc = entropy_calc_class()
-        entropy_calc.initialise()
+        entropy_calculator = entropy_calc_class()
+        entropy_calculator.initialise()
 
     else:
         raise NameError("Estimator not recognized")
 
-    return entropy_calc, estimator
+    return entropy_calculator
 
 
 def calc_entropy(entropy_calculator, data, estimator: EntropyMethods) -> float:

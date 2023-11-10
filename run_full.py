@@ -7,81 +7,83 @@ configuration file.
 import json
 import logging
 import multiprocessing
-import os
+from pathlib import Path
 
 from faultmap import config_setup
 from faultmap.data_processing import result_reconstruction, trend_extraction
-from faultmap.gaincalc import weightcalc
-from faultmap.graphreduce import reducegraph
+from faultmap.gaincalc import weight_calc
+from faultmap.graphreduce import reduce_graph_scenarios
 from faultmap.noderank import noderankcalc
-from plotting.plotter import plotdraw
+from faultmap.type_definitions import RunModes
+from plotting.plotter import draw_plot
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level="DEBUG")
 
 # TODO: Move to class object
 # TODO: Perform analysis on scenario level inside class object
 
 
-def run_weightcalc(configloc, writeoutput, mode, case, robust):
-    with open(os.path.join(configloc, "config_weightcalc.json")) as f:
-        weightcalc_config = json.load(f)
-    f.close()
+def run_weight_calc(
+    config_loc: Path, write_output: bool, mode: RunModes, case: str, robust: bool
+) -> None:
+    with open(Path(config_loc, "config_weight_calc.json"), encoding="utf-8") as f:
+        weight_calc_config = json.load(f)
 
     # Flag indicating whether single signal entropy values for each
     # signal involved should be calculated
-    single_entropies = weightcalc_config["calc_single_entropies"]
+    single_entropies = weight_calc_config["calc_single_entropies"]
     # Flag indicating whether
-    fftcalc = weightcalc_config["fft_calc"]
-    do_multiprocessing = weightcalc_config["multiprocessing"]
+    fft_calc = weight_calc_config["fft_calc"]
+    do_multiprocessing = weight_calc_config["multiprocessing"]
 
     if robust:
         try:
-            weightcalc(
+            weight_calc(
                 mode,
                 case,
-                writeoutput,
+                write_output,
                 single_entropies,
-                fftcalc,
+                fft_calc,
                 do_multiprocessing,
             )
-        except:
-            raise RuntimeError("Weight calculation failed for case: " + case)
+        except Exception as exc:
+            raise RuntimeError(f"Weight calculation failed for case: {case}") from exc
     else:
-        weightcalc(
+        weight_calc(
             mode,
             case,
-            writeoutput,
+            write_output,
             single_entropies,
-            fftcalc,
+            fft_calc,
             do_multiprocessing,
         )
 
-    return None
 
-
-def run_createarrays(writeoutput, mode, case, robust):
+def run_createarrays(mode: Modes, case: str, robust: bool) -> None:
     if robust:
         try:
             # Needs to execute twice for nosigtest cases if derived from
             # sigtest cases
             # TODO: Remove this requirement
-            result_reconstruction(mode, case, writeoutput)
-            result_reconstruction(mode, case, writeoutput)
+            result_reconstruction(mode, case)
+            result_reconstruction(mode, case)
         except:
             raise RuntimeError("Array creation failed for case: " + case)
     else:
-        result_reconstruction(mode, case, writeoutput)
-        result_reconstruction(mode, case, writeoutput)
-
-    return None
+        result_reconstruction(mode, case)
+        result_reconstruction(mode, case)
 
 
-def run_trendextraction(writeoutput, mode, case, robust):
+def run_trend_extraction(write_output, mode, case, robust):
+    """Entry point for trend extraction."""
     if robust:
         try:
-            trend_extraction(mode, case, writeoutput)
-        except:
-            raise RuntimeError("Trend extraction failed for case: " + case)
+            trend_extraction(mode, case, write_output)
+        except Exception as exc:
+            raise RuntimeError(f"Trend extraction failed for case: {case}") from exc
     else:
-        trend_extraction(mode, case, writeoutput)
+        trend_extraction(mode, case, write_output)
 
     return None
 
@@ -101,50 +103,50 @@ def run_noderank(writeoutput, mode, case, robust):
 def run_graphreduce(writeoutput, mode, case, robust):
     if robust:
         try:
-            reducegraph(mode, case, writeoutput)
+            reduce_graph_scenarios(mode, case, writeoutput)
         except:
             raise RuntimeError("Graph reduction failed for case: " + case)
     else:
-        reducegraph(mode, case, writeoutput)
+        reduce_graph_scenarios(mode, case, writeoutput)
 
 
 def run_plotting(writeoutput, mode, case, robust):
     if robust:
         try:
-            plotdraw(mode, case, writeoutput)
+            draw_plot(mode, case, writeoutput)
         except:
             raise RuntimeError("Plotting failed for case: " + case)
     else:
-        plotdraw(mode, case, writeoutput)
+        draw_plot(mode, case, writeoutput)
 
     return None
 
 
-def run_all(mode, robust=False):
-    _, configloc, _, _ = config_setup.get_locations(mode)
-    with open(os.path.join(configloc, "config_full.json")) as f:
-        fullrun_config = json.load(f)
+def run_all(mode: RunModes, robust=False):
+    """Runs all cases or tests"""
+    _, config_loc, _, _ = config_setup.get_locations(mode)
+    with open(Path(config_loc, "config_full.json"), encoding="utf-8") as f:
+        full_run_config = json.load(f)
     f.close()
 
     # Flag indicating whether calculated results should be written to disk
-    writeoutput = fullrun_config["writeoutput"]
+    writeoutput = full_run_config["write_output"]
     # Provide the mode and case names to calculate
-    mode = fullrun_config["mode"]
-    cases = fullrun_config["cases"]
+    mode = full_run_config["mode"]
+    cases = full_run_config["cases"]
 
     for case in cases:
-        logging.info("Now attempting case: " + case)
-        run_weightcalc(configloc, writeoutput, mode, case, robust)
+        logger.info("Now attempting case: %s", case)
+        run_weight_calc(config_loc, writeoutput, mode, case, robust)
         run_createarrays(writeoutput, mode, case, robust)
-        run_trendextraction(writeoutput, mode, case, robust)
+        run_trend_extraction(writeoutput, mode, case, robust)
         run_noderank(writeoutput, mode, case, robust)
         run_graphreduce(writeoutput, mode, case, robust)
         # run_plotting(writeoutput, mode, case, robust)
-        logging.info("Done with case: " + case)
+        logger.info("Done with case: " + case)
 
 
 if __name__ == "__main__":
     multiprocessing.freeze_support()
-    logging.basicConfig(level=logging.INFO)
 
     run_all("cases")

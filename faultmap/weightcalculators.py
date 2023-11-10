@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""This module stores the weight calculator classes
-used by the gaincalc module.
+"""This module stores the weight calculator classes used by the weightcalc module.
 
 """
 # Standard libraries

@@ -222,7 +222,7 @@ def drawplot(graphdata, scenario, datadir, graph, writeoutput):
     return None
 
 
-def plotdraw(mode, case, writeoutput):
+def draw_plot(mode, case, writeoutput):
     graphdata = GraphData(mode, case)
 
     # Create output directory

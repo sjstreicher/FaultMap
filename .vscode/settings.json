@@ -13,23 +13,28 @@
         "Djava",
         "dtype",
         "faultmap",
+        "forceobj",
         "gaincalc",
         "gaincalculators",
         "genfromtxt",
         "IAAFT",
         "infodynamics",
+        "jitting",
         "jpype",
         "kozachenko",
         "kraskov",
         "nats",
+        "nopython",
+        "quickdemo",
         "Ragwitz",
         "randn",
         "Skogestad",
-        "texlive",
+        "texlive"
     ],
     "cSpell.enableFiletypes": [
         "python"
     ],
     "cSpell.language": "en-GB",
-    "python.analysis.autoImportCompletions": true
+    "python.analysis.autoImportCompletions": false,
+    "python.analysis.typeCheckingMode": "off"
 }
