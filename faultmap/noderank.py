@@ -723,8 +723,8 @@ def dorankcalc(
 
         if writeoutput:
             # Make sure the correct directory exists
-            # Take datadir and swop out 'weightdata' for 'noderank'
-            savedir = data_processing.change_dirtype(datadir, "weightdata", "noderank")
+            # Take datadir and swop out 'weight_data' for 'noderank'
+            savedir = data_processing.change_dirtype(datadir, "weight_data", "noderank")
 
             config_setup.ensure_existence(os.path.join(savedir, typename[:-7]))
 
@@ -861,7 +861,7 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
     for different weight types.
 
     The results are stored in the noderank directory but retains the structure
-    of the weightdata directory
+    of the weight_data directory
 
     Notes
     -----
@@ -884,7 +884,7 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
             for weight_method in noderankdata.weight_methods:
                 basedir = os.path.join(
                     noderankdata.saveloc,
-                    "weightdata",
+                    "weight_data",
                     case,
                     scenario,
                     weight_method,

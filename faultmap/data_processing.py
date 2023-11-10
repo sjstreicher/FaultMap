@@ -18,11 +18,11 @@ from numba import jit  # type: ignore
 from numpy.typing import NDArray
 from scipy import signal  # type: ignore
 
-from faultmap import config_setup, gaincalc, infodynamics
-from faultmap.gaincalc import WeightCalcData
-from faultmap.type_definitions import RunModes
+from faultmap import config_setup, infodynamics, weightcalc
+from faultmap.type_definitions import EntropyMethods, RunModes
+from faultmap.weightcalc import WeightCalcData
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 logging.basicConfig(level="DEBUG")
 
 # pylint: disable=too-many-lines, missing-function-docstring
@@ -63,32 +63,34 @@ def get_folders(path):
 
 # Use jit for loop-jitting
 @jit(forceobj=True)
-def gen_iaaft_surrogates(data, iterations):
-    """Generates iAAFT surrogates"""
-    # Make copy to  prevent rotation of array
-    data_f = data.copy()
+def gen_iaaft_surrogates(data: NDArray, iterations: int) -> NDArray:
+    """Generates iterative amplitude adjusted Fourier transform (IAAFT) surrogates"""
+    # Make copy to prevent rotation of array
+    original_data = data.copy()
     start_time = time.process_time()
-    xs = data_f.copy()
-    # sorted amplitude stored
-    xs.sort()
-    # amplitude of fourier transform of orig
-    pwx = np.abs(np.fft.fft(data_f))
+    # amplitude stored
+    sorted_data = original_data.copy()
+    sorted_data.sort()
+    # amplitude of Fourier transform of original data
+    frequency_amplitude = np.abs(np.fft.fft(original_data))
 
-    data_f.shape = (-1, 1)
+    original_data.shape = (-1, 1)
     # random permutation as starting point
-    xsur = np.random.permutation(data_f)
-    xsur.shape = (1, -1)
+    surrogate_data = np.random.permutation(original_data)
+    surrogate_data.shape = (1, -1)
 
     for _ in range(iterations):
-        fftsurx = pwx * np.exp(1j * np.angle(np.fft.fft(xsur)))
-        xoutb = np.real(np.fft.ifft(fftsurx))
+        surrogate_fft = frequency_amplitude * np.exp(
+            1j * np.angle(np.fft.fft(surrogate_data))
+        )
+        xoutb = np.real(np.fft.ifft(surrogate_fft))
         ranks = xoutb.argsort(axis=1)
-        xsur[:, ranks] = xs
+        surrogate_data[:, ranks] = sorted_data
 
     end_time = time.process_time()
-    log.info("Time to generate surrogates: %s", str(end_time - start_time))
+    logger.info("Time to generate surrogates: %s", str(end_time - start_time))
 
-    return xsur
+    return surrogate_data
 
 
 class ResultReconstructionData:
@@ -107,7 +109,7 @@ class ResultReconstructionData:
         ) = config_setup.run_setup(mode, case)
         # Load case config file
         with open(
-            Path(self.case_config_loc, "result_reconstruction.json"),
+            Path(self.case_config_loc, "resultreconstruction.json"),
             encoding="utf-8",
         ) as f:
             self.case_config = json.load(f)
@@ -135,7 +137,7 @@ class ResultReconstructionData:
                 self.bias_correction = scenario_config.get("bias_correction", None)
                 self.mi_scale = scenario_config.get("mi_scale", False)
         else:
-            log.info("Defaulting to no bias correction")
+            logger.info("Defaulting to no bias correction")
 
 
 def process_aux_file(filename, bias_correct=True, mi_scale=False, allow_neg=False):
@@ -368,7 +370,7 @@ def create_arrays(data_dir: Path, variables, bias_correct, mi_scale, generate_di
 
                 # Write the arrays to file
                 # Create a base array based on the full set of variables
-                # found in the typical weightcalcdata function
+                # found in the typical WeightCalcData object
 
                 # Initialize matrix with variables written
                 # in first row and column
@@ -792,7 +794,7 @@ def extract_trends(datadir, writeoutput):
 
     test_strings = namesdict.keys()
 
-    savedir = change_dirtype(datadir, "weightdata", "trends")
+    savedir = change_dirtype(datadir, "weight_data", "trends")
 
     for test_string in test_strings:
         if test_string in directories:
@@ -861,7 +863,7 @@ def result_reconstruction(mode: RunModes, case: str):
 
     result_reconstruction_data = ResultReconstructionData(mode, case)
 
-    weight_calc_data = gaincalc.WeightCalcData(mode, case, False, False, False, False)
+    weight_calc_data = weightcalc.WeightCalcData(mode, case, False, False, False, False)
 
     saveloc, caseconfigdir, _, _ = config_setup.run_setup(mode, case)
 
@@ -870,7 +872,7 @@ def result_reconstruction(mode: RunModes, case: str):
     f.close()
 
     # Directory where subdirectories for scenarios will be stored
-    scenariosdir = Path(saveloc, "weightdata", case)
+    scenariosdir = Path(saveloc, "weight_data", case)
 
     # Get list of all scenarios
     scenarios = next(os.walk(scenariosdir))[1]
@@ -921,7 +923,7 @@ def trend_extraction(mode, case, write_output) -> None:
     saveloc, _, _, _ = config_setup.run_setup(mode, case)
 
     # Directory where subdirectories for scenarios will be stored
-    scenariosdir = Path(saveloc, "weightdata", case)
+    scenariosdir = Path(saveloc, "weight_data", case)
 
     # Get list of all scenarios
     scenarios = next(os.walk(scenariosdir))[1]
@@ -1070,11 +1072,11 @@ def fft_calculation(
     # Define export directories and filenames
     datadir = config_setup.ensure_existence(Path(saveloc, "fftdata"), make=True)
 
-    filename_template = Path(datadir, "{}_{}_{}.csv")
+    filename_template = os.path.join(datadir, "{}_{}_{}.csv")
 
     writecsv(filename("fft"), datalines, headerline)
 
-    log.info("Done with FFT calculations")
+    logger.info("Done with FFT calculations")
 
     return None
 
@@ -1088,10 +1090,10 @@ def write_box_dates(box_dates, save_loc, case, scenario):
 
     headerline = ["Box index", "Box start", "Box end"]
     datalines = np.zeros((len(box_dates), 3))
-    for index, boxdate in enumerate(box_dates):
+    for index, box_date in enumerate(box_dates):
         box_index = index + 1
-        box_start = boxdate[0]
-        box_end = boxdate[-1]
+        box_start = box_date[0]
+        box_end = box_date[-1]
         datalines[index, :] = [box_index, box_start, box_end]
 
     writecsv(filename("boxdates"), datalines, headerline)
@@ -1162,7 +1164,7 @@ def bandgapfilter_data(
     # Define export directories and filenames
     datadir = config_setup.ensure_existence(Path(saveloc, "bandgappeddata"), make=True)
 
-    filename_template = Path(datadir, "{}_{}_{}_{}_{}.csv")
+    filename_template = os.path.join(datadir, "{}_{}_{}_{}_{}.csv")
 
     def filename(name, lowfreq, highfreq):
         return filename_template.format(case, scenario, name, lowfreq, highfreq)
@@ -1252,7 +1254,7 @@ def write_normdata(saveloc, case, scenario, headerline, datalines):
     # Define export directories and filenames
     datadir = config_setup.ensure_existence(Path(saveloc, "normdata"), make=True)
 
-    filename_template = Path(datadir, "{}_{}_{}.csv")
+    filename_template = os.path.join(datadir, "{}_{}_{}.csv")
 
     def filename(name):
         return filename_template.format(case, scenario, name)
@@ -1267,7 +1269,7 @@ def write_detrenddata(saveloc, case, scenario, headerline, datalines):
     # Define export directories and filenames
     datadir = config_setup.ensure_existence(Path(saveloc, "detrenddata"), make=True)
 
-    filename_template = Path(datadir, "{}_{}_{}.csv")
+    filename_template = os.path.join(datadir, "{}_{}_{}.csv")
 
     def filename(name):
         return filename_template.format(case, scenario, name)
@@ -1529,7 +1531,7 @@ def get_box_endates(clean_df, window, overlap, freq):
     next_box_exists = True
     gc.disable()
     while next_box_exists:
-        log.info("Bins identified: %s", str(len(end_indexes)))
+        logger.info("Bins identified: %s", str(len(end_indexes)))
         # Get current list of differences
         index_diffs = rolling_clean_df.index - rolling_clean_df.index[next_box_index]
         # Get index of first entry that is within outside the minimum overlap range
@@ -1584,62 +1586,67 @@ def get_continuous_boxes(clean_df, window, overlap, freq):
     return array_boxes, boxdates
 
 
-def split_tsdata(inputdata, samplerate, boxsize, boxnum):
-    """Splits the inputdata into arrays useful for analysing the change of
-    weights over time.
+def split_time_series_data(
+    input_data: NDArray, sample_rate: float, box_size: int, box_num: int
+):
+    """
+    Splits the input data into arrays useful for analyzing the change of weights over time.
 
-    inputdata is a numpy array containing values for a single variable
-    (after sub-sampling)
+    Args:
+        input_data (numpy.ndarray): A numpy array containing values for a single
+            variable after sub-sampling.
+        sample_rate (float): The rate of sampling in time units (after sub-sampling).
+        box_size (int): The size of each returned dataset in time units.
+        box_num (int): The number of boxes that need to be analyzed.
 
-    samplerate is the rate of sampling in time units (after sub-sampling)
-    boxsize is the size of each returned dataset in time units
-    boxnum is the number of boxes that need to be analyzed
+    Returns:
+        list: A list of numpy arrays, where each array represents a box of data.
 
-    Boxes are evenly distributed over the provided dataset.
-    The boxes will overlap if boxsize*boxnum is more than the simulated time,
-    and will have spaces between them if it is less.
-
-
+    Notes:
+        Boxes are evenly distributed over the provided dataset. The boxes will overlap
+        if box_size * box_num is more than the simulated time, and will have spaces
+        between them if it is less.
     """
     # Get total number of samples
-    samples = len(inputdata)
-    #    print "Number of samples: ", samples
+    samples = len(input_data)
     # Convert boxsize to number of samples
-    boxsizesamples = int(round(boxsize / samplerate))
-    #    print "Box size in samples: ", boxsizesamples
+    box_size_samples = int(round(box_size / sample_rate))
     # Calculate starting index for each box
 
-    if boxnum == 1:
-        boxes = [inputdata]
+    if box_num == 1:
+        boxes = [input_data]
 
     else:
-        boxstartindex = np.empty((1, boxnum))[0]
-        boxstartindex[:] = np.NAN
-        boxstartindex[0] = 0
-        boxstartindex[-1] = samples - boxsizesamples
-        samplesbetween = (float(samples - boxsizesamples)) / float(boxnum - 1)
-        boxstartindex[1:-1] = [
-            round(samplesbetween * index) for index in range(1, boxnum - 1)
+        box_start_index = np.empty((1, box_num))[0]
+        box_start_index[:] = np.NAN
+        box_start_index[0] = 0
+        box_start_index[-1] = samples - box_size_samples
+        samples_between = (float(samples - box_size_samples)) / float(box_num - 1)
+        box_start_index[1:-1] = [
+            round(samples_between * index) for index in range(1, box_num - 1)
         ]
         boxes = [
-            inputdata[
-                int(boxstartindex[i]) : int(boxstartindex[i]) + int(boxsizesamples)
+            input_data[
+                int(box_start_index[i]) : int(box_start_index[i])
+                + int(box_size_samples)
             ]
-            for i in range(int(boxnum))
+            for i in range(int(box_num))
         ]
 
     return boxes
 
 
-def calc_signal_entropy(var_data, weight_calc_data: WeightCalcData) -> float:
+def calc_signal_entropy(
+    var_data, weight_calc_data: WeightCalcData, estimator: EntropyMethods = "kernel"
+) -> float:
     """Calculates single signal differential entropies
     by making use of the JIDT continuous box-kernel implementation.
 
     """
 
     # Setup Java class for infodynamics toolkit
-    entropy_calculator, estimator = infodynamics.setup_entropy_calculator(
-        weight_calc_data.INFODYNAMICS_LOCATION
+    entropy_calculator = infodynamics.setup_entropy_calculator(
+        weight_calc_data.infodynamics_loc
     )
 
     entropy = infodynamics.calc_entropy(entropy_calculator, var_data, estimator)
@@ -1687,12 +1694,12 @@ def vectorselection(data, timelag, sub_samples, k=1, l=1):
         # Original form according to Bauer (2007)
         # TODO: Provide for comparison
         # Modified form according to Shu & Zhao (2013)
-        startindex = (sample_n - sub_samples) - timelag * (n - 1) - 1
-        endindex = sample_n - timelag * (n - 1) - 1
-        x_hist[n - 1, :] = data[1, startindex:endindex]
+        start_index = (sample_n - sub_samples) - timelag * (n - 1) - 1
+        end_index = sample_n - timelag * (n - 1) - 1
+        x_hist[n - 1, :] = data[1, start_index:end_index]
     for m in range(1, l + 1):
-        startindex = (sample_n - sub_samples) - timelag * m - 1
-        endindex = sample_n - timelag * m - 1
-        y_hist[m - 1 :, :] = data[0, startindex:endindex]
+        start_index = (sample_n - sub_samples) - timelag * m - 1
+        end_index = sample_n - timelag * m - 1
+        y_hist[m - 1 :, :] = data[0, start_index:end_index]
 
     return x_pred, x_hist, y_hist

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Performs a lead/lag analysis on the full matrix provided.
 
 """
@@ -23,7 +22,6 @@ add_parameters = {
 
 
 def tecalc_wrapper(causevardata, affectedvardata):
-
     te_fwd = calc_infodynamics_te(
         infodynamics_loc, estimator, causevardata.T, affectedvardata.T, **add_parameters
     )
@@ -40,7 +38,7 @@ def tecalc_wrapper(causevardata, affectedvardata):
 
 from test.datagen import autoreg_gen
 
-from faultmap.data_processing import split_tsdata
+from faultmap.data_processing import split_time_series_data
 
 sns.set_style("darkgrid")
 
@@ -49,7 +47,7 @@ samples = 200000
 delay = 10
 test_delays = 50
 testsize = 1000
-startindex = 100
+start_index = 100
 alpha = 0.9
 noise_ratio = 0.1
 
@@ -60,7 +58,7 @@ sampling_rate = 1
 
 sampledata = autoreg_gen([samples, delay, alpha, noise_ratio])
 
-boxes = split_tsdata(sampledata, sampling_rate, boxsize, boxnum)
+boxes = split_time_series_data(sampledata, sampling_rate, boxsize, boxnum)
 
 causevarindex = 0
 affectedvarindex = 1
@@ -74,11 +72,10 @@ for boxindex, box in enumerate(boxes):
     corrvals = []
     tevals = []
     for delay in delays:
-
-        causevardata = box[:, causevarindex][startindex : startindex + testsize]
+        causevardata = box[:, causevarindex][start_index : start_index + testsize]
 
         affectedvardata = box[:, affectedvarindex][
-            startindex + delay : startindex + testsize + delay
+            start_index + delay : start_index + testsize + delay
         ]
 
         corrval = np.corrcoef(causevardata.T, affectedvardata.T)[1, 0]

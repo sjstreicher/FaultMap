@@ -11,10 +11,10 @@ from pathlib import Path
 
 from faultmap import config_setup
 from faultmap.data_processing import result_reconstruction, trend_extraction
-from faultmap.gaincalc import weight_calc
 from faultmap.graphreduce import reduce_graph_scenarios
 from faultmap.noderank import noderankcalc
 from faultmap.type_definitions import RunModes
+from faultmap.weightcalc import weight_calc
 from plotting.plotter import draw_plot
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ logging.basicConfig(level="DEBUG")
 def run_weight_calc(
     config_loc: Path, write_output: bool, mode: RunModes, case: str, robust: bool
 ) -> None:
-    with open(Path(config_loc, "config_weight_calc.json"), encoding="utf-8") as f:
+    with open(Path(config_loc, "config_weightcalc.json"), encoding="utf-8") as f:
         weight_calc_config = json.load(f)
 
     # Flag indicating whether single signal entropy values for each
@@ -60,7 +60,7 @@ def run_weight_calc(
         )
 
 
-def run_createarrays(mode: Modes, case: str, robust: bool) -> None:
+def run_createarrays(mode: RunModes, case: str, robust: bool) -> None:
     if robust:
         try:
             # Needs to execute twice for nosigtest cases if derived from
@@ -75,7 +75,7 @@ def run_createarrays(mode: Modes, case: str, robust: bool) -> None:
         result_reconstruction(mode, case)
 
 
-def run_trend_extraction(write_output, mode, case, robust):
+def run_trend_extraction(mode, case, robust, write_output):
     """Entry point for trend extraction."""
     if robust:
         try:
@@ -88,36 +88,36 @@ def run_trend_extraction(write_output, mode, case, robust):
     return None
 
 
-def run_noderank(writeoutput, mode, case, robust):
+def run_noderank(mode, case, robust, write_output):
     if robust:
         try:
-            noderankcalc(mode, case, writeoutput)
+            noderankcalc(mode, case, write_output)
         except:
             raise RuntimeError("Node faultmap failed for case: " + case)
     else:
-        noderankcalc(mode, case, writeoutput)
+        noderankcalc(mode, case, write_output)
 
     return None
 
 
-def run_graphreduce(writeoutput, mode, case, robust):
+def run_graphreduce(mode, case, robust, write_output):
     if robust:
         try:
-            reduce_graph_scenarios(mode, case, writeoutput)
+            reduce_graph_scenarios(mode, case, write_output)
         except:
             raise RuntimeError("Graph reduction failed for case: " + case)
     else:
-        reduce_graph_scenarios(mode, case, writeoutput)
+        reduce_graph_scenarios(mode, case, write_output)
 
 
-def run_plotting(writeoutput, mode, case, robust):
+def run_plotting(mode, case, robust, write_output):
     if robust:
         try:
-            draw_plot(mode, case, writeoutput)
+            draw_plot(mode, case, write_output)
         except:
             raise RuntimeError("Plotting failed for case: " + case)
     else:
-        draw_plot(mode, case, writeoutput)
+        draw_plot(mode, case, write_output)
 
     return None
 
@@ -130,19 +130,19 @@ def run_all(mode: RunModes, robust=False):
     f.close()
 
     # Flag indicating whether calculated results should be written to disk
-    writeoutput = full_run_config["write_output"]
+    write_output = full_run_config["write_output"]
     # Provide the mode and case names to calculate
     mode = full_run_config["mode"]
     cases = full_run_config["cases"]
 
     for case in cases:
         logger.info("Now attempting case: %s", case)
-        run_weight_calc(config_loc, writeoutput, mode, case, robust)
-        run_createarrays(writeoutput, mode, case, robust)
-        run_trend_extraction(writeoutput, mode, case, robust)
-        run_noderank(writeoutput, mode, case, robust)
-        run_graphreduce(writeoutput, mode, case, robust)
-        # run_plotting(writeoutput, mode, case, robust)
+        run_weight_calc(config_loc, write_output, mode, case, robust)
+        run_createarrays(mode, case, robust)
+        run_trend_extraction(mode, case, robust, write_output)
+        run_noderank(mode, case, robust, write_output)
+        run_graphreduce(mode, case, robust, write_output)
+        run_plotting(mode, case, robust, write_output)
         logger.info("Done with case: " + case)
 
 

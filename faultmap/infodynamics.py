@@ -26,7 +26,7 @@ def check_jvm(infodynamics_path: Path):
             "-Xms32M",
             "-Xmx512M",
             "-ea",
-            "-Djava.class.path=" + infodynamics_path.as_uri(),
+            "-Djava.class.path=" + str(infodynamics_path.absolute()),
             convertStrings=True,
         )
 
@@ -324,9 +324,9 @@ def setup_mi_calculator(
 
 def setup_entropy_calculator(
     infodynamics_path: Path,
-    estimator=EntropyMethods,
-    kernel_bandwidth=0.1,
-    multivariate=False,
+    estimator: EntropyMethods = "kernel",
+    kernel_bandwidth: float = 0.1,
+    multivariate: bool = False,
 ):
     """Instantiates an entropy calculator from a class of the Java Infodynamics Toolkit
     (JIDT) to calculate differential entropy (continuous signals) according to the

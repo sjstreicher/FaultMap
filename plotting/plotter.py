@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This module executes all functions needed to draw desired plots.
 
 """
@@ -211,7 +210,7 @@ def get_box_threshold_vectors(graphdata):
 
 def drawplot(graphdata, scenario, datadir, graph, writeoutput):
     dirparts = data_processing.get_folders(datadir)
-    dirparts[dirparts.index("weightdata")] = "graphs"
+    dirparts[dirparts.index("weight_data")] = "graphs"
     savedir = dirparts[0]
     for pathpart in dirparts[1:]:
         savedir = os.path.join(savedir, pathpart)
@@ -236,7 +235,7 @@ def draw_plot(mode, case, writeoutput):
                 print(scenario)
                 basedir = os.path.join(
                     graphdata.saveloc,
-                    "weightdata",
+                    "weight_data",
                     case,
                     scenario,
                     weight_method,
