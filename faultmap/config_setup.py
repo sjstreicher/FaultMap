@@ -5,8 +5,10 @@ import os
 from pathlib import Path
 from typing import Tuple
 
+from faultmap.type_definitions import RunModes
 
-def ensure_existence(location, make=True):
+
+def ensure_existence(location: Path, make=True) -> Path:
     """
 
     Args:
@@ -21,20 +23,22 @@ def ensure_existence(location, make=True):
             os.makedirs(location)
         else:
             raise IOError(f"File does not exists: {location}")
-    return location
+    return Path(location)
 
 
-def get_locations(mode="cases"):
+def get_locations(mode: RunModes = "cases") -> tuple[Path, Path, Path, Path]:
     """Gets all required directories related to the specified mode.
+
+    TODO: Remove the need for this by using proper test fixtures
 
     Parameters
     ----------
         mode : string
             Either 'test' or 'cases'. Specifies whether the test or user
             configurable cases directories should be set.
-            Test directories are read from testconfig.json which is bundled
+            Test directories are read from test_config.json which is bundled
             with the code, while cases directories are read from
-            caseconfig.json which must be created by the user.
+            case_config.json which must be created by the user.
 
     Returns
     -------
@@ -46,11 +50,13 @@ def get_locations(mode="cases"):
     """
     # Load directories config file
     if mode == "test":
-        with open("test/testconfig.json", encoding="utf-8") as file:
+        parent_dir = Path(__file__).parent
+        tests_dir = Path(parent_dir, "../tests")
+        with open(Path(tests_dir, "test_config.json"), encoding="utf-8") as file:
             dirs = json.load(file)
         file.close()
     elif mode == "cases":
-        with open("../caseconfig.json", encoding="utf-8") as file:
+        with open("../case_config.json", encoding="utf-8") as file:
             dirs = json.load(file)
         file.close()
     else:
@@ -67,20 +73,20 @@ def get_locations(mode="cases"):
     return data_loc, config_loc, save_loc, infodynamics_loc
 
 
-def run_setup(mode: str, case: str) -> Tuple[Path, Path, Path, Path]:
+def run_setup(mode: RunModes, case: str) -> Tuple[Path, Path, Path, Path]:
     """Gets all required directories from the case configuration file.
 
     Args:
         mode: Either 'test' or 'cases'. Specifies whether the test or user configurable
             cases directories should be set. Test directories are read from
-            testconfig.json which is bundled with the code, while cases directories are
-            read from caseconfig.json which must be created by the user.
+            test_config.json which is bundled with the code, while cases directories are
+            read from case_config.json which must be created by the user.
         case: The name of the case that is to be run. Points to dictionary in either
             test or case config files.
 
     Returns:
         save_loc:
-        caseconfig_dir:
+        case_config_dir:
         case_dir:
         infodynamics_loc:
 
@@ -89,7 +95,7 @@ def run_setup(mode: str, case: str) -> Tuple[Path, Path, Path, Path]:
     data_loc, config_loc, save_loc, infodynamics_loc = get_locations(mode)
 
     # Define case data directory
-    case_dir = ensure_existence(os.path.join(data_loc, mode, case), make=True)
-    caseconfig_dir = os.path.join(config_loc, mode, case)
+    case_dir = ensure_existence(Path(data_loc, mode, case), make=True)
+    case_config_dir = Path(config_loc, mode, case)
 
-    return save_loc, caseconfig_dir, case_dir, infodynamics_loc
+    return save_loc, case_config_dir, case_dir, infodynamics_loc

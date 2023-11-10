@@ -1,7 +1,7 @@
-"""Calculates weight and auxiliary data for each causevar and writes to files.
+"""Calculates weight and auxiliary data for each source variable and writes to files.
 
 All weight data file output writers are now called at this level, making the
-process interruption tolerant up to a single causevar analysis.
+process interruption tolerant up to a single source variable analysis.
 
 """
 
@@ -26,14 +26,14 @@ def writecsv_weightcalc(filename, datalines, header):
 def readcsv_weightcalc(filename):
     """CSV reader customized for reading weights."""
 
-    with open(filename) as f:
+    with open(filename, encoding="utf-8") as f:
         header = next(csv.reader(f))[:]
         values = np.genfromtxt(f, delimiter=",", dtype=str)
 
     return values, header
 
 
-def calc_weights_oneset(
+def calc_weights_one_source(
     weightcalcdata,
     weightcalculator,
     box,
@@ -41,19 +41,19 @@ def calc_weights_oneset(
     size,
     newconnectionmatrix,
     method,
-    boxindex,
+    boxindex: int,
     filename,
     headerline,
-    writeoutput,
-    causevarindex,
+    writeoutput: bool,
+    source_var_index: int,
 ):
-    causevar = weightcalcdata.variables[causevarindex]
+    causevar = weightcalcdata.variables[source_var_index]
 
     print(
         "Start analysing causal variable: "
         + causevar
         + " ["
-        + str(causevarindex + 1)
+        + str(source_var_index + 1)
         + "/"
         + str(len(weightcalcdata.causevarindexes))
         + "]"
@@ -153,7 +153,7 @@ def calc_weights_oneset(
         )
 
         exists = False
-        do_test = not (newconnectionmatrix[affectedvarindex, causevarindex] == 0)
+        do_test = not (newconnectionmatrix[affectedvarindex, source_var_index] == 0)
         # Test if the affectedvar has already been calculated
         if (method[:16] == "transfer_entropy") and do_test:
             testlocation = filename(auxdirectional_name, boxindex + 1, causevar)
@@ -187,7 +187,7 @@ def calc_weights_oneset(
             for delay in weightcalcdata.sample_delays:
                 logging.info("Now testing delay: " + str(delay))
 
-                causevardata = box[:, causevarindex][startindex : startindex + size]
+                causevardata = box[:, source_var_index][startindex : startindex + size]
 
                 affectedvardata = box[:, affectedvarindex][
                     startindex + delay : startindex + size + delay
@@ -197,7 +197,7 @@ def calc_weights_oneset(
                     causevardata,
                     affectedvardata,
                     weightcalcdata,
-                    causevarindex,
+                    source_var_index,
                     affectedvarindex,
                 )
 
@@ -290,7 +290,7 @@ def calc_weights_oneset(
                     auxdata_thisvar_absolute,
                 ) = weightcalculator.report(
                     weightcalcdata,
-                    causevarindex,
+                    source_var_index,
                     affectedvarindex,
                     weightlist,
                     box,
@@ -350,7 +350,7 @@ def calc_weights_oneset(
 
                 auxdata_thisvar_neutral = weightcalculator.report(
                     weightcalcdata,
-                    causevarindex,
+                    source_var_index,
                     affectedvarindex,
                     weightlist,
                     box,
@@ -373,7 +373,7 @@ def calc_weights_oneset(
                     )
 
         if (
-            not (newconnectionmatrix[affectedvarindex, causevarindex] == 0)
+            not (newconnectionmatrix[affectedvarindex, source_var_index] == 0)
             and (exists is False)
             and (writeoutput is True)
         ):
@@ -452,7 +452,7 @@ def calc_weights_oneset(
         "Done analysing causal variable: "
         + causevar
         + " ["
-        + str(causevarindex + 1)
+        + str(source_var_index + 1)
         + "/"
         + str(len(weightcalcdata.causevarindexes))
         + "]"
@@ -477,7 +477,7 @@ def run(non_iter_args, do_multiprocessing):
     ] = non_iter_args
 
     partial_gaincalc_oneset = partial(
-        calc_weights_oneset,
+        calc_weights_one_source,
         weightcalcdata,
         weightcalculator,
         box,

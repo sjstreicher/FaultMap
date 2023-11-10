@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Receives a weighted directed graph in GML format and deletes all edges
 that connects nodes that are connected via some other path. Only the longest
 paths are retained.
@@ -31,7 +30,6 @@ class GraphReduceData(object):
     """
 
     def __init__(self, mode, case):
-
         # Get locations from configuration file
         (
             self.saveloc,
@@ -76,13 +74,12 @@ class GraphReduceData(object):
             self.boxes = boxindexes
 
 
-def dographreduce(graphreducedata, scenario, datadir, typename, writeoutput):
-
+def reduce_graph(graph_reduce_data, scenario, data_dir, typename, write_output):
     graph_filename = "{}.gml"
     simplified_graph_filename = "{}_simplified.gml"
     lowedge_graph_filename = "{}_lowedge.gml"
 
-    boxesdir = os.path.join(datadir, typename)
+    boxesdir = os.path.join(data_dir, typename)
     boxes = next(os.walk(boxesdir))[1]
 
     for box in boxes:
@@ -94,38 +91,38 @@ def dographreduce(graphreducedata, scenario, datadir, typename, writeoutput):
                 os.path.join(
                     dummiesdir,
                     dummytype,
-                    graph_filename.format(graphreducedata.graph),
+                    graph_filename.format(graph_reduce_data.graph),
                 )
             )
             # Get appropriate weight threshold for deleting edges from graph
             # TODO: Implement elegant way of dealing with empty graphs
             try:
                 threshold = compute_edge_threshold(
-                    original_graph, graphreducedata.percentile
+                    original_graph, graph_reduce_data.percentile
                 )
             except:
                 print("Empty graph")
                 break
             # Delete low value edges from graph
             lowedge_graph = delete_lowval_edges(
-                original_graph, threshold, graphreducedata.remove_self_loops
+                original_graph, threshold, graph_reduce_data.remove_self_loops
             )
             # Get simplified graph
             simplified_graph = delete_loworder_edges(
                 lowedge_graph,
-                graphreducedata.depth,
-                graphreducedata.weight_discretion,
+                graph_reduce_data.depth,
+                graph_reduce_data.weight_discretion,
             )
 
             # Write simplified graph to file
-            if writeoutput:
+            if write_output:
                 # Write simplified graph
                 nx.readwrite.write_gml(
                     simplified_graph,
                     os.path.join(
                         dummiesdir,
                         dummytype,
-                        simplified_graph_filename.format(graphreducedata.graph),
+                        simplified_graph_filename.format(graph_reduce_data.graph),
                     ),
                 )
                 # Write lowedge graph
@@ -134,14 +131,14 @@ def dographreduce(graphreducedata, scenario, datadir, typename, writeoutput):
                     os.path.join(
                         dummiesdir,
                         dummytype,
-                        lowedge_graph_filename.format(graphreducedata.graph),
+                        lowedge_graph_filename.format(graph_reduce_data.graph),
                     ),
                 )
     return None
 
 
-def reducegraph(mode, case, writeoutput):
-    graphreducedata = GraphReduceData(mode, case)
+def reduce_graph_scenarios(mode, case, write_output):
+    graph_reduce_data = GraphReduceData(mode, case)
 
     saveloc, caseconfigdir, casedir, _ = config_setup.run_setup(mode, case)
 
@@ -152,16 +149,16 @@ def reducegraph(mode, case, writeoutput):
     #                         'graphs'), make=True)
 
     # Directory where subdirectories for scenarios will be found
-    scenariosdir = os.path.join(saveloc, "noderank", case)
+    scenarios_dir = os.path.join(saveloc, "noderank", case)
 
     # Get list of all scenarios
-    scenarios = next(os.walk(scenariosdir))[1]
+    scenarios = next(os.walk(scenarios_dir))[1]
 
     for scenario in scenarios:
-        if scenario in graphreducedata.scenarios:
+        if scenario in graph_reduce_data.scenarios:
             logging.info("Running scenario {}".format(scenario))
             # Update scenario-specific fields graphreducedata object
-            graphreducedata.scenariodata(scenario)
+            graph_reduce_data.scenariodata(scenario)
             print(scenario)
         else:
             continue
@@ -169,41 +166,40 @@ def reducegraph(mode, case, writeoutput):
         # Iterate through every source graph that is found inside
         # the scenario's subdirectories
 
-        methodsdir = os.path.join(scenariosdir, scenario)
-        methods = next(os.walk(methodsdir))[1]
+        methods_dir = os.path.join(scenarios_dir, scenario)
+        methods = next(os.walk(methods_dir))[1]
         for method in methods:
             print(method)
-            sigtypesdir = os.path.join(methodsdir, method)
-            sigtypes = next(os.walk(sigtypesdir))[1]
-            for sigtype in sigtypes:
-                print(sigtype)
-                embedtypesdir = os.path.join(sigtypesdir, sigtype)
-                embedtypes = next(os.walk(embedtypesdir))[1]
-                for embedtype in embedtypes:
-                    print(embedtype)
-                    datadir = os.path.join(embedtypesdir, embedtype)
+            sig_types_dir = os.path.join(methods_dir, method)
+            sig_types = next(os.walk(sig_types_dir))[1]
+            for sig_type in sig_types:
+                print(sig_type)
+                embed_types_dir = os.path.join(sig_types_dir, sig_type)
+                embed_types = next(os.walk(embed_types_dir))[1]
+                for embed_type in embed_types:
+                    print(embed_type)
+                    data_dir = os.path.join(embed_types_dir, embed_type)
 
                     if method[:16] == "transfer_entropy":
-                        typenames = ["weight_absolute", "weight_directional"]
+                        type_names = ["weight_absolute", "weight_directional"]
                         # 'signtested_weight_directional']
-                        if sigtype == "sigtest":
-                            typenames.append("sig_dweight_absolute")
-                            typenames.append("sigweight_directional")
-                            typenames.append("signtested_sigweight_directional")
+                        if sig_type == "sigtest":
+                            type_names.append("sig_dweight_absolute")
+                            type_names.append("sigweight_directional")
+                            type_names.append("signtested_sigweight_directional")
                     else:
-                        typenames = ["weight"]
-                        if sigtype == "sigtest":
-                            typenames.append("sigweight")
+                        type_names = ["weight"]
+                        if sig_type == "sigtest":
+                            type_names.append("sigweight")
 
-                    for typename in typenames:
+                    for typename in type_names:
                         print(typename)
                         # Start the methods here
-                        dographreduce(
-                            graphreducedata,
-                            scenario,
-                            datadir,
+                        reduce_graph(
+                            graph_reduce_data,
+                            data_dir,
                             typename,
-                            writeoutput,
+                            write_output,
                         )
 
     return None
@@ -269,7 +265,6 @@ def remove_duplicates(
     removed_edges,
     weight_discretion,
 ):
-
     for duplicate in intersection_list:
         if simplified_graph.has_edge(node, duplicate):
             if weight_discretion:

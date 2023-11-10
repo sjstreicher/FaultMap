@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-"""Generates sample digraphs for testing and demonstrating faultmap methods.
+"""Generates sample digraphs for testing and demonstrating graphical methods.
 
 """
 
@@ -9,11 +8,11 @@ from typing import List
 
 import networkx as nx
 import numpy as np
-from datagen import seed_randn
 
 from faultmap.data_processing import build_graph
+from faultmap.datagen import seed_randn
 
-files_loc = json.load(open("test/testconfig.json", encoding="utf-8"))
+files_loc = json.load(open("tests/test_config.json", encoding="utf-8"))
 save_loc = os.path.expanduser(files_loc["save_loc"])
 
 seed_list = [35, 88, 107, 52, 98]

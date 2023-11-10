@@ -24,15 +24,17 @@ import logging
 import multiprocessing
 import os
 import time
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
 from faultmap import config_setup, data_processing, datagen, gaincalc_oneset
-from faultmap.gaincalculators import CorrWeightCalculator, TransEntWeightCalculator
+from faultmap.type_definitions import RunModes
+from faultmap.weightcalculators import CorrWeightCalculator, TransEntWeightCalculator
 
 
-class WeightcalcData:
+class WeightCalcData:
     """Creates a data object from files or functions for use in
     weight calculation methods.
 
@@ -53,7 +55,7 @@ class WeightcalcData:
         mode : str
             Either 'test' or 'cases'. Tests data are generated dynamically and
             stored in specified folders. Case data are read from file and
-            stored under organized headings in the saveloc directory specified
+            stored under organized headings in the save_loc directory specified
             in config.json.
         case : str
             The name of the case that is to be run. Points to dictionary in
@@ -71,23 +73,22 @@ class WeightcalcData:
         """
         # Get file locations from configuration file
         (
-            self.saveloc,
-            self.caseconfigdir,
-            self.casedir,
-            self.infodynamicsloc,
+            self.save_loc,
+            self.case_config_dir,
+            self.case_dir,
+            self.infodynamics_loc,
         ) = config_setup.run_setup(mode, case)
         # Load case config file
         with open(
-            os.path.join(self.caseconfigdir, "weightcalc.json"), encoding="utf-8"
-        ) as configfile:
-            self.caseconfig = json.load(configfile)
-        configfile.close()
+            os.path.join(self.case_config_dir, "weight_calc.json"), encoding="utf-8"
+        ) as f:
+            self.case_config = json.load(f)
         # Get data type
-        self.datatype = self.caseconfig["datatype"]
+        self.datatype = self.case_config["datatype"]
         # Get scenarios
-        self.scenarios = self.caseconfig["scenarios"]
+        self.scenarios = self.case_config["scenarios"]
         # Get methods
-        self.methods = self.caseconfig["methods"]
+        self.methods = self.case_config["methods"]
 
         self.do_multiprocessing = do_multiprocessing
         self.use_gpu = use_gpu
@@ -115,17 +116,18 @@ class WeightcalcData:
         """
         print(f"The scenario name is: {scenario}")
 
-        self.settings_set = self.caseconfig[scenario]["settings"]
+        self.settings_set = self.case_config[scenario]["settings"]
 
     def set_settings(self, scenario, settings_name):
-        if "use_connections" in self.caseconfig[settings_name]:
-            self.connections_used = self.caseconfig[settings_name]["use_connections"]
+        # TODO: Rewrite this with get
+        if "use_connections" in self.case_config[settings_name]:
+            self.connections_used = self.case_config[settings_name]["use_connections"]
         else:
             self.connections_used = False
-        if "transient" in self.caseconfig[settings_name]:
-            self.transient = self.caseconfig[settings_name]["transient"]
-            if "transient_method" in self.caseconfig[settings_name]:
-                self.transient_method = self.caseconfig[settings_name][
+        if "transient" in self.case_config[settings_name]:
+            self.transient = self.case_config[settings_name]["transient"]
+            if "transient_method" in self.case_config[settings_name]:
+                self.transient_method = self.case_config[settings_name][
                     "transient_method"
                 ]
             else:
@@ -133,48 +135,43 @@ class WeightcalcData:
         else:
             self.transient = False
             logging.info("Defaulting to single time region analysis")
-        if "normalise" in self.caseconfig[settings_name]:
-            self.normalise = self.caseconfig[settings_name]["normalise"]
+        if "normalise" in self.case_config[settings_name]:
+            self.normalise = self.case_config[settings_name]["normalise"]
         else:
             self.normalise = False
             logging.info("Defaulting to no normalisation")
-        if "detrend" in self.caseconfig[settings_name]:
-            self.detrend = self.caseconfig[settings_name]["detrend"]
+        if "detrend" in self.case_config[settings_name]:
+            self.detrend = self.case_config[settings_name]["detrend"]
         else:
             self.detrend = False
             logging.info("Defaulting to no detrending")
-        self.sigtest = self.caseconfig[settings_name]["sigtest"]
+        self.sigtest = self.case_config[settings_name]["sigtest"]
         if self.sigtest:
-            # The transfer entropy threshold calculation method be either
-            # 'sixsigma' or 'rankorder'
-            self.thresh_method = self.caseconfig[settings_name]["thresh_method"]
-            # The transfer entropy surrogate generation method be either
+            # The transfer entropy threshold calculation method be either 'sixsigma' or
+            # 'rankorder'
+            self.thresh_method = self.case_config[settings_name]["thresh_method"]
+            # The transfer entropy surrogate generation method must be either
             # 'iAAFT' or 'random_shuffle'
-            self.surr_method = self.caseconfig[settings_name]["surr_method"]
-        if "allthresh" in self.caseconfig[settings_name]:
-            self.allthresh = self.caseconfig[settings_name]["allthresh"]
-        else:
-            self.allthresh = False
+            self.surrogate_method = self.case_config[settings_name]["surrogate_method"]
+
+            self.all_thresh = self.case_config[settings_name].get("all_thresh", False)
 
         # Get sampling rate and unit name
-        self.sampling_rate = self.caseconfig[settings_name]["sampling_rate"]
-        self.sampling_unit = self.caseconfig[settings_name]["sampling_unit"]
+        self.sampling_rate = self.case_config[settings_name]["sampling_rate"]
+        self.sampling_unit = self.case_config[settings_name]["sampling_unit"]
         # Get starting index
-        if "startindex" in self.caseconfig[settings_name]:
-            self.startindex = self.caseconfig[settings_name]["startindex"]
-        else:
-            self.startindex = 0
+        self.start_index = self.case_config[settings_name].get("start_index", 0)
 
         # Get parameters for Kraskov method
         if "transfer_entropy_kraskov" in self.methods:
-            self.additional_parameters = self.caseconfig[settings_name][
+            self.additional_parameters = self.case_config[settings_name][
                 "additional_parameters"
             ]
 
         # Get parameters for kernel method
         if "transfer_entropy_kernel" in self.methods:
-            if "kernel_width" in self.caseconfig[settings_name]:
-                self.kernel_width = self.caseconfig[settings_name]["kernel_width"]
+            if "kernel_width" in self.case_config[settings_name]:
+                self.kernel_width = self.case_config[settings_name]["kernel_width"]
             else:
                 self.kernel_width = None
 
@@ -182,16 +179,16 @@ class WeightcalcData:
             # Get path to time series data input file in standard format
             # described in documentation under "Input data formats"
             raw_tsdata = os.path.join(
-                self.casedir, "data", self.caseconfig[scenario]["data"]
+                self.case_dir, "data", self.case_config[scenario]["data"]
             )
 
             # Retrieve connection matrix
             if self.connections_used:
                 # Get connection (adjacency) matrix
                 connection_loc = os.path.join(
-                    self.casedir,
+                    self.case_dir,
                     "connections",
-                    self.caseconfig[scenario]["connections"],
+                    self.case_config[scenario]["connections"],
                 )
                 (
                     self.connectionmatrix,
@@ -205,11 +202,11 @@ class WeightcalcData:
 
             self.variables = list(raw_df.keys())
             self.timestamps = np.asarray(raw_df.index.astype(np.int64) // 10**9)
-            self.headerline = ["Time"] + [var for var in self.variables]
+            self.header_line = ["Time"] + [var for var in self.variables]
 
-            self.inputdata_raw = np.asarray(raw_df)
+            self.input_data_raw = np.asarray(raw_df)
 
-            # Convert timeseries data in CSV file to H5 data format
+            # Convert times eries data in CSV file to H5 data format
             # datapath = data_processing.csv_to_h5(self.saveloc, raw_tsdata,
             #                                      scenario, self.casename)
             # Read variables from orignal CSV file
@@ -222,80 +219,77 @@ class WeightcalcData:
             #                                 dtype='str')[0, :]
 
         elif self.datatype == "function":
-            raw_tsdata_gen = self.caseconfig[scenario]["datagen"]
+            raw_tsdata_gen = self.case_config[scenario]["datagen"]
             if self.connections_used:
-                connectionloc = self.caseconfig[scenario]["connections"]
+                connectionloc = self.case_config[scenario]["connections"]
                 # Get the variables and connection matrix
                 self.variables, self.connectionmatrix = getattr(
                     datagen, connectionloc
                 )()
             # TODO: Store function arguments in scenario config file
-            params = self.caseconfig[settings_name]["datagen_params"]
+            params = self.case_config[settings_name]["datagen_params"]
             # Get inputdata
-            self.inputdata_raw = getattr(datagen, raw_tsdata_gen)(params)
-            self.inputdata_raw = np.asarray(self.inputdata_raw)
+            self.input_data_raw = getattr(datagen, raw_tsdata_gen)(params)
+            self.input_data_raw = np.asarray(self.input_data_raw)
 
             self.timestamps = np.arange(
                 0,
-                len(self.inputdata_raw[:, 0]) * self.sampling_rate,
+                len(self.input_data_raw[:, 0]) * self.sampling_rate,
                 self.sampling_rate,
             )
 
-            self.headerline = ["Time"]
-            [self.headerline.append(variable) for variable in self.variables]
+            self.header_line = ["Time"]
+            [self.header_line.append(variable) for variable in self.variables]
 
         # Perform normalisation
         # Retrieve scaling limits from file
         if self.normalise == "skogestad":
             # Get scaling parameters
-            if "scalelimits" in self.caseconfig[scenario]:
+            if "scalelimits" in self.case_config[scenario]:
                 scaling_loc = os.path.join(
-                    self.casedir,
+                    self.case_dir,
                     "scalelimits",
-                    self.caseconfig[scenario]["scalelimits"],
+                    self.case_config[scenario]["scalelimits"],
                 )
-                scalingvalues = data_processing.read_scalelimits(scaling_loc)
+                scaling_values = data_processing.read_scale_limits(scaling_loc)
             else:
                 raise NameError(
                     "Scale limits reference missing from " "configuration file"
                 )
         else:
-            scalingvalues = None
+            scaling_values = None
 
-        self.inputdata_normstep = data_processing.normalise_data(
-            self.headerline,
+        self.normalised_input_data = data_processing.normalise_data(
+            self.header_line,
             self.timestamps,
-            self.inputdata_raw,
+            self.input_data_raw,
             self.variables,
-            self.saveloc,
+            self.save_loc,
             self.case_name,
             scenario,
             self.normalise,
-            self.methods,
-            scalingvalues,
+            scaling_values,
         )
 
         # Get delay type
-        if "delaytype" in self.caseconfig[settings_name]:
-            self.delaytype = self.caseconfig[settings_name]["delaytype"]
-        else:
-            self.delaytype = "datapoints"
-
+        self.delay_type = self.case_config[settings_name].get(
+            "delay_type", "datapoints"
+        )
         # Get bias correction parameter
-        if "bias_correct" in self.caseconfig[scenario]:
-            self.bias_correct = self.caseconfig[scenario]["bias_correct"]
+        if "bias_correct" in self.case_config[scenario]:
+            self.bias_correct = self.case_config[scenario]["bias_correct"]
         else:
             self.bias_correct = False
 
         # Get size of sample vectors for test
         # Must be smaller than number of samples
-        self.testsize = self.caseconfig[settings_name]["testsize"]
+        self.testsize = self.case_config[settings_name]["test_size"]
 
         # Get number of delays to test
-        test_delays = self.caseconfig[scenario]["test_delays"]
+        test_delays = self.case_config[scenario]["test_delays"]
 
-        if "bidirectional_delays" in self.caseconfig[scenario].keys():
-            self.bidirectional_delays = self.caseconfig[scenario][
+        if "bidirectional_delays" in self.case_config[scenario].keys():
+            self.bidirectional_delays = self.case_config[scenario][
                 "bidirectional_delays"
             ]
         else:
@@ -307,57 +301,58 @@ class WeightcalcData:
             delay_range = range(test_delays + 1)
 
         # Define intervals of delays
-        if self.delaytype == "datapoints":
+        if self.delay_type == "datapoints":
             self.delays = delay_range
 
-        elif self.delaytype == "intervals":
+        elif self.delay_type == "intervals":
             # Test delays at specified intervals
-            self.delayinterval = self.caseconfig[settings_name]["delay_interval"]
+            self.delayinterval = self.case_config[settings_name]["delay_interval"]
 
             self.delays = [(val * self.delayinterval) for val in delay_range]
 
-        if "causevarindexes" in self.caseconfig[scenario]:
-            self.causevarindexes = self.caseconfig[scenario]["causevarindexes"]
+        if "causevarindexes" in self.case_config[scenario]:
+            self.sourve_var_indexes = self.case_config[scenario]["source_var_indexes"]
         else:
-            self.causevarindexes = "all"
-        if self.causevarindexes == "all":
-            self.causevarindexes = range(len(self.variables))
-        if "affectedvarindexes" in self.caseconfig[scenario]:
-            self.affectedvarindexes = self.caseconfig[scenario]["affectedvarindexes"]
-        else:
-            self.affectedvarindexes = "all"
-        if self.affectedvarindexes == "all":
-            self.affectedvarindexes = range(len(self.variables))
+            self.sourve_var_indexes = "all"
+        if self.sourve_var_indexes == "all":
+            self.sourve_var_indexes = range(len(self.variables))
 
-        if "bandgap_filtering" in self.caseconfig[scenario]:
-            bandgap_filtering = self.caseconfig[scenario]["bandgap_filtering"]
+        self.destination_var_indexes = self.case_config[scenario].get(
+            "destination_var_indexes", "all"
+        )
+
+        if self.destination_var_indexes == "all":
+            self.destination_var_indexes = range(len(self.variables))
+
+        if "bandgap_filtering" in self.case_config[scenario]:
+            bandgap_filtering = self.case_config[scenario]["bandgap_filtering"]
         else:
             bandgap_filtering = False
         if bandgap_filtering:
-            low_freq = self.caseconfig[scenario]["low_freq"]
-            high_freq = self.caseconfig[scenario]["high_freq"]
+            low_freq = self.case_config[scenario]["low_freq"]
+            high_freq = self.case_config[scenario]["high_freq"]
             self.inputdata_bandgapfiltered = data_processing.bandgapfilter_data(
                 raw_tsdata,
-                self.inputdata_normstep,
+                self.normalised_input_data,
                 self.variables,
                 low_freq,
                 high_freq,
-                self.saveloc,
+                self.save_loc,
                 self.case_name,
                 scenario,
             )
             self.inputdata_originalrate = self.inputdata_bandgapfiltered
         else:
-            self.inputdata_originalrate = self.inputdata_normstep
+            self.inputdata_originalrate = self.normalised_input_data
 
         # Perform detrending
         # Detrending should be performed after normalisation and band gap filtering
 
         self.inputdata_originalrate = data_processing.detrend_data(
-            self.headerline,
+            self.header_line,
             self.timestamps,
             self.inputdata_originalrate,
-            self.saveloc,
+            self.save_loc,
             self.case_name,
             scenario,
             self.detrend,
@@ -365,7 +360,7 @@ class WeightcalcData:
 
         # Subsample data if required
         # Get sub_sampling interval
-        self.sub_sampling_interval = self.caseconfig[settings_name][
+        self.sub_sampling_interval = self.case_config[settings_name][
             "sub_sampling_interval"
         ]
         # TODO: Use proper pandas.tseries.resample techniques
@@ -374,11 +369,11 @@ class WeightcalcData:
         self.inputdata = self.inputdata_originalrate[0 :: self.sub_sampling_interval]
 
         if self.transient:
-            self.boxsize = self.caseconfig[settings_name]["boxsize"]
+            self.boxsize = self.case_config[settings_name]["boxsize"]
             if self.transient_method == "legacy":
-                self.boxnum = self.caseconfig[settings_name]["boxnum"]
+                self.boxnum = self.case_config[settings_name]["boxnum"]
             elif self.transient_method == "robust":
-                self.boxoverlap = self.caseconfig[settings_name]["boxoverlap"]
+                self.boxoverlap = self.case_config[settings_name]["boxoverlap"]
 
         else:
             self.boxnum = 1  # Only a single box will be used
@@ -400,8 +395,8 @@ class WeightcalcData:
                 self.boxsize,
                 self.boxnum,
             )
-            data_processing.write_boxdates(
-                self.boxdates, self.saveloc, self.case_name, scenario
+            data_processing.write_box_dates(
+                self.boxdates, self.save_loc, self.case_name, scenario
             )
 
             # Generate boxes to use
@@ -425,22 +420,22 @@ class WeightcalcData:
                 df, self.boxsize, self.boxoverlap, freq_string
             )
 
-            data_processing.write_boxdates(
-                self.boxdates, self.saveloc, self.case_name, scenario
+            data_processing.write_box_dates(
+                self.boxdates, self.save_loc, self.case_name, scenario
             )
 
             self.boxnum = len(self.boxdates)
 
         # Select which of the boxes to evaluate
         if self.transient:
-            if "boxindexes" in self.caseconfig[scenario]:
-                if self.caseconfig[scenario]["boxindexes"] == "range":
+            if "boxindexes" in self.case_config[scenario]:
+                if self.case_config[scenario]["boxindexes"] == "range":
                     self.boxindexes = range(
-                        self.caseconfig[scenario]["boxindexes_start"],
-                        self.caseconfig[scenario]["boxindexes_end"] + 1,
+                        self.case_config[scenario]["boxindexes_start"],
+                        self.case_config[scenario]["boxindexes_end"] + 1,
                     )
                 else:
-                    self.boxindexes = self.caseconfig[scenario]["boxindexes"]
+                    self.boxindexes = self.case_config[scenario]["boxindexes"]
             else:
                 self.boxindexes = "all"
             if self.boxindexes == "all":
@@ -454,13 +449,13 @@ class WeightcalcData:
             self.generate_diffs = False
 
         # Calculate delays in indexes as well as time units
-        if self.delaytype == "datapoints":
+        if self.delay_type == "datapoints":
             self.actual_delays = [
                 (delay * self.sampling_rate * self.sub_sampling_interval)
                 for delay in self.delays
             ]
             self.sample_delays = self.delays
-        elif self.delaytype == "intervals":
+        elif self.delay_type == "intervals":
             self.actual_delays = [
                 int(round(delay / self.sampling_rate)) * self.sampling_rate
                 for delay in self.delays
@@ -480,12 +475,12 @@ class WeightcalcData:
 
         if self.fft_calc:
             data_processing.fft_calculation(
-                self.headerline,
+                self.header_line,
                 self.inputdata_originalrate,
                 self.variables,
                 self.sampling_rate,
                 self.sampling_unit,
-                self.saveloc,
+                self.save_loc,
                 self.case_name,
                 scenario,
             )
@@ -595,7 +590,7 @@ def calc_weights(weight_calc_data, method: str, scenario, write_output):
 
     # Define weight_store_dir up to the method level
     weight_store_dir = config_setup.ensure_existence(
-        os.path.join(
+        Path(
             weight_calc_data.save_loc,
             "weight_data",
             weight_calc_data.case_name,
@@ -618,7 +613,7 @@ def calc_weights(weight_calc_data, method: str, scenario, write_output):
             )
 
         signal_entropy_dir = config_setup.ensure_existence(
-            os.path.join(weight_calc_data.save_loc, "signal_entropies"), make=True
+            Path(weight_calc_data.save_loc, "signal_entropies"), make=True
         )
 
         signal_entropy_filename_template = os.path.join(
@@ -635,10 +630,10 @@ def calc_weights(weight_calc_data, method: str, scenario, write_output):
             # and save output in similar format to
             # standard weight calculation results
             signal_entropies = []
-            for varindex, _ in enumerate(weight_calc_data.variables):
-                variable_data = box[:, varindex][start_index : start_index + size]
+            for var_index, _ in enumerate(weight_calc_data.variables):
+                var_data = box[:, var_index][start_index : start_index + size]
                 entropy = data_processing.calc_signal_entropy(
-                    variable_data, weight_calc_data
+                    var_data, weight_calc_data
                 )
                 signal_entropies.append(entropy)
 
@@ -685,14 +680,14 @@ def calc_weights(weight_calc_data, method: str, scenario, write_output):
     return None
 
 
-def weightcalc(
-    mode,
-    case,
-    writeoutput=False,
-    single_entropies=False,
-    fftcalc=False,
-    do_multiprocessing=False,
-    use_gpu=False,
+def weight_calc(
+    mode: RunModes,
+    case: str,
+    writeoutput: bool = False,
+    single_entropies: bool = False,
+    calc_fft: bool = False,
+    do_multiprocessing: bool = False,
+    use_gpu: bool = False,
 ):
     """Reports the maximum weight as well as associated delay
     obtained by shifting the affected variable behind the causal variable a
@@ -710,7 +705,7 @@ def weightcalc(
             either test or case config files.
         single_entropies : bool
             Flags whether the entropies of single signals should be calculated.
-        fftcalc : bool
+        calc_fft : bool
             Indicates whether the FFT of all individual signals should be
             calculated.
         do_multiprocessing : bool
@@ -725,24 +720,24 @@ def weightcalc(
 
     """
 
-    weightcalcdata = WeightcalcData(
-        mode, case, single_entropies, fftcalc, do_multiprocessing, use_gpu
+    weight_calc_data = WeightCalcData(
+        mode, case, single_entropies, calc_fft, do_multiprocessing, use_gpu
     )
 
-    for scenario in weightcalcdata.scenarios:
-        logging.info("Running scenario {}".format(scenario))
+    for scenario in weight_calc_data.scenarios:
+        logging.info("Running scenario %s", scenario)
         # Update scenario-specific fields of weightcalcdata object
-        weightcalcdata.scenario_data(scenario)
-        for settings_name in weightcalcdata.settings_set:
-            weightcalcdata.set_settings(scenario, settings_name)
-            logging.info("Now running settings {}".format(settings_name))
+        weight_calc_data.scenario_data(scenario)
+        for settings_name in weight_calc_data.settings_set:
+            weight_calc_data.set_settings(scenario, settings_name)
+            logging.info("Now running settings %s", settings_name)
 
-            for method in weightcalcdata.methods:
-                logging.info("Method: " + method)
+            for method in weight_calc_data.methods:
+                logging.info("Method: %s", method)
 
-                start_time = time.clock()
-                calc_weights(weightcalcdata, method, scenario, writeoutput)
-                end_time = time.clock()
+                start_time = time.process_time()
+                calc_weights(weight_calc_data, method, scenario, writeoutput)
+                end_time = time.process_time()
                 print(end_time - start_time)
 
 

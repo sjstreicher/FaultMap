@@ -23,5 +23,5 @@ mode = createarrays_config["mode"]
 cases = createarrays_config["cases"]
 
 for case in cases:
-    result_reconstruction(mode, case, writeoutput)
-    result_reconstruction(mode, case, writeoutput)
+    result_reconstruction(mode, case)
+    result_reconstruction(mode, case)

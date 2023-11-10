@@ -13,12 +13,11 @@ import json
 import logging
 import operator
 import os
-from test import networkgen
 
 import networkx as nx
 import numpy as np
 
-from faultmap import config_setup, data_processing
+from faultmap import config_setup, data_processing, networkgen
 
 
 class NoderankData:

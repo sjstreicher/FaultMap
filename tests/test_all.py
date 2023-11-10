@@ -1,17 +1,15 @@
-# -*- coding: utf-8 -*-
 """Tests all functionality. Aims for full coverage.
 
 """
 
 import multiprocessing
-import unittest
 
 from run_full import run_all
 
 
-class TestFullDemo(unittest.TestCase):
-    def test_full_analysis(self):
-        run_all("test")
+def test_full_analysis():
+    """Performs and end-to-end run on the test cases."""
+    run_all("test")
 
 
 # class TestWeightCalculation(unittest.TestCase):
@@ -35,7 +33,7 @@ class TestFullDemo(unittest.TestCase):
 #        weightcalc(self.mode, self.case, True, False, False, True)
 #
 #    def test_createarrays(self):
-#        result_reconstruction(self.mode, self.case, True)
+#        result_reconstruction(self.mode, self.case)
 #
 #
 # class TestTrendExtraction(unittest.TestCase):
@@ -44,7 +42,7 @@ class TestFullDemo(unittest.TestCase):
 #        self.mode = 'test'
 #        self.case = 'fulldemo'
 #        weightcalc(self.mode, self.case, True, False, False, True)
-#        result_reconstruction(self.mode, self.case, True)
+#        result_reconstruction(self.mode, self.case)
 #
 #    def test_trendextraction(self):
 #        trend_extraction(self.mode, self.case, True)
@@ -56,8 +54,8 @@ class TestFullDemo(unittest.TestCase):
 #        self.mode = 'test'
 #        self.case = 'fulldemo'
 #        weightcalc(self.mode, self.case, True, False, False, True)
-#        result_reconstruction(self.mode, self.case, True)
-#        trend_extraction(self.mode, self.case, True)
+#        result_reconstruction(self.mode, self.case)
+#        trend_extraction(self.mode, self.case)
 #
 #    def test_noderanking(self):
 #        noderankcalc(self.mode, self.case, True)
@@ -69,7 +67,7 @@ class TestFullDemo(unittest.TestCase):
 #        self.mode = 'test'
 #        self.case = 'fulldemo'
 #        weightcalc(self.mode, self.case, True, False, False, True)
-#        result_reconstruction(self.mode, self.case, True)
+#        result_reconstruction(self.mode, self.case)
 #        trend_extraction(self.mode, self.case, True)
 #        noderankcalc(self.mode, self.case, True)
 #
@@ -79,4 +77,4 @@ class TestFullDemo(unittest.TestCase):
 
 if __name__ == "__main__":
     multiprocessing.freeze_support()
-    unittest.main()
+    test_full_analysis()

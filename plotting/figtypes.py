@@ -27,7 +27,7 @@ between multiple scenarios
     Includes the option to plot the significance threshold values obtained by
     different methods
 
-Simple/Directional/Significance weights vs. boxes for specifc variable
+Simple/Directional/Significance weights vs. boxes for specific variable
 between multiple scenarios
     Includes the option to plot the significance threshold values obtained by
     different methods (value at optimizing delay used in actual testing
@@ -43,14 +43,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from faultmap import data_processing
-from faultmap.gaincalc import WeightcalcData
+from faultmap.gaincalc import WeightCalcData
 from plotting import plotter
 
 # from plotter import get_scenario_data_vectors
 
 # Preamble
 # sns.set_style('seaborn-paper')
-plt.style.use(["seaborn-whitegrid", "seaborn-paper"])
+plt.style.use(["seaborn-v0_8-whitegrid", "seaborn-v0_8-paper"])
 
 mpl.rcParams["xtick.labelsize"] = 12
 mpl.rcParams["ytick.labelsize"] = 12
@@ -93,10 +93,10 @@ def fig_timeseries(graphdata, graph, scenario, savedir):
     graphdata.get_plotvars(graph)
     # graphdata.get_starttime(graph)
 
-    weightcalcdata = WeightcalcData(graphdata.mode, graphdata.case, False, False, False)
+    weightcalcdata = WeightCalcData(graphdata.mode, graphdata.case, False, False, False)
     weightcalcdata.set_settings(scenario, graphdata.settings)
 
-    valuematrix = weightcalcdata.inputdata_normstep
+    valuematrix = weightcalcdata.normalised_input_data
     variables = weightcalcdata.variables
 
     plt.figure(1, (12, 6))

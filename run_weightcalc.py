@@ -10,7 +10,7 @@ import multiprocessing
 import os
 
 from faultmap import config_setup
-from faultmap.gaincalc import weightcalc
+from faultmap.gaincalc import weight_calc
 
 if __name__ == "__main__":
     multiprocessing.freeze_support()
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     do_multiprocessing = weightcalc_config["multiprocessing"]
 
     for case in cases:
-        weightcalc(
+        weight_calc(
             mode,
             case,
             writeoutput,

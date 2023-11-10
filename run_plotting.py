@@ -8,7 +8,7 @@ import logging
 import os
 
 from faultmap import config_setup
-from plotting.plotter import plotdraw
+from plotting.plotter import draw_plot
 
 logging.basicConfig(level=logging.INFO)
 dataloc, configloc, _, _ = config_setup.get_locations()
@@ -22,4 +22,4 @@ mode = plotting_config["mode"]
 cases = plotting_config["cases"]
 
 for case in cases:
-    plotdraw(mode, case, writeoutput)
+    draw_plot(mode, case, writeoutput)
