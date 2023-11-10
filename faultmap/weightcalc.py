@@ -28,10 +28,15 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from numpy.typing import NDArray
 
-from faultmap import config_setup, data_processing, datagen, gaincalc_oneset
+from faultmap import config_setup, data_processing, datagen, weightcalc_onesource
 from faultmap.type_definitions import RunModes
-from faultmap.weightcalculators import CorrWeightCalculator, TransEntWeightCalculator
+from faultmap.weightcalculators import (
+    CorrelationWeightCalculator,
+    TransferEntropyWeightCalculator,
+    WeightCalculator,
+)
 
 
 class WeightCalcData:
@@ -42,7 +47,7 @@ class WeightCalcData:
 
     def __init__(
         self,
-        mode: str,
+        mode: RunModes,
         case: str,
         single_entropies: bool,
         fft_calc: bool,
@@ -80,7 +85,7 @@ class WeightCalcData:
         ) = config_setup.run_setup(mode, case)
         # Load case config file
         with open(
-            os.path.join(self.case_config_dir, "weight_calc.json"), encoding="utf-8"
+            os.path.join(self.case_config_dir, "weightcalc.json"), encoding="utf-8"
         ) as f:
             self.case_config = json.load(f)
         # Get data type
@@ -103,38 +108,34 @@ class WeightCalcData:
         self.settings_set = None
         self.connections_used = None
 
-    def scenario_data(self, scenario: str):
+    def scenario_data(self, scenario_name: str):
         """Retrieves data particular to each scenario for the case being
         investigated.
 
         Parameters
         ----------
-            scenario : str
+            scenario_name : str
                 Name of scenario to retrieve data for. Should be defined in
                 config file.
 
         """
-        print(f"The scenario name is: {scenario}")
+        print(f"The scenario name is: {scenario_name}")
 
-        self.settings_set = self.case_config[scenario]["settings"]
+        self.settings_set = self.case_config[scenario_name]["settings"]
 
     def set_settings(self, scenario, settings_name):
-        # TODO: Rewrite this with get
-        if "use_connections" in self.case_config[settings_name]:
-            self.connections_used = self.case_config[settings_name]["use_connections"]
-        else:
-            self.connections_used = False
+        self.connections_used = self.case_config[settings_name].get(
+            "use_connections", False
+        )
         if "transient" in self.case_config[settings_name]:
             self.transient = self.case_config[settings_name]["transient"]
-            if "transient_method" in self.case_config[settings_name]:
-                self.transient_method = self.case_config[settings_name][
-                    "transient_method"
-                ]
-            else:
-                self.transient_method = "legacy"
         else:
             self.transient = False
             logging.info("Defaulting to single time region analysis")
+        self.transient_method = self.case_config[settings_name].get(
+            "transient_method", "legacy"
+        )
+
         if "normalise" in self.case_config[settings_name]:
             self.normalise = self.case_config[settings_name]["normalise"]
         else:
@@ -149,7 +150,7 @@ class WeightCalcData:
         if self.sigtest:
             # The transfer entropy threshold calculation method be either 'sixsigma' or
             # 'rankorder'
-            self.thresh_method = self.case_config[settings_name]["thresh_method"]
+            self.threshold_method = self.case_config[settings_name]["threshold_method"]
             # The transfer entropy surrogate generation method must be either
             # 'iAAFT' or 'random_shuffle'
             self.surrogate_method = self.case_config[settings_name]["surrogate_method"]
@@ -283,7 +284,7 @@ class WeightCalcData:
 
         # Get size of sample vectors for test
         # Must be smaller than number of samples
-        self.testsize = self.case_config[settings_name]["test_size"]
+        self.test_size = self.case_config[settings_name]["test_size"]
 
         # Get number of delays to test
         test_delays = self.case_config[scenario]["test_delays"]
@@ -310,12 +311,11 @@ class WeightCalcData:
 
             self.delays = [(val * self.delayinterval) for val in delay_range]
 
-        if "causevarindexes" in self.case_config[scenario]:
-            self.sourve_var_indexes = self.case_config[scenario]["source_var_indexes"]
-        else:
-            self.sourve_var_indexes = "all"
-        if self.sourve_var_indexes == "all":
-            self.sourve_var_indexes = range(len(self.variables))
+        self.source_var_indexes = self.case_config[scenario].get(
+            "source_var_indexes", "all"
+        )
+        if self.source_var_indexes == "all":
+            self.source_var_indexes = range(len(self.variables))
 
         self.destination_var_indexes = self.case_config[scenario].get(
             "destination_var_indexes", "all"
@@ -389,7 +389,7 @@ class WeightCalcData:
 
         if self.transient_method == "legacy" or self.transient_method is None:
             # Get box start and end dates
-            self.boxdates = data_processing.split_tsdata(
+            self.boxdates = data_processing.split_time_series_data(
                 self.timestamps,
                 self.sampling_rate * self.sub_sampling_interval,
                 self.boxsize,
@@ -400,7 +400,7 @@ class WeightCalcData:
             )
 
             # Generate boxes to use
-            self.boxes = data_processing.split_tsdata(
+            self.boxes = data_processing.split_time_series_data(
                 self.inputdata,
                 self.sampling_rate * self.sub_sampling_interval,
                 self.boxsize,
@@ -494,7 +494,9 @@ def writecsv_weightcalc(filename, items, header):
         csv.writer(file).writerows(items)
 
 
-def calc_weights(weight_calc_data, method: str, scenario, write_output):
+def calculate_weights(
+    weight_calc_data: WeightCalcData, method: str, scenario: str, write_output: bool
+):
     """Determines the maximum weight between two variables by searching through
     a specified set of delays.
 
@@ -514,18 +516,18 @@ def calc_weights(weight_calc_data, method: str, scenario, write_output):
 
     """
 
-    weight_calculator: object
+    weight_calculator: WeightCalculator
 
     if method == "cross_correlation":
-        weight_calculator = CorrWeightCalculator(weight_calc_data)
+        weight_calculator = CorrelationWeightCalculator(weight_calc_data)
     elif method == "transfer_entropy_kernel":
-        weight_calculator = TransEntWeightCalculator(weight_calc_data, "kernel")
+        weight_calculator = TransferEntropyWeightCalculator(weight_calc_data, "kernel")
     elif method == "transfer_entropy_kraskov":
-        weight_calculator = TransEntWeightCalculator(weight_calc_data, "kraskov")
+        weight_calculator = TransferEntropyWeightCalculator(weight_calc_data, "kraskov")
     elif method == "transfer_entropy_discrete":
-        weight_calculator = TransEntWeightCalculator(weight_calc_data, "discrete")
-    # elif method == 'partial_correlation':
-    #     weight_calculator = PartialCorrWeightCalculator(weight_calc_data)
+        weight_calculator = TransferEntropyWeightCalculator(
+            weight_calc_data, "discrete"
+        )
     else:
         raise ValueError("Method not recognized")
 
@@ -543,17 +545,17 @@ def calc_weights(weight_calc_data, method: str, scenario, write_output):
         embed_status = "naive"
 
     var_dims = len(weight_calc_data.variables)
-    start_index = weight_calc_data.startindex
-    size = weight_calc_data.testsize
+    start_index = weight_calc_data.start_index
+    size = weight_calc_data.test_size
 
-    cause_delete_list = []
-    affected_delete_list = []
+    source_delete_list = []
+    destination_delete_list = []
     for index in range(var_dims):
-        if index not in weight_calc_data.causevarindexes:
-            cause_delete_list.append(index)
+        if index not in weight_calc_data.source_var_indexes:
+            source_delete_list.append(index)
             logging.info("Deleted column %s", str(index))
-        if index not in weight_calc_data.affectedvarindexes:
-            affected_delete_list.append(index)
+        if index not in weight_calc_data.destination_var_indexes:
+            destination_delete_list.append(index)
             logging.info("Deleted row %s", str(index))
 
     if weight_calc_data.connections_used:
@@ -561,29 +563,39 @@ def calc_weights(weight_calc_data, method: str, scenario, write_output):
     else:
         new_connection_matrix = np.ones((var_dims, var_dims))
     # Substitute columns not used with zeros in connection matrix
-    for cause_delete_index in cause_delete_list:
-        new_connection_matrix[:, cause_delete_index] = np.zeros(var_dims)
+    for source_delete_index in source_delete_list:
+        new_connection_matrix[:, source_delete_index] = np.zeros(var_dims)
     # Substitute rows not used with zeros in connection matrix
-    for affected_delete_index in affected_delete_list:
-        new_connection_matrix[affected_delete_index, :] = np.zeros(var_dims)
+    for destination_delete_index in destination_delete_list:
+        new_connection_matrix[destination_delete_index, :] = np.zeros(var_dims)
 
     # Initiate header line for weight store file
     # Create "Delay" as header for first row
     header_line = ["Delay"]
-    for affected_var_index in weight_calc_data.affectedvarindexes:
-        affected_var_name = weight_calc_data.variables[affected_var_index]
-        header_line.append(affected_var_name)
+    for destination_var_index in weight_calc_data.destination_var_indexes:
+        destination_var_name = weight_calc_data.variables[destination_var_index]
+        header_line.append(destination_var_name)
 
-    def filename(weight_name, box_index, cause_var):
+    def filename(weight_name: str, box_index: int, source_var: str) -> Path:
         """Define filename structure for CSV file containing weights between a specific
-        cause variable and all the subsequent affected variables"""
+        source variable and all the subsequent destination variables.
+
+        Args:
+            weight_name (str): Name of the weight.
+            box_index (int): Index of the box.
+            source_var (str): Name of the source variable.
+
+        Returns:
+            Path: The filename of the CSV file containing weights between a specific
+                source variable and all the subsequent destination variables.
+        """
         box_string = f"box{box_index:03d}"
 
-        return os.path.join(
+        return Path(
             config_setup.ensure_existence(
                 os.path.join(weight_store_dir, weight_name, box_string), make=True
             ),
-            f"{cause_var}.csv",
+            f"{source_var}.csv",
         )
 
     # Store the weight calculation results in similar format as original data
@@ -644,8 +656,8 @@ def calc_weights(weight_calc_data, method: str, scenario, write_output):
 
             # Need to add another axis to signalentlist in order to make
             # it a sequence so that it can work with writecsv_weightcalc
-            signal_entropies = np.asarray(signal_entropies)
-            signal_entropies = signal_entropies[np.newaxis, :]
+            signal_entropies_array: NDArray = np.asarray(signal_entropies)
+            signal_entropies = signal_entropies_array[np.newaxis, :]
 
             writecsv_weightcalc(
                 signal_entropy_filename("signal_entropy", box_index + 1),
@@ -654,10 +666,7 @@ def calc_weights(weight_calc_data, method: str, scenario, write_output):
             )
 
         # Start parallelising code here
-        # Create one process for each causevarindex
-
-        ###########################################################
-
+        # Create one process for each source variable
         non_iter_args = [
             weight_calc_data,
             weight_calculator,
@@ -673,11 +682,7 @@ def calc_weights(weight_calc_data, method: str, scenario, write_output):
         ]
 
         # Run the script that will handle multiprocessing
-        gaincalc_oneset.run(non_iter_args, weight_calc_data.do_multiprocessing)
-
-        ########################################################
-
-    return None
+        weightcalc_onesource.run(non_iter_args, weight_calc_data.do_multiprocessing)
 
 
 def weight_calc(
@@ -726,7 +731,7 @@ def weight_calc(
 
     for scenario in weight_calc_data.scenarios:
         logging.info("Running scenario %s", scenario)
-        # Update scenario-specific fields of weightcalcdata object
+        # Update scenario-specific fields of WeightCalcData object
         weight_calc_data.scenario_data(scenario)
         for settings_name in weight_calc_data.settings_set:
             weight_calc_data.set_settings(scenario, settings_name)
@@ -736,7 +741,7 @@ def weight_calc(
                 logging.info("Method: %s", method)
 
                 start_time = time.process_time()
-                calc_weights(weight_calc_data, method, scenario, writeoutput)
+                calculate_weights(weight_calc_data, method, scenario, writeoutput)
                 end_time = time.process_time()
                 print(end_time - start_time)
 

@@ -9,10 +9,18 @@ import csv
 import logging
 import os
 from functools import partial
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pathos  # type: ignore
 from pathos.multiprocessing import ProcessingPool as Pool  # type: ignore
+
+if TYPE_CHECKING:
+    from faultmap.weightcalc import WeightCalcData
+    from faultmap.weightcalculators import WeightCalculator
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 
 def writecsv_weightcalc(filename, datalines, header):
@@ -34,51 +42,50 @@ def readcsv_weightcalc(filename):
 
 
 def calc_weights_one_source(
-    weightcalcdata,
-    weightcalculator,
+    weight_calc_data: "WeightCalcData",
+    weight_calculator: "WeightCalculator",
     box,
-    startindex,
+    start_index,
     size,
-    newconnectionmatrix,
+    new_connection_matrix,
     method,
-    boxindex: int,
+    box_index: int,
     filename,
-    headerline,
-    writeoutput: bool,
+    header_line,
+    write_output: bool,
     source_var_index: int,
 ):
-    causevar = weightcalcdata.variables[source_var_index]
+    source_var = weight_calc_data.variables[source_var_index]
 
-    print(
-        "Start analysing causal variable: "
-        + causevar
+    logger.info(
+        "Start analysing source variable: "
+        + source_var
         + " ["
         + str(source_var_index + 1)
         + "/"
-        + str(len(weightcalcdata.causevarindexes))
+        + str(len(weight_calc_data.source_var_indexes))
         + "]"
     )
 
-    directional_name = "weights_directional"
-    absolute_name = "weights_absolute"
-    neutral_name = "weights"
+    directional_weights_name = "weights_directional"
+    absolute_weights_name = "weights_absolute"
+    neutral_weights_name = "weights"
 
-    mis_directional_name = "mis_directional"
-    mis_absolute_name = "mis_absolute"
-    mis_neutral_name = "mis"
+    directional_mi_name = "mis_directional"
+    absolute_mi_name = "mis_absolute"
 
-    auxdirectional_name = "auxdata_directional"
-    auxabsolute_name = "auxdata_absolute"
-    auxneutral_name = "auxdata"
+    directional_aux_name = "auxdata_directional"
+    absolute_aux_name = "auxdata_absolute"
+    neutral_aux_name = "auxdata"
 
     # Provide names for the significance threshold file types
-    if weightcalcdata.allthresh:
+    if weight_calc_data.all_thresh:
         sig_directional_name = "sigthresh_directional"
         sig_absolute_name = "sigthresh_absolute"
         sig_neutral_name = "sigthresh"
 
     # Initiate datalines with delays
-    datalines_directional = np.asarray(weightcalcdata.actual_delays)
+    datalines_directional = np.asarray(weight_calc_data.actual_delays)
     datalines_directional = datalines_directional[:, np.newaxis]
     datalines_absolute = datalines_directional.copy()
     datalines_neutral = datalines_directional.copy()
@@ -86,7 +93,6 @@ def calc_weights_one_source(
     # Datalines needed to store mutual information
     mis_datalines_directional = datalines_directional.copy()
     mis_datalines_absolute = datalines_directional.copy()
-    mis_datalines_neutral = datalines_directional.copy()
 
     # Datalines needed to store significance threshold values
     # for each variable combination
@@ -99,75 +105,77 @@ def calc_weights_one_source(
     auxdata_absolute = []
     auxdata_neutral = []
 
-    if method[:16] == "transfer_entropy":
-        if os.path.exists(filename(auxdirectional_name, boxindex + 1, causevar)):
+    if "transfer_entropy" in method:
+        if os.path.exists(filename(directional_aux_name, box_index + 1, source_var)):
             auxdata_directional = list(
                 np.genfromtxt(
-                    filename(auxdirectional_name, boxindex + 1, causevar),
+                    filename(directional_aux_name, box_index + 1, source_var),
                     delimiter=",",
                     dtype=str,
                 )[1:, :]
             )
             auxdata_absolute = list(
                 np.genfromtxt(
-                    filename(auxdirectional_name, boxindex + 1, causevar),
+                    filename(directional_aux_name, box_index + 1, source_var),
                     delimiter=",",
                     dtype=str,
                 )[1:, :]
             )
 
             datalines_directional, _ = readcsv_weightcalc(
-                filename(directional_name, boxindex + 1, causevar)
+                filename(directional_weights_name, box_index + 1, source_var)
             )
 
             datalines_absolute, _ = readcsv_weightcalc(
-                filename(absolute_name, boxindex + 1, causevar)
+                filename(absolute_weights_name, box_index + 1, source_var)
             )
 
             mis_datalines_directional, _ = readcsv_weightcalc(
-                filename(mis_directional_name, boxindex + 1, causevar)
+                filename(directional_mi_name, box_index + 1, source_var)
             )
 
             mis_datalines_absolute, _ = readcsv_weightcalc(
-                filename(mis_absolute_name, boxindex + 1, causevar)
+                filename(absolute_mi_name, box_index + 1, source_var)
             )
 
-            if weightcalcdata.allthresh:
+            if weight_calc_data.all_thresh:
                 datalines_sigthresh_directional = readcsv_weightcalc(
-                    filename(sig_directional_name, boxindex + 1, causevar)
+                    filename(sig_directional_name, box_index + 1, source_var)
                 )
                 datalines_sigthresh_absolute = readcsv_weightcalc(
-                    filename(sig_absolute_name, boxindex + 1, causevar)
+                    filename(sig_absolute_name, box_index + 1, source_var)
                 )
 
-    for affectedvarindex in weightcalcdata.affectedvarindexes:
-        affectedvar = weightcalcdata.variables[affectedvarindex]
+    for destination_var_index in weight_calc_data.destination_var_indexes:
+        destination_var = weight_calc_data.variables[destination_var_index]
 
-        logging.info(
+        logger.info(
             "Analysing effect of: "
-            + causevar
+            + source_var
             + " on "
-            + affectedvar
+            + destination_var
             + " for box number: "
-            + str(boxindex + 1)
+            + str(box_index + 1)
         )
 
         exists = False
-        do_test = not (newconnectionmatrix[affectedvarindex, source_var_index] == 0)
+        do_test = not (
+            new_connection_matrix[destination_var_index, source_var_index] == 0
+        )
         # Test if the affectedvar has already been calculated
-        if (method[:16] == "transfer_entropy") and do_test:
-            testlocation = filename(auxdirectional_name, boxindex + 1, causevar)
-            if os.path.exists(testlocation):
+        if "transfer_entropy" in method and do_test:
+            test_location = filename(directional_aux_name, box_index + 1, source_var)
+            if os.path.exists(test_location):
                 # Open CSV file and read names of second affected vars
-                auxdatafile = np.genfromtxt(
-                    testlocation,
+                aux_data_file = np.genfromtxt(
+                    test_location,
                     delimiter=",",
                     usecols=np.arange(0, 2),
                     dtype=str,
                 )
-                affectedvars = auxdatafile[:, 1]
-                if affectedvar in affectedvars:
-                    print("Affected variable results in existence")
+                destination_vars = aux_data_file[:, 1]
+                if destination_var in destination_vars:
+                    print("Destination variable results in existence")
                     exists = True
 
         if do_test and (exists is False):
@@ -184,27 +192,39 @@ def calc_weights_one_source(
             mifwd_list = []
             mibwd_list = []
 
-            for delay in weightcalcdata.sample_delays:
-                logging.info("Now testing delay: " + str(delay))
+            for delay in weight_calc_data.sample_delays:
+                logger.info("Now testing delay: %s", str(delay))
 
-                causevardata = box[:, source_var_index][startindex : startindex + size]
+                if start_index + delay < 0:
+                    raise ValueError(
+                        "Start index must be larger than biggest negative delay"
+                    )
 
-                affectedvardata = box[:, affectedvarindex][
-                    startindex + delay : startindex + size + delay
+                source_var_data = box[:, source_var_index][
+                    start_index : start_index + size
                 ]
 
-                weight, auxdata = weightcalculator.calc_weight(
-                    causevardata,
-                    affectedvardata,
-                    weightcalcdata,
+                destination_var_data = box[:, destination_var_index][
+                    start_index + delay : start_index + size + delay
+                ]
+
+                weight, auxdata = weight_calculator.calculate_weight(
+                    source_var_data,
+                    destination_var_data,
+                    weight_calc_data,
                     source_var_index,
-                    affectedvarindex,
+                    destination_var_index,
                 )
 
                 # Calculate significance thresholds at each data point
-                if weightcalcdata.allthresh:
-                    sigthreshold = weightcalculator.calc_significance_threshold(
-                        weightcalcdata, affectedvar, causevar, box, delay
+                if weight_calc_data.all_thresh:
+                    significance_threshold = (
+                        # TODO: Follow up on how name order got swapped around
+                        #  It is possible that the order of the significance test was
+                        #  accidentally swapped around in the original code
+                        weight_calculator.calculate_significance_threshold(
+                            source_var, destination_var, box, delay
+                        )
                     )
 
                 if len(weight) > 1:
@@ -213,14 +233,14 @@ def calc_weights_one_source(
                     directional_weightlist.append(weight[0])
                     absolute_weightlist.append(weight[1])
                     # Same approach with significance thresholds
-                    if weightcalcdata.allthresh:
-                        directional_sigthreshlist.append(sigthreshold[0])
-                        absolute_sigthreshlist.append(sigthreshold[1])
+                    if weight_calc_data.all_thresh:
+                        directional_sigthreshlist.append(significance_threshold[0])
+                        absolute_sigthreshlist.append(significance_threshold[1])
 
                 else:
                     weightlist.append(weight[0])
-                    if weightcalcdata.allthresh:
-                        sigthreshlist.append(sigthreshold[0])
+                    if weight_calc_data.all_thresh:
+                        sigthreshlist.append(significance_threshold[0])
 
                 if auxdata is not None:
                     if len(auxdata) > 1:
@@ -288,10 +308,9 @@ def calc_weights_one_source(
                 (
                     auxdata_thisvar_directional,
                     auxdata_thisvar_absolute,
-                ) = weightcalculator.report(
-                    weightcalcdata,
+                ) = weight_calculator.report(
                     source_var_index,
-                    affectedvarindex,
+                    destination_var_index,
                     weightlist,
                     box,
                     proplist,
@@ -302,7 +321,7 @@ def calc_weights_one_source(
                 auxdata_absolute.append(auxdata_thisvar_absolute)
 
                 # Do the same for the significance threshold
-                if weightcalcdata.allthresh:
+                if weight_calc_data.all_thresh:
                     sigthreshlist = [
                         directional_sigthreshlist,
                         absolute_sigthreshlist,
@@ -348,10 +367,9 @@ def calc_weights_one_source(
                 # Generate and store report files according to each method
                 proplist = None
 
-                auxdata_thisvar_neutral = weightcalculator.report(
-                    weightcalcdata,
+                auxdata_thisvar_neutral = weight_calculator.report(
                     source_var_index,
-                    affectedvarindex,
+                    destination_var_index,
                     weightlist,
                     box,
                     proplist,
@@ -360,7 +378,7 @@ def calc_weights_one_source(
                 auxdata_neutral.append(auxdata_thisvar_neutral)
 
                 # Write the significance thresholds to file
-                if weightcalcdata.allthresh:
+                if weight_calc_data.all_thresh:
                     sigthresh_thisvar_neutral = np.asarray(sigthreshlist)
                     sigthresh_thisvar_neutral = sigthresh_thisvar_neutral[:, np.newaxis]
 
@@ -373,127 +391,125 @@ def calc_weights_one_source(
                     )
 
         if (
-            not (newconnectionmatrix[affectedvarindex, source_var_index] == 0)
+            not (new_connection_matrix[destination_var_index, source_var_index] == 0)
             and (exists is False)
-            and (writeoutput is True)
+            and (write_output is True)
         ):
             if twodimensions:
                 writecsv_weightcalc(
-                    filename(directional_name, boxindex + 1, causevar),
+                    filename(directional_weights_name, box_index + 1, source_var),
                     datalines_directional,
-                    headerline,
+                    header_line,
                 )
 
                 writecsv_weightcalc(
-                    filename(absolute_name, boxindex + 1, causevar),
+                    filename(absolute_weights_name, box_index + 1, source_var),
                     datalines_absolute,
-                    headerline,
+                    header_line,
                 )
 
                 # Write mutual information over multiple delays to file just as for transfer entropy
                 writecsv_weightcalc(
-                    filename(mis_directional_name, boxindex + 1, causevar),
+                    filename(directional_mi_name, box_index + 1, source_var),
                     mis_datalines_directional,
-                    headerline,
+                    header_line,
                 )
 
                 writecsv_weightcalc(
-                    filename(mis_absolute_name, boxindex + 1, causevar),
+                    filename(absolute_mi_name, box_index + 1, source_var),
                     mis_datalines_absolute,
-                    headerline,
+                    header_line,
                 )
 
                 writecsv_weightcalc(
-                    filename(auxdirectional_name, boxindex + 1, causevar),
+                    filename(directional_aux_name, box_index + 1, source_var),
                     auxdata_directional,
-                    weightcalculator.data_header,
+                    weight_calculator.data_header,
                 )
 
                 writecsv_weightcalc(
-                    filename(auxabsolute_name, boxindex + 1, causevar),
+                    filename(absolute_aux_name, box_index + 1, source_var),
                     auxdata_absolute,
-                    weightcalculator.data_header,
+                    weight_calculator.data_header,
                 )
 
-                if weightcalcdata.allthresh:
+                if weight_calc_data.all_thresh:
                     writecsv_weightcalc(
-                        filename(sig_directional_name, boxindex + 1, causevar),
+                        filename(sig_directional_name, box_index + 1, source_var),
                         datalines_sigthresh_directional,
-                        headerline,
+                        header_line,
                     )
 
                     writecsv_weightcalc(
-                        filename(sig_absolute_name, boxindex + 1, causevar),
+                        filename(sig_absolute_name, box_index + 1, source_var),
                         datalines_sigthresh_absolute,
-                        headerline,
+                        header_line,
                     )
 
             else:
                 writecsv_weightcalc(
-                    filename(neutral_name, boxindex + 1, causevar),
+                    filename(neutral_weights_name, box_index + 1, source_var),
                     datalines_neutral,
-                    headerline,
+                    header_line,
                 )
 
                 writecsv_weightcalc(
-                    filename(auxneutral_name, boxindex + 1, causevar),
+                    filename(neutral_aux_name, box_index + 1, source_var),
                     auxdata_neutral,
-                    weightcalculator.data_header,
+                    weight_calculator.data_header,
                 )
 
-                if weightcalcdata.allthresh:
+                if weight_calc_data.all_thresh:
                     writecsv_weightcalc(
-                        filename(sig_neutral_name, boxindex + 1, causevar),
+                        filename(sig_neutral_name, box_index + 1, source_var),
                         datalines_sigthresh_neutral,
-                        headerline,
+                        header_line,
                     )
 
     print(
         "Done analysing causal variable: "
-        + causevar
+        + source_var
         + " ["
         + str(source_var_index + 1)
         + "/"
-        + str(len(weightcalcdata.causevarindexes))
+        + str(len(weight_calc_data.source_var_indexes))
         + "]"
     )
-
-    return None
 
 
 def run(non_iter_args, do_multiprocessing):
     [
-        weightcalcdata,
-        weightcalculator,
+        weight_calc_data,
+        weight_calculator,
         box,
-        startindex,
+        start_index,
         size,
-        newconnectionmatrix,
+        new_connection_matrix,
         method,
-        boxindex,
+        box_index,
         filename,
-        headerline,
-        writeoutput,
+        header_line,
+        write_output,
     ] = non_iter_args
 
-    partial_gaincalc_oneset = partial(
+    partial_weightcalc_one_source = partial(
         calc_weights_one_source,
-        weightcalcdata,
-        weightcalculator,
+        weight_calc_data,
+        weight_calculator,
         box,
-        startindex,
+        start_index,
         size,
-        newconnectionmatrix,
+        new_connection_matrix,
         method,
-        boxindex,
+        box_index,
         filename,
-        headerline,
-        writeoutput,
+        header_line,
+        write_output,
     )
 
     if do_multiprocessing:
         pool = Pool(processes=pathos.multiprocessing.cpu_count())
-        pool.map(partial_gaincalc_oneset, weightcalcdata.causevarindexes)
+        pool.map(partial_weightcalc_one_source, weight_calc_data.source_var_indexes)
 
         # Current solution to no close and join methods on ProcessingPool
         # https://github.com/uqfoundation/pathos/issues/46
@@ -504,7 +520,7 @@ def run(non_iter_args, do_multiprocessing):
         pathos.multiprocessing.__STATE["pool"] = None
 
     else:
-        for causevarindex in weightcalcdata.causevarindexes:
-            partial_gaincalc_oneset(causevarindex)
+        for source_var_index in weight_calc_data.source_var_indexes:
+            partial_weightcalc_one_source(source_var_index)
 
     return None

@@ -7,7 +7,7 @@ import numpy as np
 import seaborn as sns
 
 from faultmap import infodynamics
-from faultmap.data_processing import split_tsdata
+from faultmap.data_processing import split_time_series_data
 from faultmap.datagen import autoreg_gen
 
 sns.set_style("darkgrid")
@@ -30,7 +30,7 @@ KERNEL_BANDWIDTH = 0.5
 
 sampledata = autoreg_gen([SAMPLES, DELAY, ALPHA, NOISE_RATIO])
 
-boxes = split_tsdata(sampledata, SAMPLING_RATE, BOX_SIZE, BOX_NUM)
+boxes = split_time_series_data(sampledata, SAMPLING_RATE, BOX_SIZE, BOX_NUM)
 
 CAUSE_VAR_INDEX = 0
 AFFECTED_VAR_INDEX = 1

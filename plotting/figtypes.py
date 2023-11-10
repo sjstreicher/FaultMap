@@ -43,7 +43,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from faultmap import data_processing
-from faultmap.gaincalc import WeightCalcData
+from faultmap.weightcalc import WeightCalcData
 from plotting import plotter
 
 # from plotter import get_scenario_data_vectors
@@ -93,18 +93,20 @@ def fig_timeseries(graphdata, graph, scenario, savedir):
     graphdata.get_plotvars(graph)
     # graphdata.get_starttime(graph)
 
-    weightcalcdata = WeightCalcData(graphdata.mode, graphdata.case, False, False, False)
-    weightcalcdata.set_settings(scenario, graphdata.settings)
+    weight_calc_data = WeightCalcData(
+        graphdata.mode, graphdata.case, False, False, False
+    )
+    weight_calc_data.set_settings(scenario, graphdata.settings)
 
-    valuematrix = weightcalcdata.normalised_input_data
-    variables = weightcalcdata.variables
+    valuematrix = weight_calc_data.normalised_input_data
+    variables = weight_calc_data.variables
 
     plt.figure(1, (12, 6))
 
     for varname in graphdata.plotvars:
         varindex = variables.index(varname)
         plt.plot(
-            np.asarray(weightcalcdata.timestamps),
+            np.asarray(weight_calc_data.timestamps),
             valuematrix[:, varindex],
             "-",
             label=r"{}".format(variables[varindex]),
@@ -188,9 +190,9 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
     graphdata.get_sigthresholdplotting(graph)
     graphdata.get_linelabels(graph)
 
-    # Get back from savedir to weightdata source
+    # Get back from savedir to weight_data source
     # This is up to the embed type level
-    weightdir = data_processing.change_dirtype(savedir, "graphs", "weightdata")
+    weightdir = data_processing.change_dirtype(savedir, "graphs", "weight_data")
 
     # Extract current method from weightdir
     dirparts = data_processing.get_folders(weightdir)
@@ -360,9 +362,9 @@ def fig_diffscen_vs_delay(graphdata, graph, scenario, savedir):
     # Get x-axis values
     #    graphdata.get_xvalues(graphname)
 
-    # Get back from savedir to weightdata source
+    # Get back from savedir to weight_data source
     # This is up to the embed type level
-    weightdir = data_processing.change_dirtype(savedir, "graphs", "weightdata")
+    weightdir = data_processing.change_dirtype(savedir, "graphs", "weight_data")
 
     # Extract current method from weightdir
     dirparts = data_processing.get_folders(weightdir)
