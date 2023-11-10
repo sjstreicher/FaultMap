@@ -8,7 +8,7 @@ import logging
 
 import numpy as np
 
-from faultmap import data_processing, transentropy
+from faultmap import data_processing, infodynamics
 
 
 class CorrWeightCalculator:
@@ -33,18 +33,18 @@ class CorrWeightCalculator:
         #        logging.info("Correlation threshold: " + str(self.threshcorr))
 
         self.data_header = [
-            "causevar",
-            "affectedvar",
+            "source_variable",
+            "destination_variable",
             "base_corr",
             "max_corr",
             "max_delay",
             "max_index",
-            "signchange",
-            "threshcorr",
-            "threshdir",
-            "threshpass",
-            "directionpass",
-            "dirval",
+            "sign_change",
+            "thresh_corr",
+            "thresh_directionality",
+            "pass_thresh",
+            "pass_directionality",
+            "directionality_value",
         ]
 
         if weight_calc_data.sigtest:
@@ -189,7 +189,6 @@ class CorrWeightCalculator:
         )
 
     def calcsigthresh(self, weightcalcdata, causevar, affectedvar, box, _):
-
         # Calculates correlation as well as correlation directionality index
         # significance thresholds
         # The correlation threshold is a simple statistical significance test
@@ -218,76 +217,71 @@ class CorrWeightCalculator:
         return [thresh_corr[0], thresh_dirindex[0]]
 
     @staticmethod
-    def select_weights(weightcalcdata, causevar, affectedvar, weightlist):
-
-        # Initiate flag indicating whether direction test passed
-        directionpass = None
-
+    def select_weights(weightcalcdata, causevar, affectedvar, weights: list):
         if weightcalcdata.bidirectional_delays:
-            baseval = weightlist[int((len(weightlist) / 2))]
+            base_value = weights[int((len(weights) / 2))]
         else:
-            baseval = weightlist[0]
+            base_value = weights[0]
 
         # Alternative interpretation:
-        # Maxval is defined as the maximum absolute value in the forward direction
-        # Minval is defined as the maximum absolute value in the negative direction
+        # max_val is defined as the maximum absolute value in the forward direction
+        # min_val is defined as the maximum absolute value in the negative direction
         if weightcalcdata.bidirectional_delays:
-            maxval = max(np.abs(weightlist[int((len(weightlist) / 2)) :]))
-            minval = -1 * max(np.abs(weightlist[: int((len(weightlist) / 2))]))
+            max_val = max(np.abs(weights[int((len(weights) / 2)) :]))
+            min_val = -1 * max(np.abs(weights[: int((len(weights) / 2))]))
         else:
             raise ValueError(
-                "The correlation directionality test is only defined for bidirectional delays"
+                "The correlation directionality test is only defined for bidirectional "
+                "delays"
             )
 
-        # Test that maxval is positive and minval is negative
-        if maxval < 0 or minval > 0:
+        # Test that maxval is positive and min_val is negative
+        if max_val < 0 or min_val > 0:
             raise ValueError("Values do not adhere to sign expectations")
-        # Value used to break tie between maxval and minval if 1 and -1
+        # Value used to break tie between maxval and min_val if 1 and -1
         tol = 0.0
         # Always select maxval if both are equal
         # This is to ensure that 1 is selected above -1
-        if (maxval + (minval + tol)) >= 0:
-            maxcorr = maxval
+        if (max_val + (min_val + tol)) >= 0:
+            max_corr = max_val
         else:
-            maxcorr = abs(minval)
+            max_corr = abs(min_val)
 
-        delay_index = list(np.abs(weightlist)).index(maxcorr)
+        delay_index = list(np.abs(weights)).index(max_corr)
 
         # Correlation thresholds from Bauer2008 Eq. 4
-        # maxcorr_abs = abs(maxcorr)
-        bestdelay = weightcalcdata.actual_delays[delay_index]
-        if (maxval and minval) != 0:
-            directionindex = abs(maxval + minval) / ((maxval + abs(minval)) * 0.5)
+        # max_corr_abs = abs(max_corr)
+        best_delay = weightcalcdata.actual_delays[delay_index]
+        if (max_val and min_val) != 0:
+            direction_index = abs(max_val + min_val) / ((max_val + abs(min_val)) * 0.5)
         else:
-            directionindex = 0
+            direction_index = 0
 
-        signchange = not ((baseval / weightlist[delay_index]) >= 0)
+        sign_change = not ((base_value / weights[delay_index]) >= 0)
 
-        logging.info("Forwards maximum correlation value: " + str(maxval))
-        logging.info("Backwards maximum correlation value: " + str(minval))
+        logging.info("Forward maximum correlation value: %s", str(max_val))
+        logging.info("Backward maximum correlation value: %s", str(min_val))
         logging.info(
-            "The maximum correlation between "
-            + causevar
-            + " and "
-            + affectedvar
-            + " is: "
-            + str(maxcorr)
+            "The maximum correlation between %s and %s is: %s",
+            causevar,
+            affectedvar,
+            str(max_corr),
         )
-        logging.info("The corresponding delay is: " + str(bestdelay))
-        logging.info("The correlation with no delay is: " + str(baseval))
+        logging.info("The corresponding delay is: %s", str(best_delay))
+        logging.info("The correlation with no delay is: %s", str(base_value))
 
-        logging.info("Directionality value: " + str(directionindex))
+        logging.info("Directionality value: %s", str(direction_index))
 
-        bestdelay_sample = weightcalcdata.sample_delays[delay_index]
+        best_delay_sample = weightcalcdata.sample_delays[delay_index]
 
         return (
-            baseval,
-            maxcorr,
+            base_value,
+            max_corr,
             delay_index,
-            bestdelay,
-            bestdelay_sample,
-            directionindex,
-            signchange,
+            best_delay,
+            best_delay_sample,
+            direction_index,
+            sign_change,
         )
 
     def report(
@@ -299,7 +293,6 @@ class CorrWeightCalculator:
         box,
         _,
     ):
-
         """Calculates and reports the relevant output for each combination
         of variables tested.
 
@@ -512,7 +505,7 @@ class TransEntWeightCalculator:
 
         # Pass special estimator specific parameters in here
 
-        transfer_entropy_forward, aux_data_forward = transentropy.calc_infodynamics_te(
+        transfer_entropy_forward, aux_data_forward = infodynamics.calc_te(
             self.infodynamics_location,
             self.estimator,
             affected_var_data.T,
@@ -520,7 +513,7 @@ class TransEntWeightCalculator:
             **self.parameters
         )
 
-        transent_bwd, auxdata_bwd = transentropy.calc_infodynamics_te(
+        transent_bwd, auxdata_bwd = infodynamics.calc_te(
             self.infodynamics_location,
             self.estimator,
             cause_var_data.T,
@@ -538,7 +531,6 @@ class TransEntWeightCalculator:
 
     @staticmethod
     def select_weights(weightcalcdata, causevar, affectedvar, weightlist, directional):
-
         if directional:
             directionstring = "directional"
         else:
@@ -645,7 +637,6 @@ class TransEntWeightCalculator:
         proplist,
         milist,
     ):
-
         """Calculates and reports the relevant output for each combination
         of variables tested.
 
@@ -866,8 +857,7 @@ class TransEntWeightCalculator:
         # The causal (or source) data is replaced by surrogate data,
         # while the affected (or destination) data remains unchanged.
 
-        # Get the causal data in the correct format
-        # for surrogate generation
+        # Get the source data in the correct format for surrogate generation
 
         thresh_causevardata = box[:, weightcalcdata.variables.index(causevar)][
             weightcalcdata.startindex : weightcalcdata.startindex
@@ -898,7 +888,6 @@ class TransEntWeightCalculator:
         surr_te_absolute_list = []
         surr_te_directional_list = []
         for n in range(trials):
-
             [surr_te_directional, surr_te_absolute], _ = self.calculate_weight(
                 surr_tsdata[n][0, :], thresh_affectedvardata
             )
@@ -973,7 +962,6 @@ class TransEntWeightCalculator:
     def calc_significance_threshold(
         self, weight_calc_data, cause_var, affected_var, box, delay
     ):
-
         # This is only called when the entropy at each delay is tested
 
         if self.threshold_method == "rankorder":

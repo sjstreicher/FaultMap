@@ -28,7 +28,6 @@ class NoderankData:
     """
 
     def __init__(self, mode, case):
-
         # Get locations from configuration file
         (
             self.saveloc,
@@ -81,7 +80,8 @@ class NoderankData:
             self.connections_used = False
 
         # This bias refers to assigning importance weights to different nodes
-        # and should not be confused with bias subtraction performed during resultreconstruction
+        # and should not be confused with bias subtraction performed during result
+        # reconstruction
         if "use_bias" in settings:
             self.bias_used = settings["use_bias"]
         else:
@@ -529,7 +529,7 @@ def calc_gainrank(gainmatrix, noderankdata, rank_method, dummyweight):
         backwardgain,
         backwardvariablelist,
         backwardbias,
-    ) = data_processing.rankbackward(
+    ) = data_processing.rank_backward(
         noderankdata.variablelist,
         gainmatrix,
         noderankdata.connectionmatrix,
@@ -635,7 +635,6 @@ def dorankcalc(
     writeoutput,
     preprocessing,
 ):
-
     if noderankdata.datatype == "file":
         noderankdata.get_boxes(scenario, datadir, typename)
         gainmatrices = get_gainmatrices(noderankdata, datadir, typename)
@@ -731,7 +730,6 @@ def dorankcalc(
             config_setup.ensure_existence(os.path.join(savedir, typename[:-7]))
 
             if preprocessing:
-
                 # Save the modified gainmatrix
                 writecsv_looprank(
                     os.path.join(savedir, typename[:-7], modgainmatrix_name),
@@ -879,14 +877,12 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
     )
 
     for scenario in noderankdata.scenarios:
-
         logging.info("Running scenario {}".format(scenario))
         # Update scenario-specific fields of noderankdata object
         noderankdata.scenariodata(scenario)
 
         for rank_method in noderankdata.rank_methods:
             for weight_method in noderankdata.weight_methods:
-
                 basedir = os.path.join(
                     noderankdata.saveloc,
                     "weightdata",

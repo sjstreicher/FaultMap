@@ -25,7 +25,7 @@ noderankdata = NodeRankdata(0.999, 0.1)
     backwardgain,
     backwardvariablelist,
     backwardbias,
-) = data_processing.rankbackward(
+) = data_processing.rank_backward(
     variables, gainmatrix, connections, biasvector, dummyweight, dummies
 )
 

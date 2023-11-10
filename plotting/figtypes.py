@@ -193,7 +193,7 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
     weightdir = data_processing.change_dirtype(savedir, "graphs", "weightdata")
 
     # Extract current method from weightdir
-    dirparts = data_processing.getfolders(weightdir)
+    dirparts = data_processing.get_folders(weightdir)
     # The method is two folders up from the embed level
     method = dirparts[-3]
 
@@ -232,7 +232,6 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
         for boxindex, sourcevar in itertools.product(
             graphdata.boxindexes, graphdata.sourcevars
         ):
-
             fig = plt.figure(1, figsize=(12, 6))
             ax = fig.add_subplot(111)
             if len(typename) > 8:
@@ -366,7 +365,7 @@ def fig_diffscen_vs_delay(graphdata, graph, scenario, savedir):
     weightdir = data_processing.change_dirtype(savedir, "graphs", "weightdata")
 
     # Extract current method from weightdir
-    dirparts = data_processing.getfolders(weightdir)
+    dirparts = data_processing.get_folders(weightdir)
     # The method is two folders up from the embed level
     method = dirparts[-3]
 
@@ -405,7 +404,6 @@ def fig_diffscen_vs_delay(graphdata, graph, scenario, savedir):
         for boxindex, sourcevar in itertools.product(
             graphdata.boxindexes, graphdata.sourcevars
         ):
-
             fig = plt.figure(1, figsize=(12, 6))
             ax = fig.add_subplot(111)
             if len(typename) > 8:
@@ -514,7 +512,7 @@ def fig_values_vs_boxes(graphdata, graph, scenario, savedir):
     trendsdir = data_processing.change_dirtype(savedir, "graphs", "trends")
 
     # Extract current method and sigstatus from weightdir
-    dirparts = data_processing.getfolders(trendsdir)
+    dirparts = data_processing.get_folders(trendsdir)
     # The method is three folders up from the embed level
     method = dirparts[-3]
     # The sigstatus is two folders up from the embed level
@@ -522,7 +520,6 @@ def fig_values_vs_boxes(graphdata, graph, scenario, savedir):
 
     # Select typenames based on method and sigstatus
     if method[:16] == "transfer_entropy":
-
         typenames = [
             "weight_absolute_trend",
             "signtested_weight_directional_trend",
@@ -553,7 +550,6 @@ def fig_values_vs_boxes(graphdata, graph, scenario, savedir):
 
     for typename in typenames:
         for sourcevar in graphdata.sourcevars:
-
             fig = plt.figure(1, figsize=(12, 6))
             ax = fig.add_subplot(111)
             if len(typename) > 15:
@@ -601,7 +597,6 @@ def fig_values_vs_boxes(graphdata, graph, scenario, savedir):
 
     for delay_typename in delay_typenames:
         for sourcevar in graphdata.sourcevars:
-
             fig = plt.figure(1, figsize=(12, 6))
             ax = fig.add_subplot(111)
             if len(typename) > 8:
@@ -669,7 +664,7 @@ def fig_maxval_variables(graphdata, graph, scenario, savedir):
     trendsdir = data_processing.change_dirtype(savedir, "graphs", "trends")
 
     # Extract current method and sigstatus from weightdir
-    dirparts = data_processing.getfolders(trendsdir)
+    dirparts = data_processing.get_folders(trendsdir)
     # The method is three folders up from the embed level
     method = dirparts[-3]
     # The sigstatus is two folders up from the embed level
@@ -678,7 +673,6 @@ def fig_maxval_variables(graphdata, graph, scenario, savedir):
     plt.figure(1, (12, 6))
 
     for count, scenario in enumerate(graphdata.scenario):
-
         sourcefile = filename_template.format(
             graphdata.case,
             scenario,

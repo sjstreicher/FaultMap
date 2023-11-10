@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-"""Calculates weight and auxilliary data for each causevar and writes to files.
+"""Calculates weight and auxiliary data for each causevar and writes to files.
 
 All weight data file output writers are now called at this level, making the
 process interruption tolerant up to a single causevar analysis.
@@ -12,14 +11,14 @@ import os
 from functools import partial
 
 import numpy as np
-import pathos
-from pathos.multiprocessing import ProcessingPool as Pool
+import pathos  # type: ignore
+from pathos.multiprocessing import ProcessingPool as Pool  # type: ignore
 
 
 def writecsv_weightcalc(filename, datalines, header):
     """CSV writer customized for writing weights."""
 
-    with open(filename, "w", newline="") as f:
+    with open(filename, "w", newline="", encoding="utf-8") as f:
         csv.writer(f).writerow(header)
         csv.writer(f).writerows(datalines)
 
@@ -48,7 +47,6 @@ def calc_weights_oneset(
     writeoutput,
     causevarindex,
 ):
-
     causevar = weightcalcdata.variables[causevarindex]
 
     print(
@@ -247,7 +245,6 @@ def calc_weights_oneset(
                         mibwd_list.append(mi_bwd)
 
             if len(weight) > 1:
-
                 twodimensions = True
 
                 proplist = [propfwd_list, propbwd_list]
@@ -338,7 +335,6 @@ def calc_weights_oneset(
                     )
 
             else:
-
                 twodimensions = False
 
                 weights_thisvar_neutral = np.asarray(weightlist)
@@ -381,7 +377,6 @@ def calc_weights_oneset(
             and (exists is False)
             and (writeoutput is True)
         ):
-
             if twodimensions:
                 writecsv_weightcalc(
                     filename(directional_name, boxindex + 1, causevar),

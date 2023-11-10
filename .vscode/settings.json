@@ -1,0 +1,35 @@
+{
+    "cSpell.words": [
+        "autoembed",
+        "autoreg",
+        "autoregressive",
+        "autouse",
+        "cython",
+        "darkgrid",
+        "datagen",
+        "datalines",
+        "delayedval",
+        "detrend",
+        "Djava",
+        "dtype",
+        "faultmap",
+        "gaincalc",
+        "gaincalculators",
+        "genfromtxt",
+        "IAAFT",
+        "infodynamics",
+        "jpype",
+        "kozachenko",
+        "kraskov",
+        "nats",
+        "Ragwitz",
+        "randn",
+        "Skogestad",
+        "texlive",
+    ],
+    "cSpell.enableFiletypes": [
+        "python"
+    ],
+    "cSpell.language": "en-GB",
+    "python.analysis.autoImportCompletions": true
+}
