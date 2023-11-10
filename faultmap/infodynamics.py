@@ -1,45 +1,56 @@
-# -*- coding: utf-8 -*-
 """Methods used in the calculation of transfer entropy. A JIDT wrapper.
 
 """
 
-import jpype
+from pathlib import Path
+from typing import Literal
+
+import jpype  # type: ignore
 import numpy as np
 
+MutualInformationMethods = Literal["kernel", "kraskov", "discrete"]
+EntropyMethods = Literal["gaussian", "kernel", "kozachenko"]
 
-def check_jvm(infodynamicsloc):
+
+def check_jvm(infodynamics_path: Path):
+    """
+    Check if the Java Virtual Machine (JVM) is started and start it if it is not.
+
+    Args:
+        infodynamics_path (str): The file path to the infodynamics jar file.
+
+    Returns:
+        None
+    """
     if not jpype.isJVMStarted():
         jpype.startJVM(
             jpype.getDefaultJVMPath(),
             "-Xms32M",
             "-Xmx512M",
             "-ea",
-            "-Djava.class.path=" + infodynamicsloc,
+            "-Djava.class.path=" + infodynamics_path.as_uri(),
             convertStrings=True,
         )
 
 
-def setup_infodynamics_te(infodynamicsloc, calcmethod, **parameters):
-    """Prepares the teCalc class of the Java Infodyamics Toolkit (JIDT)
+def setup_te(infodynamics_path: Path, method: MutualInformationMethods, **parameters):
+    """Prepares the teCalc class of the Java Infodynamics Toolkit (JIDT)
     in order to calculate transfer entropy according to the kernel or Kraskov
     estimator method. Also supports discrete transfer entropy calculation.
 
-    The embedding dimension of the destination or target variable (k) can
-    easily be set by adjusting the histlength parameter.
-
     """
 
-    check_jvm(infodynamicsloc)
+    check_jvm(infodynamics_path)
 
-    if calcmethod == "kernel":
-        teCalcClass = jpype.JPackage(
+    if method == "kernel":
+        calculator_class = jpype.JPackage(
             "infodynamics.measures.continuous.kernel"
         ).TransferEntropyCalculatorKernel
-        teCalc = teCalcClass()
+        te_calculator = calculator_class()
 
         # Normalisation is performed before this step, set property to false to
         # prevent accidental data standardisation
-        teCalc.setProperty("NORMALISE", "false")
+        te_calculator.setProperty("NORMALISE", "false")
 
         # Parameter definitions - refer to JIDT Javadocs
         # k - destination embedded history length (Schreiber k=1)
@@ -50,19 +61,17 @@ def setup_infodynamics_te(infodynamicsloc, calcmethod, **parameters):
         k = parameters.get("k", 1)
         kernel_width = parameters.get("kernel_width", 0.25)
 
-        teCalc.initialise(k, kernel_width)
+        te_calculator.initialise(k, kernel_width)
 
-    elif calcmethod == "kraskov":
-        """The Kraskov method is the recommended method and also provides
-        methods for auto-embedding. The max corr AIS auto-embedding method
-        will be enabled as the default.
+    elif method == "kraskov":
+        # The Kraskov method is the recommended method and also provides methods for
+        # auto-embedding. The max corr AIS auto-embedding method will be enabled as the
+        # default.
 
-        """
-
-        teCalcClass = jpype.JPackage(
+        calculator_class = jpype.JPackage(
             "infodynamics.measures.continuous.kraskov"
         ).TransferEntropyCalculatorKraskov
-        teCalc = teCalcClass()
+        te_calculator = calculator_class()
         # Parameter definitions - refer to JIDT javadocs
 
         # k - embedding length of destination past history to consider
@@ -74,25 +83,25 @@ def setup_infodynamics_te(infodynamicsloc, calcmethod, **parameters):
 
         # Normalisation is performed before this step, set property to false to
         # prevent accidental data standardisation
-        teCalc.setProperty("NORMALISE", "false")
+        te_calculator.setProperty("NORMALISE", "false")
 
         # Allow for manual override
 
         if "k_history" in parameters:
             k_history = parameters["k_history"]
-            teCalc.setProperty("k_HISTORY", str(k_history))
+            te_calculator.setProperty("k_HISTORY", str(k_history))
 
         if "k_tau" in parameters:
             k_tau = parameters["k_tau"]
-            teCalc.setProperty("k_TAU", str(k_tau))
+            te_calculator.setProperty("k_TAU", str(k_tau))
 
         if "l_history" in parameters:
             l_history = parameters["l_history"]
-            teCalc.setProperty("l_HISTORY", str(l_history))
+            te_calculator.setProperty("l_HISTORY", str(l_history))
 
         if "l_tau" in parameters:
             l_tau = parameters["l_tau"]
-            teCalc.setProperty("l_TAU", str(l_tau))
+            te_calculator.setProperty("l_TAU", str(l_tau))
 
         if "auto_embed" in parameters:
             auto_embed = parameters["auto_embed"]
@@ -103,12 +112,14 @@ def setup_infodynamics_te(infodynamicsloc, calcmethod, **parameters):
                 # nature of our data.
                 # Use a maximum history and tau search of 5
                 # teCalc.setProperty("AUTO_EMBED_METHOD", "RAGWITZ")
-                teCalc.setProperty("AUTO_EMBED_METHOD", "MAX_CORR_AIS")
+                te_calculator.setProperty("AUTO_EMBED_METHOD", "MAX_CORR_AIS")
 
                 ksearchmax = parameters.get("k_search_max", 5)
-                teCalc.setProperty("AUTO_EMBED_K_SEARCH_MAX", str(ksearchmax))
+                te_calculator.setProperty("AUTO_EMBED_K_SEARCH_MAX", str(ksearchmax))
                 tausearchmax = parameters.get("tau_search_max", 5)
-                teCalc.setProperty("AUTO_EMBED_TAU_SEARCH_MAX", str(tausearchmax))
+                te_calculator.setProperty(
+                    "AUTO_EMBED_TAU_SEARCH_MAX", str(tausearchmax)
+                )
 
         # Note: If setting the delay is needed to be changed on each iteration,
         # it may be best to do this outside the loop and initialise teCalc
@@ -116,54 +127,49 @@ def setup_infodynamics_te(infodynamicsloc, calcmethod, **parameters):
 
         if "delay" in parameters:
             delay = parameters["delay"]
-            teCalc.setProperty("DELAY", str(delay))
+            te_calculator.setProperty("DELAY", str(delay))
 
         if "use_gpu" in parameters:
             if parameters["use_gpu"]:
-                teCalc.setProperty("USE_GPU", "true")
+                te_calculator.setProperty("USE_GPU", "true")
             else:
-                teCalc.setProperty("USE_GPU", "false")
+                te_calculator.setProperty("USE_GPU", "false")
 
-        teCalc.initialise()
+        te_calculator.initialise()
 
-    elif calcmethod == "discrete":
-        teCalcClass = jpype.JPackage(
+    elif method == "discrete":
+        calculator_class = jpype.JPackage(
             "infodynamics.measures.discrete"
         ).TransferEntropyCalculatorDiscrete
         # Parameter definitions - refer to JIDT javadocs
         # base - number of quantisation levels for each variable
         # binary variables are in base-2
-        # destHistoryEmbedLength - embedded history length of the
-        # destination to condition on - this is k in Schreiber's notation
+        # destHistoryEmbedLength - embedded history length of the destination to
+        # condition on - this is k in Schreiber's notation
         # sourceHistoryEmbeddingLength - embedded history length of the source
         # to include - this is l in Schreiber's notation
         # TODO: Allow these settings to be defined by configuration file
 
+        # Base default of 2 (binary) is used"
         base = parameters.get("base", 2)
-        #            print "base default of 2 (binary) is used"
+        dest_history_embed_length = parameters.get("destHistoryEmbedLength", 1)
+        # source_history_embed_length = None  # not used at the moment
 
-        destHistoryEmbedLength = parameters.get("destHistoryEmbedLength", 1)
-
-        base = 2
-        destHistoryEmbedLength = 1
-        #        sourceHistoryEmbeddingLength = None  # not used at the moment
-        teCalc = teCalcClass(base, destHistoryEmbedLength)
-        teCalc.initialise()
+        te_calculator = calculator_class(base, dest_history_embed_length)
+        te_calculator.initialise()
 
     else:
         raise NameError("Transfer entropy method name not recognized")
 
-    return teCalc
+    return te_calculator
 
 
-def calc_infodynamics_te(
-    infodynamicsloc, calc_method, affected_data, causal_data, **parameters
-):
+def calc_te(infodynamics_path, calc_method, affected_data, causal_data, **parameters):
     """Calculates the transfer entropy for a specific time lag (equal to
-    prediction horison) between two sets of time series data.
+    prediction horizon) between two sets of time series data.
 
     This implementation makes use of the infodynamics toolkit:
-    https://code.google.com/p/information-dynamics-toolkit/
+    https://jlizier.github.io/jidt/
 
     The transfer entropy should have a maximum value when time lag = delay
     used to generate an autoregressive dataset, or will otherwise indicate the
@@ -171,8 +177,8 @@ def calc_infodynamics_te(
 
     """
 
-    te_calc = setup_infodynamics_te(infodynamicsloc, calc_method, **parameters)
-    mi_calc = setup_infodynamics_mi(infodynamicsloc, calc_method, **parameters)
+    te_calc = setup_te(infodynamics_path, calc_method, **parameters)
+    mi_calc = setup_mi(infodynamics_path, calc_method, **parameters)
 
     test_significance = parameters.get("test_significance", False)
     significance_permutations = parameters.get("significance_permutations", 30)
@@ -199,8 +205,7 @@ def calc_infodynamics_te(
         transfer_entropy = transfer_entropy / np.log(2.0)
         mutual_information = mutual_information / np.log(2.0)
     elif calc_method in ("kernel", "discrete"):
-        transfer_entropy = transfer_entropy
-        mutual_information = mutual_information
+        pass
     else:
         raise NameError("Infodynamics method name not recognized")
 
@@ -225,7 +230,7 @@ def calc_infodynamics_te(
             l_history,
             l_tau,
             delay,
-        ]  # Mutual info included as a property
+        ]
     else:
         properties = [None]
 
@@ -235,13 +240,10 @@ def calc_infodynamics_te(
     )
 
 
-def setup_infodynamics_mi(infodynamicsloc, calcmethod, **parameters):
-    """Prepares the mi_calc class of the Java Infodyamics Toolkit (JIDT)
+def setup_mi(infodynamics_path: Path, method: str, **parameters):
+    """Prepares the mi_calc class of the Java Infodynamics Toolkit (JIDT)
     in order to calculate mutual information according to the kernel or Kraskov
     estimator method. Also supports discrete mutual information calculation.
-
-    The embedding dimension of the destination or target variable (k) can
-    easily be set by adjusting the histlength parameter.
 
     The Kraskov method is the recommended method and also provides
     methods for auto-embedding. The max corr AIS auto-embedding method
@@ -249,9 +251,9 @@ def setup_infodynamics_mi(infodynamicsloc, calcmethod, **parameters):
 
     """
 
-    check_jvm(infodynamicsloc)
+    check_jvm(infodynamics_path)
 
-    if calcmethod == "kernel":
+    if method == "kernel":
         mi_calc_class = jpype.JPackage(
             "infodynamics.measures.continuous.kernel"
         ).MutualInfoCalculatorMultiVariateKernel
@@ -274,8 +276,7 @@ def setup_infodynamics_mi(infodynamicsloc, calcmethod, **parameters):
 
         mi_calc.initialise()
 
-    elif calcmethod == "kraskov":
-
+    elif method == "kraskov":
         mi_calc_class = jpype.JPackage(
             "infodynamics.measures.continuous.kraskov"
         ).MutualInfoCalculatorMultiVariateKraskov1
@@ -300,7 +301,7 @@ def setup_infodynamics_mi(infodynamicsloc, calcmethod, **parameters):
 
         mi_calc.initialise()
 
-    elif calcmethod == "discrete":
+    elif method == "discrete":
         mi_calc_class = jpype.JPackage(
             "infodynamics.measures.discrete"
         ).MutualInformationCalculatorDiscrete
@@ -321,16 +322,19 @@ def setup_infodynamics_mi(infodynamicsloc, calcmethod, **parameters):
     return mi_calc
 
 
-def setup_infodynamics_entropy(
-    infodynamicsloc, estimator="kernel", kernel_bandwidth=0.1, mult=False
+def setup_entropy(
+    infodynamics_path,
+    estimator=EntropyMethods,
+    kernel_bandwidth=0.1,
+    multivariate=False,
 ):
-    """Prepares the entropy_calc class of the Java Infodyamics Toolkit (JIDK)
+    """Prepares the entropy_calc class of the Java Infodynamics Toolkit (JIDT)
     in order to calculate differential entropy (continuous signals) according
     to the estimation method specified.
 
     Parameters
     ----------
-        infodynamicsloc : path
+        infodynamics_path : path
             Location of infodynamics.jar
          estimator : string, default='kernel'
             Either 'kernel' or 'gaussian'. Specifies the estimator to use in
@@ -339,7 +343,7 @@ def setup_infodynamics_entropy(
             The width of the kernels for the kernel method. If normalisation
             is performed, these are in terms of standard deviation, otherwise
             absolute.
-        mult : bool, default=False
+        multivariate : bool, default=False
             Indicates whether the entropy is to be calculated on a univariate
             or multivariate signal.
 
@@ -352,10 +356,10 @@ def setup_infodynamics_entropy(
 
     """
 
-    check_jvm(infodynamicsloc)
+    check_jvm(infodynamics_path)
 
     if estimator == "kernel":
-        if mult:
+        if multivariate:
             entropy_calc_class = jpype.JPackage(
                 "infodynamics.measures.continuous.kernel"
             ).EntropyCalculatorMultiVariateKernel
@@ -371,7 +375,7 @@ def setup_infodynamics_entropy(
         entropy_calc.initialise(kernel_bandwidth)
 
     elif estimator == "gaussian":
-        if mult:
+        if multivariate:
             entropy_calc_class = jpype.JPackage(
                 "infodynamics.measures.continuous.gaussian"
             ).EntropyCalculatorMultiVariateGaussian
@@ -397,7 +401,7 @@ def setup_infodynamics_entropy(
     return entropy_calc, estimator
 
 
-def calc_infodynamics_entropy(entropy_calculator, data, estimator):
+def calc_entropy(entropy_calculator, data, estimator: EntropyMethods) -> float:
     """Estimates the entropy of a single signal.
 
     Parameters

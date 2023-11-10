@@ -58,7 +58,6 @@ def run_weightcalc(configloc, writeoutput, mode, case, robust):
 
 
 def run_createarrays(writeoutput, mode, case, robust):
-
     if robust:
         try:
             # Needs to execute twice for nosigtest cases if derived from
@@ -76,7 +75,6 @@ def run_createarrays(writeoutput, mode, case, robust):
 
 
 def run_trendextraction(writeoutput, mode, case, robust):
-
     if robust:
         try:
             trend_extraction(mode, case, writeoutput)
@@ -89,7 +87,6 @@ def run_trendextraction(writeoutput, mode, case, robust):
 
 
 def run_noderank(writeoutput, mode, case, robust):
-
     if robust:
         try:
             noderankcalc(mode, case, writeoutput)
@@ -102,7 +99,6 @@ def run_noderank(writeoutput, mode, case, robust):
 
 
 def run_graphreduce(writeoutput, mode, case, robust):
-
     if robust:
         try:
             reducegraph(mode, case, writeoutput)
@@ -113,7 +109,6 @@ def run_graphreduce(writeoutput, mode, case, robust):
 
 
 def run_plotting(writeoutput, mode, case, robust):
-
     if robust:
         try:
             plotdraw(mode, case, writeoutput)

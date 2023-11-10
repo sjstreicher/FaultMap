@@ -24,16 +24,15 @@ import logging
 import multiprocessing
 import os
 import time
-from test import datagen
 
 import numpy as np
 import pandas as pd
 
-from faultmap import config_setup, data_processing, gaincalc_oneset
+from faultmap import config_setup, data_processing, datagen, gaincalc_oneset
 from faultmap.gaincalculators import CorrWeightCalculator, TransEntWeightCalculator
 
 
-class WeightcalcData(object):
+class WeightcalcData:
     """Creates a data object from files or functions for use in
     weight calculation methods.
 
@@ -78,7 +77,9 @@ class WeightcalcData(object):
             self.infodynamicsloc,
         ) = config_setup.run_setup(mode, case)
         # Load case config file
-        with open(os.path.join(self.caseconfigdir, "weightcalc.json")) as configfile:
+        with open(
+            os.path.join(self.caseconfigdir, "weightcalc.json"), encoding="utf-8"
+        ) as configfile:
             self.caseconfig = json.load(configfile)
         configfile.close()
         # Get data type
@@ -102,14 +103,6 @@ class WeightcalcData(object):
         self.connections_used = None
 
     def scenario_data(self, scenario: str):
-        """
-
-        Args:
-            scenario:
-
-        Returns:
-
-        """
         """Retrieves data particular to each scenario for the case being
         investigated.
 
@@ -428,7 +421,7 @@ class WeightcalcData(object):
 
             freq_string = str(self.sampling_rate) + "S"
 
-            self.boxes, self.boxdates = data_processing.get_continous_boxes(
+            self.boxes, self.boxdates = data_processing.get_continuous_boxes(
                 df, self.boxsize, self.boxoverlap, freq_string
             )
 
@@ -526,6 +519,8 @@ def calc_weights(weight_calc_data, method: str, scenario, write_output):
 
     """
 
+    weight_calculator: object
+
     if method == "cross_correlation":
         weight_calculator = CorrWeightCalculator(weight_calc_data)
     elif method == "transfer_entropy_kernel":
@@ -584,18 +579,17 @@ def calc_weights(weight_calc_data, method: str, scenario, write_output):
         affected_var_name = weight_calc_data.variables[affected_var_index]
         header_line.append(affected_var_name)
 
-    # Define filename structure for CSV file containing weights between
-    # a specific cause variable and all the subsequent affected variables
     def filename(weight_name, box_index, cause_var):
+        """Define filename structure for CSV file containing weights between a specific
+        cause variable and all the subsequent affected variables"""
         box_string = f"box{box_index:03d}"
 
-        filedir = config_setup.ensure_existence(
-            os.path.join(weight_store_dir, weight_name, box_string), make=True
+        return os.path.join(
+            config_setup.ensure_existence(
+                os.path.join(weight_store_dir, weight_name, box_string), make=True
+            ),
+            f"{cause_var}.csv",
         )
-
-        filename = f"{cause_var}.csv"
-
-        return os.path.join(filedir, filename)
 
     # Store the weight calculation results in similar format as original data
 
@@ -619,20 +613,20 @@ def calc_weights(weight_calc_data, method: str, scenario, write_output):
         # Define filename structure for CSV file
 
         def signal_entropy_filename(name, box_index):
-            return signalent_filename_template.format(
+            return signal_entropy_filename_template.format(
                 weight_calc_data.case_name, scenario, name, box_index
             )
 
-        signalentstoredir = config_setup.ensure_existence(
+        signal_entropy_dir = config_setup.ensure_existence(
             os.path.join(weight_calc_data.save_loc, "signal_entropies"), make=True
         )
 
-        signalent_filename_template = os.path.join(
-            signalentstoredir, "{}_{}_{}_box{:03d}.csv"
+        signal_entropy_filename_template = os.path.join(
+            signal_entropy_dir, "{}_{}_{}_box{:03d}.csv"
         )
 
-    for boxindex in weight_calc_data.boxindexes:
-        box = weight_calc_data.boxes[boxindex]
+    for box_index in weight_calc_data.boxindexes:
+        box = weight_calc_data.boxes[box_index]
 
         # Calculate single signal entropies - do not worry about
         # delays, but still do it according to different boxes
@@ -640,11 +634,13 @@ def calc_weights(weight_calc_data, method: str, scenario, write_output):
             # Calculate single signal entropies of all variables
             # and save output in similar format to
             # standard weight calculation results
-            signalentlist = []
+            signal_entropies = []
             for varindex, _ in enumerate(weight_calc_data.variables):
-                vardata = box[:, varindex][start_index : start_index + size]
-                entropy = data_processing.calc_signalent(vardata, weight_calc_data)
-                signalentlist.append(entropy)
+                variable_data = box[:, varindex][start_index : start_index + size]
+                entropy = data_processing.calc_signal_entropy(
+                    variable_data, weight_calc_data
+                )
+                signal_entropies.append(entropy)
 
             # Write the signal entropies to file - one file for each box
             # Each file will only have one line as we are not
@@ -653,12 +649,12 @@ def calc_weights(weight_calc_data, method: str, scenario, write_output):
 
             # Need to add another axis to signalentlist in order to make
             # it a sequence so that it can work with writecsv_weightcalc
-            signalentlist = np.asarray(signalentlist)
-            signalentlist = signalentlist[np.newaxis, :]
+            signal_entropies = np.asarray(signal_entropies)
+            signal_entropies = signal_entropies[np.newaxis, :]
 
             writecsv_weightcalc(
-                signal_entropy_filename("signal_entropy", boxindex + 1),
-                signalentlist,
+                signal_entropy_filename("signal_entropy", box_index + 1),
+                signal_entropies,
                 signal_entropy_header_line,
             )
 
@@ -675,7 +671,7 @@ def calc_weights(weight_calc_data, method: str, scenario, write_output):
             size,
             new_connection_matrix,
             method,
-            boxindex,
+            box_index,
             filename,
             header_line,
             write_output,
@@ -751,4 +747,4 @@ def weightcalc(
 
 
 if __name__ == "__main__":
-    multiprocessing.freezeSupport()
+    multiprocessing.freeze_support()

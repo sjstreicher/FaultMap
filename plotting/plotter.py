@@ -26,7 +26,6 @@ class GraphData(object):
     """
 
     def __init__(self, mode, case):
-
         # Get locations from configuration file
         (
             self.saveloc,
@@ -119,7 +118,6 @@ def get_scenario_data_vectors(graphdata, example_sourcefile, example_scenario):
     valuematrices = []
 
     for scenario in graphdata.scenarios:
-
         # Change sourcefile path on scenario level
 
         sourcefile = data_processing.change_dirtype(
@@ -212,8 +210,7 @@ def get_box_threshold_vectors(graphdata):
 
 
 def drawplot(graphdata, scenario, datadir, graph, writeoutput):
-
-    dirparts = data_processing.getfolders(datadir)
+    dirparts = data_processing.get_folders(datadir)
     dirparts[dirparts.index("weightdata")] = "graphs"
     savedir = dirparts[0]
     for pathpart in dirparts[1:]:
@@ -226,7 +223,6 @@ def drawplot(graphdata, scenario, datadir, graph, writeoutput):
 
 
 def plotdraw(mode, case, writeoutput):
-
     graphdata = GraphData(mode, case)
 
     # Create output directory

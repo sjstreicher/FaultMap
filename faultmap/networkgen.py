@@ -11,9 +11,9 @@ import networkx as nx
 import numpy as np
 from datagen import seed_randn
 
-from faultmap.data_processing import buildgraph
+from faultmap.data_processing import build_graph
 
-files_loc = json.load(open("test/testconfig.json"))
+files_loc = json.load(open("test/testconfig.json", encoding="utf-8"))
 save_loc = os.path.expanduser(files_loc["save_loc"])
 
 seed_list = [35, 88, 107, 52, 98]
@@ -70,7 +70,7 @@ def test_function_builder(
         variables = numbered_variables("X", n_vars)
 
     def graph_generator(draw=False):
-        test_graph = buildgraph(
+        test_graph = build_graph(
             variables, gain_matrix, connections, np.ones(len(variables))
         )
 

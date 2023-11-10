@@ -16,12 +16,13 @@ import pandas as pd
 import sklearn.preprocessing
 import tables as tb
 from numba import jit
+from numpy.typing import NDArray
 from scipy import signal
 
-from faultmap import config_setup, gaincalc, transentropy
+from faultmap import config_setup, gaincalc, infodynamics
 
 
-@jit
+@jit(nopython=True)
 def shuffle_data(input_data):
     """Returns a (seeded) randomly shuffled array of data.
     The data input needs to be a two-dimensional numpy array.
@@ -36,7 +37,7 @@ def shuffle_data(input_data):
     return shuffled_formatted
 
 
-def getfolders(path):
+def get_folders(path):
     folders = []
     while 1:
         path, folder = os.path.split(path)
@@ -72,7 +73,7 @@ def gen_iaaft_surrogates(data, iterations):
     xsur = np.random.permutation(data_f)
     xsur.shape = (1, -1)
 
-    for i in range(iterations):
+    for _ in range(iterations):
         fftsurx = pwx * np.exp(1j * np.angle(np.fft.fft(xsur)))
         xoutb = np.real(np.fft.ifft(fftsurx))
         ranks = xoutb.argsort(axis=1)
@@ -91,35 +92,37 @@ class ResultReconstructionData:
     """
 
     def __init__(self, mode, case):
-
         # Get locations from configuration file
         (
-            self.saveloc,
-            self.caseconfigloc,
-            self.casedir,
+            self.sav_loc,
+            self.case_config_loc,
+            self.case_dir,
             _,
         ) = config_setup.run_setup(mode, case)
         # Load case config file
-        with open(os.path.join(self.caseconfigloc, "resultreconstruction.json")) as f:
-            self.caseconfig = json.load(f)
+        with open(
+            os.path.join(self.case_config_loc, "result_reconstruction.json"),
+            encoding="utf-8",
+        ) as f:
+            self.case_config = json.load(f)
         f.close()
 
         # Get data type
-        self.datatype = self.caseconfig["datatype"]
+        self.datatype = self.case_config["datatype"]
 
         self.case = case
 
         # Get scenarios
-        self.scenarios = self.caseconfig["scenarios"]
+        self.scenarios = self.case_config["scenarios"]
         self.case = case
 
-    def scenariodata(self, scenario):
+    def setup_scenario(self, scenario):
         """Retrieves data particular to each scenario for the case being
         investigated.
 
         """
 
-        scenario_config = self.caseconfig[scenario]
+        scenario_config = self.case_config[scenario]
 
         if scenario_config:
             if self.datatype == "file":
@@ -130,7 +133,6 @@ class ResultReconstructionData:
                 else:
                     self.mi_scale = False
         else:
-            settings = {}
             self.bias_correction = False
             self.mi_scale = (
                 False  # Make it False for now, might change this default in future
@@ -189,7 +191,6 @@ def process_auxfile(filename, bias_correct=True, mi_scale=False, allow_neg=False
                 maxdelay_index = row.index("max_delay")
 
             if rowindex > 0:
-
                 affectedvars.append(row[affectedvar_index])
 
                 # Test if weight failed threshpass or directionpass test and
@@ -302,9 +303,7 @@ def create_arrays(datadir, variables, bias_correct, mi_scale, generate_diffs):
     test_strings = ["auxdata_absolute", "auxdata_directional", "auxdata"]
 
     for test_string in test_strings:
-
         if test_string in directories:
-
             if test_string == "auxdata_absolute":
                 weightarray_name = absoluteweightarray_name
                 difweightarray_name = difabsoluteweightarray_name
@@ -418,9 +417,8 @@ def create_arrays(datadir, variables, bias_correct, mi_scale, generate_diffs):
                 delayfilename = os.path.join(delayarray_dir, "delay_array.csv")
                 np.savetxt(delayfilename, delay_matrix, delimiter=",", fmt="%s")
 
-                dirparts = getfolders(datadir)
+                dirparts = get_folders(datadir)
                 if "sigtested" in dirparts:
-
                     dirparts[dirparts.index("sigtested")] = "nosigtest"
                     nosigtest_savedir = dirparts[0]
                     for pathpart in dirparts[1:]:
@@ -482,7 +480,6 @@ def create_arrays(datadir, variables, bias_correct, mi_scale, generate_diffs):
                 boxes.sort()
 
                 for boxindex, box in enumerate(boxes):
-
                     difweights_matrix = np.zeros(
                         (len(variables) + 1, len(variables) + 1)
                     ).astype(object)
@@ -492,7 +489,6 @@ def create_arrays(datadir, variables, bias_correct, mi_scale, generate_diffs):
                     difweights_matrix[1:, 0] = variables
 
                     if boxindex > 0:
-
                         base_weight_array_dir = os.path.join(
                             datadir, weightarray_name, boxes[boxindex - 1]
                         )  # Already one behind
@@ -546,8 +542,7 @@ def create_arrays(datadir, variables, bias_correct, mi_scale, generate_diffs):
                         fmt="%s",
                     )
 
-                    if "sigtested" in getfolders(datadir):
-
+                    if "sigtested" in get_folders(datadir):
                         nosigtest_difweights_matrix = np.zeros(
                             (len(variables) + 1, len(variables) + 1)
                         ).astype(object)
@@ -557,7 +552,6 @@ def create_arrays(datadir, variables, bias_correct, mi_scale, generate_diffs):
                         nosigtest_difweights_matrix[1:, 0] = variables
 
                         if boxindex > 0:
-
                             nosigtest_base_weight_array_dir = os.path.join(
                                 nosigtest_savedir,
                                 weightarray_name,
@@ -656,7 +650,6 @@ def create_signtested_directionalarrays(datadir, writeoutput):
 
     for test_index, test_string in enumerate(test_strings):
         if test_string in directories:
-
             if test_string == "weight_directional_arrays":
                 signtested_directionalweightarrayname = signtested_weightarrayname
             if test_string == "sigweight_directional_arrays":
@@ -795,9 +788,7 @@ def extract_trends(datadir, writeoutput):
     savedir = change_dirtype(datadir, "weightdata", "trends")
 
     for test_string in test_strings:
-
         if test_string in directories:
-
             trendname = namesdict[test_string]
 
             arraydataframes = []
@@ -851,7 +842,7 @@ def extract_trends(datadir, writeoutput):
     return None
 
 
-def result_reconstruction(mode, case, writeoutput):
+def result_reconstruction(mode, case):
     """Reconstructs the weight_array and delay_array for different weight types
     from data generated by run_weightcalc process.
 
@@ -869,7 +860,7 @@ def result_reconstruction(mode, case, writeoutput):
 
     saveloc, caseconfigdir, _, _ = config_setup.run_setup(mode, case)
 
-    with open(os.path.join(caseconfigdir, "weightcalc.json")) as f:
+    with open(os.path.join(caseconfigdir, "weightcalc.json"), encoding="utf-8") as f:
         caseconfig = json.load(f)
     f.close()
 
@@ -882,7 +873,7 @@ def result_reconstruction(mode, case, writeoutput):
     for scenario in scenarios:
         print(scenario)
 
-        result_reconstruction_data.scenariodata(scenario)
+        result_reconstruction_data.setup_scenario(scenario)
 
         weight_calc_data.set_settings(scenario, caseconfig[scenario]["settings"][0])
 
@@ -952,7 +943,6 @@ def trend_extraction(mode, case, writeoutput):
 
 
 def csv_to_h5(saveloc, raw_tsdata, scenario, case, overwrite=True):
-
     # Name the dataset according to the scenario
     dataset = scenario
 
@@ -963,7 +953,6 @@ def csv_to_h5(saveloc, raw_tsdata, scenario, case, overwrite=True):
     filename = os.path.join(datapath, scenario + ".h5")
 
     if overwrite or (not os.path.exists(filename)):
-
         hdf5writer = tb.open_file(filename, "w")
         data = np.genfromtxt(raw_tsdata, delimiter=",")
         # Strip time column and labels first row
@@ -1002,7 +991,7 @@ def writecsv(filename, items, header=None):
 
 
 def change_dirtype(datadir, oldtype, newtype):
-    dirparts = getfolders(datadir)
+    dirparts = get_folders(datadir)
     dirparts[dirparts.index(oldtype)] = newtype
     datadir = dirparts[0]
     for pathpart in dirparts[1:]:
@@ -1023,7 +1012,6 @@ def fft_calculation(
     plotting=False,
     plotting_endsample=500,
 ):
-
     # TODO: Perform detrending
     # logging.info("Starting FFT calculations")
     # Using a print command instead as logging is late
@@ -1192,7 +1180,6 @@ def bandgapfilter_data(
 
 
 def detrend_linear_model(data):
-
     df = pd.DataFrame(data)
     detrended_df = pd.DataFrame(signal.detrend(df.dropna(), axis=0))
     detrended_df.index = df.dropna().index
@@ -1202,7 +1189,6 @@ def detrend_linear_model(data):
 
 
 def detrend_first_differences(data):
-
     df = pd.DataFrame(data)
     detrended_df = df - df.shift(1)
     # Make first entry zero
@@ -1265,7 +1251,6 @@ def skogestad_scale(data_raw, variables, scalingvalues):
 
 
 def write_normdata(saveloc, case, scenario, headerline, datalines):
-
     # Define export directories and filenames
     datadir = config_setup.ensure_existence(
         os.path.join(saveloc, "normdata"), make=True
@@ -1283,7 +1268,6 @@ def write_normdata(saveloc, case, scenario, headerline, datalines):
 
 
 def write_detrenddata(saveloc, case, scenario, headerline, datalines):
-
     # Define export directories and filenames
     datadir = config_setup.ensure_existence(
         os.path.join(saveloc, "detrenddata"), make=True
@@ -1312,7 +1296,6 @@ def normalise_data(
     weight_methods,
     scalingvalues,
 ):
-
     if method == "standardise":
         inputdata_normalised = sklearn.preprocessing.scale(inputdata_raw, axis=0)
     elif method == "skogestad":
@@ -1341,7 +1324,6 @@ def normalise_data(
 
 
 def detrend_data(headerline, timestamps, inputdata, saveloc, case, scenario, method):
-
     if method == "first_differences":
         inputdata_detrended = detrend_first_differences(inputdata)
     elif method == "link_relatives":
@@ -1463,8 +1445,8 @@ def buildcase(dummyweight, digraph, name, dummycreation):
                 digraph.add_node(nameofscale, bias=1.0)
                 counter += 1
 
-    connection = nx.to_numpy_matrix(digraph, weight=None)
-    gain = nx.to_numpy_matrix(digraph, weight="weight")
+    connection = nx.to_numpy_matrix(digraph, weight=None)  # pylint: disable=no-member
+    gain = nx.to_numpy_matrix(digraph, weight="weight")  # pylint: disable=no-member
     variablelist = digraph.nodes()
     nodedatalist = digraph.nodes(data=True)
 
@@ -1475,7 +1457,24 @@ def buildcase(dummyweight, digraph, name, dummycreation):
     return np.array(connection), gain, variablelist, biaslist
 
 
-def buildgraph(variables, gainmatrix, connections, biasvector):
+import networkx as nx
+
+
+def build_graph(
+    variables: list[str], gain_matrix: NDArray, connections, bias_vector
+) -> nx.DiGraph:
+    """
+    Builds a directed graph using the given variables, gain matrix, connections, and bias vector.
+
+    Args:
+        variables (list): A list of variable names.
+        gain_matrix (numpy.ndarray): A 2D numpy array representing the gain matrix.
+        connections (numpy.ndarray): A 2D numpy array representing the connections between variables.
+        bias_vector (numpy.ndarray): A 1D numpy array representing the bias vector.
+
+    Returns:
+        networkx.DiGraph: A directed graph representing the connections between variables, with weights and biases.
+    """
     digraph = nx.DiGraph()
     # Construct the graph with connections
     for col, colvar in enumerate(variables):
@@ -1483,11 +1482,11 @@ def buildgraph(variables, gainmatrix, connections, biasvector):
             # The node order is source, sink according to
             # the convention that columns are sources and rows are sinks
             if connections[row, col] != 0:
-                digraph.add_edge(rowvar, colvar, weight=gainmatrix[row, col])
+                digraph.add_edge(rowvar, colvar, weight=gain_matrix[row, col])
 
     # Add the bias information to the graph nodes
     for nodeindex, nodename in enumerate(variables):
-        digraph.add_node(nodename, bias=biasvector[nodeindex])
+        digraph.add_node(nodename, bias=bias_vector[nodeindex])
 
     return digraph
 
@@ -1497,28 +1496,27 @@ def write_dictionary(filename, dictionary):
         json.dump(dictionary, f)
 
 
-def rankbackward(
+def rank_backward(
     variables, gainmatrix, connections, biasvector, dummyweight, dummycreation
 ):
-    """This method adds a unit gain node to all nodes with an out-degree
-    of 1 in order for the relative scale to be retained.
-    Therefore all nodes with pointers should have 2 or more edges
-    pointing away from them.
+    """This method adds a unit gain node to all nodes with an out-degree of 1 in order
+    for the relative scale to be retained. Therefore all nodes with pointers should have
+    2 or more edges pointing away from them.
 
-    It uses the number of dummy variables to construct these gain,
-    connection and variable name matrices.
+    It uses the number of dummy variables to construct these gain, connection and
+    variable name matrices.
 
     """
 
     # TODO: Modify bias vector to assign zero weight to all dummy nodes
 
-    digraph = buildgraph(variables, gainmatrix, connections, biasvector)
+    digraph = build_graph(variables, gainmatrix, connections, biasvector)
     return buildcase(dummyweight, digraph, "DV BWD ", dummycreation)
 
 
 def get_box_endates(clean_df, window, overlap, freq):
-    """Gets the end dates of boxes from dataframe that are continous over window and guarenteed to have a maximum
-    overlap.
+    """Gets the end dates of boxes from dataframe that are continous over window and
+    guarenteed to have a maximum overlap.
 
     clean_df: clean dataframe with nan assigned to all bad data
     window: size of window in steps at desired frequency
@@ -1541,7 +1539,7 @@ def get_box_endates(clean_df, window, overlap, freq):
     next_box_exists = True
     gc.disable()
     while next_box_exists:
-        logging.info("Bins identified: " + str(len(end_indexes)))
+        logging.info("Bins identified: %s", str(len(end_indexes)))
         # Get current list of differences
         index_diffs = rolling_clean_df.index - rolling_clean_df.index[next_box_index]
         # Get index of first entry that is within outside the minimum overlap range
@@ -1560,8 +1558,21 @@ def get_box_endates(clean_df, window, overlap, freq):
     return end_indexes
 
 
-def get_continous_boxes(clean_df, window, overlap, freq):
+def get_continuous_boxes(clean_df, window, overlap, freq):
+    """
+    Splits a pandas DataFrame into continuous boxes of a specified window size and overlap.
 
+    Args:
+        clean_df (pandas.DataFrame): The DataFrame to split into boxes.
+        window (int): The size of the window in number of time steps.
+        overlap (float): The overlap between consecutive windows as a fraction of the window size.
+        freq (str): The frequency of the time series data, e.g. '1H' for hourly data.
+
+    Returns:
+        tuple: A tuple containing:
+            - array_boxes (list of numpy.ndarray): A list of numpy arrays, where each array contains the data for a single box.
+            - boxdates (list of numpy.ndarray): A list of numpy arrays, where each array contains the start and end timestamps for a single box.
+    """
     box_end_dates = get_box_endates(clean_df, window, overlap, freq)
     boxdates = [
         np.asarray(
@@ -1630,18 +1641,18 @@ def split_tsdata(inputdata, samplerate, boxsize, boxnum):
     return boxes
 
 
-def calc_signalent(vardata, weightcalcdata):
+def calc_signal_entropy(vardata, weightcalcdata):
     """Calculates single signal differential entropies
     by making use of the JIDT continuous box-kernel implementation.
 
     """
 
     # Setup Java class for infodynamics toolkit
-    entropyCalc, estimator = transentropy.setup_infodynamics_entropy(
+    entropyCalc, estimator = infodynamics.setup_entropy(
         weightcalcdata.INFODYNAMICS_LOCATION
     )
 
-    entropy = transentropy.calc_infodynamics_entropy(entropyCalc, vardata, estimator)
+    entropy = infodynamics.calc_entropy(entropyCalc, vardata, estimator)
     return entropy
 
 

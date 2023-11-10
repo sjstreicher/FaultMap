@@ -1,16 +1,14 @@
-# -*- coding: utf-8 -*-
 """Demonstrates single signal entropy calculations.
 
 """
-
-from test.datagen import autoreg_gen
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
-from faultmap import transentropy
+from faultmap import infodynamics
 from faultmap.data_processing import split_tsdata
+from faultmap.datagen import autoreg_gen
 
 sns.set_style("darkgrid")
 
@@ -61,12 +59,10 @@ def calculate_entropies(var_data, estimator=ESTIMATOR):
     kernel_bandwidth = 0.8
     print(f"Kernel bandwidth: {str(kernel_bandwidth)}")
     # Setup Java class for infodynamics toolkit
-    entropy_calc = transentropy.setup_infodynamics_entropy(
+    entropy_calc = infodynamics.setup_infodynamics_entropy(
         INFODYNAMICS_LOCATION, estimator, kernel_bandwidth
     )
-    signal_entropy_kernel = transentropy.calc_infodynamics_entropy(
-        entropy_calc, var_data, estimator
-    )
+    signal_entropy_kernel = infodynamics.calc_entropy(entropy_calc, var_data, estimator)
     signal_entropy_gaussian = gaussian_entropy(var_data)
 
     return signal_entropy_kernel, signal_entropy_gaussian
