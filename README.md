@@ -1,12 +1,12 @@
 # FaultMap
 
-![Travis Build](https://travis-ci.org/SimonStreicher/FaultMap.png?branch=master "Travis Build Status")(https://travis-ci.org/SimonStreicher/FaultMap)
+[![Travis Build](https://travis-ci.org/SimonStreicher/FaultMap.png?branch=master "Travis Build Status")](https://travis-ci.org/SimonStreicher/FaultMap)
 
-![Code Coverage](https://coveralls.io/repos/github/SimonStreicher/FaultMap/badge.svg?branch=master "Code Coverage")(https://coveralls.io/github/SimonStreicher/FaultMap?branch=master)
+[![Code Coverage](https://coveralls.io/repos/github/SimonStreicher/FaultMap/badge.svg?branch=master "Code Coverage")](https://coveralls.io/github/SimonStreicher/FaultMap?branch=master)
 
-![Code Climate](https://codeclimate.com/github/SimonStreicher/FaultMap/badges/gpa.svg "Code Climate Grade")(https://codeclimate.com/github/SimonStreicher/FaultMap)
+[![Code Climate](https://codeclimate.com/github/SimonStreicher/FaultMap/badges/gpa.svg "Code Climate Grade")](https://codeclimate.com/github/SimonStreicher/FaultMap)
 
-![DOI](https://zenodo.org/badge/14229559.svg "DOI")(https://zenodo.org/badge/latestdoi/14229559)
+[![DOI](https://zenodo.org/badge/14229559.svg "DOI")](https://zenodo.org/badge/latestdoi/14229559)
 
 ## Introduction
 
