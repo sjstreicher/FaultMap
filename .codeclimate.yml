@@ -3,10 +3,7 @@ engines:
     enabled: true
     config:
       languages:
-      - ruby
-      - javascript
       - python
-      - php
   fixme:
     enabled: true
     checks:
@@ -16,11 +13,5 @@ engines:
     enabled: true
 ratings:
   paths:
-  - "**.inc"
-  - "**.js"
-  - "**.jsx"
-  - "**.module"
-  - "**.php"
   - "**.py"
-  - "**.rb"
 exclude_paths: []

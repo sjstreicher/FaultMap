@@ -164,7 +164,7 @@ def process_aux_file(filename, bias_correct=True, mi_scale=False, allow_neg=Fals
         for row_index, row in enumerate(aux_file_reader):
             if row_index == 0:
                 # Find the indices of important rows
-                destination_var_index = row.index("destination_var")
+                destination_var_index = row.index("destination_variable")
 
                 if "max_ent" in row:
                     max_val_index = row.index("max_ent")
@@ -186,8 +186,8 @@ def process_aux_file(filename, bias_correct=True, mi_scale=False, allow_neg=Fals
                 else:
                     mi_index = None
 
-                pass_threshold_index = row.index("pass_threshold")
-                pass_directionality_index = row.index("pass_directionality")
+                pass_threshold_index = row.index("significance_threshold_passed")
+                pass_directionality_index = row.index("directionality_check_passed")
                 max_delay_index = row.index("max_delay")
 
             if row_index > 0:
@@ -1440,8 +1440,8 @@ def buildcase(dummyweight, digraph, name, dummycreation):
                 digraph.add_node(nameofscale, bias=1.0)
                 counter += 1
 
-    connection = nx.to_numpy_matrix(digraph, weight=None)  # pylint: disable=no-member
-    gain = nx.to_numpy_matrix(digraph, weight="weight")  # pylint: disable=no-member
+    connection = nx.to_numpy_array(digraph, weight=None)
+    gain = nx.to_numpy_array(digraph, weight="weight")
     variablelist = digraph.nodes()
     nodedatalist = digraph.nodes(data=True)
 

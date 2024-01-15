@@ -74,7 +74,7 @@ class GraphReduceData(object):
             self.boxes = boxindexes
 
 
-def reduce_graph(graph_reduce_data, scenario, data_dir, typename, write_output):
+def reduce_graph(graph_reduce_data, data_dir, typename, write_output):
     graph_filename = "{}.gml"
     simplified_graph_filename = "{}_simplified.gml"
     lowedge_graph_filename = "{}_lowedge.gml"

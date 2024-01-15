@@ -143,7 +143,7 @@ def run_all(mode: RunModes, robust=False):
         run_noderank(mode, case, robust, write_output)
         run_graphreduce(mode, case, robust, write_output)
         run_plotting(mode, case, robust, write_output)
-        logger.info("Done with case: " + case)
+        logger.info("Done with case: %s", case)
 
 
 if __name__ == "__main__":

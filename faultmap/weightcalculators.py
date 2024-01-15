@@ -89,10 +89,10 @@ class CorrelationWeightCalculator(WeightCalculator):
             "max_delay",
             "max_index",
             "sign_change",
-            "thresh_corr",
+            "threshold_correlation",
             "thresh_directionality",
-            "pass_thresh",
-            "pass_directionality",
+            "significance_threshold_passed",
+            "directionality_check_passed",
             "directionality_value",
         ]
 
@@ -440,8 +440,8 @@ class TransferEntropyWeightCalculator(WeightCalculator):
     ):
         super().__init__(weight_calc_data)
         self.data_header = [
-            "cause_var",
-            "affected_var",
+            "source_variable",
+            "destination_variable",
             "base_ent",
             "max_ent",
             "max_delay",
@@ -450,7 +450,7 @@ class TransferEntropyWeightCalculator(WeightCalculator):
             "bias_mean",
             "bias_std",
             "significance_threshold_passed",
-            "direcionality_check_passed",
+            "directionality_check_passed",
             "k_hist_fwd",
             "k_tau_fwd",
             "l_hist_fwd",

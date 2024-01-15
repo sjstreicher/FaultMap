@@ -1,6 +1,6 @@
 language: python
 python:
-  - "3.7"
+  - "3.11"
 #virtualenv:
 #    system_site_packages: true
 
@@ -25,7 +25,7 @@ before_install:
 # Install packages
 install:
   # Create a conda environment
-  - conda create -n faultmap python=3.7
+  - conda create -n faultmap python=3.11
   - source activate faultmap
   - pip install -r requirements.txt
 script:
