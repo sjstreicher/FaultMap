@@ -26,6 +26,7 @@
         "dummytypes",
         "dweight",
         "faultmap",
+        "faultmapconfigs",
         "firstweight",
         "forceobj",
         "gaincalc",
@@ -63,6 +64,7 @@
         "Skogestad",
         "texlive",
         "totlist",
+        "weightcalc",
         "weightlist"
     ],
     "cSpell.enableFiletypes": [

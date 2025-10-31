@@ -1,12 +1,12 @@
 # FaultMap
 
-[![Travis Build](https://travis-ci.org/SimonStreicher/FaultMap.png?branch=master "Travis Build Status")](https://travis-ci.org/SimonStreicher/FaultMap)
+<!-- [![Travis Build](https://travis-ci.org/SimonStreicher/FaultMap.png?branch=master "Travis Build Status")](https://travis-ci.org/SimonStreicher/FaultMap)
 
 [![Code Coverage](https://coveralls.io/repos/github/SimonStreicher/FaultMap/badge.svg?branch=master "Code Coverage")](https://coveralls.io/github/SimonStreicher/FaultMap?branch=master)
 
-[![Code Climate](https://codeclimate.com/github/SimonStreicher/FaultMap/badges/gpa.svg "Code Climate Grade")](https://codeclimate.com/github/SimonStreicher/FaultMap)
+[![Code Climate](https://codeclimate.com/github/SimonStreicher/FaultMap/badges/gpa.svg "Code Climate Grade")](https://codeclimate.com/github/SimonStreicher/FaultMap) -->
 
-[![DOI](https://zenodo.org/badge/14229559.svg "DOI")](https://zenodo.org/badge/latestdoi/14229559)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2543739.svg)](https://doi.org/10.5281/zenodo.2543739)
 
 ## Introduction
 
@@ -23,7 +23,7 @@ Documentation and demonstrations still under development.
 
 Most of the prerequisites are related to getting JPype to work correctly:
 
-- Python 3.7+ with compatible C++ compiler
+- Python 3.10+ with compatible C++ compiler
   - On Windows, compiling packages usually requires the `VC++ 2015.3 v14.00 (v140) toolset for desktop` to be installed from the Visual Studio installer.
 - Java JDK 1.8.201+ (or latest Java 8 SDK)
   - The JAVA_HOME environment variable should point to the installation directory.
@@ -33,9 +33,9 @@ Most of the prerequisites are related to getting JPype to work correctly:
 ```bash
 git clone https://github.com/SimonStreicher/FaultMap.git
 cd FaultMap
-conda create --name faultmap python=3.7
-source activate faultmap
-pip install -r requirements.txt
+conda create --name faultmap python=3.10
+conda activate faultmap
+pip install -e .
 pytest
 ```
 
@@ -50,17 +50,17 @@ If you want to build locally, the Dockerfile can be found at [FaultMapDocker Git
 ## Setup
 
 Create directories for storing the data, configuration files as well as results.
-Create a file `caseconfig.json` in the root directory, similar to `testconfig.json` which comes with the distribution.
+Create a file `case_config.json` in the root directory, similar to `test_config.json` which comes with the distribution (located in the `tests` directory).
 Enter the full path to the data, configuration and results directories as well as the `infodynamics.jar` you want to use for [Java Information Dynamics Toolkit (JIDT)](https://github.com/jlizier/jidt) (the tested version is included in the distribution).
 
-Example `caseconfig.json` file (also included in `example_configs` directory):
+Example `case_config.json` file:
 
 ```json
 {
-  "dataloc": "~/faultmap/faultmap_data",
-  "configloc": "~/repos/faultmapconfigs",
-  "saveloc": "~/faultmap/faultmap_results",
-  "infodynamicsloc": "~/repos/FaultMap/infodynamics.jar"
+  "data_loc": "~/faultmap/faultmap_data",
+  "config_loc": "~/repos/faultmapconfigs",
+  "save_loc": "~/faultmap/faultmap_results",
+  "infodynamics_loc": "~/repos/FaultMap/infodynamics.jar"
 }
 ```
 
@@ -76,14 +76,14 @@ The following configuration files are needed to fully specify a specific case:
 
 ## Execution
 
-In order to calculate a full set of results for a specific case, make sure this case name is included in the `config_full.json` file in the directory defined under `configloc` in the `caseconfig.json` file.
+In order to calculate a full set of results for a specific case, make sure this case name is included in the `config_full.json` file in the directory defined under `config_loc` in the `case_config.json` file.
 
 Example `config_full.json` file (also included in `example_configs` directory):
 
 ```json
 {
   "mode": "cases",
-  "writeoutput": true,
+  "write_output": true,
   "cases": [
     "tennessee_eastman"
   ]
