@@ -363,9 +363,9 @@ def calc_transient_importancediffs(rankingdicts, variablelist):
     boxrankdict = {}
     rel_boxrankdict = {}
     for variable in variablelist:
-        diffvect = np.full((len(rankingdicts) - 1,), np.NAN)
-        rankvect = np.full((len(rankingdicts),), np.NAN)
-        rel_rankvect = np.full((len(rankingdicts),), np.NAN)
+        diffvect = np.full((len(rankingdicts) - 1,), np.nan)
+        rankvect = np.full((len(rankingdicts),), np.nan)
+        rel_rankvect = np.full((len(rankingdicts),), np.nan)
         basevaldict[variable] = rankingdicts[0][variable]
         # Get initial previous importance
         prev_importance = basevaldict[variable]
@@ -410,7 +410,11 @@ def create_importance_graph(
             noderankdata.variablelist.index(dest_var),
             noderankdata.variablelist.index(source_var),
         ]
-        opengraph.add_edge(source_var, dest_var, weight=edge_weight, delay=edge_delay)
+        # Skip edges with NaN delay (GML format doesn't support NaN)
+        if not np.isnan(edge_delay):
+            opengraph.add_edge(
+                source_var, dest_var, weight=edge_weight, delay=edge_delay
+            )
     openedgelist = opengraph.edges()
 
     #    closedgraph = nx.DiGraph()
@@ -432,13 +436,13 @@ def create_importance_graph(
             noderankdata.variablelist.index(dest_var),
             noderankdata.variablelist.index(source_var),
         ]
-        # Do not include edges with zero weight
-        if edge_weight != 0:
+        # Do not include edges with zero weight or NaN delay (GML format doesn't support NaN)
+        if edge_weight != 0 and not np.isnan(edge_delay):
             relative_closedgraph.add_edge(
                 *newedge,
                 weight=(edge_weight / max_weight),
                 delay=edge_delay,
-                controlloop=int(newedge not in openedgelist)
+                controlloop=int(newedge not in openedgelist),
             )
 
     for node in relative_closedgraph.nodes():

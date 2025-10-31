@@ -1,6 +1,4 @@
-"""Methods used in the calculation of transfer entropy. A JIDT wrapper.
-
-"""
+"""Methods used in the calculation of transfer entropy. A JIDT wrapper."""
 
 from pathlib import Path
 

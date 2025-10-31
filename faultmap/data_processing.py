@@ -1618,7 +1618,7 @@ def split_time_series_data(
 
     else:
         box_start_index = np.empty((1, box_num))[0]
-        box_start_index[:] = np.NAN
+        box_start_index[:] = np.nan
         box_start_index[0] = 0
         box_start_index[-1] = samples - box_size_samples
         samples_between = (float(samples - box_size_samples)) / float(box_num - 1)
