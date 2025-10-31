@@ -37,5 +37,7 @@
     ],
     "cSpell.language": "en-GB",
     "python.analysis.autoImportCompletions": false,
-    "python.analysis.typeCheckingMode": "off"
+    "python.analysis.typeCheckingMode": "off",
+    "cursorpyright.analysis.autoImportCompletions": false,
+    "cursorpyright.analysis.typeCheckingMode": "off"
 }
