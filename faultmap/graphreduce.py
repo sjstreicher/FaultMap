@@ -100,7 +100,7 @@ def reduce_graph(graph_reduce_data, data_dir, typename, write_output):
                 threshold = compute_edge_threshold(
                     original_graph, graph_reduce_data.percentile
                 )
-            except:
+            except Exception:
                 print("Empty graph")
                 break
             # Delete low value edges from graph
@@ -301,7 +301,7 @@ def delete_loworder_edges(graph, max_depth, weight_discretion):
     All self-loops are also deleted.
 
     The level up to which the search for higher order connections should be
-    completed is indiciated by the 'max_depth' parameter.
+    completed is indicated by the 'max_depth' parameter.
     A value of 1 means that children of children will be investigated, while a
     value of 2 means that children of children of children will be included in
     the search, and so on.
@@ -331,8 +331,8 @@ def delete_loworder_edges(graph, max_depth, weight_discretion):
             + str(len(simplified_graph.nodes()))
             + ")"
         )
-        # First create a list of lists of all childs at different degrees,
-        # up to the level where no childs are returned
+        # First create a list of lists of all children at different degrees,
+        # up to the level where no children are returned
         morechilds = True
         depth = 0
         child_list = list(simplified_graph.successors(node))
@@ -344,7 +344,7 @@ def delete_loworder_edges(graph, max_depth, weight_discretion):
                 children_lists_decomp = []
                 decompose(children_lists[depth - 1], children_lists_decomp)
                 for upper_child in children_lists_decomp:
-                    # Get list of childs for each child in previous layer
+                    # Get list of children for each child in previous layer
                     upper_child_children = list(
                         simplified_graph.successors(upper_child)
                     )
