@@ -1,6 +1,7 @@
 # FaultMap
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2543739.svg)](https://doi.org/10.5281/zenodo.2543739)
+[![Documentation Status](https://readthedocs.org/projects/faultmap/badge/?version=latest)](https://faultmap.readthedocs.io/en/latest/?badge=latest)
 
 ## Introduction
 
