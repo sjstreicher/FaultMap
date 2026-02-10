@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
-"""Generates and plots test data.
-
-"""
-
-from test import datagen
+"""Generates and plots test data."""
 
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+from test import datagen
 
 sns.set_style("darkgrid")
 
@@ -27,7 +23,7 @@ for dataindex in testdata:
         testdata.index.values,
         testdata[dataindex],
         "-",
-        label=r"{}".format(testdata.columns.values[dataindex]),
+        label=rf"{testdata.columns.values[dataindex]}",
     )
 
 plt.ylabel(y_label, fontsize=14)

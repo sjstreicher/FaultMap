@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-"""Performs node faultmap.
+"""Performs node faultmap."""
 
-"""
 import json
 import logging
 import os

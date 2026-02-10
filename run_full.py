@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
 """Performs all analysis steps for all cases specified in the
 configuration file.
 
 """
+
 # Standard modules
 import json
 import logging
@@ -68,8 +68,8 @@ def run_createarrays(mode: RunModes, case: str, robust: bool) -> None:
             # TODO: Remove this requirement
             result_reconstruction(mode, case)
             result_reconstruction(mode, case)
-        except:
-            raise RuntimeError("Array creation failed for case: " + case)
+        except Exception as exc:
+            raise RuntimeError(f"Array creation failed for case: {case}") from exc
     else:
         result_reconstruction(mode, case)
         result_reconstruction(mode, case)
@@ -92,8 +92,8 @@ def run_noderank(mode, case, robust, write_output):
     if robust:
         try:
             noderankcalc(mode, case, write_output)
-        except:
-            raise RuntimeError("Node faultmap failed for case: " + case)
+        except Exception as exc:
+            raise RuntimeError(f"Node faultmap failed for case: {case}") from exc
     else:
         noderankcalc(mode, case, write_output)
 
@@ -104,8 +104,8 @@ def run_graphreduce(mode, case, robust, write_output):
     if robust:
         try:
             reduce_graph_scenarios(mode, case, write_output)
-        except:
-            raise RuntimeError("Graph reduction failed for case: " + case)
+        except Exception as exc:
+            raise RuntimeError(f"Graph reduction failed for case: {case}") from exc
     else:
         reduce_graph_scenarios(mode, case, write_output)
 
@@ -114,8 +114,8 @@ def run_plotting(mode, case, robust, write_output):
     if robust:
         try:
             draw_plot(mode, case, write_output)
-        except:
-            raise RuntimeError("Plotting failed for case: " + case)
+        except Exception as exc:
+            raise RuntimeError(f"Plotting failed for case: {case}") from exc
     else:
         draw_plot(mode, case, write_output)
 
@@ -127,7 +127,6 @@ def run_all(mode: RunModes, robust=False):
     _, config_loc, _, _ = config_setup.get_locations(mode)
     with open(Path(config_loc, "config_full.json"), encoding="utf-8") as f:
         full_run_config = json.load(f)
-    f.close()
 
     # Flag indicating whether calculated results should be written to disk
     write_output = full_run_config["write_output"]

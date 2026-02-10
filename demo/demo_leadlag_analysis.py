@@ -1,11 +1,11 @@
-"""Performs a lead/lag analysis on the full matrix provided.
-
-"""
+"""Performs a lead/lag analysis on the full matrix provided."""
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from test.datagen import autoreg_gen
 
+from faultmap.data_processing import split_time_series_data
 from faultmap.transentropy import calc_infodynamics_te
 
 infodynamics_loc = "infodynamics.jar"
@@ -34,11 +34,6 @@ def tecalc_wrapper(causevardata, affectedvardata):
 
 
 # Delays to test in the forwards as well as backwards directions
-
-
-from test.datagen import autoreg_gen
-
-from faultmap.data_processing import split_time_series_data
 
 sns.set_style("darkgrid")
 

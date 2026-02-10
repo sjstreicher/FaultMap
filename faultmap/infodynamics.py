@@ -1,11 +1,14 @@
 """Methods used in the calculation of transfer entropy. A JIDT wrapper."""
 
+import logging
 from pathlib import Path
 
 import jpype  # type: ignore
 import numpy as np
 
 from faultmap.type_definitions import EntropyMethods, MutualInformationMethods
+
+logger = logging.getLogger(__name__)
 
 
 def check_jvm(infodynamics_path: Path):
@@ -155,7 +158,7 @@ def setup_te(infodynamics_path: Path, method: MutualInformationMethods, **parame
         te_calculator.initialise()
 
     else:
-        raise NameError("Transfer entropy method name not recognized")
+        raise ValueError(f"Transfer entropy method name not recognized: {method}")
 
     return te_calculator
 
@@ -180,9 +183,10 @@ def calc_te(infodynamics_path, calc_method, affected_data, causal_data, **parame
     significance_permutations = parameters.get("significance_permutations", 30)
 
     if len(causal_data) != len(affected_data):
-        print("Source length: " + str(len(causal_data)))
-        print("Destination length: " + str(len(affected_data)))
-        raise ValueError("The source and destination arrays are of different lengths")
+        raise ValueError(
+            f"The source and destination arrays are of different lengths "
+            f"(source={len(causal_data)}, destination={len(affected_data)})"
+        )
 
     if calc_method == "discrete":
         source = map(int, causal_data)
@@ -203,7 +207,7 @@ def calc_te(infodynamics_path, calc_method, affected_data, causal_data, **parame
     elif calc_method in ("kernel", "discrete"):
         pass
     else:
-        raise NameError("Infodynamics method name not recognized")
+        raise ValueError(f"Infodynamics method name not recognized: {calc_method}")
 
     if test_significance:
         te_significance = te_calc.computeSignificance(significance_permutations)
@@ -315,7 +319,7 @@ def setup_mi_calculator(
         mi_calc.initialise()
 
     else:
-        raise NameError("Mutual information method name not recognized")
+        raise ValueError(f"Mutual information method name not recognized: {method}")
 
     return mi_calc
 
@@ -394,7 +398,7 @@ def setup_entropy_calculator(
         entropy_calculator.initialise()
 
     else:
-        raise NameError("Estimator not recognized")
+        raise ValueError(f"Estimator not recognized: {estimator}")
 
     return entropy_calculator
 
@@ -434,6 +438,6 @@ def calc_entropy(entropy_calculator, data, estimator: EntropyMethods) -> float:
     elif estimator == "kozachenko":
         entropy = entropy / np.log(2.0)
     else:
-        raise NameError("Estimator not recognized")
+        raise ValueError(f"Estimator not recognized: {estimator}")
 
     return entropy

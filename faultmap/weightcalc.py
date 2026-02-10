@@ -107,6 +107,7 @@ class WeightCalcData:
 
         self.settings_set = None
         self.connections_used = None
+        self.transient_method: str | None = None
 
     def scenario_data(self, scenario_name: str):
         """Retrieves data particular to each scenario for the case being
@@ -119,7 +120,7 @@ class WeightCalcData:
                 config file.
 
         """
-        print(f"The scenario name is: {scenario_name}")
+        logging.info("The scenario name is: %s", scenario_name)
 
         self.settings_set = self.case_config[scenario_name]["settings"]
 
@@ -239,8 +240,7 @@ class WeightCalcData:
                 self.sampling_rate,
             )
 
-            self.header_line = ["Time"]
-            [self.header_line.append(variable) for variable in self.variables]
+            self.header_line = ["Time"] + list(self.variables)
 
         # Perform normalisation
         # Retrieve scaling limits from file
@@ -254,8 +254,8 @@ class WeightCalcData:
                 )
                 scaling_values = data_processing.read_scale_limits(scaling_loc)
             else:
-                raise NameError(
-                    "Scale limits reference missing from " "configuration file"
+                raise ValueError(
+                    "Scale limits reference missing from configuration file"
                 )
         else:
             scaling_values = None
@@ -382,12 +382,7 @@ class WeightCalcData:
             # as the original data file - but it does not play a role at all
             # in the actual box determination for the case of boxnum = 1
 
-        try:
-            self.transient_method
-        except:
-            self.transient_method = None
-
-        if self.transient_method == "legacy" or self.transient_method is None:
+        if self.transient_method in ("legacy", None):
             # Get box start and end dates
             self.boxdates = data_processing.split_time_series_data(
                 self.timestamps,
@@ -693,7 +688,7 @@ def weight_calc(
     calc_fft: bool = False,
     do_multiprocessing: bool = False,
     use_gpu: bool = False,
-):
+) -> None:
     """Reports the maximum weight as well as associated delay
     obtained by shifting the affected variable behind the causal variable a
     specified set of delays.
@@ -743,7 +738,7 @@ def weight_calc(
                 start_time = time.process_time()
                 calculate_weights(weight_calc_data, method, scenario, writeoutput)
                 end_time = time.process_time()
-                print(end_time - start_time)
+                logging.info("Weight calc time: %s", end_time - start_time)
 
 
 if __name__ == "__main__":

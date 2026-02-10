@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This module is used to rank nodes in a digraph.
 It requires a connection as well as a gain matrix as inputs.
 
@@ -16,6 +15,7 @@ import os
 
 import networkx as nx
 import numpy as np
+from numpy.typing import NDArray
 
 from faultmap import config_setup, data_processing, networkgen
 
@@ -37,7 +37,6 @@ class NoderankData:
         # Load case config file
         with open(os.path.join(self.caseconfigloc, "noderank.json")) as f:
             self.caseconfig = json.load(f)
-        f.close()
 
         # Get scenarios
         self.scenarios = self.caseconfig["scenarios"]
@@ -150,7 +149,7 @@ class NoderankData:
                 # If no bias vector is defined, use a vector of equal weights
                 self.biasvector = np.ones(len(self.variablelist))
 
-        logging.info("Number of tags: {}".format(len(self.variablelist)))
+        logging.info("Number of tags: %s", len(self.variablelist))
 
     def get_boxes(self, scenario, datadir, typename):
         if "boxindexes" in self.caseconfig[scenario]:
@@ -176,20 +175,20 @@ def writecsv_looprank(filename, items):
         csv.writer(f).writerows(items)
 
 
-def norm_dict(dictionary):
+def norm_dict(dictionary: dict[str, float]) -> dict[str, float]:
     total = sum(dictionary.values())
     # NOTE: if this is slow in Python 2, replace .items with .iteritems
     return {key: value / total for key, value in dictionary.items()}
 
 
 def calc_simple_rank(
-    gainmatrix,
-    variables,
-    biasvector,
-    noderankdata,
-    rank_method,
-    package="networkx",
-):
+    gainmatrix: NDArray,
+    variables: list[str],
+    biasvector: NDArray,
+    noderankdata: NoderankData,
+    rank_method: str,
+    package: str = "networkx",
+) -> tuple[dict[str, float], list[tuple[str, float]]]:
     """Constructs the faultmap dictionary using the eigenvector approach
     i.e. Ax = x where A is the local gain matrix.
 
@@ -282,7 +281,7 @@ def calc_simple_rank(
             pagerank_rankingdict_norm = norm_dict(pagerank_rankingdict)
             rankingdict = pagerank_rankingdict_norm
         else:
-            raise NameError("Method not defined")
+            raise ValueError(f"Rank method not defined: {rank_method}")
 
     elif package == "simple":
         if rank_method == "eigenvector":
@@ -303,10 +302,10 @@ def calc_simple_rank(
             # i.e. {NODE:RANKING}
             rankingdict = dict(zip(variables, rankarray_norm))
         else:
-            raise NameError("Method not defined")
+            raise ValueError(f"Rank method not defined: {rank_method}")
 
     else:
-        raise NameError("Package not defined")
+        raise ValueError(f"Package not defined: {package}")
 
     rankinglist = sorted(rankingdict.items(), key=operator.itemgetter(1), reverse=True)
 
@@ -318,7 +317,9 @@ def calc_simple_rank(
     return rankingdict, rankinglist
 
 
-def normalise_rankinglist(rankingdict, originalvariables):
+def normalise_rankinglist(
+    rankingdict: dict[str, float], originalvariables: list[str]
+) -> list[tuple[str, float]]:
     normalised_rankingdict = {}
     for variable in originalvariables:
         normalised_rankingdict[variable] = rankingdict[variable]
@@ -337,7 +338,9 @@ def normalise_rankinglist(rankingdict, originalvariables):
     return normalised_rankinglist
 
 
-def calc_transient_importancediffs(rankingdicts, variablelist):
+def calc_transient_importancediffs(
+    rankingdicts: list[dict[str, float]], variablelist: list[str]
+) -> tuple[dict, dict, dict, dict]:
     """Returns three dictionaries with importance scores that can be used in
     further analysis.
 
@@ -436,7 +439,8 @@ def create_importance_graph(
             noderankdata.variablelist.index(dest_var),
             noderankdata.variablelist.index(source_var),
         ]
-        # Do not include edges with zero weight or NaN delay (GML format doesn't support NaN)
+        # Do not include edges with zero weight or NaN delay
+        # (GML format doesn't support NaN)
         if edge_weight != 0 and not np.isnan(edge_delay):
             relative_closedgraph.add_edge(
                 *newedge,
@@ -454,7 +458,7 @@ def create_importance_graph(
     return relative_closedgraph, opengraph
 
 
-def gainmatrix_preprocessing(gainmatrix):
+def gainmatrix_preprocessing(gainmatrix: NDArray) -> tuple[NDArray, float]:
     """Moves the mean and scales the variance of the elements in the
     gainmatrix to a specified value.
 
@@ -489,7 +493,7 @@ def gainmatrix_preprocessing(gainmatrix):
     return modgainmatrix, currentmean
 
 
-def gainmatrix_tobinary(gainmatrix):
+def gainmatrix_tobinary(gainmatrix: NDArray) -> NDArray:
     """Changes all the weights to a boolean
 
     INCOMPLETE
@@ -589,7 +593,7 @@ def get_gainmatrices(noderankdata, datadir, typename):
 
     for boxindex in noderankdata.boxes:
         gainmatrix = data_processing.read_matrix(
-            os.path.join(datadir, typename, "box{:03d}".format(boxindex + 1), fname)
+            os.path.join(datadir, typename, f"box{boxindex + 1:03d}", fname)
         )
 
         gainmatrices.append(gainmatrix)
@@ -619,7 +623,7 @@ def get_delaymatrices(noderankdata, datadir, typename):
             os.path.join(
                 datadir,
                 delaytypename,
-                "box{:03d}".format(boxindex + 1),
+                f"box{boxindex + 1:03d}",
                 "delay_array.csv",
             )
         )
@@ -711,7 +715,8 @@ def dorankcalc(
 
         if generate_diffs:
             # TODO: Review effect of positive differences only
-            # Take only positive for now due to convergence issues, but investigate proper handling
+            # Take only positive for now due to convergence issues,
+            # but investigate proper handling
             # of negative edge changes
             dif_rankingdict, dif_rankinglist, _, _, _ = calc_gainrank(
                 mod_dif_gainmatrix, noderankdata, rank_method, dummyweight
@@ -759,7 +764,7 @@ def dorankcalc(
             os.path.join(
                 savedir,
                 typename[:-7],
-                "box{:03d}".format(noderankdata.boxes[index] + 1),
+                f"box{noderankdata.boxes[index] + 1:03d}",
                 dummystatus,
             )
         )
@@ -860,7 +865,9 @@ def dorankcalc(
     return None
 
 
-def noderankcalc(mode, case, writeoutput, preprocessing=False):
+def noderankcalc(
+    mode: str, case: str, writeoutput: bool, preprocessing: bool = False
+) -> None:
     """Ranks the nodes in a network based on gain matrices already generated
     for different weight types.
 
@@ -880,7 +887,7 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
     )
 
     for scenario in noderankdata.scenarios:
-        logging.info("Running scenario {}".format(scenario))
+        logging.info("Running scenario %s", scenario)
         # Update scenario-specific fields of noderankdata object
         noderankdata.scenariodata(scenario)
 
@@ -900,7 +907,7 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                     sigtypes = ["test_nosig"]
 
                 for sigtype in sigtypes:
-                    print(sigtype)
+                    logging.info("Processing sigtype: %s", sigtype)
                     embedtypesdir = os.path.join(basedir, sigtype)
 
                     if noderankdata.datatype == "file":
@@ -909,7 +916,7 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                         embedtypes = ["test_noembed"]
 
                     for embedtype in embedtypes:
-                        print(embedtype)
+                        logging.info("Processing embedtype: %s", embedtype)
                         datadir = os.path.join(embedtypesdir, embedtype)
 
                         if weight_method[:16] == "transfer_entropy":

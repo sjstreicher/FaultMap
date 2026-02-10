@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-"""Generates various plots as specified in the plotting configuration file.
-
-"""
+"""Generates various plots as specified in the plotting configuration file."""
 
 import json
 import logging

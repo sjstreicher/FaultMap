@@ -23,7 +23,7 @@ import numpy as np
 from faultmap import config_setup
 
 
-class GraphReduceData(object):
+class GraphReduceData:
     """Creates a data object from file and or function definitions for use in
     graph reduce method.
 
@@ -40,7 +40,6 @@ class GraphReduceData(object):
         # Load case config file
         with open(os.path.join(self.caseconfigloc, "graphreduce.json")) as f:
             self.caseconfig = json.load(f)
-        f.close()
 
         # Get scenarios
         self.scenarios = self.caseconfig["scenarios"]
@@ -101,7 +100,7 @@ def reduce_graph(graph_reduce_data, data_dir, typename, write_output):
                     original_graph, graph_reduce_data.percentile
                 )
             except Exception:
-                print("Empty graph")
+                logging.warning("Empty graph")
                 break
             # Delete low value edges from graph
             lowedge_graph = delete_lowval_edges(
@@ -137,7 +136,7 @@ def reduce_graph(graph_reduce_data, data_dir, typename, write_output):
     return None
 
 
-def reduce_graph_scenarios(mode, case, write_output):
+def reduce_graph_scenarios(mode: str, case: str, write_output: bool) -> None:
     graph_reduce_data = GraphReduceData(mode, case)
 
     saveloc, caseconfigdir, casedir, _ = config_setup.run_setup(mode, case)
@@ -156,10 +155,9 @@ def reduce_graph_scenarios(mode, case, write_output):
 
     for scenario in scenarios:
         if scenario in graph_reduce_data.scenarios:
-            logging.info("Running scenario {}".format(scenario))
+            logging.info("Running scenario %s", scenario)
             # Update scenario-specific fields graphreducedata object
             graph_reduce_data.scenariodata(scenario)
-            print(scenario)
         else:
             continue
 
@@ -169,15 +167,15 @@ def reduce_graph_scenarios(mode, case, write_output):
         methods_dir = os.path.join(scenarios_dir, scenario)
         methods = next(os.walk(methods_dir))[1]
         for method in methods:
-            print(method)
+            logging.info("Processing method: %s", method)
             sig_types_dir = os.path.join(methods_dir, method)
             sig_types = next(os.walk(sig_types_dir))[1]
             for sig_type in sig_types:
-                print(sig_type)
+                logging.info("Processing sigtype: %s", sig_type)
                 embed_types_dir = os.path.join(sig_types_dir, sig_type)
                 embed_types = next(os.walk(embed_types_dir))[1]
                 for embed_type in embed_types:
-                    print(embed_type)
+                    logging.info("Processing embedtype: %s", embed_type)
                     data_dir = os.path.join(embed_types_dir, embed_type)
 
                     if method[:16] == "transfer_entropy":
@@ -193,7 +191,7 @@ def reduce_graph_scenarios(mode, case, write_output):
                             type_names.append("sigweight")
 
                     for typename in type_names:
-                        print(typename)
+                        logging.info("Processing typename: %s", typename)
                         # Start the methods here
                         reduce_graph(
                             graph_reduce_data,

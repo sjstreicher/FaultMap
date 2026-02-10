@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """General graph types are defined for re-usability and consistent formatting.
 
 The style is selected to be compatible with greyscale print work as far
@@ -63,9 +62,13 @@ markers = ["o", "*", "s", "v", "X", "D", "H"]
 yaxislabel = {
     "cross_correlation": r"Cross correlation",
     "absolute_transfer_entropy_kernel": r"Simple transfer entropy (Kernel) (bits)",
-    "directional_transfer_entropy_kernel": r"Directional transfer entropy (Kernel) (bits)",
-    "absolute_transfer_entropy_kraskov": r"Simple transfer entropy (Kraskov) (bits)",
-    "directional_transfer_entropy_kraskov": r"Directional transfer entropy (Kraskov) (bits)",
+    "directional_transfer_entropy_kernel": (
+        r"Directional transfer entropy (Kernel) (bits)"
+    ),
+    "absolute_transfer_entropy_kraskov": (r"Simple transfer entropy (Kraskov) (bits)"),
+    "directional_transfer_entropy_kraskov": (
+        r"Directional transfer entropy (Kraskov) (bits)"
+    ),
 }
 
 linelabels = {
@@ -109,7 +112,7 @@ def fig_timeseries(graphdata, graph, scenario, savedir):
             np.asarray(weight_calc_data.timestamps),
             valuematrix[:, varindex],
             "-",
-            label=r"{}".format(variables[varindex]),
+            label=rf"{variables[varindex]}",
         )
 
     plt.ylabel("Normalised value", fontsize=14)
@@ -119,7 +122,7 @@ def fig_timeseries(graphdata, graph, scenario, savedir):
     if graphdata.axis_limits is not False:
         plt.axis(graphdata.axis_limits)
 
-    plt.savefig(os.path.join(savedir, "{}_timeseries.pdf".format(scenario)))
+    plt.savefig(os.path.join(savedir, f"{scenario}_timeseries.pdf"))
     plt.close()
 
     return None
@@ -140,7 +143,7 @@ def fig_fft(graphdata, graph, scenario, savedir):
     sourcefile = os.path.join(
         graphdata.save_loc,
         "fftdata",
-        "{}_{}_fft.csv".format(graphdata.case, scenario),
+        f"{graphdata.case}_{scenario}_fft.csv",
     )
 
     valuematrix, headers = data_processing.read_header_values_datafile(sourcefile)
@@ -153,17 +156,17 @@ def fig_fft(graphdata, graph, scenario, savedir):
             valuematrix[:, 0],
             valuematrix[:, varindex],
             "-",
-            label=r"${}$".format(headers[varindex]),
+            label=rf"${headers[varindex]}$",
         )
 
     plt.ylabel("Normalised value", fontsize=14)
-    plt.xlabel(r"Frequency ({})".format(graphdata.frequencyunit), fontsize=14)
+    plt.xlabel(rf"Frequency ({graphdata.frequencyunit})", fontsize=14)
     plt.legend(bbox_to_anchor=graphdata.legendbbox)
 
     if graphdata.axis_limits is not False:
         plt.axis(graphdata.axis_limits)
 
-    plt.savefig(os.path.join(savedir, "{}_fft.pdf".format(scenario)))
+    plt.savefig(os.path.join(savedir, f"{scenario}_fft.pdf"))
     plt.close()
 
     return None
@@ -197,7 +200,7 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
     # Extract current method from weightdir
     dirparts = data_processing.get_folders(weightdir)
     # The method is two folders up from the embed level
-    method = dirparts[-3]
+    method = dirparts[-3]  # noqa: F841
 
     # Select typenames based on method
     if method[:16] == "transfer_entropy":
@@ -241,14 +244,14 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
             else:
                 yaxislabelstring = method
             ax.set_ylabel(yaxislabel[yaxislabelstring], fontsize=14)
-            ax.set_xlabel(r"Delay ({})".format(graphdata.timeunit), fontsize=14)
+            ax.set_xlabel(rf"Delay ({graphdata.timeunit})", fontsize=14)
 
             # Open data file and plot graph
             sourcefile = os.path.join(
                 weightdir,
                 typename,
-                "box{:03d}".format(boxindex),
-                "{}.csv".format(sourcevar),
+                f"box{boxindex:03d}",
+                f"{sourcevar}.csv",
             )
 
             valuematrix, headers = data_processing.read_header_values_datafile(
@@ -259,8 +262,8 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
                 threshold_sourcefile = os.path.join(
                     weightdir,
                     thresh_typenames[typeindex],
-                    "box{:03d}".format(boxindex),
-                    "{}.csv".format(sourcevar),
+                    f"box{boxindex:03d}",
+                    f"{sourcevar}.csv",
                 )
 
                 (
@@ -306,7 +309,9 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
 
             # Shrink current axis by 20%
             #                box = ax.get_position()
-            #                ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+            #                ax.set_position(
+            #                    [box.x0, box.y0, box.width * 0.8, box.height]
+            #                )
 
             # ax.legend(loc='center left',
             #          bbox_to_anchor=graphdata.legendbbox)
@@ -319,9 +324,7 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
             plt.savefig(
                 os.path.join(
                     savedir,
-                    "{}_{}_box{:03d}_{}.pdf".format(
-                        scenario, typename, boxindex, sourcevar
-                    ),
+                    f"{scenario}_{typename}_box{boxindex:03d}_{sourcevar}.pdf",
                 ),
                 bbox_inches="tight",
                 pad_inches=0,
@@ -331,9 +334,7 @@ def fig_values_vs_delays(graphdata, graph, scenario, savedir):
             plt.savefig(
                 os.path.join(
                     savedir,
-                    "{}_{}_box{:03d}_{}.svg".format(
-                        scenario, typename, boxindex, sourcevar
-                    ),
+                    f"{scenario}_{typename}_box{boxindex:03d}_{sourcevar}.svg",
                 ),
                 bbox_inches="tight",
                 pad_inches=0,
@@ -369,7 +370,7 @@ def fig_diffscen_vs_delay(graphdata, graph, scenario, savedir):
     # Extract current method from weightdir
     dirparts = data_processing.get_folders(weightdir)
     # The method is two folders up from the embed level
-    method = dirparts[-3]
+    method = dirparts[-3]  # noqa: F841
 
     # Select typenames based on method
     if method[:16] == "transfer_entropy":
@@ -413,14 +414,14 @@ def fig_diffscen_vs_delay(graphdata, graph, scenario, savedir):
             else:
                 yaxislabelstring = method
             ax.set_ylabel(yaxislabel[yaxislabelstring], fontsize=14)
-            ax.set_xlabel(r"Delay ({})".format(graphdata.timeunit), fontsize=14)
+            ax.set_xlabel(rf"Delay ({graphdata.timeunit})", fontsize=14)
 
             # Open data file and plot graph
             sourcefile = os.path.join(
                 weightdir,
                 typename,
-                "box{:03d}".format(boxindex),
-                "{}.csv".format(sourcevar),
+                f"box{boxindex:03d}",
+                f"{sourcevar}.csv",
             )
 
             _, headers = data_processing.read_header_values_datafile(sourcefile)
@@ -432,8 +433,8 @@ def fig_diffscen_vs_delay(graphdata, graph, scenario, savedir):
 
             bbox_props = dict(boxstyle="round", fc="w", ec="0.5", alpha=0.8)
 
-            xaxis_intervals = []
-            relevant_values = []
+            xaxis_intervals = []  # noqa: F841
+            relevant_values = []  # noqa: F841
             for scenarioindex, valuematrix in enumerate(valuematrices):
                 # # Get the maximum from each valuematrix in the entry
                 # # which corresponds to the common element of interest.
@@ -477,9 +478,7 @@ def fig_diffscen_vs_delay(graphdata, graph, scenario, savedir):
             plt.savefig(
                 os.path.join(
                     savedir,
-                    "{}_{}_box{:03d}_{}.pdf".format(
-                        scenario, typename, boxindex, sourcevar
-                    ),
+                    f"{scenario}_{typename}_box{boxindex:03d}_{sourcevar}.pdf",
                 ),
                 bbox_inches="tight",
                 pad_inches=0,
@@ -516,9 +515,9 @@ def fig_values_vs_boxes(graphdata, graph, scenario, savedir):
     # Extract current method and sigstatus from weightdir
     dirparts = data_processing.get_folders(trendsdir)
     # The method is three folders up from the embed level
-    method = dirparts[-3]
+    method = dirparts[-3]  # noqa: F841
     # The sigstatus is two folders up from the embed level
-    sigstatus = dirparts[-2]
+    sigstatus = dirparts[-2]  # noqa: F841
 
     # Select typenames based on method and sigstatus
     if method[:16] == "transfer_entropy":
@@ -562,7 +561,7 @@ def fig_values_vs_boxes(graphdata, graph, scenario, savedir):
             ax.set_xlabel(r"Box", fontsize=14)
 
             # Open data file and plot graph
-            sourcefile = os.path.join(trendsdir, sourcevar, "{}.csv".format(typename))
+            sourcefile = os.path.join(trendsdir, sourcevar, f"{typename}.csv")
 
             valuematrix, headers = data_processing.read_header_values_datafile(
                 sourcefile
@@ -592,7 +591,7 @@ def fig_values_vs_boxes(graphdata, graph, scenario, savedir):
             plt.savefig(
                 os.path.join(
                     savedir,
-                    "{}_{}_{}.pdf".format(scenario, typename, sourcevar),
+                    f"{scenario}_{typename}_{sourcevar}.pdf",
                 )
             )
             plt.close()
@@ -606,13 +605,11 @@ def fig_values_vs_boxes(graphdata, graph, scenario, savedir):
             else:
                 yaxislabelstring = method
 
-            ax.set_ylabel(r"Delay ({})".format(graphdata.timeunit), fontsize=14)
+            ax.set_ylabel(rf"Delay ({graphdata.timeunit})", fontsize=14)
             ax.set_xlabel(r"Box", fontsize=14)
 
             # Open data file and plot graph
-            sourcefile = os.path.join(
-                trendsdir, sourcevar, "{}.csv".format(delay_typename)
-            )
+            sourcefile = os.path.join(trendsdir, sourcevar, f"{delay_typename}.csv")
 
             valuematrix, headers = data_processing.read_header_values_datafile(
                 sourcefile
@@ -642,7 +639,7 @@ def fig_values_vs_boxes(graphdata, graph, scenario, savedir):
             plt.savefig(
                 os.path.join(
                     savedir,
-                    "{}_{}_{}.pdf".format(scenario, delay_typename, sourcevar),
+                    f"{scenario}_{delay_typename}_{sourcevar}.pdf",
                 )
             )
             plt.close()
@@ -668,14 +665,14 @@ def fig_maxval_variables(graphdata, graph, scenario, savedir):
     # Extract current method and sigstatus from weightdir
     dirparts = data_processing.get_folders(trendsdir)
     # The method is three folders up from the embed level
-    method = dirparts[-3]
+    method = dirparts[-3]  # noqa: F841
     # The sigstatus is two folders up from the embed level
-    sigstatus = dirparts[-2]
+    sigstatus = dirparts[-2]  # noqa: F841
 
     plt.figure(1, (12, 6))
 
     for count, scenario in enumerate(graphdata.scenario):
-        sourcefile = filename_template.format(
+        sourcefile = filename_template.format(  # noqa: F821
             graphdata.case,
             scenario,
             graphdata.method[0],
@@ -684,7 +681,7 @@ def fig_maxval_variables(graphdata, graph, scenario, savedir):
             graphdata.sourcevar,
         )
 
-        if delays:
+        if delays:  # noqa: F821
             valuematrix, headers = data_processing.read_header_values_datafile(
                 sourcefile
             )
@@ -707,8 +704,8 @@ def fig_maxval_variables(graphdata, graph, scenario, savedir):
             label=graphdata.linelabels[count],
         )
 
-        if drawfit:
-            graphdata.fitlinelabels(graphname)
+        if drawfit:  # noqa: F821
+            graphdata.fitlinelabels(graphname)  # noqa: F821
             fit_params = np.polyfit(np.log(graphdata.xvals), np.log(max_values), 1)
             fit_y = [
                 (i * fit_params[0] + fit_params[1]) for i in np.log(graphdata.xvals)
@@ -729,7 +726,7 @@ def fig_maxval_variables(graphdata, graph, scenario, savedir):
     if graphdata.axis_limits is not False:
         plt.axis(graphdata.axis_limits)
 
-    plt.savefig(graph_filename_template.format(graphname))
+    plt.savefig(graph_filename_template.format(graphname))  # noqa: F821
     plt.close()
 
     return None

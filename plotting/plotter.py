@@ -1,12 +1,13 @@
-"""This module executes all functions needed to draw desired plots.
-
-"""
+"""This module executes all functions needed to draw desired plots."""
 
 import json
+import logging
 import os
 
 from faultmap import config_setup, data_processing
 from plotting import figtypes
+
+logger = logging.getLogger(__name__)
 
 
 def raw_string(s):
@@ -18,7 +19,7 @@ def raw_string(s):
     return s.decode("utf-8")
 
 
-class GraphData(object):
+class GraphData:
     """Creates a graph object storing information required by
     graphing functions.
 
@@ -38,13 +39,11 @@ class GraphData(object):
         # Load case config file
         with open(os.path.join(self.caseconfigloc, "plotting.json")) as configfile:
             self.caseconfig = json.load(configfile)
-        configfile.close()
 
         # Load weight case config file
         # This is used in plots that make use of original time series data
         with open(os.path.join(self.caseconfigloc, "weightcalc.json")) as f:
             self.weight_caseconfig = json.load(f)
-        f.close()
 
         # Get graphs
         self.graphs = self.caseconfig["graphs"]
@@ -143,7 +142,7 @@ def get_box_data_vectors(graphdata):
     for box in graphdata.boxindex:
         sourcevalues = []
         for sourceindex, sourcevar in enumerate(graphdata.sourcevar):
-            sourcefile = filename_template.format(
+            sourcefile = filename_template.format(  # noqa: F821
                 graphdata.case,
                 graphdata.scenario,
                 graphdata.method[0],
@@ -169,7 +168,7 @@ def get_box_ranking_scores(graphdata):
 
     """
 
-    importancedict_filename = importancedict_filename_template.format(
+    importancedict_filename = importancedict_filename_template.format(  # noqa: F821
         graphdata.case, graphdata.scenario, graphdata.method[0]
     )
 
@@ -194,7 +193,7 @@ def get_box_threshold_vectors(graphdata):
     for box in graphdata.boxindex:
         sourcevalues = []
         for sourceindex, sourcevar in enumerate(graphdata.sourcevar):
-            sourcefile = filename_sig_template.format(
+            sourcefile = filename_sig_template.format(  # noqa: F821
                 graphdata.case,
                 graphdata.scenario,
                 graphdata.method[0],
@@ -230,9 +229,9 @@ def draw_plot(mode, case, writeoutput):
     for graph in graphdata.graphs:
         graphdata.graphdetails(graph)
         for weight_method in graphdata.weight_methods:
-            print(weight_method)
+            logger.info("Processing weight method: %s", weight_method)
             for scenario in graphdata.scenarios:
-                print(scenario)
+                logger.info("Processing scenario: %s", scenario)
                 basedir = os.path.join(
                     graphdata.saveloc,
                     "weight_data",
@@ -245,11 +244,11 @@ def draw_plot(mode, case, writeoutput):
 
                 for sigtype in sigtypes:
                     if sigtype in graphdata.significance_cases:
-                        print(sigtype)
+                        logger.info("Processing sigtype: %s", sigtype)
                         embedtypesdir = os.path.join(basedir, sigtype)
                         embedtypes = next(os.walk(embedtypesdir))[1]
                         for embedtype in embedtypes:
-                            print(embedtype)
+                            logger.info("Processing embedtype: %s", embedtype)
                             datadir = os.path.join(embedtypesdir, embedtype)
                             # Actual plot drawing execution starts here
                             drawplot(

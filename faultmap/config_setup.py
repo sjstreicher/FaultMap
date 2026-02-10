@@ -3,9 +3,27 @@
 import json
 import os
 from pathlib import Path
-from typing import Tuple
+from typing import NamedTuple
 
 from faultmap.type_definitions import RunModes
+
+
+class Locations(NamedTuple):
+    """Directories used for data, configuration, results, and JIDT."""
+
+    data_loc: Path
+    config_loc: Path
+    save_loc: Path
+    infodynamics_loc: Path
+
+
+class CaseSetup(NamedTuple):
+    """Directories resolved for a specific case run."""
+
+    save_loc: Path
+    case_config_dir: Path
+    case_dir: Path
+    infodynamics_loc: Path
 
 
 def ensure_existence(location: Path, make=True) -> Path:
@@ -22,11 +40,11 @@ def ensure_existence(location: Path, make=True) -> Path:
         if make:
             os.makedirs(location)
         else:
-            raise IOError(f"File does not exists: {location}")
+            raise FileNotFoundError(f"File does not exist: {location}")
     return Path(location)
 
 
-def get_locations(mode: RunModes = "cases") -> tuple[Path, Path, Path, Path]:
+def get_locations(mode: RunModes = "cases") -> Locations:
     """Gets all required directories related to the specified mode.
 
     TODO: Remove the need for this by using proper test fixtures
@@ -54,13 +72,11 @@ def get_locations(mode: RunModes = "cases") -> tuple[Path, Path, Path, Path]:
         tests_dir = Path(parent_dir, "../tests")
         with open(Path(tests_dir, "test_config.json"), encoding="utf-8") as file:
             dirs = json.load(file)
-        file.close()
     elif mode == "cases":
         with open("../case_config.json", encoding="utf-8") as file:
             dirs = json.load(file)
-        file.close()
     else:
-        raise NameError("Mode name not recognized")
+        raise ValueError(f"Mode name not recognized: {mode}")
 
     # Get data and preferred export directories from
     # directories config file
@@ -68,12 +84,10 @@ def get_locations(mode: RunModes = "cases") -> tuple[Path, Path, Path, Path]:
         ensure_existence(os.path.expanduser(dirs[location]))
         for location in ["data_loc", "config_loc", "save_loc", "infodynamics_loc"]
     ]
-    data_loc, config_loc, save_loc, infodynamics_loc = locations
-
-    return data_loc, config_loc, save_loc, infodynamics_loc
+    return Locations(*locations)
 
 
-def run_setup(mode: RunModes, case: str) -> Tuple[Path, Path, Path, Path]:
+def run_setup(mode: RunModes, case: str) -> CaseSetup:
     """Gets all required directories from the case configuration file.
 
     Args:
@@ -92,10 +106,15 @@ def run_setup(mode: RunModes, case: str) -> Tuple[Path, Path, Path, Path]:
 
     """
 
-    data_loc, config_loc, save_loc, infodynamics_loc = get_locations(mode)
+    locations = get_locations(mode)
 
     # Define case data directory
-    case_dir = ensure_existence(Path(data_loc, mode, case), make=True)
-    case_config_dir = Path(config_loc, mode, case)
+    case_dir = ensure_existence(Path(locations.data_loc, mode, case), make=True)
+    case_config_dir = Path(locations.config_loc, mode, case)
 
-    return save_loc, case_config_dir, case_dir, infodynamics_loc
+    return CaseSetup(
+        save_loc=locations.save_loc,
+        case_config_dir=case_config_dir,
+        case_dir=case_dir,
+        infodynamics_loc=locations.infodynamics_loc,
+    )

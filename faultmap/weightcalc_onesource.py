@@ -20,7 +20,6 @@ if TYPE_CHECKING:
     from faultmap.weightcalculators import WeightCalculator
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG)
 
 
 def writecsv_weightcalc(filename, datalines, header):
@@ -175,7 +174,7 @@ def calc_weights_one_source(
                 )
                 destination_vars = aux_data_file[:, 1]
                 if destination_var in destination_vars:
-                    print("Destination variable results in existence")
+                    logger.info("Destination variable results in existence")
                     exists = True
 
         if do_test and (exists is False):
@@ -269,7 +268,7 @@ def calc_weights_one_source(
 
                 proplist = [propfwd_list, propbwd_list]
                 milist = [mifwd_list, mibwd_list]
-                siglist = [sigfwd_list, sigbwd_list]
+                siglist = [sigfwd_list, sigbwd_list]  # noqa: F841
                 weightlist = [directional_weightlist, absolute_weightlist]
 
                 # Combine weight data
@@ -408,7 +407,7 @@ def calc_weights_one_source(
                     header_line,
                 )
 
-                # Write mutual information over multiple delays to file just as for transfer entropy
+                # Write MI over multiple delays to file as for TE
                 writecsv_weightcalc(
                     filename(directional_mi_name, box_index + 1, source_var),
                     mis_datalines_directional,
@@ -466,14 +465,11 @@ def calc_weights_one_source(
                         header_line,
                     )
 
-    print(
-        "Done analysing causal variable: "
-        + source_var
-        + " ["
-        + str(source_var_index + 1)
-        + "/"
-        + str(len(weight_calc_data.source_var_indexes))
-        + "]"
+    logger.info(
+        "Done analysing causal variable: %s [%d/%d]",
+        source_var,
+        source_var_index + 1,
+        len(weight_calc_data.source_var_indexes),
     )
 
 

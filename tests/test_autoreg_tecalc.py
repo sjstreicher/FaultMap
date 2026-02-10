@@ -15,15 +15,14 @@ from faultmap.infodynamics import calc_te
 def start_jvm():
     """Checks if JVM is started, and starts it if not."""
     jar_loc = "infodynamics.jar"
-    # Only start the JVM if it's not already running
-    if not jpype.isJVMStarted():
-        jpype.startJVM(jpype.getDefaultJVMPath(), "-ea", "-Djava.class.path=" + jar_loc)
-    yield  # This will execute before the first test
-
-    # Teardown
-    # Shut down the JVM (not strictly necessary)
-    if jpype.isJVMStarted():
-        jpype.shutdownJVM()
+    try:
+        if not jpype.isJVMStarted():
+            jpype.startJVM(
+                jpype.getDefaultJVMPath(), "-ea", "-Djava.class.path=" + jar_loc
+            )
+    except (OSError, jpype.JVMNotFoundException):
+        pytest.skip("JVM or infodynamics.jar not available")
+    yield
 
 
 @pytest.fixture(name="generation_details")
@@ -52,7 +51,7 @@ def test_peak_te_infodyn_kernel(generation_details: tuple[int, int, int]):
             "kernel",
             x_hist_norm[0],
             y_hist_norm[0],
-            **{"kernel_width": 0.1}
+            **{"kernel_width": 0.1},
         )
         entropies_infodyn_kernel.append(result_infodyn)
 
