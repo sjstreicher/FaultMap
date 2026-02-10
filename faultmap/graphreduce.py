@@ -136,7 +136,7 @@ def reduce_graph(graph_reduce_data, data_dir, typename, write_output):
     return None
 
 
-def reduce_graph_scenarios(mode, case, write_output):
+def reduce_graph_scenarios(mode: str, case: str, write_output: bool) -> None:
     graph_reduce_data = GraphReduceData(mode, case)
 
     saveloc, caseconfigdir, casedir, _ = config_setup.run_setup(mode, case)

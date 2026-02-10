@@ -690,7 +690,7 @@ def weight_calc(
     calc_fft: bool = False,
     do_multiprocessing: bool = False,
     use_gpu: bool = False,
-):
+) -> None:
     """Reports the maximum weight as well as associated delay
     obtained by shifting the affected variable behind the causal variable a
     specified set of delays.

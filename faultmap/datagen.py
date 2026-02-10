@@ -7,6 +7,7 @@ from typing import Callable
 import control  # type: ignore
 import numpy as np
 from numpy import vstack
+from numpy.typing import NDArray
 
 import faultmap.data_processing
 
@@ -37,7 +38,7 @@ connectionmatrix_2x2, connectionmatrix_4x4, connectionmatrix_5x5 = [
 ]
 
 
-def seed_random(method, seed, samples):
+def seed_random(method: Callable, seed: int, samples: int) -> NDArray:
     """Set random seed."""
     np.random.seed(int(seed))
     return method(int(samples))
@@ -49,7 +50,7 @@ seed_randn = partial(seed_random, np.random.randn)
 seed_rand = partial(seed_random, np.random.rand)
 
 
-def autoreg_gen(params):
+def autoreg_gen(params: list) -> NDArray:
     """Generates an autoregressive set of vectors.
 
     A constant seed is used for testing comparison purposes.
@@ -95,7 +96,7 @@ def autoreg_gen(params):
     return data.T
 
 
-def delay_gen(params):
+def delay_gen(params: list) -> NDArray:
     """Generates a normally distributed random data vector
     and a pure delay companion.
 
@@ -139,7 +140,7 @@ def delay_gen(params):
     return data.T
 
 
-def random_gen(params, n=2):
+def random_gen(params: list, n: int = 2) -> NDArray:
     """Generates n independent random data vectors"""
 
     samples = params[0]

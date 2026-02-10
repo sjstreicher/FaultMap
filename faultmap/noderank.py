@@ -16,6 +16,7 @@ import os
 
 import networkx as nx
 import numpy as np
+from numpy.typing import NDArray
 
 from faultmap import config_setup, data_processing, networkgen
 
@@ -175,20 +176,20 @@ def writecsv_looprank(filename, items):
         csv.writer(f).writerows(items)
 
 
-def norm_dict(dictionary):
+def norm_dict(dictionary: dict[str, float]) -> dict[str, float]:
     total = sum(dictionary.values())
     # NOTE: if this is slow in Python 2, replace .items with .iteritems
     return {key: value / total for key, value in dictionary.items()}
 
 
 def calc_simple_rank(
-    gainmatrix,
-    variables,
-    biasvector,
-    noderankdata,
-    rank_method,
-    package="networkx",
-):
+    gainmatrix: NDArray,
+    variables: list[str],
+    biasvector: NDArray,
+    noderankdata: NoderankData,
+    rank_method: str,
+    package: str = "networkx",
+) -> tuple[dict[str, float], list[tuple[str, float]]]:
     """Constructs the faultmap dictionary using the eigenvector approach
     i.e. Ax = x where A is the local gain matrix.
 
@@ -317,7 +318,7 @@ def calc_simple_rank(
     return rankingdict, rankinglist
 
 
-def normalise_rankinglist(rankingdict, originalvariables):
+def normalise_rankinglist(rankingdict: dict[str, float], originalvariables: list[str]) -> list[tuple[str, float]]:
     normalised_rankingdict = {}
     for variable in originalvariables:
         normalised_rankingdict[variable] = rankingdict[variable]
@@ -336,7 +337,9 @@ def normalise_rankinglist(rankingdict, originalvariables):
     return normalised_rankinglist
 
 
-def calc_transient_importancediffs(rankingdicts, variablelist):
+def calc_transient_importancediffs(
+    rankingdicts: list[dict[str, float]], variablelist: list[str]
+) -> tuple[dict, dict, dict, dict]:
     """Returns three dictionaries with importance scores that can be used in
     further analysis.
 
@@ -453,7 +456,7 @@ def create_importance_graph(
     return relative_closedgraph, opengraph
 
 
-def gainmatrix_preprocessing(gainmatrix):
+def gainmatrix_preprocessing(gainmatrix: NDArray) -> tuple[NDArray, float]:
     """Moves the mean and scales the variance of the elements in the
     gainmatrix to a specified value.
 
@@ -488,7 +491,7 @@ def gainmatrix_preprocessing(gainmatrix):
     return modgainmatrix, currentmean
 
 
-def gainmatrix_tobinary(gainmatrix):
+def gainmatrix_tobinary(gainmatrix: NDArray) -> NDArray:
     """Changes all the weights to a boolean
 
     INCOMPLETE
@@ -859,7 +862,7 @@ def dorankcalc(
     return None
 
 
-def noderankcalc(mode, case, writeoutput, preprocessing=False):
+def noderankcalc(mode: str, case: str, writeoutput: bool, preprocessing: bool = False) -> None:
     """Ranks the nodes in a network based on gain matrices already generated
     for different weight types.
 

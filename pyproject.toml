@@ -35,10 +35,17 @@ types = [
     "types-seaborn>=0.13.0.2",
     "networkx-stubs>=0.0.1",
 ]
+docs = [
+    "sphinx>=7.0.0",
+    "sphinx-rtd-theme>=2.0.0",
+]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
 
 [tool.isort]
 profile = "black"
