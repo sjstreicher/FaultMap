@@ -33,11 +33,19 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v4
 
+      - name: Cache uv dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            uv-${{ runner.os }}-${{ matrix.python-version }}-
+
       - name: Install dependencies
         run: uv pip install --system ".[test]"
 
       - name: Run tests
-        run: pytest tests/ -v --cov=faultmap --cov-report=xml
+        run: pytest tests/ -v --cov=faultmap --cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage
         if: matrix.python-version == '3.11'
@@ -70,4 +78,32 @@ jobs:
 
       - name: Lint with pylint
         run: pylint faultmap/ --fail-under=5.0
+        continue-on-error: true
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qq -y default-jdk libhdf5-dev pkg-config
+
+      - name: Set JAVA_HOME
+        run: echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))" >> $GITHUB_ENV
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv pip install --system ".[docs]"
+
+      - name: Build documentation
+        run: sphinx-build -b html docs/ docs/_build/html -W --keep-going
         continue-on-error: true
