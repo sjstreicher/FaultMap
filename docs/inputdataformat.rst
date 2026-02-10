@@ -7,9 +7,10 @@ Time series data format
 -----------------------
 
 The input data format for time series data associated with data tags on the plant are comma separated files (CSV) as follows:
-*The first row should be a header line, with the first column label being "Time".
-*The first column should contain the time of measurements in UNIX time.
-*The rest of the columns should contain the raw data - no need to be normalised, this will be done automatically in the post-processing stages.
+
+* The first row should be a header line, with the first column label being "Time".
+* The first column should contain the time of measurements in UNIX time.
+* The rest of the columns should contain the raw data - no need to be normalised, this will be done automatically in the post-processing stages.
 
 Descriptive labels data format
 ------------------------------
@@ -17,7 +18,7 @@ Descriptive labels data format
 Descriptive labels might be associated with each process data tag.
 This should be provided in the form of a CSV file with the data tag name in the first column and the description in the second column.
 The first row should have the labels "Tag name" and "Description" in them.
-The filename should be``tag_descriptions.csv``.
+The filename should be ``tag_descriptions.csv``.
 
 Connectivity information
 ------------------------

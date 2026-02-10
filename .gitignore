@@ -37,6 +37,9 @@ htmlcov/
 # ASV benchmarks
 .asv
 
+# Sphinx documentation build
+docs/_build/
+
 # Project-specific
 caseconfig.json
 demos/

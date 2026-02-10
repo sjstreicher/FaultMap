@@ -338,7 +338,7 @@ def setup_entropy_calculator(
     ----------
         infodynamics_path : path
             Location of infodynamics.jar
-         estimator : string, default='kernel'
+        estimator : string, default='kernel'
             Either 'kernel' or 'gaussian'. Specifies the estimator to use in
             determining the required probability density functions.
         kernel_bandwidth : float

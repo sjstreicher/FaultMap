@@ -1,12 +1,6 @@
 API Reference
 =============
 
-.. toctree::
-   :maxdepth: 2
-
-   faultmap
-
-
 faultmap package
 ----------------
 

@@ -21,7 +21,7 @@ try:
     html_theme = "sphinx_rtd_theme"
 except ImportError:
     html_theme = "alabaster"
-html_static_path = ["_static"]
+html_static_path = []
 
 # Napoleon settings for Google/NumPy style docstrings
 napoleon_google_docstrings = True
