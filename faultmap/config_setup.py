@@ -60,10 +60,9 @@ def get_locations(mode: RunModes = "cases") -> Locations:
 
     Returns
     -------
-        data_loc : path
-        config_loc : path
-        save_loc : path
-        infodynamics_loc : path
+    Locations
+        A named tuple containing ``data_loc``, ``config_loc``,
+        ``save_loc``, and ``infodynamics_loc`` paths.
 
     """
     # Load directories config file
@@ -99,10 +98,8 @@ def run_setup(mode: RunModes, case: str) -> CaseSetup:
             test or case config files.
 
     Returns:
-        save_loc:
-        case_config_dir:
-        case_dir:
-        infodynamics_loc:
+        CaseSetup named tuple containing ``save_loc``, ``case_config_dir``,
+        ``case_dir``, and ``infodynamics_loc`` paths.
 
     """
 
