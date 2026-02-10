@@ -1,6 +1,5 @@
-from test import networkgen
-
 import numpy as np
+from test import networkgen
 
 from faultmap import data_processing, noderank
 
@@ -12,7 +11,7 @@ dummies = False
 rank_method = "eigenvector"
 
 
-class NodeRankdata(object):
+class NodeRankdata:
     def __init__(self, m, alpha):
         self.m = m
         self.alpha = alpha

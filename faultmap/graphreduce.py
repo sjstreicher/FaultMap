@@ -23,7 +23,7 @@ import numpy as np
 from faultmap import config_setup
 
 
-class GraphReduceData(object):
+class GraphReduceData:
     """Creates a data object from file and or function definitions for use in
     graph reduce method.
 

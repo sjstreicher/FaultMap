@@ -1,6 +1,4 @@
-"""Tests all functionality. Aims for full coverage.
-
-"""
+"""Tests all functionality. Aims for full coverage."""
 
 import multiprocessing
 

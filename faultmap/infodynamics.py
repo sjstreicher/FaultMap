@@ -6,9 +6,9 @@ from pathlib import Path
 import jpype  # type: ignore
 import numpy as np
 
-logger = logging.getLogger(__name__)
-
 from faultmap.type_definitions import EntropyMethods, MutualInformationMethods
+
+logger = logging.getLogger(__name__)
 
 
 def check_jvm(infodynamics_path: Path):

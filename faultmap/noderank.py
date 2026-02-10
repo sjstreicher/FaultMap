@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This module is used to rank nodes in a digraph.
 It requires a connection as well as a gain matrix as inputs.
 
@@ -318,7 +317,9 @@ def calc_simple_rank(
     return rankingdict, rankinglist
 
 
-def normalise_rankinglist(rankingdict: dict[str, float], originalvariables: list[str]) -> list[tuple[str, float]]:
+def normalise_rankinglist(
+    rankingdict: dict[str, float], originalvariables: list[str]
+) -> list[tuple[str, float]]:
     normalised_rankingdict = {}
     for variable in originalvariables:
         normalised_rankingdict[variable] = rankingdict[variable]
@@ -438,7 +439,8 @@ def create_importance_graph(
             noderankdata.variablelist.index(dest_var),
             noderankdata.variablelist.index(source_var),
         ]
-        # Do not include edges with zero weight or NaN delay (GML format doesn't support NaN)
+        # Do not include edges with zero weight or NaN delay
+        # (GML format doesn't support NaN)
         if edge_weight != 0 and not np.isnan(edge_delay):
             relative_closedgraph.add_edge(
                 *newedge,
@@ -591,7 +593,7 @@ def get_gainmatrices(noderankdata, datadir, typename):
 
     for boxindex in noderankdata.boxes:
         gainmatrix = data_processing.read_matrix(
-            os.path.join(datadir, typename, "box{:03d}".format(boxindex + 1), fname)
+            os.path.join(datadir, typename, f"box{boxindex + 1:03d}", fname)
         )
 
         gainmatrices.append(gainmatrix)
@@ -621,7 +623,7 @@ def get_delaymatrices(noderankdata, datadir, typename):
             os.path.join(
                 datadir,
                 delaytypename,
-                "box{:03d}".format(boxindex + 1),
+                f"box{boxindex + 1:03d}",
                 "delay_array.csv",
             )
         )
@@ -713,7 +715,8 @@ def dorankcalc(
 
         if generate_diffs:
             # TODO: Review effect of positive differences only
-            # Take only positive for now due to convergence issues, but investigate proper handling
+            # Take only positive for now due to convergence issues,
+            # but investigate proper handling
             # of negative edge changes
             dif_rankingdict, dif_rankinglist, _, _, _ = calc_gainrank(
                 mod_dif_gainmatrix, noderankdata, rank_method, dummyweight
@@ -761,7 +764,7 @@ def dorankcalc(
             os.path.join(
                 savedir,
                 typename[:-7],
-                "box{:03d}".format(noderankdata.boxes[index] + 1),
+                f"box{noderankdata.boxes[index] + 1:03d}",
                 dummystatus,
             )
         )
@@ -862,7 +865,9 @@ def dorankcalc(
     return None
 
 
-def noderankcalc(mode: str, case: str, writeoutput: bool, preprocessing: bool = False) -> None:
+def noderankcalc(
+    mode: str, case: str, writeoutput: bool, preprocessing: bool = False
+) -> None:
     """Ranks the nodes in a network based on gain matrices already generated
     for different weight types.
 

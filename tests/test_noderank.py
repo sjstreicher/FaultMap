@@ -1,7 +1,6 @@
 """Unit tests for noderank module."""
 
 import numpy as np
-import pytest
 
 from faultmap.noderank import (
     calc_transient_importancediffs,

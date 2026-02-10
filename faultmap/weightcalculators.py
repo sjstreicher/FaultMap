@@ -1,6 +1,5 @@
-"""This module stores the weight calculator classes used by the weightcalc module.
+"""This module stores the weight calculator classes used by the weightcalc module."""
 
-"""
 import abc
 import logging
 import types
@@ -110,7 +109,8 @@ class CorrelationWeightCalculator(WeightCalculator):
         # Normalised measure
         # corrval = np.corrcoef(source_var_data.T, affectedvardata.T)[1, 0]
         # Here we use the biased correlation measure
-        # corrval = np.correlate(source_var_data.T, affectedvardata.T)[0] / len(affectedvardata)
+        # corrval = np.correlate(source_var_data.T,
+        #     affectedvardata.T)[0] / len(affectedvardata)
 
         return [corrval], None
 
@@ -283,7 +283,7 @@ class CorrelationWeightCalculator(WeightCalculator):
 
     def select_weights(self, source_var, destination_var, weights: list):
         if self.weight_calc_data.bidirectional_delays:
-            base_value = weights[int((len(weights) / 2))]
+            base_value = weights[int(len(weights) / 2)]
         else:
             base_value = weights[0]
 
@@ -291,8 +291,8 @@ class CorrelationWeightCalculator(WeightCalculator):
         # max_val is defined as the maximum absolute value in the forward direction
         # min_val is defined as the maximum absolute value in the negative direction
         if self.weight_calc_data.bidirectional_delays:
-            max_val = max(np.abs(weights[int((len(weights) / 2)) :]))
-            min_val = -1 * max(np.abs(weights[: int((len(weights) / 2))]))
+            max_val = max(np.abs(weights[int(len(weights) / 2) :]))
+            min_val = -1 * max(np.abs(weights[: int(len(weights) / 2)]))
         else:
             raise ValueError(
                 "The correlation directionality test is only defined for bidirectional "
@@ -433,7 +433,7 @@ class CorrelationWeightCalculator(WeightCalculator):
 
 
 class TransferEntropyWeightCalculator(WeightCalculator):
-    """Implementation of WeightCalculator for transfer entropy based weight calculation."""
+    """Transfer entropy based weight calculation."""
 
     def __init__(
         self, weight_calc_data: "WeightCalcData", estimator: MutualInformationMethods
@@ -493,7 +493,7 @@ class TransferEntropyWeightCalculator(WeightCalculator):
             self.estimator,
             affected_var_data.T,
             cause_var_data.T,
-            **self.parameters
+            **self.parameters,
         )
 
         transent_bwd, auxdata_bwd = infodynamics.calc_te(
@@ -501,7 +501,7 @@ class TransferEntropyWeightCalculator(WeightCalculator):
             self.estimator,
             cause_var_data.T,
             affected_var_data.T,
-            **self.parameters
+            **self.parameters,
         )
 
         transent_directional = transfer_entropy_forward - transent_bwd
@@ -683,19 +683,21 @@ class TransferEntropyWeightCalculator(WeightCalculator):
 
         if self.weight_calc_data.sigtest:
             # Calculate threshold for transfer entropy
-            thresh_source_var_data = box[:, source_var_index][
-                start_index : start_index + size
-            ]
-            thresh_affectedvardata_directional = box[:, destination_var_index][
-                start_index
-                + best_sample_delay_directional : start_index
+            thresh_source_var_data = box[  # noqa: F841
+                :, source_var_index
+            ][start_index : start_index + size]
+            thresh_affectedvardata_directional = box[  # noqa: F841
+                :, destination_var_index
+            ][
+                start_index + best_sample_delay_directional : start_index
                 + size
                 + best_sample_delay_directional
             ]
 
-            thresh_affectedvardata_absolute = box[:, destination_var_index][
-                start_index
-                + bestdelay_sample_absolute : start_index
+            thresh_affectedvardata_absolute = box[  # noqa: F841
+                :, destination_var_index
+            ][
+                start_index + bestdelay_sample_absolute : start_index
                 + size
                 + bestdelay_sample_absolute
             ]

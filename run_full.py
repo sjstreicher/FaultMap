@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
 """Performs all analysis steps for all cases specified in the
 configuration file.
 
 """
+
 # Standard modules
 import json
 import logging

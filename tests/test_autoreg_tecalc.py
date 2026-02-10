@@ -52,7 +52,7 @@ def test_peak_te_infodyn_kernel(generation_details: tuple[int, int, int]):
             "kernel",
             x_hist_norm[0],
             y_hist_norm[0],
-            **{"kernel_width": 0.1}
+            **{"kernel_width": 0.1},
         )
         entropies_infodyn_kernel.append(result_infodyn)
 

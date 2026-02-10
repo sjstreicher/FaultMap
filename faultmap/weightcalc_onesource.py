@@ -268,7 +268,7 @@ def calc_weights_one_source(
 
                 proplist = [propfwd_list, propbwd_list]
                 milist = [mifwd_list, mibwd_list]
-                siglist = [sigfwd_list, sigbwd_list]
+                siglist = [sigfwd_list, sigbwd_list]  # noqa: F841
                 weightlist = [directional_weightlist, absolute_weightlist]
 
                 # Combine weight data
@@ -407,7 +407,7 @@ def calc_weights_one_source(
                     header_line,
                 )
 
-                # Write mutual information over multiple delays to file just as for transfer entropy
+                # Write MI over multiple delays to file as for TE
                 writecsv_weightcalc(
                     filename(directional_mi_name, box_index + 1, source_var),
                     mis_datalines_directional,

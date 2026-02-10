@@ -6,7 +6,6 @@ Tests pure Python functions that don't require Java/JIDT.
 import csv
 import os
 import tempfile
-from pathlib import Path
 
 import networkx as nx
 import numpy as np
@@ -151,8 +150,10 @@ class TestBuildGraph:
 
 class TestVectorSelection:
     def test_basic_selection(self):
-        data = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-                         [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]], dtype=float)
+        data = np.array(
+            [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]],
+            dtype=float,
+        )
         x_pred, x_hist, y_hist = vectorselection(data, timelag=1, sub_samples=5)
 
         assert x_pred.shape == (1, 5)
@@ -259,8 +260,15 @@ class TestNormaliseData:
             variables = ["Var1", "Var2"]
 
             result = normalise_data(
-                headerline, timestamps, inputdata, variables,
-                tmpdir, "testcase", "testscenario", "standardise", None,
+                headerline,
+                timestamps,
+                inputdata,
+                variables,
+                tmpdir,
+                "testcase",
+                "testscenario",
+                "standardise",
+                None,
             )
             # Standardised data should have zero mean per column
             for col in range(result.shape[1]):
@@ -274,8 +282,15 @@ class TestNormaliseData:
             variables = ["Var1"]
 
             result = normalise_data(
-                headerline, timestamps, inputdata, variables,
-                tmpdir, "testcase", "testscenario", False, None,
+                headerline,
+                timestamps,
+                inputdata,
+                variables,
+                tmpdir,
+                "testcase",
+                "testscenario",
+                False,
+                None,
             )
             np.testing.assert_array_equal(result, inputdata)
 
@@ -283,6 +298,13 @@ class TestNormaliseData:
         with tempfile.TemporaryDirectory() as tmpdir:
             with pytest.raises(ValueError, match="Normalisation method not recognized"):
                 normalise_data(
-                    ["Time", "V"], np.array([0.0]), np.array([[1.0]]),
-                    ["V"], tmpdir, "c", "s", "invalid_method", None,
+                    ["Time", "V"],
+                    np.array([0.0]),
+                    np.array([[1.0]]),
+                    ["V"],
+                    tmpdir,
+                    "c",
+                    "s",
+                    "invalid_method",
+                    None,
                 )

@@ -1,6 +1,4 @@
-"""This module executes all functions needed to draw desired plots.
-
-"""
+"""This module executes all functions needed to draw desired plots."""
 
 import json
 import logging
@@ -144,7 +142,7 @@ def get_box_data_vectors(graphdata):
     for box in graphdata.boxindex:
         sourcevalues = []
         for sourceindex, sourcevar in enumerate(graphdata.sourcevar):
-            sourcefile = filename_template.format(
+            sourcefile = filename_template.format(  # noqa: F821
                 graphdata.case,
                 graphdata.scenario,
                 graphdata.method[0],
@@ -170,7 +168,7 @@ def get_box_ranking_scores(graphdata):
 
     """
 
-    importancedict_filename = importancedict_filename_template.format(
+    importancedict_filename = importancedict_filename_template.format(  # noqa: F821
         graphdata.case, graphdata.scenario, graphdata.method[0]
     )
 
@@ -195,7 +193,7 @@ def get_box_threshold_vectors(graphdata):
     for box in graphdata.boxindex:
         sourcevalues = []
         for sourceindex, sourcevar in enumerate(graphdata.sourcevar):
-            sourcefile = filename_sig_template.format(
+            sourcefile = filename_sig_template.format(  # noqa: F821
                 graphdata.case,
                 graphdata.scenario,
                 graphdata.method[0],

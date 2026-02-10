@@ -1,10 +1,7 @@
-"""Generates sample digraphs for testing and demonstrating graphical methods.
-
-"""
+"""Generates sample digraphs for testing and demonstrating graphical methods."""
 
 import json
 import os
-from typing import List
 
 import networkx as nx
 import numpy as np
@@ -18,7 +15,7 @@ save_loc = os.path.expanduser(files_loc["save_loc"])
 seed_list = [35, 88, 107, 52, 98]
 
 
-def numbered_variables(name: str, n_vars: int) -> List[str]:
+def numbered_variables(name: str, n_vars: int) -> list[str]:
     """
 
     Args:

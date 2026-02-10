@@ -1,8 +1,7 @@
-"""Generates various test and demo data sets.
+"""Generates various test and demo data sets."""
 
-"""
+from collections.abc import Callable
 from functools import partial
-from typing import Callable
 
 import control  # type: ignore
 import numpy as np
@@ -151,7 +150,7 @@ def random_gen(params: list[int], n: int = 2) -> NDArray:
     return data.T
 
 
-def autoreg_datagen(delay, timelag, samples, sub_samples, k=1, l=1):
+def autoreg_datagen(delay, timelag, samples, sub_samples, k=1, l=1):  # noqa: E741
     """Generates autoreg data for a specific timelag (equal to
     prediction horizon) for a set of autoregressive data.
 

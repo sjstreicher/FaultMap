@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
 """Performs weight calculation for all cases specified in the
 configuration file.
 
 """
+
 # Standard modules
 import json
 import logging

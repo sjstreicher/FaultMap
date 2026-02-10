@@ -126,7 +126,8 @@ class ResultReconstructionData:
         self.mi_scale = False
 
     def setup_scenario(self, scenario: str):
-        """Retrieves data particular to each scenario for the case being investigated."""
+        """Retrieves data particular to each scenario for the case
+        being investigated."""
 
         scenario_config = self.case_config[scenario]
 
@@ -157,7 +158,7 @@ def process_aux_file(filename, bias_correct=True, mi_scale=False, allow_neg=Fals
     significance_weights = []
     delays = []
     significance_thresholds = []
-    with open(filename, "r", encoding="utf-8") as aux_file:
+    with open(filename, encoding="utf-8") as aux_file:
         aux_file_reader = csv.reader(aux_file, delimiter=",")
         for row_index, row in enumerate(aux_file_reader):
             if row_index == 0:
@@ -220,7 +221,7 @@ def process_aux_file(filename, bias_correct=True, mi_scale=False, allow_neg=Fals
                         significance_test_weight = 0.0
                         no_significance_test_weight = 0.0
 
-                # If both bias correction and mutual information scaling is to be performed,
+                # If both bias correction and MI scaling is to be performed,
                 # bias correction should happen first
 
                 # Perform bias correction if required
@@ -344,7 +345,8 @@ def create_arrays(data_dir: Path, variables, bias_correct, mi_scale, generate_di
                     # Open auxfile and return weight array as well as
                     # significance relative weight arrays
 
-                    # TODO: Confirm whether correlation test absolutes correlations before sending to auxfile
+                    # TODO: Confirm whether correlation test absolutes
+                    # correlations before sending to auxfile
                     # Otherwise, the allow null must be used much more wisely
                     (
                         destination_vars,
@@ -393,9 +395,9 @@ def create_arrays(data_dir: Path, variables, bias_correct, mi_scale, generate_di
                     ):
                         destination_var_loc = variables.index(destination_var)
 
-                        weights_matrix[
-                            destination_var_loc + 1, source_var_loc + 1
-                        ] = weight_array[source_var_index][destination_var_index]
+                        weights_matrix[destination_var_loc + 1, source_var_loc + 1] = (
+                            weight_array[source_var_index][destination_var_index]
+                        )
                         nosigtest_weights_matrix[
                             destination_var_loc + 1, source_var_loc + 1
                         ] = nosigtest_weight_array[source_var_index][
@@ -404,9 +406,9 @@ def create_arrays(data_dir: Path, variables, bias_correct, mi_scale, generate_di
                         sigweights_matrix[
                             destination_var_loc + 1, source_var_loc + 1
                         ] = sigweight_array[source_var_index][destination_var_index]
-                        delay_matrix[
-                            destination_var_loc + 1, source_var_loc + 1
-                        ] = delay_array[source_var_index][destination_var_index]
+                        delay_matrix[destination_var_loc + 1, source_var_loc + 1] = (
+                            delay_array[source_var_index][destination_var_index]
+                        )
                         sigthresh_matrix[
                             destination_var_loc + 1, source_var_loc + 1
                         ] = sigthreshold_array[source_var_index][destination_var_index]
@@ -499,9 +501,7 @@ def create_arrays(data_dir: Path, variables, bias_correct, mi_scale, generate_di
                             final_weight_array_dir, "weight_array.csv"
                         )
 
-                        with open(
-                            base_weight_array_filename, "r", encoding="utf-8"
-                        ) as f:
+                        with open(base_weight_array_filename, encoding="utf-8") as f:
                             num_cols = len(f.readline().split(","))
                             f.seek(0)
                             base_weight_matrix = np.genfromtxt(
@@ -511,9 +511,7 @@ def create_arrays(data_dir: Path, variables, bias_correct, mi_scale, generate_di
                                 delimiter=",",
                             )
 
-                        with open(
-                            final_weight_array_filename, "r", encoding="utf-8"
-                        ) as f:
+                        with open(final_weight_array_filename, encoding="utf-8") as f:
                             num_cols = len(f.readline().split(","))
                             f.seek(0)
                             final_weight_matrix = np.genfromtxt(
@@ -568,7 +566,6 @@ def create_arrays(data_dir: Path, variables, bias_correct, mi_scale, generate_di
 
                             with open(
                                 nosigtest_base_weight_array_filename,
-                                "r",
                                 encoding="utf-8",
                             ) as f:
                                 num_cols = len(f.readline().split(","))
@@ -582,7 +579,6 @@ def create_arrays(data_dir: Path, variables, bias_correct, mi_scale, generate_di
 
                             with open(
                                 nosigtest_final_weight_array_filename,
-                                "r",
                                 encoding="utf-8",
                             ) as f:
                                 num_cols = len(f.readline().split(","))
@@ -757,7 +753,9 @@ def extract_trends(datadir, writeoutput):
         "weight_arrays": "weight_trend",
         "sigweight_absolute_arrays": "sigweight_absolute_trend",
         "sigweight_directional_arrays": "sigweight_directional_trend",
-        "signtested_sigweight_directional_arrays": "signtested_sigweight_directional_trend",
+        "signtested_sigweight_directional_arrays": (
+            "signtested_sigweight_directional_trend"
+        ),
         "sigweight_arrays": "sigweight_trend",
         "delay_absolute_arrays": "delay_absolute_trend",
         "delay_directional_arrays": "delay_directional_trend",
@@ -978,7 +976,9 @@ def read_variables(raw_tsdata: str | Path) -> list[str]:
     return variables
 
 
-def writecsv(filename: str | Path, items: list | NDArray, header: list[str] | None = None) -> None:
+def writecsv(
+    filename: str | Path, items: list | NDArray, header: list[str] | None = None
+) -> None:
     """Write CSV directly"""
     with open(filename, "w", newline="", encoding="utf-8") as f:
         if header is not None:
@@ -1190,7 +1190,9 @@ def detrend_first_differences(data: NDArray) -> NDArray:
     return detrended_df.dropna().values
 
 
-def detrend_link_relatives(data: NDArray, cap_values: bool = True, cap: float = 20.0) -> NDArray:
+def detrend_link_relatives(
+    data: NDArray, cap_values: bool = True, cap: float = 20.0
+) -> NDArray:
     # Multiply by 100 to get idea of percentage change in
     # Easier to make sense of when choosing estimator bandwidth, etc.
     # Subtract by unit to center around 0
@@ -1207,7 +1209,9 @@ def detrend_link_relatives(data: NDArray, cap_values: bool = True, cap: float = 
     return detrended_df.dropna().values
 
 
-def skogestad_scale_select(vartype: str, lower_limit: float, nominal_level: float, high_limit: float) -> float:
+def skogestad_scale_select(
+    vartype: str, lower_limit: float, nominal_level: float, high_limit: float
+) -> float:
     if vartype == "D":
         limit = max((nominal_level - lower_limit), (high_limit - nominal_level))
     elif vartype == "S":
@@ -1446,19 +1450,23 @@ def buildcase(dummyweight, digraph, name, dummycreation):
 
 
 def build_graph(
-    variables: list[str], gain_matrix: NDArray, connections: NDArray, bias_vector: NDArray
+    variables: list[str],
+    gain_matrix: NDArray,
+    connections: NDArray,
+    bias_vector: NDArray,
 ) -> nx.DiGraph:
     """
-    Builds a directed graph using the given variables, gain matrix, connections, and bias vector.
+    Builds a directed graph using the given variables, gain matrix,
+    connections, and bias vector.
 
     Args:
         variables (list): A list of variable names.
-        gain_matrix (numpy.ndarray): A 2D numpy array representing the gain matrix.
-        connections (numpy.ndarray): A 2D numpy array representing the connections between variables.
-        bias_vector (numpy.ndarray): A 1D numpy array representing the bias vector.
+        gain_matrix (numpy.ndarray): A 2D array of gains.
+        connections (numpy.ndarray): A 2D array of connections.
+        bias_vector (numpy.ndarray): A 1D array of biases.
 
     Returns:
-        networkx.DiGraph: A directed graph representing the connections between variables, with weights and biases.
+        networkx.DiGraph: A directed graph with weights and biases.
     """
     digraph = nx.DiGraph()
     # Construct the graph with connections
@@ -1545,18 +1553,19 @@ def get_box_endates(clean_df, window, overlap, freq):
 
 def get_continuous_boxes(clean_df, window, overlap, freq):
     """
-    Splits a pandas DataFrame into continuous boxes of a specified window size and overlap.
+    Splits a DataFrame into continuous boxes of a specified window
+    size and overlap.
 
     Args:
-        clean_df (pandas.DataFrame): The DataFrame to split into boxes.
-        window (int): The size of the window in number of time steps.
-        overlap (float): The overlap between consecutive windows as a fraction of the window size.
-        freq (str): The frequency of the time series data, e.g. '1H' for hourly data.
+        clean_df (pandas.DataFrame): The DataFrame to split.
+        window (int): Window size in number of time steps.
+        overlap (float): Overlap between windows as a fraction.
+        freq (str): Frequency of the time series, e.g. '1H'.
 
     Returns:
-        tuple: A tuple containing:
-            - array_boxes (list of numpy.ndarray): A list of numpy arrays, where each array contains the data for a single box.
-            - boxdates (list of numpy.ndarray): A list of numpy arrays, where each array contains the start and end timestamps for a single box.
+        tuple: (array_boxes, boxdates) where array_boxes is a list
+            of arrays per box and boxdates is a list of arrays with
+            start/end timestamps per box.
     """
     box_end_dates = get_box_endates(clean_df, window, overlap, freq)
     boxdates = [
@@ -1583,7 +1592,8 @@ def split_time_series_data(
     input_data: NDArray, sample_rate: float, box_size: int, box_num: int
 ) -> list[NDArray]:
     """
-    Splits the input data into arrays useful for analyzing the change of weights over time.
+    Splits the input data into arrays useful for analyzing the
+    change of weights over time.
 
     Args:
         input_data (numpy.ndarray): A numpy array containing values for a single
@@ -1646,7 +1656,13 @@ def calc_signal_entropy(
     return entropy
 
 
-def vectorselection(data: NDArray, timelag: int, sub_samples: int, k: int = 1, l: int = 1) -> tuple[NDArray, NDArray, NDArray]:
+def vectorselection(
+    data: NDArray,
+    timelag: int,
+    sub_samples: int,
+    k: int = 1,
+    l: int = 1,  # noqa: E741
+) -> tuple[NDArray, NDArray, NDArray]:
     """Generates sets of vectors from tags time series data
     for calculating transfer entropy.
 
