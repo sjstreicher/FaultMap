@@ -1,14 +1,46 @@
-*.pyc
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE / editor files
 .project
 .pydevproject
-.asv
-.csv
+.idea/
+.vscode/
+*.swp
+*.swo
 *~
-.idea
+
+# Test / coverage artifacts
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# Environment files
+.env
+.env.local
+
+# ASV benchmarks
+.asv
+
+# Project-specific
 caseconfig.json
 demos/
-faultmap/__pycache__/
 test_data/
 test_exports/
 test_results/
-.coverage
+*.csv

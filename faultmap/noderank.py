@@ -37,7 +37,6 @@ class NoderankData:
         # Load case config file
         with open(os.path.join(self.caseconfigloc, "noderank.json")) as f:
             self.caseconfig = json.load(f)
-        f.close()
 
         # Get scenarios
         self.scenarios = self.caseconfig["scenarios"]
@@ -150,7 +149,7 @@ class NoderankData:
                 # If no bias vector is defined, use a vector of equal weights
                 self.biasvector = np.ones(len(self.variablelist))
 
-        logging.info("Number of tags: {}".format(len(self.variablelist)))
+        logging.info("Number of tags: %s", len(self.variablelist))
 
     def get_boxes(self, scenario, datadir, typename):
         if "boxindexes" in self.caseconfig[scenario]:
@@ -282,7 +281,7 @@ def calc_simple_rank(
             pagerank_rankingdict_norm = norm_dict(pagerank_rankingdict)
             rankingdict = pagerank_rankingdict_norm
         else:
-            raise NameError("Method not defined")
+            raise ValueError(f"Rank method not defined: {rank_method}")
 
     elif package == "simple":
         if rank_method == "eigenvector":
@@ -303,10 +302,10 @@ def calc_simple_rank(
             # i.e. {NODE:RANKING}
             rankingdict = dict(zip(variables, rankarray_norm))
         else:
-            raise NameError("Method not defined")
+            raise ValueError(f"Rank method not defined: {rank_method}")
 
     else:
-        raise NameError("Package not defined")
+        raise ValueError(f"Package not defined: {package}")
 
     rankinglist = sorted(rankingdict.items(), key=operator.itemgetter(1), reverse=True)
 
@@ -880,7 +879,7 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
     )
 
     for scenario in noderankdata.scenarios:
-        logging.info("Running scenario {}".format(scenario))
+        logging.info("Running scenario %s", scenario)
         # Update scenario-specific fields of noderankdata object
         noderankdata.scenariodata(scenario)
 
@@ -900,7 +899,7 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                     sigtypes = ["test_nosig"]
 
                 for sigtype in sigtypes:
-                    print(sigtype)
+                    logging.info("Processing sigtype: %s", sigtype)
                     embedtypesdir = os.path.join(basedir, sigtype)
 
                     if noderankdata.datatype == "file":
@@ -909,7 +908,7 @@ def noderankcalc(mode, case, writeoutput, preprocessing=False):
                         embedtypes = ["test_noembed"]
 
                     for embedtype in embedtypes:
-                        print(embedtype)
+                        logging.info("Processing embedtype: %s", embedtype)
                         datadir = os.path.join(embedtypesdir, embedtype)
 
                         if weight_method[:16] == "transfer_entropy":

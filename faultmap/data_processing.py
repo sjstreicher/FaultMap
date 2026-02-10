@@ -23,7 +23,6 @@ from faultmap.type_definitions import EntropyMethods, RunModes
 from faultmap.weightcalc import WeightCalcData
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level="DEBUG")
 
 # pylint: disable=too-many-lines, missing-function-docstring
 
@@ -45,7 +44,7 @@ def shuffle_data(input_data):
 
 def get_folders(path):
     folders = []
-    while 1:
+    while True:
         path, folder = os.path.split(path)
 
         if folder != "":
@@ -113,7 +112,6 @@ class ResultReconstructionData:
             encoding="utf-8",
         ) as f:
             self.case_config = json.load(f)
-        f.close()
 
         # Get data type
         self.datatype = self.case_config["datatype"]
@@ -512,7 +510,6 @@ def create_arrays(data_dir: Path, variables, bias_correct, mi_scale, generate_di
                                 skip_header=1,
                                 delimiter=",",
                             )
-                            f.close()
 
                         with open(
                             final_weight_array_filename, "r", encoding="utf-8"
@@ -525,7 +522,6 @@ def create_arrays(data_dir: Path, variables, bias_correct, mi_scale, generate_di
                                 skip_header=1,
                                 delimiter=",",
                             )
-                            f.close()
 
                         # Calculate difference and save to file
                         # TODO: Investigate effect of taking absolute of differences
@@ -583,7 +579,6 @@ def create_arrays(data_dir: Path, variables, bias_correct, mi_scale, generate_di
                                     skip_header=1,
                                     delimiter=",",
                                 )
-                                f.close()
 
                             with open(
                                 nosigtest_final_weight_array_filename,
@@ -598,7 +593,6 @@ def create_arrays(data_dir: Path, variables, bias_correct, mi_scale, generate_di
                                     skip_header=1,
                                     delimiter=",",
                                 )
-                                f.close()
 
                             # Calculate difference and save to file
                             # TODO: Investigate effect of taking absolute of differences
@@ -869,7 +863,6 @@ def result_reconstruction(mode: RunModes, case: str):
 
     with open(Path(caseconfigdir, "weightcalc.json"), encoding="utf-8") as f:
         caseconfig = json.load(f)
-    f.close()
 
     # Directory where subdirectories for scenarios will be stored
     scenariosdir = Path(saveloc, "weight_data", case)
@@ -878,7 +871,7 @@ def result_reconstruction(mode: RunModes, case: str):
     scenarios = next(os.walk(scenariosdir))[1]
 
     for scenario in scenarios:
-        print(scenario)
+        logger.info("Processing scenario: %s", scenario)
 
         result_reconstruction_data.setup_scenario(scenario)
 
@@ -887,15 +880,15 @@ def result_reconstruction(mode: RunModes, case: str):
         methodsdir = Path(scenariosdir, scenario)
         methods = next(os.walk(methodsdir))[1]
         for method in methods:
-            print(method)
+            logger.info("Processing method: %s", method)
             sigtypesdir = Path(methodsdir, method)
             sigtypes = next(os.walk(sigtypesdir))[1]
             for sigtype in sigtypes:
-                print(sigtype)
+                logger.info("Processing sigtype: %s", sigtype)
                 embedtypesdir = Path(sigtypesdir, sigtype)
                 embedtypes = next(os.walk(embedtypesdir))[1]
                 for embedtype in embedtypes:
-                    print(embedtype)
+                    logger.info("Processing embedtype: %s", embedtype)
                     datadir = Path(embedtypesdir, embedtype)
                     create_arrays(
                         datadir,
@@ -929,20 +922,20 @@ def trend_extraction(mode, case, write_output) -> None:
     scenarios = next(os.walk(scenariosdir))[1]
 
     for scenario in scenarios:
-        print(scenario)
+        logger.info("Extracting trends for scenario: %s", scenario)
 
         methodsdir = Path(scenariosdir, scenario)
         methods = next(os.walk(methodsdir))[1]
         for method in methods:
-            print(method)
+            logger.info("Processing method: %s", method)
             sig_types_dir = Path(methodsdir, method)
             sigtypes = next(os.walk(sig_types_dir))[1]
             for sig_type in sigtypes:
-                print(sig_type)
+                logger.info("Processing sigtype: %s", sig_type)
                 embed_types_dir = Path(sig_types_dir, sig_type)
                 embedtypes = next(os.walk(embed_types_dir))[1]
                 for embedtype in embedtypes:
-                    print(embedtype)
+                    logger.info("Processing embedtype: %s", embedtype)
                     datadir = Path(embed_types_dir, embedtype)
                     extract_trends(datadir, write_output)
 
@@ -1018,7 +1011,7 @@ def fft_calculation(
     # TODO: Perform detrending
     # log.info("Starting FFT calculations")
     # Using a print command instead as logging is late
-    print("Starting FFT calculations")
+    logger.info("Starting FFT calculations")
 
     # Change first entry of headerline from "Time" to "Frequency"
     headerline[0] = "Frequency"
@@ -1220,7 +1213,7 @@ def skogestad_scale_select(vartype, lower_limit, nominal_level, high_limit):
     elif vartype == "S":
         limit = min((nominal_level - lower_limit), (high_limit - nominal_level))
     else:
-        raise NameError("Variable type flag not recognized")
+        raise ValueError(f"Variable type flag not recognized: {vartype}")
     return limit
 
 
@@ -1307,7 +1300,7 @@ def normalise_data(
         #     inputdata_normalised = inputdata_raw
         inputdata_normalised = inputdata_raw
     else:
-        raise NameError("Normalisation method not recognized")
+        raise ValueError(f"Normalisation method not recognized: {method}")
 
     datalines = np.concatenate(
         (timestamps[:, np.newaxis], inputdata_normalised), axis=1
@@ -1331,7 +1324,7 @@ def detrend_data(headerline, timestamps, inputdata, saveloc, case, scenario, met
         inputdata_detrended = inputdata
 
     else:
-        raise NameError("Detrending method not recognized")
+        raise ValueError(f"Detrending method not recognized: {method}")
 
     datalines = np.concatenate((timestamps[:, np.newaxis], inputdata_detrended), axis=1)
 
@@ -1395,7 +1388,7 @@ def read_biasvector(biasvector_loc):
     bias1, bias2, etc ... (second row)
     """
     with open(biasvector_loc, encoding="utf-8") as f:
-        variables = csv.reader(f).next()[1:]
+        variables = next(csv.reader(f))[1:]
         biasvector = np.genfromtxt(f, delimiter=",")[:]
     return biasvector, variables
 

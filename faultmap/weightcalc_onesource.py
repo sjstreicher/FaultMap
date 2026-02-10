@@ -20,7 +20,6 @@ if TYPE_CHECKING:
     from faultmap.weightcalculators import WeightCalculator
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG)
 
 
 def writecsv_weightcalc(filename, datalines, header):
@@ -175,7 +174,7 @@ def calc_weights_one_source(
                 )
                 destination_vars = aux_data_file[:, 1]
                 if destination_var in destination_vars:
-                    print("Destination variable results in existence")
+                    logger.info("Destination variable results in existence")
                     exists = True
 
         if do_test and (exists is False):
@@ -466,14 +465,11 @@ def calc_weights_one_source(
                         header_line,
                     )
 
-    print(
-        "Done analysing causal variable: "
-        + source_var
-        + " ["
-        + str(source_var_index + 1)
-        + "/"
-        + str(len(weight_calc_data.source_var_indexes))
-        + "]"
+    logger.info(
+        "Done analysing causal variable: %s [%d/%d]",
+        source_var,
+        source_var_index + 1,
+        len(weight_calc_data.source_var_indexes),
     )
 
 

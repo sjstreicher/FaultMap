@@ -3,7 +3,6 @@
 import json
 import os
 from pathlib import Path
-from typing import Tuple
 
 from faultmap.type_definitions import RunModes
 
@@ -22,7 +21,7 @@ def ensure_existence(location: Path, make=True) -> Path:
         if make:
             os.makedirs(location)
         else:
-            raise IOError(f"File does not exists: {location}")
+            raise FileNotFoundError(f"File does not exist: {location}")
     return Path(location)
 
 
@@ -54,13 +53,11 @@ def get_locations(mode: RunModes = "cases") -> tuple[Path, Path, Path, Path]:
         tests_dir = Path(parent_dir, "../tests")
         with open(Path(tests_dir, "test_config.json"), encoding="utf-8") as file:
             dirs = json.load(file)
-        file.close()
     elif mode == "cases":
         with open("../case_config.json", encoding="utf-8") as file:
             dirs = json.load(file)
-        file.close()
     else:
-        raise NameError("Mode name not recognized")
+        raise ValueError(f"Mode name not recognized: {mode}")
 
     # Get data and preferred export directories from
     # directories config file
@@ -73,7 +70,7 @@ def get_locations(mode: RunModes = "cases") -> tuple[Path, Path, Path, Path]:
     return data_loc, config_loc, save_loc, infodynamics_loc
 
 
-def run_setup(mode: RunModes, case: str) -> Tuple[Path, Path, Path, Path]:
+def run_setup(mode: RunModes, case: str) -> tuple[Path, Path, Path, Path]:
     """Gets all required directories from the case configuration file.
 
     Args:

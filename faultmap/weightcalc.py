@@ -119,7 +119,7 @@ class WeightCalcData:
                 config file.
 
         """
-        print(f"The scenario name is: {scenario_name}")
+        logging.info("The scenario name is: %s", scenario_name)
 
         self.settings_set = self.case_config[scenario_name]["settings"]
 
@@ -239,8 +239,7 @@ class WeightCalcData:
                 self.sampling_rate,
             )
 
-            self.header_line = ["Time"]
-            [self.header_line.append(variable) for variable in self.variables]
+            self.header_line = ["Time"] + list(self.variables)
 
         # Perform normalisation
         # Retrieve scaling limits from file
@@ -254,8 +253,8 @@ class WeightCalcData:
                 )
                 scaling_values = data_processing.read_scale_limits(scaling_loc)
             else:
-                raise NameError(
-                    "Scale limits reference missing from " "configuration file"
+                raise ValueError(
+                    "Scale limits reference missing from configuration file"
                 )
         else:
             scaling_values = None
@@ -382,9 +381,7 @@ class WeightCalcData:
             # as the original data file - but it does not play a role at all
             # in the actual box determination for the case of boxnum = 1
 
-        try:
-            self.transient_method
-        except:
+        if not hasattr(self, "transient_method"):
             self.transient_method = None
 
         if self.transient_method == "legacy" or self.transient_method is None:
@@ -743,7 +740,7 @@ def weight_calc(
                 start_time = time.process_time()
                 calculate_weights(weight_calc_data, method, scenario, writeoutput)
                 end_time = time.process_time()
-                print(end_time - start_time)
+                logging.info("Weight calc time: %s", end_time - start_time)
 
 
 if __name__ == "__main__":
