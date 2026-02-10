@@ -1,11 +1,5 @@
 # FaultMap
 
-<!-- [![Travis Build](https://travis-ci.org/SimonStreicher/FaultMap.png?branch=master "Travis Build Status")](https://travis-ci.org/SimonStreicher/FaultMap)
-
-[![Code Coverage](https://coveralls.io/repos/github/SimonStreicher/FaultMap/badge.svg?branch=master "Code Coverage")](https://coveralls.io/github/SimonStreicher/FaultMap?branch=master)
-
-[![Code Climate](https://codeclimate.com/github/SimonStreicher/FaultMap/badges/gpa.svg "Code Climate Grade")](https://codeclimate.com/github/SimonStreicher/FaultMap) -->
-
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2543739.svg)](https://doi.org/10.5281/zenodo.2543739)
 
 ## Introduction
@@ -17,7 +11,7 @@ These directed graphs are useful as troubleshooting aids.
 
 Network centrality algorithms are applied to determine the most influential elements based on the strength and quality of their influence on other connected nodes (eigenvector centrality).
 
-Documentation and demonstrations still under development.
+For detailed usage guides, method descriptions, and API reference, see the [documentation](docs/index.rst).
 
 ## Prerequisites
 
