@@ -1,6 +1,5 @@
 """Unit tests for config_setup module."""
 
-import os
 import tempfile
 from pathlib import Path
 
@@ -14,7 +13,7 @@ class TestEnsureExistence:
         with tempfile.TemporaryDirectory() as tmpdir:
             new_dir = Path(tmpdir, "newdir")
             result = ensure_existence(new_dir, make=True)
-            assert os.path.exists(new_dir)
+            assert new_dir.is_dir()
             assert result == new_dir
 
     def test_existing_directory(self):
@@ -30,5 +29,5 @@ class TestEnsureExistence:
         with tempfile.TemporaryDirectory() as tmpdir:
             nested = Path(tmpdir, "a", "b", "c")
             result = ensure_existence(nested, make=True)
-            assert os.path.exists(nested)
+            assert nested.is_dir()
             assert result == nested

@@ -107,6 +107,7 @@ class WeightCalcData:
 
         self.settings_set = None
         self.connections_used = None
+        self.transient_method: str | None = None
 
     def scenario_data(self, scenario_name: str):
         """Retrieves data particular to each scenario for the case being
@@ -381,10 +382,7 @@ class WeightCalcData:
             # as the original data file - but it does not play a role at all
             # in the actual box determination for the case of boxnum = 1
 
-        if not hasattr(self, "transient_method"):
-            self.transient_method = None
-
-        if self.transient_method == "legacy" or self.transient_method is None:
+        if self.transient_method in ("legacy", None):
             # Get box start and end dates
             self.boxdates = data_processing.split_time_series_data(
                 self.timestamps,

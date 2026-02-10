@@ -50,7 +50,7 @@ seed_randn = partial(seed_random, np.random.randn)
 seed_rand = partial(seed_random, np.random.rand)
 
 
-def autoreg_gen(params: list) -> NDArray:
+def autoreg_gen(params: list[int | float]) -> NDArray:
     """Generates an autoregressive set of vectors.
 
     A constant seed is used for testing comparison purposes.
@@ -96,7 +96,7 @@ def autoreg_gen(params: list) -> NDArray:
     return data.T
 
 
-def delay_gen(params: list) -> NDArray:
+def delay_gen(params: list[int]) -> NDArray:
     """Generates a normally distributed random data vector
     and a pure delay companion.
 
@@ -140,7 +140,7 @@ def delay_gen(params: list) -> NDArray:
     return data.T
 
 
-def random_gen(params: list, n: int = 2) -> NDArray:
+def random_gen(params: list[int], n: int = 2) -> NDArray:
     """Generates n independent random data vectors"""
 
     samples = params[0]

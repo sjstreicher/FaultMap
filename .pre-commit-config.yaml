@@ -10,21 +10,9 @@ repos:
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
 
--   repo: https://github.com/psf/black
-    rev: 24.10.0
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.6
     hooks:
-    -   id: black
-        language_version: python3
-
--   repo: https://github.com/PyCQA/pylint
-    rev: v3.3.3
-    hooks:
-    -   id: pylint
-        args:
-        - --rcfile=.pylintrc
-
--   repo: https://github.com/pycqa/isort
-    rev: 5.13.2
-    hooks:
-    -   id: isort
-        name: isort (python)
+    -   id: ruff
+        args: [--fix]
+    -   id: ruff-format

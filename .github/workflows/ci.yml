@@ -70,15 +70,11 @@ jobs:
       - name: Install dependencies
         run: uv pip install --system ".[dev]"
 
-      - name: Check formatting with black
-        run: black --check .
+      - name: Check formatting
+        run: ruff format --check .
 
-      - name: Check import ordering with isort
-        run: isort --check-only .
-
-      - name: Lint with pylint
-        run: pylint faultmap/ --fail-under=5.0
-        continue-on-error: true
+      - name: Lint
+        run: ruff check .
 
   docs:
     runs-on: ubuntu-latest

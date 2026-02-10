@@ -20,10 +20,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pylint>=3.0.0",
-    "black>=24.0.0",
+    "ruff>=0.8.0",
     "pre-commit>=3.5.0",
-    "isort>=5.13.0",
 ]
 test = [
     "pytest>=8.0.0",
@@ -47,5 +45,12 @@ build-backend = "hatchling.build"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
-[tool.isort]
-profile = "black"
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["faultmap"]
