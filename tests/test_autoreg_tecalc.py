@@ -15,15 +15,14 @@ from faultmap.infodynamics import calc_te
 def start_jvm():
     """Checks if JVM is started, and starts it if not."""
     jar_loc = "infodynamics.jar"
-    # Only start the JVM if it's not already running
-    if not jpype.isJVMStarted():
-        jpype.startJVM(jpype.getDefaultJVMPath(), "-ea", "-Djava.class.path=" + jar_loc)
-    yield  # This will execute before the first test
-
-    # Teardown
-    # Shut down the JVM (not strictly necessary)
-    if jpype.isJVMStarted():
-        jpype.shutdownJVM()
+    try:
+        if not jpype.isJVMStarted():
+            jpype.startJVM(
+                jpype.getDefaultJVMPath(), "-ea", "-Djava.class.path=" + jar_loc
+            )
+    except (OSError, jpype.JVMNotFoundException):
+        pytest.skip("JVM or infodynamics.jar not available")
+    yield
 
 
 @pytest.fixture(name="generation_details")
