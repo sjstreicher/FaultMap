@@ -11,7 +11,7 @@ These directed graphs are useful as troubleshooting aids.
 
 Network centrality algorithms are applied to determine the most influential elements based on the strength and quality of their influence on other connected nodes (eigenvector centrality).
 
-For detailed usage guides, method descriptions, and API reference, see the [documentation](docs/index.rst).
+For detailed usage guides, method descriptions, and API reference, see the [documentation](docs/). Build locally with `sphinx-build -b html docs/ docs/_build/html`.
 
 ## Prerequisites
 
