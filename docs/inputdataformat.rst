@@ -1,30 +1,59 @@
 Input data formats
 ==================
 
-In this section the required and optional data input formats are described.
+This section describes the required and optional input data formats.
 
 Time series data format
 -----------------------
 
-The input data format for time series data associated with data tags on the plant are comma separated files (CSV) as follows:
+The primary input is time series data from process sensors, provided as
+comma-separated value (CSV) files.
 
-* The first row should be a header line, with the first column label being "Time".
-* The first column should contain the time of measurements in UNIX time.
-* The rest of the columns should contain the raw data - no need to be normalised, this will be done automatically in the post-processing stages.
+Format requirements:
 
-Descriptive labels data format
-------------------------------
+* The first row must be a header line, with the first column label being
+  ``Time``.
+* The first column must contain timestamps in UNIX time (seconds since epoch).
+* Remaining columns contain raw measurement data for each process tag -- no
+  normalization is needed, as this is handled automatically during
+  preprocessing.
 
-Descriptive labels might be associated with each process data tag.
-This should be provided in the form of a CSV file with the data tag name in the first column and the description in the second column.
-The first row should have the labels "Tag name" and "Description" in them.
-The filename should be ``tag_descriptions.csv``.
+Example::
+
+    Time,TAG_001,TAG_002,TAG_003
+    1546300800,45.2,101.3,7.81
+    1546300860,45.5,101.1,7.79
+    1546300920,45.3,101.4,7.82
+
+Descriptive labels
+------------------
+
+Optional descriptive labels can be associated with each process data tag.
+Provide these as a CSV file named ``tag_descriptions.csv`` with two columns:
+
+* First column: ``Tag name``
+* Second column: ``Description``
+
+Example::
+
+    Tag name,Description
+    TAG_001,Reactor temperature
+    TAG_002,Feed flow rate
+    TAG_003,Product pH
+
+These descriptions are used in output reports and graph labels to make results
+more readable.
 
 Connectivity information
 ------------------------
 
-Limiting the connections to certain edges only will be an optional feature.
-This is provided for the cases where plant topology information is available and considered to be important to include in the analysis.
+Optionally, you can constrain the analysis to only consider specific connections
+between process elements. This is useful when plant topology information is
+available.
 
-Please note that adding connectivity information is not always helpful, and in some cases results in poorer analysis of the root cause of the problem as higher-order connections might play an important role in boosting a particular node's score in the network. 
-
+.. note::
+   Adding connectivity information is not always beneficial. In some cases it
+   can produce poorer root cause analysis, because higher-order connections may
+   play an important role in amplifying a node's centrality score. Use this
+   option with care and compare results with and without connectivity
+   constraints.
