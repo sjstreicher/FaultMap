@@ -1,7 +1,7 @@
 """Sphinx configuration for FaultMap documentation."""
 
 project = "FaultMap"
-copyright = "2024, Simon Streicher"
+copyright = "2025, Simon Streicher"
 author = "Simon Streicher"
 release = "0.1.3"
 
