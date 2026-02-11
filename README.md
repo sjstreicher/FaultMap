@@ -29,8 +29,8 @@ For detailed usage guides, method descriptions, and API reference, see the [docu
 To build the documentation locally:
 
 ```bash
-pip install ".[docs]"
-sphinx-build -b html docs/ docs/_build/html
+uv sync --extra docs
+uv run sphinx-build -b html docs/ docs/_build/html
 ```
 
 ## Prerequisites
@@ -45,26 +45,19 @@ sphinx-build -b html docs/ docs/_build/html
 
 ## Installation
 
-### From source (recommended for development)
+### From source
 
 ```bash
 git clone https://github.com/SimonStreicher/FaultMap.git
 cd FaultMap
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-pip install -e ".[test]"
-pytest  # Verify the installation
+uv sync --extra test
+uv run pytest  # Verify the installation
 ```
 
-### Using conda
+If you don't have [uv](https://docs.astral.sh/uv/) installed yet:
 
 ```bash
-git clone https://github.com/SimonStreicher/FaultMap.git
-cd FaultMap
-conda create --name faultmap python=3.12
-conda activate faultmap
-pip install -e .
-pytest
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 ### Using Docker
@@ -160,20 +153,20 @@ The `demo/` directory contains standalone scripts demonstrating individual compo
 Install development and test dependencies:
 
 ```bash
-pip install -e ".[dev,test]"
+uv sync --extra dev --extra test
 ```
 
 Run the test suite:
 
 ```bash
-pytest tests/ -v
+uv run pytest tests/ -v
 ```
 
 Run the linter:
 
 ```bash
-ruff check .
-ruff format --check .
+uv run ruff check .
+uv run ruff format --check .
 ```
 
 ## Citation

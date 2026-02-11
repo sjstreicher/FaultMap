@@ -36,14 +36,12 @@ Prerequisites
 Installation
 ------------
 
-From source::
+From source (using `uv <https://docs.astral.sh/uv/>`_)::
 
     git clone https://github.com/SimonStreicher/FaultMap.git
     cd FaultMap
-    python -m venv .venv
-    source .venv/bin/activate
-    pip install -e ".[test]"
-    pytest
+    uv sync --extra test
+    uv run pytest
 
 A Docker image with all dependencies pre-installed is also available::
 
