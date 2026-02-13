@@ -13,7 +13,7 @@ import faultmap.data_processing
 seed_list = [35, 88, 107, 52, 98]
 
 
-def connection_matrix_maker(n_dims: int) -> Callable[[], tuple[list[str], np.array]]:
+def connection_matrix_maker(n_dims: int) -> Callable[[], tuple[list[str], np.ndarray]]:
     """
 
     Args:
@@ -56,8 +56,8 @@ def autoreg_gen(params: list[int | float]) -> NDArray:
 
     """
 
-    samples = params[0]
-    delay = params[1]
+    samples = int(params[0])
+    delay = int(params[1])
     if len(params) >= 3:
         alpha = params[2]
     else:

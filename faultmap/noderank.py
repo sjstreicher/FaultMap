@@ -12,6 +12,7 @@ import json
 import logging
 import operator
 import os
+from pathlib import Path
 
 import networkx as nx
 import numpy as np
@@ -551,8 +552,8 @@ def calc_gainrank(gainmatrix, noderankdata, rank_method, dummyweight):
 
     backwardrankingdict, backwardrankinglist = calc_simple_rank(
         backwardgain,
-        backwardvariablelist,
-        backwardbias,
+        list(backwardvariablelist),
+        np.array(backwardbias),
         noderankdata,
         rank_method,
         package="networkx",
@@ -584,12 +585,10 @@ def get_gainmatrices(noderankdata, datadir, typename):
         fname = "sigweight_array.csv"
     elif typename[:6] == "weight" or typename[:17] == "signtested_weight":
         fname = "weight_array.csv"
-    # TODO: There are more cases to add
     elif typename[:10] == "dif_weight":
         fname = "dif_weight_array.csv"
-    # TODO: Complete and re-enable signtested directional arrays creation
-    # elif typename[:21] == 'dif_signtested_weight':
-    #    fname = ''
+    else:
+        raise ValueError(f"Unrecognized typename: {typename}")
 
     for boxindex in noderankdata.boxes:
         gainmatrix = data_processing.read_matrix(
@@ -647,7 +646,7 @@ def dorankcalc(
         gainmatrices = get_gainmatrices(noderankdata, datadir, typename)
         delaymatrices = get_delaymatrices(noderankdata, datadir, typename)
 
-    elif noderankdata.datatype == "function":
+    else:  # noderankdata.datatype == "function"
         gainmatrices = [noderankdata.gainmatrix]
         delaymatrices = [np.zeros_like(noderankdata.gainmatrix)]
         noderankdata.boxes = [0]
@@ -666,6 +665,13 @@ def dorankcalc(
     boxrankdict_name = "boxrankdict_{}.json"
     rel_boxrankdict_name = "rel_boxrankdict_{}.json"
 
+    dif_gainmatrices: list = []
+    dif_rankinglist_name = ""
+    dif_transientdict_name = ""
+    dif_basevaldict_name = ""
+    dif_boxrankdict_name = ""
+    dif_rel_boxrankdict_name = ""
+
     if generate_diffs:
         dif_rankinglist_name = "dif_rankinglist_{}.csv"
         dif_transientdict_name = "dif_transientdict_{}.json"
@@ -681,6 +687,9 @@ def dorankcalc(
     # backward_rankinglists = []
     backward_rankingdicts = []
     dif_backward_rankingdicts = []
+    mod_dif_gainmatrix: np.ndarray | None = None
+    dif_rankinglist: list | None = None
+    savedir: str | Path = ""
 
     for index, gainmatrix in enumerate(gainmatrices):
         if preprocessing:
@@ -806,6 +815,11 @@ def dorankcalc(
             backward_rankingdicts, noderankdata.variablelist
         )
 
+        dif_transientdict: dict = {}
+        dif_basevaldict: dict = {}
+        dif_boxrankdict: dict = {}
+        dif_rel_boxrankdict: dict = {}
+
         if generate_diffs:
             # Get faultmap dictionaries for difference gain arrays
             (
@@ -903,7 +917,7 @@ def noderankcalc(
 
                 if noderankdata.datatype == "file":
                     sigtypes = next(os.walk(basedir))[1]
-                elif noderankdata.datatype == "function":
+                else:  # noderankdata.datatype == "function"
                     sigtypes = ["test_nosig"]
 
                 for sigtype in sigtypes:
@@ -912,7 +926,7 @@ def noderankcalc(
 
                     if noderankdata.datatype == "file":
                         embedtypes = next(os.walk(embedtypesdir))[1]
-                    elif noderankdata.datatype == "function":
+                    else:  # noderankdata.datatype == "function"
                         embedtypes = ["test_noembed"]
 
                     for embedtype in embedtypes:

@@ -26,7 +26,7 @@ class CaseSetup(NamedTuple):
     infodynamics_loc: Path
 
 
-def ensure_existence(location: Path, make=True) -> Path:
+def ensure_existence(location: str | Path, make: bool = True) -> Path:
     """
 
     Args:

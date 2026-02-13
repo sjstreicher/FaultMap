@@ -78,10 +78,9 @@ def calc_weights_one_source(
     neutral_aux_name = "auxdata"
 
     # Provide names for the significance threshold file types
-    if weight_calc_data.all_thresh:
-        sig_directional_name = "sigthresh_directional"
-        sig_absolute_name = "sigthresh_absolute"
-        sig_neutral_name = "sigthresh"
+    sig_directional_name = "sigthresh_directional"
+    sig_absolute_name = "sigthresh_absolute"
+    sig_neutral_name = "sigthresh"
 
     # Initiate datalines with delays
     datalines_directional = np.asarray(weight_calc_data.actual_delays)
@@ -138,10 +137,10 @@ def calc_weights_one_source(
             )
 
             if weight_calc_data.all_thresh:
-                datalines_sigthresh_directional = readcsv_weightcalc(
+                datalines_sigthresh_directional, _ = readcsv_weightcalc(
                     filename(sig_directional_name, box_index + 1, source_var)
                 )
-                datalines_sigthresh_absolute = readcsv_weightcalc(
+                datalines_sigthresh_absolute, _ = readcsv_weightcalc(
                     filename(sig_absolute_name, box_index + 1, source_var)
                 )
 
@@ -169,13 +168,17 @@ def calc_weights_one_source(
                 aux_data_file = np.genfromtxt(
                     test_location,
                     delimiter=",",
-                    usecols=np.arange(0, 2),
+                    usecols=list(range(2)),
                     dtype=str,
                 )
                 destination_vars = aux_data_file[:, 1]
                 if destination_var in destination_vars:
                     logger.info("Destination variable results in existence")
                     exists = True
+
+        weight: list = []
+        twodimensions: bool = False
+        significance_threshold: list = []
 
         if do_test and (exists is False):
             weightlist = []

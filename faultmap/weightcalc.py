@@ -105,7 +105,7 @@ class WeightCalcData:
         # Flag for calculating FFT of all signals
         self.fft_calc = fft_calc
 
-        self.settings_set = None
+        self.settings_set: list[str] | None = None
         self.connections_used = None
         self.transient_method: str | None = None
 
@@ -176,6 +176,8 @@ class WeightCalcData:
                 self.kernel_width = self.case_config[settings_name]["kernel_width"]
             else:
                 self.kernel_width = None
+
+        raw_tsdata: str | None = None
 
         if self.datatype == "file":
             # Get path to time series data input file in standard format
@@ -422,6 +424,7 @@ class WeightCalcData:
             self.boxnum = len(self.boxdates)
 
         # Select which of the boxes to evaluate
+        self.boxindexes: range | list[int] = [0]
         if self.transient:
             if "boxindexes" in self.case_config[scenario]:
                 if self.case_config[scenario]["boxindexes"] == "range":
@@ -430,10 +433,10 @@ class WeightCalcData:
                         self.case_config[scenario]["boxindexes_end"] + 1,
                     )
                 else:
-                    self.boxindexes = self.case_config[scenario]["boxindexes"]
+                    self.boxindexes = list(
+                        self.case_config[scenario]["boxindexes"]
+                    )
             else:
-                self.boxindexes = "all"
-            if self.boxindexes == "all":
                 self.boxindexes = range(self.boxnum)
         else:
             self.boxindexes = [0]
@@ -609,15 +612,12 @@ def calculate_weights(
         make=True,
     )
 
+    signal_entropy_header_line: list[str] = []
+    signal_entropy_filename_template: str = ""
+
     if weight_calc_data.single_entropies:
         # Initiate header_line for single signal entropy storage file
         signal_entropy_header_line = weight_calc_data.variables
-        # Define filename structure for CSV file
-
-        def signal_entropy_filename(name, box_index):
-            return signal_entropy_filename_template.format(
-                weight_calc_data.case_name, scenario, name, box_index
-            )
 
         signal_entropy_dir = config_setup.ensure_existence(
             Path(weight_calc_data.save_loc, "signal_entropies"), make=True
@@ -625,6 +625,12 @@ def calculate_weights(
 
         signal_entropy_filename_template = os.path.join(
             signal_entropy_dir, "{}_{}_{}_box{:03d}.csv"
+        )
+
+    # Define filename structure for CSV file (used inside the for loop below)
+    def signal_entropy_filename(name: str, box_idx: int) -> str:
+        return signal_entropy_filename_template.format(
+            weight_calc_data.case_name, scenario, name, box_idx
         )
 
     for box_index in weight_calc_data.boxindexes:
@@ -728,6 +734,7 @@ def weight_calc(
         logging.info("Running scenario %s", scenario)
         # Update scenario-specific fields of WeightCalcData object
         weight_calc_data.scenario_data(scenario)
+        assert weight_calc_data.settings_set is not None
         for settings_name in weight_calc_data.settings_set:
             weight_calc_data.set_settings(scenario, settings_name)
             logging.info("Now running settings %s", settings_name)

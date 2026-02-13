@@ -3,7 +3,7 @@
 import abc
 import logging
 import types
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -35,37 +35,36 @@ class WeightCalculator(abc.ABC):
     def __init__(self, weight_calc_data: "WeightCalcData", *_):
         """Read the files or functions and returns required data fields."""
         self.weight_calc_data = weight_calc_data
+        self.data_header: list[str] = []
         if weight_calc_data.sigtest:
             self.threshold_method = weight_calc_data.threshold_method
             self.surrogate_method = weight_calc_data.surrogate_method
 
     @flexiblemethod
     @abc.abstractmethod
-    def calculate_weight(self, *_):
+    def calculate_weight(self, *args: Any, **kwargs: Any) -> Any:
         """Calculates the weight between two vectors containing timer series data."""
-        pass
+        ...
 
-    def calculate_surrogate_weight(self, *_):
+    def calculate_surrogate_weight(self, *args: Any, **kwargs: Any) -> Any:
         """Calculates surrogate weights for significance testing."""
-        pass
+        ...
 
     @abc.abstractmethod
-    def calculate_significance_threshold(
-        self, source_var: str, destination_var: str, box, delay: int
-    ):
+    def calculate_significance_threshold(self, *args: Any, **kwargs: Any) -> Any:
         """Calculates the significance threshold for the weight between two vectors
         containing timer series data.
 
         """
-        pass
+        ...
 
     @abc.abstractmethod
-    def report(self, *_):
+    def report(self, *args: Any, **kwargs: Any) -> Any:
         """Calculates and reports the relevant output for each combination
         of variables tested.
 
         """
-        pass
+        ...
 
 
 class CorrelationWeightCalculator(WeightCalculator):
@@ -96,7 +95,7 @@ class CorrelationWeightCalculator(WeightCalculator):
         ]
 
     @staticmethod
-    def calculate_weight(source_var_data, destination_var_data, *_):
+    def calculate_weight(source_var_data, destination_var_data, *_):  # type: ignore[override]
         """Calculates the correlation between two vectors containing
         timer series data.
 
@@ -130,7 +129,7 @@ class CorrelationWeightCalculator(WeightCalculator):
         self,
         source_var: str,
         destination_var: str,
-        box: int,
+        box: np.ndarray,
         trials: int,
     ):
         """Calculates surrogate correlation values for significance
@@ -164,7 +163,7 @@ class CorrelationWeightCalculator(WeightCalculator):
                 data_processing.gen_iaaft_surrogates(original_causal, 10)
                 for _ in range(trials)
             ]
-        elif self.surrogate_method == "random_shuffle":
+        else:  # self.surrogate_method == "random_shuffle"
             surr_tsdata = [
                 data_processing.shuffle_data(thresh_source_var_data)
                 for _ in range(trials)
@@ -393,7 +392,7 @@ class CorrelationWeightCalculator(WeightCalculator):
                     source_var, destination_var, box, 19
                 )
                 threshcorr, threshdir = self.thresh_rankorder(surr_corr, surr_dirindex)
-            elif self.threshold_method == "stdevs":
+            else:  # self.threshold_method == "stdevs"
                 surr_corr, surr_dirindex = self.calculate_surrogate_weight(
                     source_var, destination_var, box, 30
                 )
@@ -407,7 +406,7 @@ class CorrelationWeightCalculator(WeightCalculator):
             logging.info("Correlation threshold passed: " + str(corrthreshpass))
             logging.info("Directionality threshold passed: " + str(dirthreshpass))
 
-        elif not self.weight_calc_data.sigtest:
+        else:
             threshcorr = [None]
             threshdir = [None]
 
@@ -715,7 +714,7 @@ class TransferEntropyWeightCalculator(WeightCalculator):
                     threshent_directional,
                     threshent_absolute,
                 ) = self.threshold_rankorder(surr_te_directional, surr_te_absolute)
-            elif self.threshold_method == "stdevs":
+            else:  # self.threshold_method == "stdevs"
                 surr_te_directional, surr_te_absolute = self.calculate_surrogate_weight(
                     source_var,
                     destination_var,
@@ -755,7 +754,7 @@ class TransferEntropyWeightCalculator(WeightCalculator):
                     _, threshent_absolute = self.threshold_rankorder(
                         surr_te_directional, surr_te_absolute
                     )
-                elif self.threshold_method == "stdevs":
+                else:  # self.threshold_method == "stdevs"
                     (
                         surr_te_directional,
                         surr_te_absolute,
@@ -777,7 +776,7 @@ class TransferEntropyWeightCalculator(WeightCalculator):
             else:
                 threshpass_absolute = False
 
-        elif not self.weight_calc_data.sigtest:
+        else:
             threshent_directional = [None, None, None]
             threshent_absolute = [None, None, None]
             threshpass_directional = None
@@ -881,7 +880,7 @@ class TransferEntropyWeightCalculator(WeightCalculator):
                 for n in range(trials)
             ]
 
-        elif self.surrogate_method == "random_shuffle":
+        else:  # self.surrogate_method == "random_shuffle"
             surr_tsdata = [
                 data_processing.shuffle_data(thresh_source_var_data)
                 for n in range(trials)
@@ -971,7 +970,7 @@ class TransferEntropyWeightCalculator(WeightCalculator):
             threshent_directional, threshent_absolute = self.threshold_rankorder(
                 surr_te_directional, surr_te_absolute
             )
-        elif self.threshold_method == "stdevs":
+        else:  # self.threshold_method == "stdevs"
             surr_te_directional, surr_te_absolute = self.calculate_surrogate_weight(
                 source_var, destination_var, box, delay, 30
             )

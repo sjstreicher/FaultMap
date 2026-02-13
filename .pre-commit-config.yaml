@@ -16,3 +16,18 @@ repos:
     -   id: ruff
         args: [--fix]
     -   id: ruff-format
+
+-   repo: https://github.com/RobertCraigie/pyright-python
+    rev: v1.1.400
+    hooks:
+    -   id: pyright
+        additional_dependencies:
+        -   numpy
+        -   pandas
+        -   matplotlib
+        -   scipy
+        -   scikit-learn
+        -   networkx
+        -   seaborn
+        -   types-seaborn>=0.13.2.20251221
+        -   types-networkx>=3.6.1.20251220
