@@ -427,7 +427,7 @@ def calc_entropy(entropy_calculator, data, estimator: EntropyMethods) -> float:
     """
 
     data_array = data.tolist()
-    data_array_java = jpype.JArray(jpype.JDouble, 1)(data_array)
+    data_array_java = jpype.JArray(jpype.JDouble, 1)(data_array)  # type: ignore[operator]
     entropy_calculator.setObservations(data_array_java)
     entropy = entropy_calculator.computeAverageLocalOfObservations()
     if estimator == "gaussian":

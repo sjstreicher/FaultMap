@@ -433,9 +433,7 @@ class WeightCalcData:
                         self.case_config[scenario]["boxindexes_end"] + 1,
                     )
                 else:
-                    self.boxindexes = list(
-                        self.case_config[scenario]["boxindexes"]
-                    )
+                    self.boxindexes = list(self.case_config[scenario]["boxindexes"])
             else:
                 self.boxindexes = range(self.boxnum)
         else:

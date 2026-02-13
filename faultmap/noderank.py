@@ -482,7 +482,7 @@ def gainmatrix_preprocessing(gainmatrix: NDArray) -> tuple[NDArray, float]:
         gainsum += gainmatrix[col, row]
         counter += 1
 
-    currentmean = gainsum / counter
+    currentmean = float(gainsum / counter)
     meanscale = 1.0 / currentmean
 
     # Write meandiff to all gainmatrix elements indicated by connectionmatrix

@@ -550,9 +550,9 @@ def create_arrays(data_dir: Path, variables, bias_correct, mi_scale, generate_di
 
                     dir_parts_inner = get_folders(data_dir)
                     if "sigtested" in dir_parts_inner:
-                        dir_parts_inner[
-                            dir_parts_inner.index("sigtested")
-                        ] = "nosigtest"
+                        dir_parts_inner[dir_parts_inner.index("sigtested")] = (
+                            "nosigtest"
+                        )
                         nosigtest_save_dir_inner: str | Path = dir_parts_inner[0]
                         for path_part in dir_parts_inner[1:]:
                             nosigtest_save_dir_inner = Path(
@@ -968,7 +968,7 @@ def csv_to_h5(saveloc, raw_tsdata, scenario, case, overwrite=True):
     filename = Path(datapath, scenario + ".h5")
 
     if overwrite or (not os.path.exists(filename)):
-        hdf5writer = tb.open_file(filename, "w")
+        hdf5writer = tb.open_file(str(filename), "w")
         data = np.genfromtxt(raw_tsdata, delimiter=",")
         # Strip time column and labels first row
         data = data[1:, 1:]
