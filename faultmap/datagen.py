@@ -13,7 +13,7 @@ import faultmap.data_processing
 seed_list = [35, 88, 107, 52, 98]
 
 
-def connection_matrix_maker(n_dims: int) -> Callable[[], tuple[list[str], np.array]]:
+def connection_matrix_maker(n_dims: int) -> Callable[[], tuple[list[str], np.ndarray]]:
     """
 
     Args:
@@ -56,8 +56,8 @@ def autoreg_gen(params: list[int | float]) -> NDArray:
 
     """
 
-    samples = params[0]
-    delay = params[1]
+    samples = int(params[0])
+    delay = int(params[1])
     if len(params) >= 3:
         alpha = params[2]
     else:
@@ -290,13 +290,13 @@ def firstorder_gen(params, period=0.01, noiseamp=1.0):
     samples = params[0]
     delay = params[1]
 
-    process = control.matlab.tf([10], [100, 1])
+    process = control.matlab.tf([10], [100, 1])  # type: ignore[attr-defined]
 
     time_points = np.array(range(samples + delay))
 
     sine_input = np.array([np.sin(period * t * 2 * np.pi) for t in time_points])
 
-    process_response = control.matlab.lsim(process, sine_input, time_points)
+    process_response = control.matlab.lsim(process, sine_input, time_points)  # type: ignore[attr-defined]
 
     affected_random_add = (seed_rand(51, samples + delay) - 0.5) * noiseamp
 
