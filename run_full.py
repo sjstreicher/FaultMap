@@ -13,6 +13,7 @@ from faultmap import config_setup
 from faultmap.data_processing import result_reconstruction, trend_extraction
 from faultmap.graphreduce import reduce_graph_scenarios
 from faultmap.noderank import noderankcalc
+from faultmap.report import generate_report_scenarios
 from faultmap.type_definitions import RunModes
 from faultmap.weightcalc import weight_calc
 from plotting.plotter import draw_plot
@@ -122,6 +123,16 @@ def run_plotting(mode, case, robust, write_output):
     return None
 
 
+def run_report(mode, case, robust, write_output):
+    if robust:
+        try:
+            generate_report_scenarios(mode, case, write_output)
+        except Exception as exc:
+            raise RuntimeError(f"Report generation failed for case: {case}") from exc
+    else:
+        generate_report_scenarios(mode, case, write_output)
+
+
 def run_all(mode: RunModes, robust=False):
     """Runs all cases or tests"""
     _, config_loc, _, _ = config_setup.get_locations(mode)
@@ -142,6 +153,7 @@ def run_all(mode: RunModes, robust=False):
         run_noderank(mode, case, robust, write_output)
         run_graphreduce(mode, case, robust, write_output)
         run_plotting(mode, case, robust, write_output)
+        run_report(mode, case, robust, write_output)
         logger.info("Done with case: %s", case)
 
 

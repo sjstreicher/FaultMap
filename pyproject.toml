@@ -59,5 +59,9 @@ target-version = "py311"
 [tool.ruff.lint]
 select = ["E", "F", "I", "W", "UP"]
 
+[tool.ruff.lint.per-file-ignores]
+# HTML/CSS/JS template string lines exceed 88 chars
+"faultmap/report.py" = ["E501"]
+
 [tool.ruff.lint.isort]
 known-first-party = ["faultmap"]
