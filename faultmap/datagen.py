@@ -223,7 +223,7 @@ def sinusoid_shift_gen(
     vectors = []
 
     for i in range(n_signals):
-        sample_shift = (period / 4) * i
+        sample_shift = (period // 4) * i
         vectors.append(sine[sample_shift : samples + sample_shift])
 
     data = vstack(vectors)
